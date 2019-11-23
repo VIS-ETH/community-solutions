@@ -19,12 +19,18 @@ program.parse(process.argv);
 function tryJson(s) {
   try {
     return JSON.parse(s);
-  } catch {
+  } catch (err) {
     return s;
   }
 }
 
-async function replayRecordedRequest(recordingEntry) {
+async function replayRecordedRequest(_recordingEntry) {
+  // HACK Prevent the request library from doing dumb things
+  const recordingEntry = R.dissocPath(
+    ["request", "postData", "mimeType"],
+    _recordingEntry,
+  );
+
   const res = await sendRequest(
     url.resolve(program.baseUrl, recordingEntry.request.url),
     {
