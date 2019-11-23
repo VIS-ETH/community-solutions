@@ -4,6 +4,7 @@ const url = require("url");
 const sendRequest = require("request-promise-native");
 const diffDefault = require("jest-diff");
 const R = require("ramda");
+const { IdInferrer, mapIds } = require("./id");
 
 program
   .option("--recording <path>", "File (with entries from HAR) to replay")
@@ -49,6 +50,7 @@ async function replayRecordedRequest(_recordingEntry) {
 async function main() {
   const recordings = JSON.parse(await fs.readFile(program.recording));
 
+  const idInferrer = new IdInferrer();
   let failedSomething = false;
   for (const recordingEntry of recordings) {
     function printResult(passed) {
@@ -67,16 +69,27 @@ async function main() {
         status: recordingEntry.response.status,
         body: tryJson(recordingEntry.response.content.text),
       };
+      // TODO remap ids before sending the request
       const res = await replayRecordedRequest(recordingEntry);
       const isPdf = !!recordingEntry.response.headers.find(
         R.equals({ name: "content-type", value: "application/pdf" }),
       );
-      const match = isPdf ? true : R.equals(recordedRes, res);
-      failedEntry = failedEntry || !match;
-      printResult(match);
-      if (!match && program.diff) {
-        console.log(diffDefault(recordedRes, res));
-        console.log("\n");
+
+      function checkMatch(oldObject, newObject) {
+        const match = isPdf ? true : R.equals(oldObject, newObject);
+        failedEntry = failedEntry || !match;
+        printResult(match);
+        if (!match && program.diff) {
+          console.log(diffDefault(oldObject, newObject));
+          console.log("\n");
+        }
+        return match;
+      }
+
+      if (checkMatch(...[recordedRes, res].map(o => mapIds(() => "", o)))) {
+        idInferrer.learnMappings(recordedRes, res);
+        const mappedRes = idInferrer.remapIdsToOld(res);
+        checkMatch(recordedRes, mappedRes);
       }
     } catch (err) {
       failedEntry = true;
