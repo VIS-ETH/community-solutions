@@ -1,12 +1,12 @@
 const program = require("commander");
 const fs = require("fs-extra");
-const path = require("path");
 const url = require("url");
 const sendRequest = require("request-promise-native");
 const diffDefault = require("jest-diff");
 const R = require("ramda");
 
 program
+  .option("--recording <path>", "File (with entries from HAR) to replay")
   .option(
     "--base-url <url>",
     "URL of server where Community Solutions is running",
@@ -41,9 +41,7 @@ async function replayRecordedRequest(recordingEntry) {
 }
 
 async function main() {
-  const recordings = JSON.parse(
-    await fs.readFile(path.join(__dirname, "recordings/1/fletchz.json")),
-  );
+  const recordings = JSON.parse(await fs.readFile(program.recording));
 
   let failedSomething = false;
   for (const recordingEntry of recordings) {
