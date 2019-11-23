@@ -2671,6 +2671,7 @@ def set_feedback_flags(feedbackid):
 # FILES # FILES # FILES # FILES # FILES # FILES # FILES # FILES # FILES # FILES # FILES # FILES # FILES # FILES # FILES#
 ########################################################################################################################
 
+# TODO POSTGRES Revert this function back to random generation
 def generate_filename(length, directory, extension):
     """
     Generates a random filename
@@ -2680,11 +2681,11 @@ def generate_filename(length, directory, extension):
     """
     chars = "abcdefghijklmnopqrstuvwxyz0123456789"
     res = ""
-    while len(res) < length:
-        res += random.choice(chars)
-    if is_file_in_minio(directory, res + extension):
-        return generate_filename(length, directory, extension)
-    return res + extension
+    for i in range(100):
+        res = str(i)
+        if not is_file_in_minio(directory, res + extension):
+            return res + extension
+    raise RuntimeError("generate_filename hit iteration limit")
 
 
 @app.route("/api/uploadpdf/<pdftype>", methods=['POST'])
