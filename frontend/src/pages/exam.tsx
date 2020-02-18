@@ -590,7 +590,7 @@ export default class Exam extends React.Component<Props, State> {
                       key={e.key}
                       section={e}
                       renderer={svgrenderer}
-                      width={width}
+                      targetWidth={width}
                     />
                   );
                 default:

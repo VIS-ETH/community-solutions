@@ -1,15 +1,11 @@
 import { PdfSection } from "../interfaces";
 import SVGRenderer from "../svg-render";
 import * as React from "react";
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { css } from "glamor";
 import Colors from "../colors";
+import { useInViewport } from "@umijs/hooks";
 
-interface Props {
-  section: PdfSection;
-  renderer: SVGRenderer;
-  width: number;
-}
 const styles = {
   pdfContainer: css({
     overflow: "hidden",
@@ -21,59 +17,97 @@ const styles = {
   }),
 };
 
-const PdfSectionSvg: React.FC<Props> = ({ section, renderer, width }) => {
+const usePdf = (
+  shouldRender: boolean,
+  renderer: SVGRenderer,
+  pageNumber: number,
+): [boolean, SVGElement | null, number, number] => {
+  const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [svgElement, setSvgElement] = useState<SVGElement | null>(null);
+  const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
+  const render = useCallback(async () => {
+    setLoading(true);
+    const page = await renderer.getPage(pageNumber);
+    const viewport = page.getViewport({ scale: 1.0 });
+    setWidth(viewport.width);
+    setHeight(viewport.height);
+    const pageSvg = await renderer.renderSvg(pageNumber, viewport);
+    setLoading(false);
+    setLoaded(true);
+    setSvgElement(pageSvg);
+  }, [renderer, pageNumber]);
+  useEffect(() => {
+    if (shouldRender && !loaded && !loading) {
+      render();
+    }
+  }, [shouldRender, loaded, loading, render]);
+  return [loading, svgElement, width, height];
+};
+
+interface Props {
+  section: PdfSection;
+  renderer: SVGRenderer;
+  targetWidth: number;
+}
+const PdfSectionSvg: React.FC<Props> = ({ section, renderer, targetWidth }) => {
   const start = section.start.position;
   const end = section.end.position;
   const relativeHeight = end - start;
   const pageNumber = section.start.page;
 
-  const svg = useRef<SVGElement | null>(null);
-  const [rendered, setRendered] = useState(false);
-  const rendering = useRef(false);
-  const [containerHeight, setContainerHeight] = useState(100);
+  const [visible, containerElement] = useInViewport<HTMLDivElement>();
+  const [containerHeight, setContainerHeight] = useState(
+    targetWidth * relativeHeight * 1.414,
+  );
+  const [loading, svgElement, width, height] = usePdf(
+    visible || false,
+    renderer,
+    pageNumber,
+  );
 
-  const fixScale = useCallback(() => {
-    if (svg.current === null) return;
-    const svgWidth = parseInt(svg.current.getAttribute("width") || "0");
-    const svgHeight = parseInt(svg.current.getAttribute("height") || "0");
-    const scaling = width / svgWidth;
-    const height = svgHeight * scaling;
-    svg.current.setAttribute("width", `${width}px`);
-    svg.current.setAttribute("height", `${height}px`);
-    svg.current.style.transform = `translateY(-${start * height}px)`;
-    setContainerHeight(relativeHeight * height);
-  }, [width, section]);
-
-  const svgMountingPoint = useCallback(
+  const svgMountingPoint = useCallback<(element: HTMLDivElement) => void>(
     element => {
-      if (rendered) return;
-      if (rendering.current) return;
-      const render = async () => {
-        rendering.current = true;
-        const page = await renderer.getPage(pageNumber);
-        const viewport = page.getViewport({ scale: 1.0 });
-        const pageSvg = await renderer.renderSvg(pageNumber, viewport);
-        element.appendChild(pageSvg);
-        svg.current = pageSvg;
-        rendering.current = false;
-        setRendered(true);
-        fixScale();
-      };
-      render();
+      if (element === null) return;
+      if (svgElement === null) return;
+      while (element.firstChild) element.removeChild(element.firstChild);
+      element.appendChild(svgElement);
     },
-    [section, renderer],
+    [svgElement],
   );
 
   useEffect(() => {
-    fixScale();
-  }, [width]);
+    const scaling = targetWidth / width;
+    const newWidth = width * scaling;
+    const newHeight = height * scaling;
+    setContainerHeight(relativeHeight * newHeight);
+    if (svgElement === null) return;
+    svgElement.setAttribute("width", `${newWidth}px`);
+    svgElement.setAttribute("height", `${newHeight}px`);
+    svgElement.style.transform = `translateY(-${start * newHeight}px)`;
+  }, [targetWidth, svgElement, width, height]);
+
+  let content: React.ReactNode;
+  if (visible && svgElement) {
+    content = <div ref={svgMountingPoint} />;
+  } else if (loading) {
+    content = <div></div>;
+  } else {
+    content = <div></div>;
+  }
+
   return (
     <div
-      style={{ width, height: `${containerHeight}px` }}
+      style={{
+        width: `${targetWidth}px`,
+        height: `${containerHeight}px`,
+      }}
       {...styles.pdfContainer}
       {...(end === 1 ? styles.lastSection : undefined)}
+      ref={containerElement}
     >
-      <div ref={svgMountingPoint}></div>
+      {content}
     </div>
   );
 };
