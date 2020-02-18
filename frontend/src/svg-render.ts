@@ -47,12 +47,6 @@ export default class SVGRenderer {
 
     const page = await this.getPage(pageNumber);
     // tslint:disable-next-line: no-any
-    const objs = (page as any).commonObjs._objs;
-    for (const name in objs) {
-      console.log(name);
-      console.log(JSON.stringify([...objs[name].data.data]));
-    }
-    // tslint:disable-next-line: no-any
     const gfx = new (pdfjs as any).SVGGraphics(
       // tslint:disable-next-line: no-any
       (page as any).commonObjs,
