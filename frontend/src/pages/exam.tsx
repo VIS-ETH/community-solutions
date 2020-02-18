@@ -5,13 +5,14 @@ import { ExamMetaData, PdfSection, Section, SectionKind } from "../interfaces";
 import * as pdfjs from "pdfjs-dist";
 import { debounce } from "lodash";
 import { css } from "glamor";
-import PdfSectionComp from "../components/pdf-section";
 import AnswerSectionComponent from "../components/answer-section";
 import { fetchapi, fetchpost } from "../fetch-utils";
 import MetaData from "../components/metadata";
 import Colors from "../colors";
 import PrintExam from "../components/print-exam";
 import globalcss from "../globalcss";
+import SVGRenderer from "../svg-render";
+import PdfSectionSvg from "../components/pdf-section-svg";
 
 const RERENDER_INTERVAL = 500;
 const MAX_WIDTH = 1200;
@@ -74,6 +75,7 @@ interface Props {
 
 interface State {
   pdf?: pdfjs.PDFDocumentProxy;
+  svgrenderer?: SVGRenderer;
   renderer?: SectionRenderer;
   width: number;
   dpr: number;
@@ -168,7 +170,11 @@ export default class Exam extends React.Component<Props, State> {
         "/api/pdf/exam/" + this.props.filename,
       ).promise;
       const w = this.state.width * this.state.dpr;
-      this.setState({ pdf, renderer: await createSectionRenderer(pdf, w) });
+      this.setState({
+        pdf,
+        renderer: await createSectionRenderer(pdf, w),
+        svgrenderer: new SVGRenderer(pdf),
+      });
       this.loadSectionsFromBackend(pdf.numPages);
     } catch (e) {
       this.setState({
@@ -420,7 +426,7 @@ export default class Exam extends React.Component<Props, State> {
       }
       return <div>You can not view this exam at this time.</div>;
     }
-    const { renderer, width, dpr, sections } = this.state;
+    const { svgrenderer, width, sections } = this.state;
     const wikitransform = this.state.savedMetaData.legacy_solution
       ? this.state.savedMetaData.legacy_solution.split("/").pop()
       : "";
@@ -552,7 +558,7 @@ export default class Exam extends React.Component<Props, State> {
             </a>
           </div>
         ))}
-        {(renderer && sections && (
+        {(svgrenderer && sections && (
           <div style={{ width: width }} {...styles.wrapper}>
             {sections.map(e => {
               switch (e.kind) {
@@ -580,19 +586,11 @@ export default class Exam extends React.Component<Props, State> {
                   );
                 case SectionKind.Pdf:
                   return (
-                    <PdfSectionComp
+                    <PdfSectionSvg
                       key={e.key}
                       section={e}
-                      renderer={renderer}
+                      renderer={svgrenderer}
                       width={width}
-                      dpr={dpr}
-                      renderText={!this.state.addingSectionsActive}
-                      // ts does not like it if this is undefined...
-                      onClick={
-                        this.state.canEdit && this.state.addingSectionsActive
-                          ? this.addSection
-                          : ev => ev
-                      }
                     />
                   );
                 default:
