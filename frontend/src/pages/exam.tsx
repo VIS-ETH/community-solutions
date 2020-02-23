@@ -129,8 +129,8 @@ export default class Exam extends React.Component<Props, State> {
     allShown: false,
     updateIntervalId: 0,
   };
-  updateInterval: NodeJS.Timer;
-  cutVersionInterval: NodeJS.Timer;
+  updateInterval: NodeJS.Timeout;
+  cutVersionInterval: NodeJS.Timeout;
   debouncedUpdatePDFWidth: this["updatePDFWidth"];
 
   componentDidMount() {
@@ -163,13 +163,10 @@ export default class Exam extends React.Component<Props, State> {
   };
 
   loadPDF = async () => {
-    // tslint:disable-next-line:no-any
-    const PDFJS: pdfjs.PDFJSStatic = pdfjs as any;
     try {
-      const pdf = await PDFJS.getDocument(
+      const pdf = await pdfjs.getDocument(
         "/api/pdf/exam/" + this.props.filename,
-      );
-
+      ).promise;
       const w = this.state.width * this.state.dpr;
       this.setState({ pdf, renderer: await createSectionRenderer(pdf, w) });
       this.loadSectionsFromBackend(pdf.numPages);
@@ -253,7 +250,7 @@ export default class Exam extends React.Component<Props, State> {
       .then(res => {
         const versions = res.value;
         this.setState(prevState => {
-          let newState = { ...prevState };
+          const newState = { ...prevState };
           if (newState.sections) {
             newState.sections.forEach(section => {
               if (section.kind === SectionKind.Answer) {
@@ -319,7 +316,7 @@ export default class Exam extends React.Component<Props, State> {
 
   setAllHidden = (hidden: boolean) => {
     this.setState(prevState => {
-      let newState = { ...prevState };
+      const newState = { ...prevState };
       if (newState.sections) {
         newState.sections.forEach(section => {
           if (section.kind === SectionKind.Answer) {
@@ -334,9 +331,9 @@ export default class Exam extends React.Component<Props, State> {
 
   toggleHidden = (sectionOid: string) => {
     this.setState(prevState => {
-      let newState = { ...prevState };
+      const newState = { ...prevState };
       if (newState.sections) {
-        for (let section of newState.sections) {
+        for (const section of newState.sections) {
           if (
             section.kind === SectionKind.Answer &&
             section.oid === sectionOid
