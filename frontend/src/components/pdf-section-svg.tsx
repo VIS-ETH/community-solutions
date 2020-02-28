@@ -5,12 +5,17 @@ import { useState, useCallback, useEffect } from "react";
 import { css } from "glamor";
 import Colors from "../colors";
 import { useInViewport } from "@umijs/hooks";
+import PdfSectionText from "./pdf-section-text";
 
 const styles = {
   pdfContainer: css({
     overflow: "hidden",
     background: "white",
     boxShadow: Colors.cardShadow,
+    position: "relative",
+    "& svg": {
+      userSelect: "none",
+    },
   }),
   lastSection: css({
     marginBottom: "40px",
@@ -21,15 +26,17 @@ const usePdf = (
   shouldRender: boolean,
   renderer: SVGRenderer,
   pageNumber: number,
-): [boolean, SVGElement | null, number, number] => {
+): [boolean, SVGElement | null, number[] | undefined, number, number] => {
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [svgElement, setSvgElement] = useState<SVGElement | null>(null);
+  const [view, setView] = useState<number[]>();
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
   const render = useCallback(async () => {
     setLoading(true);
     const page = await renderer.getPage(pageNumber);
+    setView(page.view);
     const viewport = page.getViewport({ scale: 1.0 });
     setWidth(viewport.width);
     setHeight(viewport.height);
@@ -43,7 +50,7 @@ const usePdf = (
       render();
     }
   }, [shouldRender, loaded, loading, render]);
-  return [loading, svgElement, width, height];
+  return [loading, svgElement, view, width, height];
 };
 
 interface Props {
@@ -61,7 +68,9 @@ const PdfSectionSvg: React.FC<Props> = ({ section, renderer, targetWidth }) => {
   const [containerHeight, setContainerHeight] = useState(
     targetWidth * relativeHeight * 1.414,
   );
-  const [loading, svgElement, width, height] = usePdf(
+  const [translateY, setTranslateY] = useState(0);
+  const [currentScale, setCurrentScale] = useState(1);
+  const [loading, svgElement, view, width, height] = usePdf(
     visible || false,
     renderer,
     pageNumber,
@@ -72,6 +81,7 @@ const PdfSectionSvg: React.FC<Props> = ({ section, renderer, targetWidth }) => {
       if (element === null) return;
       if (svgElement === null) return;
       while (element.firstChild) element.removeChild(element.firstChild);
+      element.style.userSelect = "none";
       element.appendChild(svgElement);
     },
     [svgElement],
@@ -79,9 +89,11 @@ const PdfSectionSvg: React.FC<Props> = ({ section, renderer, targetWidth }) => {
 
   useEffect(() => {
     const scaling = targetWidth / width;
+    setCurrentScale(scaling);
     const newWidth = width * scaling;
     const newHeight = height * scaling;
     setContainerHeight(relativeHeight * newHeight);
+    setTranslateY(start * newHeight);
     if (svgElement === null) return;
     svgElement.setAttribute("width", `${newWidth}px`);
     svgElement.setAttribute("height", `${newHeight}px`);
@@ -108,6 +120,13 @@ const PdfSectionSvg: React.FC<Props> = ({ section, renderer, targetWidth }) => {
       ref={containerElement}
     >
       {content}
+      <PdfSectionText
+        section={section}
+        renderer={renderer}
+        scale={currentScale}
+        view={view}
+        translateY={translateY}
+      />
     </div>
   );
 };

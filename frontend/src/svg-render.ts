@@ -3,6 +3,7 @@ import {
   PDFDocumentProxy,
   PDFPageViewport,
   PDFPromise,
+  TextContent,
 } from "pdfjs-dist";
 import * as pdfjs from "pdfjs-dist/webpack";
 
@@ -15,12 +16,14 @@ export default class SVGRenderer {
   // tslint:disable-next-line: no-any
   gfxMap: Map<number, any>;
   svgMap: Map<number, SVGElement>;
+  textMap: Map<number, PDFPromise<TextContent>>;
   constructor(document: PDFDocumentProxy) {
     this.document = document;
     this.pageMap = new Map();
     this.operatorListMap = new Map();
     this.gfxMap = new Map();
     this.svgMap = new Map();
+    this.textMap = new Map();
   }
   async getPage(pageNumber: number): Promise<PDFPageProxy> {
     const cachedPage = this.pageMap.get(pageNumber);
@@ -67,5 +70,13 @@ export default class SVGRenderer {
     const element = await gfx.getSVG(operatorList, viewport);
     this.svgMap.set(pageNumber, element);
     return element;
+  }
+  async renderText(pageNumber: number): Promise<TextContent> {
+    const cachedPromise = this.textMap.get(pageNumber);
+    if (cachedPromise !== undefined) return cachedPromise;
+    const page = await this.getPage(pageNumber);
+    const contentPromise = page.getTextContent();
+    this.textMap.set(pageNumber, contentPromise);
+    return contentPromise;
   }
 }
