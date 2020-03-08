@@ -13,6 +13,8 @@ export const variable = {
   pageBg: v("--page-bg"),
   cardBg: v("--card-bg"),
   pdfFilter: v("--pdf-filter"),
+  inputBg: v("--input-bg"),
+  inputBorder: v("--input-border-color"),
 };
 
 const getStyle = (light: boolean) => ({
@@ -20,6 +22,8 @@ const getStyle = (light: boolean) => ({
   [variable.pageBg.name]: light ? "#ffffff" : "#1c1f21",
   [variable.cardBg.name]: light ? "#ffffff" : "#282c2f",
   [variable.pdfFilter.name]: light ? "" : "invert(0.9)",
+  [variable.inputBg.name]: light ? "#ffffff" : "rgba(28, 31, 33, 0.85)",
+  [variable.inputBorder.name]: light ? "#cdd2d5" : "#3f464a",
 
   color: variable.textColor.get,
   backgroundColor: variable.pageBg.get,

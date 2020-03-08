@@ -1,9 +1,10 @@
 import * as React from "react";
 import { css } from "glamor";
+import { variable } from "./ThemeProvider";
 const textInputStyles = css({
   boxShadow: "0 0.125rem 0.376rem rgba(0, 0, 0, 0.2)",
-  backgroundColor: "rgba(28, 31, 33, 0.85)",
-  borderColor: "#3f464a",
+  backgroundColor: variable.inputBg.get,
+  borderColor: variable.inputBorder.get,
   borderWidth: "2px",
   color: "#d6dad1",
   lineHeight: 1.5,
