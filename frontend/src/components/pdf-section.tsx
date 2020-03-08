@@ -4,6 +4,7 @@ import { SectionRenderer, Dimensions } from "../split-render";
 import { css } from "glamor";
 import Colors from "../colors";
 import { variable } from "./ThemeProvider";
+import { Card } from "./card";
 
 interface Props {
   section: PdfSection;
@@ -185,8 +186,7 @@ export default class PdfSectionComp extends React.Component<Props> {
     const { dpr } = this.props;
     const rawDim = this.sectionDimensions();
     return (
-      <div
-        {...styles.wrapper}
+      <Card
         {...(this.props.section.end.position === 1
           ? styles.lastSection
           : undefined)}
@@ -210,7 +210,7 @@ export default class PdfSectionComp extends React.Component<Props> {
         {this.props.renderText && (
           <div {...styles.textLayer} ref={this.saveTextRef} />
         )}
-      </div>
+      </Card>
     );
   }
 }

@@ -7,14 +7,15 @@ const cardStyle = css({
   borderRadius: "3px",
   display: "flex",
   flexDirection: "column",
+  position: "relative",
   boxShadow: "0 0.4rem 1.2rem rgba(0, 0, 0, 0.15)",
 });
-interface CardProps {
+interface CardProps extends React.HTMLProps<HTMLDivElement> {
   onClick?: () => void;
 }
-export const Card: React.FC<CardProps> = ({ children, onClick }) => {
+export const Card: React.FC<CardProps> = ({ children, onClick, ...rest }) => {
   return (
-    <div {...cardStyle} onClick={onClick}>
+    <div {...cardStyle} onClick={onClick} {...rest}>
       {children}
     </div>
   );
