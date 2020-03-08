@@ -10,6 +10,7 @@ import globalcss from "../globalcss";
 import GlobalConsts from "../globalconsts";
 import { listenEnter } from "../input-utils";
 import Colors from "../colors";
+import { variable } from "./ThemeProvider";
 
 interface Props {
   isReadonly: boolean;
@@ -53,6 +54,9 @@ const styles = {
     marginBottom: "5px",
     padding: "5px",
     boxSizing: "border-box",
+    backgroundColor: "transparent",
+    border: "none",
+    color: variable.textColor.get,
   }),
   actionButtons: css({
     display: "flex",

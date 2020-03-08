@@ -48,11 +48,7 @@ export default ({ value, background }: Props) => {
     ),
   };
   return (
-    <div
-      {...styles.wrapper}
-      {...css({ background: background || Colors.markdownBackground })}
-      {...css({ overflow: "auto" })}
-    >
+    <div {...styles.wrapper} {...css({ overflow: "auto" })}>
       <ReactMarkdown
         source={value}
         transformImageUri={uri => {
