@@ -12,12 +12,14 @@ export const variable = {
   textColor: v("--text-color"),
   pageBg: v("--page-bg"),
   cardBg: v("--card-bg"),
+  pdfFilter: v("--pdf-filter"),
 };
 
 const getStyle = (light: boolean) => ({
   [variable.textColor.name]: light ? "#000000" : "#d6dad1",
   [variable.pageBg.name]: light ? "#ffffff" : "#1c1f21",
   [variable.cardBg.name]: light ? "#ffffff" : "#282c2f",
+  [variable.pdfFilter.name]: light ? "" : "invert(0.9)",
 
   color: variable.textColor.get,
   backgroundColor: variable.pageBg.get,

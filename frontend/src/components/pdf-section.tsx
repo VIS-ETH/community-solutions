@@ -3,6 +3,7 @@ import { PdfSection } from "../interfaces";
 import { SectionRenderer, Dimensions } from "../split-render";
 import { css } from "glamor";
 import Colors from "../colors";
+import { variable } from "./ThemeProvider";
 
 interface Props {
   section: PdfSection;
@@ -23,6 +24,7 @@ const styles = {
   }),
   canvas: css({
     display: "block",
+    filter: variable.pdfFilter.get,
   }),
   textLayer: css({
     position: "absolute",
