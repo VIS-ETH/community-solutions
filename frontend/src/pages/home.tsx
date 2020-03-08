@@ -15,6 +15,7 @@ import { listenEnter } from "../input-utils";
 import TextLink from "../components/text-link";
 import { Card, CardHeader, CardContent } from "../components/Card";
 import Grid from "../components/Grid";
+import Button from "../components/Button";
 
 const styles = {
   header: css({
@@ -267,13 +268,13 @@ export default class Home extends React.Component<Props, State> {
                 />
               </div>
               <div>
-                <button
+                <Button
                   {...styles.addCategorySubmit}
                   disabled={this.state.newCategoryName.length === 0}
                   onClick={this.addNewCategory}
                 >
                   Add Category
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -411,18 +412,19 @@ export default class Home extends React.Component<Props, State> {
             </div>
           </div>
           <div {...styles.buttonsWrapper}>
-            <div {...globalcss.noLinkColor}>
-              <Link to="/submittranscript">Submit transcript</Link>
-            </div>
+            <Link to="/submittranscript">
+              <Button>Submit transcript</Button>
+            </Link>
+
             {this.props.isCategoryAdmin && (
-              <div {...globalcss.noLinkColor}>
-                <Link to="/uploadpdf">Upload Exam</Link>
-              </div>
+              <Link to="/uploadpdf">
+                <Button>Upload Exam</Button>
+              </Link>
             )}
             {this.props.isCategoryAdmin && (
-              <div {...globalcss.noLinkColor}>
-                <Link to="/modqueue">Mod Queue</Link>
-              </div>
+              <Link to="/modqueue">
+                <Button>Mod Queue</Button>
+              </Link>
             )}
           </div>
         </div>
