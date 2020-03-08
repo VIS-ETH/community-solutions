@@ -4,6 +4,7 @@ import { css } from "glamor";
 import Colors from "../colors";
 import { fetchapi } from "../fetch-utils";
 import { Menu } from "react-feather";
+import { variable } from "./ThemeProvider";
 
 interface Props {
   username?: string;
@@ -17,10 +18,10 @@ interface State {
 
 const linkStyle = {
   ":link": {
-    color: Colors.headerForeground,
+    color: variable.textColor.get,
   },
   ":visited": {
-    color: Colors.headerForeground,
+    color: variable.textColor.get,
   },
 };
 const styles = {
@@ -29,7 +30,7 @@ const styles = {
     position: "relative",
     display: "flex",
     justifyContent: "space-between",
-    color: Colors.headerForeground,
+    color: variable.textColor.get,
     minHeight: "100px",
     overflow: "hidden",
     marginBottom: "10px",
@@ -68,7 +69,7 @@ const styles = {
     cursor: "pointer",
     backgroundColor: "transparent",
     border: "none",
-    color: "white",
+    color: variable.textColor.get,
     "&:hover": {
       backgroundColor: "transparent",
       border: "none",
