@@ -12,6 +12,7 @@ import MetaData from "../components/metadata";
 import Colors from "../colors";
 import PrintExam from "../components/print-exam";
 import globalcss from "../globalcss";
+import Button from "../components/button";
 
 const RERENDER_INTERVAL = 500;
 const MAX_WIDTH = 1200;
@@ -441,21 +442,21 @@ export default class Exam extends React.Component<Props, State> {
         <div {...styles.sectionsButtonSticky}>
           <div {...styles.sectionsButtons}>
             <div>
-              <button onClick={this.gotoPDF}>Download PDF</button>
+              <Button onClick={this.gotoPDF}>Download PDF</Button>
             </div>
             <div>
-              <button onClick={() => this.setAllHidden(this.state.allShown)}>
+              <Button onClick={() => this.setAllHidden(this.state.allShown)}>
                 {this.state.allShown ? "Hide" : "Show"} All
-              </button>
+              </Button>
             </div>
             <div>
-              <button onClick={this.reportProblem}>Report Problem</button>
+              <Button onClick={this.reportProblem}>Report Problem</Button>
             </div>
             {this.state.canEdit && [
               <div key="metadata">
-                <button onClick={this.toggleEditingMetadataActive}>
+                <Button onClick={this.toggleEditingMetadataActive}>
                   Edit MetaData
-                </button>
+                </Button>
               </div>,
               !(
                 this.state.savedMetaData.public &&
@@ -463,14 +464,14 @@ export default class Exam extends React.Component<Props, State> {
                 this.state.savedMetaData.finished_wiki_transfer
               ) && (
                 <div key="alldone">
-                  <button onClick={this.setAllDone}>Set All Done</button>
+                  <Button onClick={this.setAllDone}>Set All Done</Button>
                 </div>
               ),
               <div key="cuts">
-                <button onClick={this.toggleAddingSectionActive}>
+                <Button onClick={this.toggleAddingSectionActive}>
                   {(this.state.addingSectionsActive && "Disable Adding Cuts") ||
                     "Enable Adding Cuts"}
-                </button>
+                </Button>
               </div>,
             ]}
             <div {...styles.licenseText}>

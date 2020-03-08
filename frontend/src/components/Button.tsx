@@ -10,10 +10,20 @@ const secondaryButtonStyles = css({
   fontSize: "1.05rem",
   fontWeight: "500",
 });
-interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {}
-const Button: React.FC<Props> = ({ children, ...rest }) => {
+const blockButtonStyle = css({
+  display: "block",
+  width: "100%",
+});
+interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  block?: boolean;
+}
+const Button: React.FC<Props> = ({ children, block, ...rest }) => {
   return (
-    <button {...secondaryButtonStyles} {...rest}>
+    <button
+      {...secondaryButtonStyles}
+      {...(block ? blockButtonStyle : {})}
+      {...rest}
+    >
       {children}
     </button>
   );

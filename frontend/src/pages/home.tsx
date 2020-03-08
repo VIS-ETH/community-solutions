@@ -13,9 +13,9 @@ import { Link } from "react-router-dom";
 import globalcss from "../globalcss";
 import { listenEnter } from "../input-utils";
 import TextLink from "../components/text-link";
-import { Card, CardHeader, CardContent } from "../components/Card";
-import Grid from "../components/Grid";
-import Button from "../components/Button";
+import { Card, CardHeader, CardContent } from "../components/card";
+import Grid from "../components/grid";
+import Button from "../components/button";
 
 const styles = {
   header: css({

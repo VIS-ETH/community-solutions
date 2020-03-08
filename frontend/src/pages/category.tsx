@@ -22,6 +22,7 @@ import { listenEnter } from "../input-utils";
 import Attachments from "../components/attachments";
 import TextLink from "../components/text-link";
 import { KeysWhereValue } from "../ts-utils";
+import Button from "../components/button";
 
 const styles = {
   wrapper: css({
@@ -652,9 +653,9 @@ export default class Category extends React.Component<Props, State> {
           )}
           {this.props.isAdmin && (
             <div {...styles.metadata}>
-              <button onClick={this.toggleEditingMetadata}>
+              <Button onClick={this.toggleEditingMetadata}>
                 Edit Category
-              </button>
+              </Button>
             </div>
           )}
           {this.state.editingMetaData && (
@@ -712,8 +713,8 @@ export default class Category extends React.Component<Props, State> {
                 </label>
               </div>
               <div>
-                <button onClick={this.saveEdit}>Save</button>
-                <button onClick={this.cancelEdit}>Cancel</button>
+                <Button onClick={this.saveEdit}>Save</Button>
+                <Button onClick={this.cancelEdit}>Cancel</Button>
               </div>
               <div>
                 <h2>Attachments</h2>
@@ -730,7 +731,7 @@ export default class Category extends React.Component<Props, State> {
                     meta1.meta2.map(meta2 => (
                       <li key={meta1.displayname + meta2.displayname}>
                         {meta2.displayname} in {meta1.displayname}{" "}
-                        <button
+                        <Button
                           onClick={() =>
                             this.removeMetaCategory(
                               meta1.displayname,
@@ -739,7 +740,7 @@ export default class Category extends React.Component<Props, State> {
                           }
                         >
                           X
-                        </button>
+                        </Button>
                       </li>
                     )),
                   )}
@@ -770,7 +771,7 @@ export default class Category extends React.Component<Props, State> {
                       ),
                   )}
                 />
-                <button
+                <Button
                   onClick={this.addMetaCategory}
                   disabled={
                     this.state.newMeta1.length === 0 ||
@@ -778,7 +779,7 @@ export default class Category extends React.Component<Props, State> {
                   }
                 >
                   Add Offered In
-                </button>
+                </Button>
               </div>
               <div>
                 <h2>Admins</h2>
@@ -786,7 +787,7 @@ export default class Category extends React.Component<Props, State> {
                   {this.state.category.admins.map(admin => (
                     <li key={admin}>
                       {admin}{" "}
-                      <button onClick={() => this.removeAdmin(admin)}>X</button>
+                      <Button onClick={() => this.removeAdmin(admin)}>X</Button>
                     </li>
                   ))}
                 </ul>
@@ -799,12 +800,12 @@ export default class Category extends React.Component<Props, State> {
                   placeholder="new admin"
                   onKeyPress={listenEnter(this.addAdmin)}
                 />
-                <button
+                <Button
                   onClick={this.addAdmin}
                   disabled={this.state.newAdminName.length === 0}
                 >
                   Add Admin
-                </button>
+                </Button>
               </div>
               <div>
                 <h2>Experts</h2>
@@ -812,9 +813,9 @@ export default class Category extends React.Component<Props, State> {
                   {this.state.category.experts.map(expert => (
                     <li key={expert}>
                       {expert}{" "}
-                      <button onClick={() => this.removeExpert(expert)}>
+                      <Button onClick={() => this.removeExpert(expert)}>
                         X
-                      </button>
+                      </Button>
                     </li>
                   ))}
                 </ul>
@@ -827,28 +828,28 @@ export default class Category extends React.Component<Props, State> {
                   placeholder="new expert"
                   onKeyPress={listenEnter(this.addExpert)}
                 />
-                <button
+                <Button
                   onClick={this.addExpert}
                   disabled={this.state.newExpertName.length === 0}
                 >
                   Add Expert
-                </button>
+                </Button>
               </div>
               <div>
                 <h2>Remove Category</h2>
-                <button onClick={this.removeCategory}>Remove Category</button>
+                <Button onClick={this.removeCategory}>Remove Category</Button>
               </div>
             </div>
           )}
         </div>
 
         <div>
-          <button
+          <Button
             onClick={this.dlSelectedExams}
             disabled={this.state.selectedExams.size === 0}
           >
             Download selected exams
-          </button>
+          </Button>
         </div>
 
         <div {...styles.filterInput}>
@@ -991,22 +992,22 @@ export default class Category extends React.Component<Props, State> {
                             !exam.finished_wiki_transfer ? (
                               this.hasValidClaim(exam) ? (
                                 exam.import_claim === this.props.username ? (
-                                  <button
+                                  <Button
                                     onClick={() => this.claimExam(exam, false)}
                                   >
                                     Release Claim
-                                  </button>
+                                  </Button>
                                 ) : (
                                   <span>
                                     Claimed by {exam.import_claim_displayname}
                                   </span>
                                 )
                               ) : (
-                                <button
+                                <Button
                                   onClick={() => this.claimExam(exam, true)}
                                 >
                                   Claim Exam
-                                </button>
+                                </Button>
                               )
                             ) : (
                               <span>-</span>
@@ -1015,9 +1016,9 @@ export default class Category extends React.Component<Props, State> {
                         )}
                         {this.props.isAdmin && (
                           <td>
-                            <button onClick={ev => this.removeExam(exam)}>
+                            <Button onClick={ev => this.removeExam(exam)}>
                               X
-                            </button>
+                            </Button>
                           </td>
                         )}
                       </tr>

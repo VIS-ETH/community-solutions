@@ -30,10 +30,8 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     color: Colors.headerForeground,
-    background: Colors.headerBackground,
     minHeight: "100px",
     overflow: "hidden",
-    boxShadow: Colors.headerShadow,
     marginBottom: "10px",
     "@media (max-width: 799px)": {
       display: "block",
