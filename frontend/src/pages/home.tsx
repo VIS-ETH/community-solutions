@@ -13,6 +13,8 @@ import { Link } from "react-router-dom";
 import globalcss from "../globalcss";
 import { listenEnter } from "../input-utils";
 import TextLink from "../components/text-link";
+import { Card, CardHeader, CardContent } from "../components/Card";
+import Grid from "../components/Grid";
 
 const styles = {
   header: css({
@@ -247,75 +249,73 @@ export default class Home extends React.Component<Props, State> {
 
   addCategoryView = () => {
     return (
-      <div {...styles.category}>
-        <div {...styles.categoryTitle} onClick={this.toggleAddingCategory}>
-          Add Category
-        </div>
-        {this.state.addingCategory && (
-          <div>
+      <Card>
+        <CardHeader>Add Category</CardHeader>
+        <CardContent>
+          {this.state.addingCategory && (
             <div>
-              <input
-                {...styles.addCategoryInput}
-                value={this.state.newCategoryName}
-                onChange={ev =>
-                  this.setState({ newCategoryName: ev.target.value })
-                }
-                type="text"
-                autoFocus={true}
-                onKeyPress={listenEnter(this.addNewCategory)}
-              />
+              <div>
+                <input
+                  {...styles.addCategoryInput}
+                  value={this.state.newCategoryName}
+                  onChange={ev =>
+                    this.setState({ newCategoryName: ev.target.value })
+                  }
+                  type="text"
+                  autoFocus={true}
+                  onKeyPress={listenEnter(this.addNewCategory)}
+                />
+              </div>
+              <div>
+                <button
+                  {...styles.addCategorySubmit}
+                  disabled={this.state.newCategoryName.length === 0}
+                  onClick={this.addNewCategory}
+                >
+                  Add Category
+                </button>
+              </div>
             </div>
-            <div>
-              <button
-                {...styles.addCategorySubmit}
-                disabled={this.state.newCategoryName.length === 0}
-                onClick={this.addNewCategory}
-              >
-                Add Category
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </CardContent>
+      </Card>
     );
   };
 
   categoryView = (category: CategoryMetaData) => {
     return (
-      <div
-        key={category.category}
-        {...styles.category}
-        onClick={() => this.gotoCategory(category)}
-      >
-        <div {...styles.categoryTitle} {...globalcss.noLinkColor}>
-          <Link to={"/category/" + category.slug}>{category.category}</Link>
-        </div>
-        <div
-          {...styles.categoryInfo}
-          title={`There are ${category.examcountpublic} exams, of which ${category.examcountanswered} have at least one answer.`}
-        >
-          Exams: {category.examcountanswered} / {category.examcountpublic}
-        </div>
-        <div
-          {...styles.categoryInfo}
-          title={`Of all questions in all ${
-            category.examcountpublic
-          } exams, ${Math.round(
-            category.answerprogress * 100,
-          )}% have an answer.`}
-        >
-          Answers: {Math.round(category.answerprogress * 100)}%
-        </div>
-      </div>
+      <Link to={"/category/" + category.slug}>
+        <Card>
+          <CardHeader>{category.category}</CardHeader>
+          <CardContent>
+            <div
+              {...styles.categoryInfo}
+              title={`There are ${category.examcountpublic} exams, of which ${category.examcountanswered} have at least one answer.`}
+            >
+              Exams: {category.examcountanswered} / {category.examcountpublic}
+            </div>
+            <div
+              {...styles.categoryInfo}
+              title={`Of all questions in all ${
+                category.examcountpublic
+              } exams, ${Math.round(
+                category.answerprogress * 100,
+              )}% have an answer.`}
+            >
+              Answers: {Math.round(category.answerprogress * 100)}%
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
     );
   };
 
   alphabeticalView = (categories: CategoryMetaData[]) => {
     return (
-      <div {...styles.categoriesWrapper}>
+      <Grid>
         {categories.map(category => this.categoryView(category))}
         {this.props.isAdmin && this.addCategoryView()}
-      </div>
+      </Grid>
     );
   };
 
@@ -336,11 +336,11 @@ export default class Home extends React.Component<Props, State> {
                     {meta2.displayname}
                   </TextLink>
                 </h3>
-                <div {...styles.categoriesWrapper}>
+                <Grid>
                   {meta2.categories.map(category =>
                     this.categoryView(category),
                   )}
-                </div>
+                </Grid>
               </div>
             ))}
           </div>
@@ -348,7 +348,7 @@ export default class Home extends React.Component<Props, State> {
         {this.props.isAdmin && (
           <div>
             <h2>New Category</h2>
-            <div {...styles.categoriesWrapper}>{this.addCategoryView()}</div>
+            <Grid>{this.addCategoryView()}</Grid>
           </div>
         )}
       </div>

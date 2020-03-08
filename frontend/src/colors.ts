@@ -3,7 +3,7 @@ export default class Colors {
   static readonly headerBackground = "#394b59";
   static readonly headerShadow = "0 2px 4px 0 grey";
 
-  static readonly pageBackground = "#f3f3f3";
+  static readonly pageBackground = "white";
 
   static readonly link = "#4b41ff";
   static readonly linkVisited = "#4b41ff";

@@ -17,6 +17,7 @@ import colors from "./colors";
 import globalcss from "./globalcss";
 import LoginForm from "./components/loginform";
 import HashLocationHandler from "./components/hash-location-handler";
+import { ThemeProvider } from "./components/ThemeProvider";
 
 css.global("body", {
   fontFamily:
@@ -142,87 +143,91 @@ export default class App extends React.Component<{}, State> {
 
   render() {
     return (
-      <div>
-        <Route component={HashLocationHandler} />
-        <Header
-          username={this.state.username}
-          displayName={this.state.displayname || "loading..."}
-        />
-        <div {...styles.inner}>
-          {!this.state.loadedSessionData && "loading..."}
-          {this.state.loadedSessionData && !this.state.loggedin && (
-            <LoginForm userinfoChanged={this.loadMe} />
-          )}
-          {this.state.loggedin && (
-            <Switch>
-              <Route
-                path="/exams/:filename"
-                render={props => (
-                  <Exam
-                    {...props}
-                    isAdmin={this.state.isAdmin}
-                    filename={props.match.params.filename}
-                  />
-                )}
-              />
-              <Route
-                path="/user/:username"
-                render={props => (
-                  <UserInfoComponent
-                    {...props}
-                    isMyself={
-                      this.state.username === props.match.params.username
-                    }
-                    isAdmin={this.state.isAdmin}
-                    username={props.match.params.username}
-                    userinfoChanged={this.loadMe}
-                  />
-                )}
-              />
-              <Route
-                path="/category/:category"
-                render={props => (
-                  <Category
-                    categorySlug={props.match.params.category}
-                    username={this.state.username}
-                    isAdmin={this.state.isAdmin}
-                  />
-                )}
-              />
-              <Route path="/uploadpdf" component={UploadPDF} />
-              <Route path="/submittranscript" component={SubmitTranscript} />
-              <Route
-                path="/scoreboard"
-                render={props => <Scoreboard username={this.state.username} />}
-              />
-              <Route
-                path="/modqueue"
-                render={props => (
-                  <ModQueue
-                    isAdmin={this.state.isAdmin}
-                    username={this.state.username}
-                  />
-                )}
-              />
-              <Route
-                path="/feedback"
-                render={props => (
-                  <Feedback {...props} isAdmin={this.state.isAdmin} />
-                )}
-              />
-              <Route
-                render={props => (
-                  <Home
-                    {...props}
-                    isAdmin={this.state.isAdmin}
-                    isCategoryAdmin={this.state.isCategoryAdmin}
-                  />
-                )}
-              />
-            </Switch>
-          )}
+      <ThemeProvider>
+        <div>
+          <Route component={HashLocationHandler} />
+          <Header
+            username={this.state.username}
+            displayName={this.state.displayname || "loading..."}
+          />
+          <div {...styles.inner}>
+            {!this.state.loadedSessionData && "loading..."}
+            {this.state.loadedSessionData && !this.state.loggedin && (
+              <LoginForm userinfoChanged={this.loadMe} />
+            )}
+            {this.state.loggedin && (
+              <Switch>
+                <Route
+                  path="/exams/:filename"
+                  render={props => (
+                    <Exam
+                      {...props}
+                      isAdmin={this.state.isAdmin}
+                      filename={props.match.params.filename}
+                    />
+                  )}
+                />
+                <Route
+                  path="/user/:username"
+                  render={props => (
+                    <UserInfoComponent
+                      {...props}
+                      isMyself={
+                        this.state.username === props.match.params.username
+                      }
+                      isAdmin={this.state.isAdmin}
+                      username={props.match.params.username}
+                      userinfoChanged={this.loadMe}
+                    />
+                  )}
+                />
+                <Route
+                  path="/category/:category"
+                  render={props => (
+                    <Category
+                      categorySlug={props.match.params.category}
+                      username={this.state.username}
+                      isAdmin={this.state.isAdmin}
+                    />
+                  )}
+                />
+                <Route path="/uploadpdf" component={UploadPDF} />
+                <Route path="/submittranscript" component={SubmitTranscript} />
+                <Route
+                  path="/scoreboard"
+                  render={props => (
+                    <Scoreboard username={this.state.username} />
+                  )}
+                />
+                <Route
+                  path="/modqueue"
+                  render={props => (
+                    <ModQueue
+                      isAdmin={this.state.isAdmin}
+                      username={this.state.username}
+                    />
+                  )}
+                />
+                <Route
+                  path="/feedback"
+                  render={props => (
+                    <Feedback {...props} isAdmin={this.state.isAdmin} />
+                  )}
+                />
+                <Route
+                  render={props => (
+                    <Home
+                      {...props}
+                      isAdmin={this.state.isAdmin}
+                      isCategoryAdmin={this.state.isCategoryAdmin}
+                    />
+                  )}
+                />
+              </Switch>
+            )}
+          </div>
         </div>
-      </div>
+      </ThemeProvider>
     );
   }
 }
