@@ -15,13 +15,27 @@ interface State {
   notificationCount: number;
   menuVisibleOnMobile: boolean;
 }
-
-const linkStyle = {
+const titleLinkStyle = {
+  borderBottom: "2px solid rgba(214, 218, 209, 0)",
+  color: "#d6dad1",
+  fontWeight: "400",
   ":link": {
-    color: variable.textColor.get,
+    color: "#d6dad1",
   },
   ":visited": {
-    color: variable.textColor.get,
+    color: "#d6dad1",
+  },
+};
+const linkStyle = {
+  borderBottom: "2px solid rgba(214, 218, 209, 0)",
+  color: "#d6dad1",
+  textTransform: "uppercase",
+  fontWeight: "500",
+  ":link": {
+    color: "#d6dad1",
+  },
+  ":visited": {
+    color: "#d6dad1",
   },
 };
 const styles = {
@@ -30,10 +44,11 @@ const styles = {
     position: "relative",
     display: "flex",
     justifyContent: "space-between",
-    color: variable.textColor.get,
+    color: "white",
     minHeight: "100px",
     overflow: "hidden",
     marginBottom: "10px",
+    backgroundColor: "#1c1f21",
     "@media (max-width: 799px)": {
       display: "block",
     },
@@ -56,9 +71,9 @@ const styles = {
   title: css({
     flexGrow: "1",
     marginLeft: "30px",
-    fontSize: "32px",
+    fontSize: "1.35rem",
     fontWeight: "bold",
-    "& a": linkStyle,
+    "& a": titleLinkStyle,
     "@media (max-width: 799px)": {
       fontSize: "20px",
     },
@@ -69,7 +84,7 @@ const styles = {
     cursor: "pointer",
     backgroundColor: "transparent",
     border: "none",
-    color: variable.textColor.get,
+    color: "white",
     "&:hover": {
       backgroundColor: "transparent",
       border: "none",
@@ -98,7 +113,7 @@ const styles = {
   menuitem: css({
     display: "block",
     marginRight: "40px",
-    fontSize: "24px",
+    fontSize: "1.05rem",
     "& a": linkStyle,
     "@media (max-width: 799px)": {
       fontSize: "20px",
