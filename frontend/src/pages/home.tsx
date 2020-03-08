@@ -16,6 +16,7 @@ import TextLink from "../components/text-link";
 import { Card, CardHeader, CardContent } from "../components/card";
 import Grid from "../components/grid";
 import Button from "../components/button";
+import TextInput from "../components/text-input";
 
 const styles = {
   header: css({
@@ -401,7 +402,7 @@ export default class Home extends React.Component<Props, State> {
               </span>
             </div>
             <div {...styles.filterInput}>
-              <input
+              <TextInput
                 type="text"
                 onChange={this.filterChanged}
                 value={this.state.filter}

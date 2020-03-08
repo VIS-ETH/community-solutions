@@ -4,6 +4,7 @@ import { loadAnswerSection } from "../exam-loader";
 import { fetchpost } from "../fetch-utils";
 import { css } from "glamor";
 import AnswerComponent from "./answer";
+import Button from "./button";
 
 interface Props {
   isAdmin: boolean;
@@ -137,7 +138,7 @@ export default class AnswerSectionComponent extends React.Component<
           <div key="showhidebutton" {...styles.threebuttons}>
             <div />
             <div>
-              <button onClick={this.props.onToggleHidden}>Show Answers</button>
+              <Button onClick={this.props.onToggleHidden}>Show Answers</Button>
             </div>
             <div />
           </div>
@@ -167,7 +168,7 @@ export default class AnswerSectionComponent extends React.Component<
           <div {...styles.leftButton}>
             {(section.allow_new_answer || section.allow_new_legacy_answer) && (
               <div>
-                <button
+                <Button
                   className="primary"
                   title={
                     section.allow_new_answer && section.allow_new_legacy_answer
@@ -184,20 +185,20 @@ export default class AnswerSectionComponent extends React.Component<
                   {section.allow_new_answer
                     ? "Add Answer"
                     : "Add Legacy Answer"}
-                </button>
+                </Button>
               </div>
             )}
           </div>
           <div>
             {section.answers.length > 0 && (
-              <button onClick={this.props.onToggleHidden}>Hide Answers</button>
+              <Button onClick={this.props.onToggleHidden}>Hide Answers</Button>
             )}
           </div>
           <div {...styles.rightButton}>
             {this.props.canDelete && (
-              <button onClick={this.removeSection}>
+              <Button onClick={this.removeSection}>
                 Remove Answer Section
-              </button>
+              </Button>
             )}
           </div>
         </div>

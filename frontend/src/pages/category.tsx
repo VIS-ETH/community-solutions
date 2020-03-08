@@ -23,6 +23,14 @@ import Attachments from "../components/attachments";
 import TextLink from "../components/text-link";
 import { KeysWhereValue } from "../ts-utils";
 import Button from "../components/button";
+import {
+  TableHeader,
+  Table,
+  TableRow,
+  TableBody,
+  TableHeaderCell,
+  TableCell,
+} from "../components/table";
 
 const styles = {
   wrapper: css({
@@ -876,50 +884,50 @@ export default class Category extends React.Component<Props, State> {
                   {examType}
                 </TextLink>
               </h2>
-              <table {...styles.examsTable}>
-                <thead>
-                  <tr>
-                    <th {...styles.selectionColumn}>
-                      <div {...styles.selectionButtons}>
-                        <div
-                          {...styles.selectionButton}
-                          onClick={ev => this.selectAllExams(examType)}
-                        >
-                          <img
-                            {...styles.selectionImg}
-                            src="/static/select_all.svg"
-                            title="Select All"
-                            alt="Select All"
-                          />
-                        </div>
-                        <div
-                          {...styles.selectionButton}
-                          onClick={ev => this.unselectAllExams(examType)}
-                        >
-                          <img
-                            {...styles.selectionImg}
-                            src="/static/deselect_all.svg"
-                            title="Deselect All"
-                            alt="Deselect All"
-                          />
-                        </div>
+              <Table>
+                <TableHeader>
+                  <TableHeaderCell {...styles.selectionColumn}>
+                    <div {...styles.selectionButtons}>
+                      <div
+                        {...styles.selectionButton}
+                        onClick={ev => this.selectAllExams(examType)}
+                      >
+                        <img
+                          {...styles.selectionImg}
+                          src="/static/select_all.svg"
+                          title="Select All"
+                          alt="Select All"
+                        />
                       </div>
-                    </th>
-                    <th>Name</th>
-                    <th>Remark</th>
-                    <th>Answers</th>
-                    {catAdmin && <th>Public</th>}
-                    {catAdmin && <th>Import State</th>}
-                    {catAdmin && <th>Claim</th>}
-                    {this.props.isAdmin && <th>Remove</th>}
-                  </tr>
-                </thead>
-                <tbody>
+                      <div
+                        {...styles.selectionButton}
+                        onClick={ev => this.unselectAllExams(examType)}
+                      >
+                        <img
+                          {...styles.selectionImg}
+                          src="/static/deselect_all.svg"
+                          title="Deselect All"
+                          alt="Deselect All"
+                        />
+                      </div>
+                    </div>
+                  </TableHeaderCell>
+                  <TableHeaderCell>Name</TableHeaderCell>
+                  <TableHeaderCell>Remark</TableHeaderCell>
+                  <TableHeaderCell>Answers</TableHeaderCell>
+                  {catAdmin && <TableHeaderCell>Public</TableHeaderCell>}
+                  {catAdmin && <TableHeaderCell>Import State</TableHeaderCell>}
+                  {catAdmin && <TableHeaderCell>Claim</TableHeaderCell>}
+                  {this.props.isAdmin && (
+                    <TableHeaderCell>Remove</TableHeaderCell>
+                  )}
+                </TableHeader>
+                <TableBody>
                   {viewableExams
                     .filter(exam => (exam.examtype || "Exams") === examType)
                     .map(exam => (
-                      <tr key={exam.filename}>
-                        <td {...styles.selectionColumn}>
+                      <TableRow key={exam.filename}>
+                        <TableCell {...styles.selectionColumn}>
                           <input
                             type="checkbox"
                             checked={this.state.selectedExams.has(
@@ -933,8 +941,8 @@ export default class Category extends React.Component<Props, State> {
                             }
                             disabled={!exam.canView}
                           />
-                        </td>
-                        <td>
+                        </TableCell>
+                        <TableCell>
                           {(exam.canView && (
                             <Link to={"/exams/" + exam.filename}>
                               {exam.displayname}
@@ -944,8 +952,8 @@ export default class Category extends React.Component<Props, State> {
                               {exam.displayname}
                             </span>
                           )}
-                        </td>
-                        <td>
+                        </TableCell>
+                        <TableCell>
                           {exam.remark}
                           {exam.has_printonly ? (
                             <span title="This exam can only be printed. We can not provide this exam online.">
@@ -955,8 +963,8 @@ export default class Category extends React.Component<Props, State> {
                           ) : (
                             undefined
                           )}
-                        </td>
-                        <td>
+                        </TableCell>
+                        <TableCell>
                           <span
                             title={`There are ${exam.count_cuts} questions, of which ${exam.count_answered} have at least one solution.`}
                           >
@@ -970,24 +978,24 @@ export default class Category extends React.Component<Props, State> {
                           ) : (
                             undefined
                           )}
-                        </td>
+                        </TableCell>
                         {catAdmin && (
-                          <td>
+                          <TableCell>
                             {exam.public ? "Public" : "Hidden"}
                             {exam.needs_payment ? " (oral)" : ""}
-                          </td>
+                          </TableCell>
                         )}
                         {catAdmin && (
-                          <td>
+                          <TableCell>
                             {exam.finished_cuts
                               ? exam.finished_wiki_transfer
                                 ? "All done"
                                 : "Needs Wiki Import"
                               : "Needs Cuts"}
-                          </td>
+                          </TableCell>
                         )}
                         {catAdmin && (
-                          <td>
+                          <TableCell>
                             {!exam.finished_cuts ||
                             !exam.finished_wiki_transfer ? (
                               this.hasValidClaim(exam) ? (
@@ -1012,7 +1020,7 @@ export default class Category extends React.Component<Props, State> {
                             ) : (
                               <span>-</span>
                             )}
-                          </td>
+                          </TableCell>
                         )}
                         {this.props.isAdmin && (
                           <td>
@@ -1021,10 +1029,10 @@ export default class Category extends React.Component<Props, State> {
                             </Button>
                           </td>
                         )}
-                      </tr>
+                      </TableRow>
                     ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           ))}
         {attachments.length > 0 && (

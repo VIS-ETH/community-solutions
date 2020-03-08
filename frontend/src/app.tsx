@@ -71,27 +71,6 @@ css.global(".primary", {
 css.global(".primary:hover", {
   background: Colors.buttonPrimaryHover,
 });
-css.global("table", {
-  borderCollapse: "collapse",
-  boxShadow: Colors.tableShadow,
-  textAlign: "left",
-});
-css.global("table td, table th", {
-  border: "none",
-  padding: "8px",
-});
-css.global("table th", {
-  background: Colors.tableHeader,
-});
-css.global("thead tr", {
-  borderBottom: "1px solid " + Colors.tableHeaderBorder,
-});
-css.global("table tr:nth-child(even)", {
-  background: Colors.tableEven,
-});
-css.global("table tr:nth-child(odd)", {
-  background: Colors.tableOdd,
-});
 
 const styles = {
   inner: css({

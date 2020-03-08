@@ -4,6 +4,7 @@ const secondaryButtonStyles = css({
   boxShadow: "0 0.125rem 0.376rem rgba(0, 0, 0, 0.2)",
   backgroundColor: "#cbcbbb",
   borderColor: "#c0c0ac",
+  borderWidth: "2px",
   color: "#212529",
   lineHeight: 1.5,
   padding: "0.375rem 0.75rem",
