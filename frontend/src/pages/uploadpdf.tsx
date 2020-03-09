@@ -4,6 +4,10 @@ import { css } from "glamor";
 import { fetchapi, fetchpost } from "../fetch-utils";
 import AutocompleteInput from "../components/autocomplete-input";
 import Colors from "../colors";
+import { Card, CardHeader, CardContent } from "../components/card";
+import Container from "../components/container";
+import Button from "../components/button";
+import TextInput from "../components/text-input";
 
 interface State {
   file: Blob;
@@ -97,40 +101,44 @@ export default class UploadPDF extends React.Component<{}, State> {
       );
     } else {
       return (
-        <div {...styles.wrapper}>
-          <h2>Upload PDF</h2>
-          {this.state.error && <p>{this.state.error}</p>}
-          <form onSubmit={this.handleUpload}>
-            <div>
-              <input
-                onChange={this.handleFileChange}
-                type="file"
-                accept="application/pdf"
-              />
-            </div>
-            <div>
-              <input
-                onChange={this.handleDisplayNameChange}
-                value={this.state.displayName}
-                type="text"
-                placeholder="displayname..."
-                required
-              />
-            </div>
-            <div>
-              <AutocompleteInput
-                name="category"
-                onChange={this.handleCategoryChange}
-                value={this.state.category}
-                placeholder="category..."
-                autocomplete={this.state.categories}
-              />
-            </div>
-            <div>
-              <button type="submit">Upload</button>
-            </div>
-          </form>
-        </div>
+        <Container maxWidth={"300px"}>
+          <Card>
+            <CardHeader>Upload PDF</CardHeader>
+            <CardContent>
+              {this.state.error && <p>{this.state.error}</p>}
+              <form onSubmit={this.handleUpload}>
+                <div>
+                  <input
+                    onChange={this.handleFileChange}
+                    type="file"
+                    accept="application/pdf"
+                  />
+                </div>
+                <div>
+                  <TextInput
+                    onChange={this.handleDisplayNameChange}
+                    value={this.state.displayName}
+                    type="text"
+                    placeholder="displayname..."
+                    required
+                  />
+                </div>
+                <div>
+                  <AutocompleteInput
+                    name="category"
+                    onChange={this.handleCategoryChange}
+                    value={this.state.category}
+                    placeholder="category..."
+                    autocomplete={this.state.categories}
+                  />
+                </div>
+                <div>
+                  <Button type="submit">Upload</Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </Container>
       );
     }
   }

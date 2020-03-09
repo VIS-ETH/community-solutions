@@ -6,6 +6,10 @@ import { Link } from "react-router-dom";
 import colors from "../colors";
 import GlobalConsts from "../globalconsts";
 import moment from "moment";
+import Container from "../components/container";
+import { Card, CardContent } from "../components/card";
+import PaddingWrapper from "../components/padding-wrapper";
+import Button from "../components/button";
 
 const styles = {
   wrapper: css({
@@ -141,7 +145,7 @@ export default class ModQueue extends React.Component<Props, State> {
       return <div>Loading...</div>;
     }
     return (
-      <div {...styles.wrapper}>
+      <Container>
         {this.state.flaggedAnswers.length > 0 && (
           <div>
             <h1>Flagged Answers</h1>
@@ -187,66 +191,72 @@ export default class ModQueue extends React.Component<Props, State> {
         )}
         <h1>Import Queue</h1>
         {this.state.error && <div>{this.state.error}</div>}
-        <table {...styles.queueTable}>
-          <thead>
-            <tr>
-              <th>Category</th>
-              <th>Name</th>
-              <th>Remark</th>
-              <th>Public</th>
-              <th>Import State</th>
-              <th>Claim</th>
-            </tr>
-          </thead>
-          <tbody>
-            {this.state.exams.map(exam => (
-              <tr key={exam.filename}>
-                <td>{exam.category}</td>
-                <td>
-                  <Link to={"/exams/" + exam.filename} target="_blank">
-                    {exam.displayname}
-                  </Link>
-                </td>
-                <td>{exam.remark}</td>
-                <td>{exam.public ? "Public" : "Hidden"}</td>
-                <td>
-                  {exam.finished_cuts
-                    ? exam.finished_wiki_transfer
-                      ? "All done"
-                      : "Needs Wiki Import"
-                    : "Needs Cuts"}
-                </td>
-                <td>
-                  {!exam.finished_cuts || !exam.finished_wiki_transfer ? (
-                    this.hasValidClaim(exam) ? (
-                      exam.import_claim === this.props.username ? (
-                        <button onClick={() => this.claimExam(exam, false)}>
-                          Release Claim
-                        </button>
+        <Card>
+          <CardContent>
+            <table {...styles.queueTable}>
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Name</th>
+                  <th>Remark</th>
+                  <th>Public</th>
+                  <th>Import State</th>
+                  <th>Claim</th>
+                </tr>
+              </thead>
+              <tbody>
+                {this.state.exams.map(exam => (
+                  <tr key={exam.filename}>
+                    <td>{exam.category}</td>
+                    <td>
+                      <Link to={"/exams/" + exam.filename} target="_blank">
+                        {exam.displayname}
+                      </Link>
+                    </td>
+                    <td>{exam.remark}</td>
+                    <td>{exam.public ? "Public" : "Hidden"}</td>
+                    <td>
+                      {exam.finished_cuts
+                        ? exam.finished_wiki_transfer
+                          ? "All done"
+                          : "Needs Wiki Import"
+                        : "Needs Cuts"}
+                    </td>
+                    <td>
+                      {!exam.finished_cuts || !exam.finished_wiki_transfer ? (
+                        this.hasValidClaim(exam) ? (
+                          exam.import_claim === this.props.username ? (
+                            <Button onClick={() => this.claimExam(exam, false)}>
+                              Release Claim
+                            </Button>
+                          ) : (
+                            <span>
+                              Claimed by {exam.import_claim_displayname}
+                            </span>
+                          )
+                        ) : (
+                          <Button onClick={() => this.claimExam(exam, true)}>
+                            Claim Exam
+                          </Button>
+                        )
                       ) : (
-                        <span>Claimed by {exam.import_claim_displayname}</span>
-                      )
-                    ) : (
-                      <button onClick={() => this.claimExam(exam, true)}>
-                        Claim Exam
-                      </button>
-                    )
-                  ) : (
-                    <span>-</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div>
-          <button
+                        <span>-</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+        <PaddingWrapper>
+          <Button
             onClick={() => this.setIncludeHidden(!this.state.includeHidden)}
           >
             {this.state.includeHidden ? "Hide" : "Show"} Complete Hidden Exams
-          </button>
-        </div>
-      </div>
+          </Button>
+        </PaddingWrapper>
+      </Container>
     );
   }
 }

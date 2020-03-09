@@ -17,6 +17,7 @@ import { Card, CardHeader, CardContent } from "../components/card";
 import Grid from "../components/grid";
 import Button from "../components/button";
 import TextInput from "../components/text-input";
+import Container from "../components/container";
 
 const styles = {
   header: css({
@@ -379,7 +380,7 @@ export default class Home extends React.Component<Props, State> {
       this.state.metaCategories,
     );
     return (
-      <div>
+      <Container>
         <div {...styles.header}>
           <div {...styles.filterWrapper}>
             <div {...styles.sortWrapper}>
@@ -432,7 +433,7 @@ export default class Home extends React.Component<Props, State> {
         {this.state.bySemesterView
           ? this.semesterView(categoriesBySemester)
           : this.alphabeticalView(categoriesFiltered)}
-      </div>
+      </Container>
     );
   }
 }

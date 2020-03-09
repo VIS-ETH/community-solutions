@@ -1,6 +1,9 @@
 import * as React from "react";
 import { css } from "glamor";
 import { fetchpost } from "../fetch-utils";
+import Container from "./container";
+import Button from "./button";
+import TextInput from "./text-input";
 
 interface Props {
   userinfoChanged: () => void;
@@ -57,11 +60,11 @@ export default class LoginForm extends React.Component<Props> {
 
   render() {
     return (
-      <div {...styles.wrapper}>
+      <Container maxWidth="400px">
         {this.state.error && <div>{this.state.error}</div>}
         <form {...styles.form}>
           <div>
-            <input
+            <TextInput
               onChange={ev => this.setState({ username: ev.target.value })}
               value={this.state.username}
               type="text"
@@ -71,7 +74,7 @@ export default class LoginForm extends React.Component<Props> {
             />
           </div>
           <div>
-            <input
+            <TextInput
               onChange={ev => this.setState({ password: ev.target.value })}
               value={this.state.password}
               type="password"
@@ -80,9 +83,9 @@ export default class LoginForm extends React.Component<Props> {
             />
           </div>
           <div>
-            <button type="submit" onClick={this.loginUser}>
+            <Button type="submit" onClick={this.loginUser}>
               Login
-            </button>
+            </Button>
           </div>
         </form>
         {window.location.hostname === "localhost" && (
@@ -95,7 +98,7 @@ export default class LoginForm extends React.Component<Props> {
             <p>morica : admin666</p>
           </div>
         )}
-      </div>
+      </Container>
     );
   }
 }
