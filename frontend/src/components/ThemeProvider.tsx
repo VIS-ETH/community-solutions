@@ -15,6 +15,8 @@ export const variable = {
   pdfFilter: v("--pdf-filter"),
   inputBg: v("--input-bg"),
   inputBorder: v("--input-border-color"),
+  buttonBg: v("--button-bg"),
+  buttonBgHover: v("--button-bg-hover"),
 };
 
 const getStyle = (light: boolean) => ({
@@ -24,6 +26,8 @@ const getStyle = (light: boolean) => ({
   [variable.pdfFilter.name]: light ? "" : "invert(0.9)",
   [variable.inputBg.name]: light ? "#ffffff" : "rgba(28, 31, 33, 0.85)",
   [variable.inputBorder.name]: light ? "#cdd2d5" : "#3f464a",
+  [variable.buttonBg.name]: "#cbcbbb",
+  [variable.buttonBgHover.name]: "#c0c0ac",
 
   color: variable.textColor.get,
   backgroundColor: variable.pageBg.get,
