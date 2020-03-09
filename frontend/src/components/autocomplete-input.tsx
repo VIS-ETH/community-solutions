@@ -1,4 +1,5 @@
 import * as React from "react";
+import TextInput from "./text-input";
 
 interface Props {
   name: string;
@@ -14,7 +15,7 @@ export default class AutocompleteInput extends React.Component<Props> {
   render() {
     return (
       <React.Fragment>
-        <input
+        <TextInput
           type="text"
           list={this.props.name + "_list"}
           name={this.props.name}
