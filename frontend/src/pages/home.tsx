@@ -286,7 +286,7 @@ export default class Home extends React.Component<Props, State> {
 
   categoryView = (category: CategoryMetaData) => {
     return (
-      <Link to={"/category/" + category.slug}>
+      <Link to={"/category/" + category.slug} key={category.slug}>
         <Card>
           <CardHeader>{category.category}</CardHeader>
           <CardContent>

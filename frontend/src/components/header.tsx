@@ -5,6 +5,7 @@ import Colors from "../colors";
 import { fetchapi } from "../fetch-utils";
 import { Menu } from "react-feather";
 import { variable } from "./ThemeProvider";
+import ThemeSwitch from "./theme-switch";
 
 interface Props {
   username?: string;
@@ -191,6 +192,9 @@ export default class Header extends React.Component<Props, State> {
             ? styles.activeMenuWrapper
             : styles.inactiveMenuWrapper)}
         >
+          <div {...styles.menuitem}>
+            <ThemeSwitch />
+          </div>
           <div {...styles.menuitem}>
             <Link to="/feedback" onClick={this.linkClicked}>
               Feedback

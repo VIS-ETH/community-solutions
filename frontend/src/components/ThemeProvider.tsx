@@ -31,31 +31,39 @@ const getStyle = (light: boolean) => ({
 
   color: variable.textColor.get,
   backgroundColor: variable.pageBg.get,
+
+  transition: "background-color 0.2s",
+  "& *": {
+    transition: "background-color 0.2s",
+  },
 });
 
 const lightTheme = css(getStyle(true));
 const darkTheme = css(getStyle(false));
 
-const ThemeContext = React.createContext([
-  "light" as Theme,
-  ((_newTheme: Theme) => undefined) as (newTheme: Theme) => void,
-]);
+export const ThemeContext = React.createContext([
+  "light",
+  (_newTheme: Theme) => undefined,
+] as [Theme, (newTheme: Theme) => void]);
 interface Props {}
 export const ThemeProvider: React.FC<Props> = ({ children }) => {
   const prefersDarkMode = usePrefersDarkMode();
-  const [theme, setTheme] = useState<Theme>(prefersDarkMode ? "dark" : "light");
+  const [theme, setTheme] = useState<Theme | undefined>(undefined);
   useEffect(() => {
     setTheme(prefersDarkMode ? "dark" : "light");
   }, [prefersDarkMode]);
 
   useEffect(() => {
+    document.body.style.transition = "background-color 0.2s";
     document.body.style.backgroundColor = getStyle(theme === "light")[
       variable.pageBg.name
-    ];
+    ] as string;
   }, [theme]);
   return (
     <div {...(theme === "light" ? lightTheme : darkTheme)}>
-      <ThemeContext.Provider value={[theme, setTheme]}>
+      <ThemeContext.Provider
+        value={[theme || (prefersDarkMode ? "light" : "dark"), setTheme]}
+      >
         {children}
       </ThemeContext.Provider>
     </div>
