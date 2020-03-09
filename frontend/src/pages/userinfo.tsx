@@ -9,7 +9,8 @@ import GlobalConsts from "../globalconsts";
 import { Link } from "react-router-dom";
 import Colors from "../colors";
 import AnswerComponent from "../components/answer";
-
+import { Card, CardHeader, CardContent } from "../components/card";
+import Button from "../components/button";
 const styles = {
   wrapper: css({
     maxWidth: "1200px",
@@ -343,46 +344,52 @@ export default class UserInfoComponent extends React.Component<Props, State> {
   };
 
   renderScoreCard = () => (
-    <div {...styles.card}>
-      <h1>
+    <Card>
+      <CardHeader>
         {this.state.userInfo.displayName}
         {this.props.isMyself && (
           <span onClick={this.logoutUser} {...styles.logoutText}>
             (Logout)
           </span>
         )}
-      </h1>
-      <div {...styles.scoreWrapper}>
-        <div {...styles.score}>
-          <div>Score</div>
-          <div {...styles.scoreNumber}>{this.state.userInfo.score}</div>
-        </div>
-        <div {...styles.score}>
-          <div>Answers</div>
-          <div {...styles.scoreNumber}>{this.state.userInfo.score_answers}</div>
-        </div>
-        <div {...styles.score}>
-          <div>Comments</div>
-          <div {...styles.scoreNumber}>
-            {this.state.userInfo.score_comments}
-          </div>
-        </div>
-        {this.state.userInfo.score_cuts > 0 && (
+      </CardHeader>
+      <CardContent>
+        <div {...styles.scoreWrapper}>
           <div {...styles.score}>
-            <div>Exam Import</div>
-            <div {...styles.scoreNumber}>{this.state.userInfo.score_cuts}</div>
+            <div>Score</div>
+            <div {...styles.scoreNumber}>{this.state.userInfo.score}</div>
           </div>
-        )}
-        {this.state.userInfo.score_legacy > 0 && (
           <div {...styles.score}>
-            <div>Wiki Import</div>
+            <div>Answers</div>
             <div {...styles.scoreNumber}>
-              {this.state.userInfo.score_legacy}
+              {this.state.userInfo.score_answers}
             </div>
           </div>
-        )}
-      </div>
-    </div>
+          <div {...styles.score}>
+            <div>Comments</div>
+            <div {...styles.scoreNumber}>
+              {this.state.userInfo.score_comments}
+            </div>
+          </div>
+          {this.state.userInfo.score_cuts > 0 && (
+            <div {...styles.score}>
+              <div>Exam Import</div>
+              <div {...styles.scoreNumber}>
+                {this.state.userInfo.score_cuts}
+              </div>
+            </div>
+          )}
+          {this.state.userInfo.score_legacy > 0 && (
+            <div {...styles.score}>
+              <div>Wiki Import</div>
+              <div {...styles.scoreNumber}>
+                {this.state.userInfo.score_legacy}
+              </div>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 
   renderPayments = () => (
@@ -445,12 +452,12 @@ export default class UserInfoComponent extends React.Component<Props, State> {
                     )}
                     {!payment.refund_time && this.props.isAdmin && (
                       <div>
-                        <button onClick={() => this.refundPayment(payment)}>
+                        <Button onClick={() => this.refundPayment(payment)}>
                           Mark Refunded
-                        </button>
-                        <button onClick={() => this.removePayment(payment)}>
+                        </Button>
+                        <Button onClick={() => this.removePayment(payment)}>
                           Remove Payment
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </div>
@@ -475,7 +482,7 @@ export default class UserInfoComponent extends React.Component<Props, State> {
           this.state.payments.filter(payment => payment.active).length ===
             0 && (
             <div>
-              <button onClick={this.addPayment}>Add Payment</button>
+              <Button onClick={this.addPayment}>Add Payment</Button>
             </div>
           )}
       </div>
@@ -524,21 +531,21 @@ export default class UserInfoComponent extends React.Component<Props, State> {
         ))}
         <div>
           {notifications.length < this.state.notifications.length && (
-            <button
+            <Button
               onClick={() => this.setState({ showAllNotifications: true })}
             >
               Show {this.state.notifications.length - notifications.length} More
               Notifications
-            </button>
+            </Button>
           )}
           {!this.state.showReadNotifications && (
-            <button onClick={this.loadAllNotifications}>
+            <Button onClick={this.loadAllNotifications}>
               Show Read Notifications
-            </button>
+            </Button>
           )}
           {this.state.notifications.filter(notification => !notification.read)
             .length > 0 && (
-            <button onClick={this.markAllRead}>Mark All Read</button>
+            <Button onClick={this.markAllRead}>Mark All Read</Button>
           )}
         </div>
       </div>
@@ -567,9 +574,9 @@ export default class UserInfoComponent extends React.Component<Props, State> {
         ))}
         <div>
           {answers.length < this.state.answers.length && (
-            <button onClick={() => this.setState({ showAllAnswers: true })}>
+            <Button onClick={() => this.setState({ showAllAnswers: true })}>
               Show {this.state.answers.length - answers.length} More Answers
-            </button>
+            </Button>
           )}
           {answers.length === 0 && (
             <span>This user did not write any answers yet.</span>
