@@ -1,12 +1,13 @@
-FROM node:13.1-alpine
+FROM node:13.11-alpine
 
 WORKDIR /usr/src/app
 COPY ./frontend/package.json .
 COPY ./frontend/yarn.lock .
 RUN yarn
 COPY ./frontend/tsconfig.json .
-COPY ./frontend/tslint.json .
-COPY ./frontend/.prettierrc ./.prettierrc
+COPY ./frontend/.eslintrc.json .
+COPY ./frontend/.env.production .
+COPY ./frontend/.prettierrc.json ./.prettierrc.json
 COPY ./frontend/public ./public
 COPY ./frontend/src ./src
 RUN yarn run check-format || ( >&2 echo -e '\n\n=========\nSome code has not been autoformated. See "Editing frontend code" in README.md.\n=========\n\n'; exit 1 )
@@ -24,25 +25,20 @@ RUN apt-get install -y \
 	python3 python3-pip python3-dev \
 	smbclient poppler-utils
 
-COPY ./src/requirements.txt ./requirements.txt
+COPY ./backend/requirements.txt ./requirements.txt
 RUN pip3 install -r requirements.txt
 
 COPY cinit.yml /etc/cinit.d/community-solutions.yml
 
-# prevent guincorn from buffering prints from pythno workers
+# prevent guincorn from buffering prints from python workers
 ENV PYTHONUNBUFFERED True
 
-COPY --from=0 /usr/src/app/build/index.html ./templates/index.html
+COPY --from=0 /usr/src/app/build/manifest.json ./manifest.json
+COPY --from=0 /usr/src/app/build/index.html ./index.html
 COPY --from=0 /usr/src/app/build/favicon.ico ./favicon.ico
 COPY --from=0 /usr/src/app/build/static ./static
-COPY ./tutorial-slides ./tutorial-slides
+COPY ./frontend/public/exam10.pdf ./exam10.pdf
 COPY ./frontend/public/static ./static
-COPY ./src/people_pb2.py .
-COPY ./src/people_pb2_grpc.py .
-COPY ./src/ethprint.py .
-COPY ./src/dbmigrations.py .
-COPY ./src/legacy_importer.py .
-COPY ./src/people_cache.py .
-COPY ./src/server.py .
+COPY ./backend/ ./
 
 EXPOSE 80

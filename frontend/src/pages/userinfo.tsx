@@ -4,7 +4,7 @@ import { Answer, NotificationInfo, PaymentInfo, UserInfo } from "../interfaces";
 import NotificationComponent from "../components/notification";
 import { css } from "glamor";
 import colors from "../colors";
-import * as moment from "moment";
+import moment from "moment";
 import GlobalConsts from "../globalconsts";
 import { Link } from "react-router-dom";
 import Colors from "../colors";
@@ -156,7 +156,7 @@ export default class UserInfoComponent extends React.Component<Props, State> {
   }
 
   loadUserInfo = () => {
-    fetchapi("/api/userinfo/" + this.props.username)
+    fetchapi("/api/scoreboard/userinfo/" + this.props.username + "/")
       .then(res => {
         this.setState({
           userInfo: res.value,
@@ -170,7 +170,7 @@ export default class UserInfoComponent extends React.Component<Props, State> {
   };
 
   loadEnabledNotifications = () => {
-    fetchapi("/api/notifications/getenabled")
+    fetchapi("/api/notification/getenabled/")
       .then(res => {
         this.setState({
           enabledNotifications: res.value,
@@ -185,8 +185,8 @@ export default class UserInfoComponent extends React.Component<Props, State> {
 
   loadPayments = () => {
     const query = this.props.isMyself
-      ? "/api/payment/me"
-      : "/api/payment/query/" + this.props.username;
+      ? "/api/payment/me/"
+      : "/api/payment/query/" + this.props.username + "/";
     fetchapi(query)
       .then(res => {
         this.setState({
@@ -201,7 +201,7 @@ export default class UserInfoComponent extends React.Component<Props, State> {
   };
 
   addPayment = () => {
-    fetchpost("/api/payment/pay", {
+    fetchpost("/api/payment/pay/", {
       username: this.props.username,
     })
       .then(() => {
@@ -215,11 +215,10 @@ export default class UserInfoComponent extends React.Component<Props, State> {
   };
 
   removePayment = (payment: PaymentInfo) => {
+    // eslint-disable-next-line no-restricted-globals
     const confirmation = confirm("Remove Payment?");
     if (confirmation) {
-      fetchpost("/api/payment/remove", {
-        oid: payment.oid,
-      })
+      fetchpost("/api/payment/remove/" + payment.oid + "/", {})
         .then(() => {
           this.loadPayments();
         })
@@ -234,14 +233,13 @@ export default class UserInfoComponent extends React.Component<Props, State> {
   refundPayment = (payment: PaymentInfo) => {
     let confirmation = true;
     if (!payment.uploaded_filename) {
+      // eslint-disable-next-line no-restricted-globals
       confirmation = confirm(
         "The payment does not have any associated exams. Really refund?",
       );
     }
     if (confirmation) {
-      fetchpost("/api/payment/refund", {
-        oid: payment.oid,
-      })
+      fetchpost("/api/payment/refund/" + payment.oid + "/", {})
         .then(() => {
           this.loadPayments();
         })
@@ -254,7 +252,7 @@ export default class UserInfoComponent extends React.Component<Props, State> {
   };
 
   loadUnreadNotifications = () => {
-    fetchapi("/api/notifications/unread")
+    fetchapi("/api/notification/unread/")
       .then(res => {
         this.setState({
           notifications: res.value,
@@ -268,7 +266,7 @@ export default class UserInfoComponent extends React.Component<Props, State> {
   };
 
   loadAllNotifications = () => {
-    fetchapi("/api/notifications/all")
+    fetchapi("/api/notification/all/")
       .then(res => {
         this.setState({
           showReadNotifications: true,
@@ -283,9 +281,9 @@ export default class UserInfoComponent extends React.Component<Props, State> {
   };
 
   setNotificationEnabled = (type: number, enabled: boolean) => {
-    fetchpost("/api/notifications/setenabled", {
+    fetchpost("/api/notification/setenabled/", {
       type: type,
-      enabled: enabled ? 1 : 0,
+      enabled: enabled,
     }).then(() => {
       this.loadEnabledNotifications();
     });
@@ -296,9 +294,8 @@ export default class UserInfoComponent extends React.Component<Props, State> {
       this.state.notifications
         .filter(notification => !notification.read)
         .map(notification =>
-          fetchpost("/api/notifications/setread", {
-            read: 1,
-            notificationoid: notification.oid,
+          fetchpost("/api/notification/setread/" + notification.oid + "/", {
+            read: true,
           }).catch(err => {
             this.setState({
               error: err.toString(),
@@ -321,7 +318,7 @@ export default class UserInfoComponent extends React.Component<Props, State> {
   };
 
   loadAnswers = () => {
-    fetchapi("/api/user/" + this.props.username + "/answers")
+    fetchapi("/api/exam/listbyuser/" + this.props.username + "/")
       .then(res => {
         this.setState({
           answers: res.value,
@@ -335,7 +332,7 @@ export default class UserInfoComponent extends React.Component<Props, State> {
   };
 
   logoutUser = () => {
-    fetchpost("/api/logout", {}).then(() => {
+    fetchpost("/api/auth/logout/", {}).then(() => {
       this.props.userinfoChanged();
     });
   };
@@ -561,6 +558,7 @@ export default class UserInfoComponent extends React.Component<Props, State> {
             sectionId={answer.sectionId}
             answer={answer}
             onSectionChanged={() => undefined}
+            onCancelEdit={() => undefined}
           />
         ))}
         <div>

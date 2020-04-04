@@ -1,10 +1,4 @@
-import {
-  Section,
-  AnswerSection,
-  SectionKind,
-  PdfSection,
-  ServerCutPosition,
-} from "./interfaces";
+import { Section, AnswerSection, SectionKind, PdfSection } from "./interfaces";
 import { fetchapi } from "./fetch-utils";
 
 function createPdfSection(
@@ -31,14 +25,14 @@ export async function loadSections(
   filename: string,
   pageCount: number,
 ): Promise<Section[]> {
-  const response = await fetchapi(`/api/exam/${filename}/cuts`);
+  const response = await fetchapi(`/api/exam/cuts/${filename}/`);
   const cuts = response.value;
   let akey = -1;
   const sections: Section[] = [];
   for (let i = 1; i <= pageCount; i++) {
     let lastpos = 0;
     if (i in cuts) {
-      cuts[i].forEach((cut: ServerCutPosition) => {
+      for (const cut of cuts[i]) {
         const { relHeight: position, oid, cutVersion } = cut;
         if (position !== lastpos) {
           const key = akey + "-" + lastpos + "-" + position;
@@ -50,14 +44,12 @@ export async function loadSections(
           oid: oid,
           kind: SectionKind.Answer,
           answers: [],
-          asker: "",
-          askerDisplayName: "",
           allow_new_answer: true,
           allow_new_legacy_answer: false,
           hidden: true,
           cutVersion: cutVersion,
         });
-      });
+      }
     }
     if (lastpos < 1) {
       const key = akey + "-" + lastpos + "-" + 1;
@@ -68,15 +60,10 @@ export async function loadSections(
   return sections;
 }
 
-export async function loadAnswerSection(
-  filename: string,
-  oid: string,
-): Promise<AnswerSection> {
+export async function loadAnswerSection(oid: string): Promise<AnswerSection> {
   try {
-    const section = await fetchapi(
-      `/api/exam/${filename}/answersection/${oid}`,
-    );
-    const answersection = section.value.answersection;
+    const section = await fetchapi(`/api/exam/answersection/${oid}/`);
+    const answersection = section.value;
     answersection.key = oid;
     answersection.kind = SectionKind.Answer;
     return answersection;

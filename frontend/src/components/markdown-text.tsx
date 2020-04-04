@@ -1,6 +1,6 @@
 import * as React from "react";
 import { css } from "glamor";
-import * as ReactMarkdown from "react-markdown";
+import ReactMarkdown from "react-markdown";
 import * as RemarkMathPlugin from "remark-math";
 import "katex/dist/katex.min.css";
 import TeX from "@matejmazur/react-katex";
@@ -59,7 +59,7 @@ export default ({ value, background }: Props) => {
           if (uri.includes("/")) {
             return uri;
           } else {
-            return "/api/img/" + uri;
+            return "/api/image/get/" + uri + "/";
           }
         }}
         plugins={[RemarkMathPlugin]}

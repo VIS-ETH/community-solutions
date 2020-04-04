@@ -1,25 +1,24 @@
 import * as React from "react";
 import { AnswerSection, Comment } from "../interfaces";
-import * as moment from "moment";
+import moment from "moment";
 import { css } from "glamor";
 import MarkdownText from "./markdown-text";
-import { fetchpost } from "../fetch-utils";
-import ImageOverlay from "./image-overlay";
+import { fetchpost, imageHandler } from "../fetch-utils";
 import { Link } from "react-router-dom";
 import globalcss from "../globalcss";
 import GlobalConsts from "../globalconsts";
-import { listenEnter } from "../input-utils";
 import Colors from "../colors";
+import Editor from "./Editor";
+import { UndoStack } from "./Editor/utils/undo-stack";
 
 interface Props {
   isReadonly: boolean;
   isAdmin: boolean;
-  filename: string;
   sectionId: string;
   answerId: string;
   isNewComment?: boolean;
   comment: Comment;
-  onSectionChanged: (res: { value: { answersection: AnswerSection } }) => void;
+  onSectionChanged: (res: { value: AnswerSection }) => void;
   onNewCommentSaved?: () => void;
 }
 
@@ -27,8 +26,7 @@ interface State {
   editing: boolean;
   text: string;
   savedText: string;
-  imageDialog: boolean;
-  imageCursorPosition: number;
+  undoStack: UndoStack;
 }
 
 const styles = {
@@ -73,20 +71,14 @@ export default class CommentComponent extends React.Component<Props, State> {
     editing: !!this.props.isNewComment,
     savedText: this.props.comment.text,
     text: this.props.comment.text,
-    imageDialog: false,
-    imageCursorPosition: -1,
+    undoStack: { prev: [], next: [] },
   };
 
   removeComment = () => {
+    // eslint-disable-next-line no-restricted-globals
     const confirmation = confirm("Remove comment?");
     if (confirmation) {
-      fetchpost(
-        `/api/exam/${this.props.filename}/removecomment/${this.props.sectionId}/${this.props.answerId}`,
-        {
-          commentoid: this.props.comment.oid,
-          admin: !this.props.comment.canEdit && this.props.isAdmin ? 1 : 0,
-        },
-      )
+      fetchpost(`/api/exam/removecomment/${this.props.comment.oid}/`, {})
         .then(res => {
           this.props.onSectionChanged(res);
         })
@@ -107,12 +99,9 @@ export default class CommentComponent extends React.Component<Props, State> {
 
   saveComment = () => {
     if (this.props.isNewComment) {
-      fetchpost(
-        `/api/exam/${this.props.filename}/addcomment/${this.props.sectionId}/${this.props.answerId}`,
-        {
-          text: this.state.text,
-        },
-      )
+      fetchpost(`/api/exam/addcomment/${this.props.answerId}/`, {
+        text: this.state.text,
+      })
         .then(res => {
           this.setState({ text: "" });
           if (this.props.onNewCommentSaved) {
@@ -122,13 +111,9 @@ export default class CommentComponent extends React.Component<Props, State> {
         })
         .catch(() => undefined);
     } else {
-      fetchpost(
-        `/api/exam/${this.props.filename}/setcomment/${this.props.sectionId}/${this.props.answerId}`,
-        {
-          commentoid: this.props.comment.oid,
-          text: this.state.text,
-        },
-      )
+      fetchpost(`/api/exam/setcomment/${this.props.comment.oid}/`, {
+        text: this.state.text,
+      })
         .then(res => {
           this.setState(prevState => ({
             editing: false,
@@ -140,38 +125,10 @@ export default class CommentComponent extends React.Component<Props, State> {
     }
   };
 
-  commentTextareaChange = (event: React.FormEvent<HTMLTextAreaElement>) => {
+  commentTextareaChange = (newValue: string) => {
     this.setState({
-      text: event.currentTarget.value,
-      imageCursorPosition: event.currentTarget.selectionStart,
+      text: newValue,
     });
-  };
-
-  startImageDialog = () => {
-    this.setState({ imageDialog: true });
-  };
-
-  endImageDialog = (image: string) => {
-    if (image.length > 0) {
-      const imageTag = `![Image Description](${image})`;
-      this.setState(prevState => {
-        let newText = prevState.text;
-        if (prevState.imageCursorPosition < 0) {
-          newText += imageTag;
-        } else {
-          newText =
-            newText.slice(0, prevState.imageCursorPosition) +
-            imageTag +
-            newText.slice(prevState.imageCursorPosition);
-        }
-        return {
-          imageDialog: false,
-          text: newText,
-        };
-      });
-    } else {
-      this.setState({ imageDialog: false });
-    }
   };
 
   render() {
@@ -202,6 +159,7 @@ export default class CommentComponent extends React.Component<Props, State> {
                   {...styles.actionImg}
                   src="/static/edit.svg"
                   title="Edit Comment"
+                  alt="Edit Comment"
                 />
               </div>
             )}
@@ -213,42 +171,38 @@ export default class CommentComponent extends React.Component<Props, State> {
                     {...styles.actionImg}
                     src="/static/delete.svg"
                     title="Delete Comment"
+                    alt="Delete Comment"
                   />
                 </div>
               )}
           </div>
         </div>
-        <div {...styles.comment}>
-          <MarkdownText
-            value={this.state.editing ? this.state.text : comment.text}
-          />
-        </div>
+        {!this.state.editing && (
+          <div {...styles.comment}>
+            <MarkdownText
+              value={this.state.editing ? this.state.text : comment.text}
+            />
+          </div>
+        )}
         {this.state.editing && (
           <div>
             <div>
-              <textarea
-                {...styles.textareaInput}
-                onKeyUp={this.commentTextareaChange}
-                onChange={this.commentTextareaChange}
-                cols={80}
-                rows={5}
+              <Editor
                 value={this.state.text}
-                onKeyPress={listenEnter(this.saveComment, true)}
+                onChange={this.commentTextareaChange}
+                imageHandler={imageHandler}
+                preview={str => <MarkdownText value={str} />}
+                undoStack={this.state.undoStack}
+                setUndoStack={undoStack => this.setState({ undoStack })}
               />
             </div>
             <div {...styles.actionButtons}>
-              <div {...styles.actionButton} onClick={this.startImageDialog}>
-                <img
-                  {...styles.actionImg}
-                  src="/static/images.svg"
-                  title="Images"
-                />
-              </div>
               <div {...styles.actionButton} onClick={this.saveComment}>
                 <img
                   {...styles.actionImg}
                   src="/static/save.svg"
                   title="Save Comment"
+                  alt="Save Comment"
                 />
               </div>
               {!this.props.isNewComment && (
@@ -257,14 +211,12 @@ export default class CommentComponent extends React.Component<Props, State> {
                     {...styles.actionImg}
                     src="/static/cancel.svg"
                     title="Cancel"
+                    alt="Cancel"
                   />
                 </div>
               )}
             </div>
           </div>
-        )}
-        {this.state.imageDialog && (
-          <ImageOverlay onClose={this.endImageDialog} />
         )}
       </div>
     );

@@ -6,7 +6,7 @@ import Colors from "../colors";
 
 const styles = {
   background: css({
-    background: "rgba(0, 0, 0, 0.4)",
+    background: "rgba(0, 0, 0, 0.2)",
     position: "fixed",
     top: "0",
     left: "0",
@@ -14,6 +14,7 @@ const styles = {
     bottom: "0",
     paddingTop: "200px",
     paddingBottom: "200px",
+    zIndex: 100,
     "@media (max-height: 799px)": {
       paddingTop: "50px",
       paddingBottom: "50px",
@@ -110,7 +111,7 @@ export default class ImageOverlay extends React.Component<Props, State> {
   }
 
   loadImages = () => {
-    fetchapi("/api/image/list")
+    fetchapi("/api/image/list/")
       .then(res => {
         res.value.reverse();
         this.setState({ images: res.value });
@@ -135,7 +136,7 @@ export default class ImageOverlay extends React.Component<Props, State> {
       return;
     }
 
-    fetchpost("/api/uploadimg", {
+    fetchpost("/api/image/upload/", {
       file: this.state.file,
     })
       .then(res => {
@@ -166,9 +167,10 @@ export default class ImageOverlay extends React.Component<Props, State> {
   };
 
   removeImage = (image: string) => {
+    // eslint-disable-next-line no-restricted-globals
     const confirmation = confirm("Remove image?");
     if (confirmation) {
-      fetchpost(`/api/image/${image}/remove`, {})
+      fetchpost(`/api/image/remove/${image}/`, {})
         .then(() => {
           this.loadImages();
         })
@@ -214,7 +216,7 @@ export default class ImageOverlay extends React.Component<Props, State> {
                     <img
                       {...styles.imageSmall}
                       key={img}
-                      src={"/api/img/" + img}
+                      src={"/api/image/get/" + img + "/"}
                       alt="Image Preview"
                     />
                   </div>

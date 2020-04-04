@@ -1,17 +1,17 @@
 import * as React from "react";
 import { Answer, AnswerSection } from "../interfaces";
-import * as moment from "moment";
+import moment from "moment";
 import Comment from "./comment";
 import { css } from "glamor";
 import MarkdownText from "./markdown-text";
-import { fetchpost } from "../fetch-utils";
-import ImageOverlay from "./image-overlay";
+import { fetchpost, imageHandler } from "../fetch-utils";
 import Colors from "../colors";
 import { Link } from "react-router-dom";
 import globalcss from "../globalcss";
 import GlobalConsts from "../globalconsts";
 import colors from "../colors";
-import { listenEnter } from "../input-utils";
+import Editor from "./Editor";
+import { UndoStack } from "./Editor/utils/undo-stack";
 
 interface Props {
   isReadonly: boolean;
@@ -20,14 +20,15 @@ interface Props {
   filename: string;
   sectionId: string;
   answer: Answer;
-  onSectionChanged: (res: { value: { answersection: AnswerSection } }) => void;
+  onSectionChanged: (res: { value: AnswerSection }) => void;
+  onCancelEdit: () => void;
 }
 
 interface State {
   editing: boolean;
   imageDialog: boolean;
-  imageCursorPosition: number;
   text: string;
+  undoStack: UndoStack;
   savedText: string;
   addingComment: boolean;
   allCommentsVisible: boolean;
@@ -128,6 +129,7 @@ const styles = {
     boxSizing: "border-box",
   }),
   actionButtons: css({
+    width: "100%",
     display: "flex",
     justifyContent: "flex-end",
     marginRight: "25px",
@@ -160,11 +162,11 @@ export default class AnswerComponent extends React.Component<Props, State> {
   state: State = {
     editing: this.props.answer.canEdit && this.props.answer.text.length === 0,
     imageDialog: false,
-    imageCursorPosition: -1,
     savedText: this.props.answer.text,
     text: this.props.answer.text,
     allCommentsVisible: false,
     addingComment: false,
+    undoStack: { prev: [], next: [] },
   };
 
   componentDidUpdate(
@@ -184,43 +186,22 @@ export default class AnswerComponent extends React.Component<Props, State> {
   };
 
   removeAnswer = () => {
+    // eslint-disable-next-line no-restricted-globals
     const confirmation = confirm("Remove answer?");
     if (confirmation) {
-      if (this.props.answer.canEdit) {
-        fetchpost(
-          `/api/exam/${this.props.filename}/removeanswer/${this.props.sectionId}`,
-          this.enrichPostdata({}),
-        )
-          .then(res => {
-            this.props.onSectionChanged(res);
-          })
-          .catch(() => undefined);
-      } else {
-        fetchpost(
-          `/api/exam/${this.props.filename}/adminremoveanswer/${this.props.sectionId}/${this.props.answer.oid}`,
-          {},
-        )
-          .then(res => {
-            this.props.onSectionChanged(res);
-          })
-          .catch(() => undefined);
-      }
-    }
-  };
-
-  enrichPostdata = (postdata: object) => {
-    if (this.props.answer.authorId === "__legacy__") {
-      return { ...postdata, legacyuser: 1 };
-    } else {
-      return postdata;
+      fetchpost(`/api/exam/removeanswer/${this.props.answer.oid}/`, {})
+        .then(res => {
+          this.props.onSectionChanged(res);
+        })
+        .catch(() => undefined);
     }
   };
 
   saveAnswer = () => {
-    fetchpost(
-      `/api/exam/${this.props.filename}/setanswer/${this.props.sectionId}`,
-      this.enrichPostdata({ text: this.state.text }),
-    )
+    fetchpost(`/api/exam/setanswer/${this.props.sectionId}/`, {
+      text: this.state.text,
+      legacy_answer: this.props.answer.isLegacyAnswer,
+    })
       .then(res => {
         this.setState(prevState => ({
           editing: false,
@@ -236,12 +217,12 @@ export default class AnswerComponent extends React.Component<Props, State> {
       editing: false,
       text: prevState.savedText,
     }));
+    this.props.onCancelEdit();
   };
 
   startEdit = () => {
     this.setState({
       editing: true,
-      imageCursorPosition: -1,
     });
   };
 
@@ -251,37 +232,9 @@ export default class AnswerComponent extends React.Component<Props, State> {
     }));
   };
 
-  startImageDialog = () => {
-    this.setState({ imageDialog: true });
-  };
-
-  endImageDialog = (image: string) => {
-    if (image.length > 0) {
-      const imageTag = `![Image Description](${image})`;
-      this.setState(prevState => {
-        let newText = prevState.text;
-        if (prevState.imageCursorPosition < 0) {
-          newText += imageTag;
-        } else {
-          newText =
-            newText.slice(0, prevState.imageCursorPosition) +
-            imageTag +
-            newText.slice(prevState.imageCursorPosition);
-        }
-        return {
-          imageDialog: false,
-          text: newText,
-        };
-      });
-    } else {
-      this.setState({ imageDialog: false });
-    }
-  };
-
-  answerTextareaChange = (event: React.FormEvent<HTMLTextAreaElement>) => {
+  answerTextareaChange = (newValue: string) => {
     this.setState({
-      text: event.currentTarget.value,
-      imageCursorPosition: event.currentTarget.selectionStart,
+      text: newValue,
     });
   };
 
@@ -294,10 +247,7 @@ export default class AnswerComponent extends React.Component<Props, State> {
         : this.props.answer.isDownvoted
         ? 0
         : -1;
-    fetchpost(
-      `/api/exam/${this.props.filename}/setlike/${this.props.sectionId}/${this.props.answer.oid}`,
-      { like: newLike },
-    )
+    fetchpost(`/api/exam/setlike/${this.props.answer.oid}/`, { like: newLike })
       .then(res => {
         this.props.onSectionChanged(res);
       })
@@ -305,12 +255,9 @@ export default class AnswerComponent extends React.Component<Props, State> {
   };
 
   toggleAnswerFlag = () => {
-    fetchpost(
-      `/api/exam/${this.props.filename}/setflagged/${this.props.sectionId}/${this.props.answer.oid}`,
-      {
-        flagged: this.props.answer.isFlagged ? 0 : 1,
-      },
-    )
+    fetchpost(`/api/exam/setflagged/${this.props.answer.oid}/`, {
+      flagged: !this.props.answer.isFlagged,
+    })
       .then(res => {
         this.props.onSectionChanged(res);
       })
@@ -318,10 +265,7 @@ export default class AnswerComponent extends React.Component<Props, State> {
   };
 
   resetAnswerFlagged = () => {
-    fetchpost(
-      `/api/exam/${this.props.filename}/resetflagged/${this.props.sectionId}/${this.props.answer.oid}`,
-      {},
-    )
+    fetchpost(`/api/exam/resetflagged/${this.props.answer.oid}/`, {})
       .then(res => {
         this.props.onSectionChanged(res);
       })
@@ -329,12 +273,9 @@ export default class AnswerComponent extends React.Component<Props, State> {
   };
 
   toggleAnswerExpertVote = () => {
-    fetchpost(
-      `/api/exam/${this.props.filename}/setexpertvote/${this.props.sectionId}/${this.props.answer.oid}`,
-      {
-        vote: this.props.answer.isExpertVoted ? 0 : 1,
-      },
-    )
+    fetchpost(`/api/exam/setexpertvote/${this.props.answer.oid}/`, {
+      vote: !this.props.answer.isExpertVoted,
+    })
       .then(res => {
         this.props.onSectionChanged(res);
       })
@@ -359,9 +300,11 @@ export default class AnswerComponent extends React.Component<Props, State> {
         <div ref={this.setMainDivRef} {...styles.header}>
           <div>
             <b {...globalcss.noLinkColor}>
-              <Link to={`/user/${answer.authorId}`}>
-                {answer.authorDisplayName}
-              </Link>
+              {(answer.authorId.length > 0 && (
+                <Link to={`/user/${answer.authorId}`}>
+                  {answer.authorDisplayName}
+                </Link>
+              )) || <span>{answer.authorDisplayName}</span>}
             </b>{" "}
             •{" "}
             {moment(answer.time, GlobalConsts.momentParseString).format(
@@ -403,6 +346,7 @@ export default class AnswerComponent extends React.Component<Props, State> {
                         ? " (" + answer.expertvotes + " votes)"
                         : "")
                     }
+                    alt="This answer is endorsed by an expert"
                   />
                 </div>,
               ]}
@@ -443,42 +387,31 @@ export default class AnswerComponent extends React.Component<Props, State> {
             )}
           </div>
         </div>
-        <div {...styles.answer}>
-          <MarkdownText value={this.state.text} />
-        </div>
+        {!this.state.editing && (
+          <div {...styles.answer}>
+            <MarkdownText value={this.state.text} />
+          </div>
+        )}
         {this.state.editing && (
           <div>
             <div {...styles.answerInput}>
-              <textarea
-                {...styles.textareaInput}
-                onKeyUp={this.answerTextareaChange}
-                onChange={this.answerTextareaChange}
-                cols={120}
-                rows={20}
+              <Editor
                 value={this.state.text}
-                onKeyPress={listenEnter(this.saveAnswer, true)}
+                onChange={this.answerTextareaChange}
+                imageHandler={imageHandler}
+                preview={str => <MarkdownText value={str} />}
+                undoStack={this.state.undoStack}
+                setUndoStack={undoStack => this.setState({ undoStack })}
               />
             </div>
             <div {...styles.answerTexHint}>
-              <div>
-                <small>
-                  You can use Markdown. Use ``` code ``` for code. Use $ math $
-                  or $$ \n math \n $$ for latex math.
-                </small>
-              </div>
               <div {...styles.actionButtons}>
-                <div {...styles.actionButton} onClick={this.startImageDialog}>
-                  <img
-                    {...styles.actionImg}
-                    src="/static/images.svg"
-                    title="Images"
-                  />
-                </div>
                 <div {...styles.actionButton} onClick={this.saveAnswer}>
                   <img
                     {...styles.actionImg}
                     src="/static/save.svg"
                     title="Save"
+                    alt="Save"
                   />
                 </div>
                 <div {...styles.actionButton} onClick={this.cancelEdit}>
@@ -486,6 +419,7 @@ export default class AnswerComponent extends React.Component<Props, State> {
                     {...styles.actionImg}
                     src="/static/cancel.svg"
                     title="Cancel"
+                    alt="Cancel"
                   />
                 </div>
               </div>
@@ -497,7 +431,9 @@ export default class AnswerComponent extends React.Component<Props, State> {
           <div {...styles.actionButtons}>
             <div {...styles.permalink}>
               <small>
-                <Link to={"/exams/" + this.props.filename + "#" + answer.oid}>
+                <Link
+                  to={"/exams/" + this.props.filename + "#" + answer.longId}
+                >
                   Permalink
                 </Link>
               </small>
@@ -508,6 +444,7 @@ export default class AnswerComponent extends React.Component<Props, State> {
                   {...styles.actionImg}
                   src="/static/comment.svg"
                   title="Add Comment"
+                  alt="Add Comment"
                 />
               </div>
             )}
@@ -517,6 +454,7 @@ export default class AnswerComponent extends React.Component<Props, State> {
                   {...styles.actionImg}
                   src="/static/edit.svg"
                   title="Edit Answer"
+                  alt="Edit Answer"
                 />
               </div>
             )}
@@ -526,6 +464,7 @@ export default class AnswerComponent extends React.Component<Props, State> {
                   {...styles.actionImg}
                   src="/static/delete.svg"
                   title="Delete Answer"
+                  alt="Delete Answer"
                 />
               </div>
             )}
@@ -539,6 +478,7 @@ export default class AnswerComponent extends React.Component<Props, State> {
                       : "/static/flag.svg"
                   }
                   title="Flag as Inappropriate"
+                  alt="Flag as Inappropriate"
                 />
               </div>
             )}
@@ -549,9 +489,6 @@ export default class AnswerComponent extends React.Component<Props, State> {
             )}
           </div>
         )}
-        {this.state.imageDialog && (
-          <ImageOverlay onClose={this.endImageDialog} />
-        )}
 
         {(answer.comments.length > 0 || this.state.addingComment) && (
           <div {...styles.comments}>
@@ -560,11 +497,11 @@ export default class AnswerComponent extends React.Component<Props, State> {
                 isNewComment={true}
                 isReadonly={this.props.isReadonly}
                 isAdmin={this.props.isAdmin}
-                filename={this.props.filename}
                 sectionId={this.props.sectionId}
                 answerId={answer.oid}
                 comment={{
                   oid: "",
+                  longId: "",
                   text: "",
                   authorId: "",
                   authorDisplayName: "",
@@ -582,7 +519,6 @@ export default class AnswerComponent extends React.Component<Props, State> {
                 isReadonly={this.props.isReadonly}
                 isAdmin={this.props.isAdmin}
                 comment={e}
-                filename={this.props.filename}
                 sectionId={this.props.sectionId}
                 answerId={answer.oid}
                 onSectionChanged={this.props.onSectionChanged}

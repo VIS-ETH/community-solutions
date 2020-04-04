@@ -27,7 +27,14 @@ const styles = {
     float: "right",
     zIndex: "100",
     "@media (max-width: 799px)": {
-      position: "static",
+      position: "relative",
+      top: "unset",
+      float: "none",
+      width: "100%",
+      "& button": {
+        marginLeft: "0",
+        marginRight: "0",
+      },
     },
   }),
   sectionsButtons: css({
@@ -107,6 +114,7 @@ export default class Exam extends React.Component<Props, State> {
       hasPayed: false,
       filename: "",
       category: "",
+      category_displayname: "",
       examtype: "",
       displayname: "",
       legacy_solution: "",
@@ -116,12 +124,12 @@ export default class Exam extends React.Component<Props, State> {
       public: false,
       finished_cuts: false,
       finished_wiki_transfer: false,
-      has_printonly: false,
+      is_printonly: false,
       has_solution: false,
       solution_printonly: false,
       needs_payment: false,
-      is_payment_exam: false,
-      payment_exam_checked: false,
+      is_oral_transcript: false,
+      oral_transcript_checked: false,
       count_cuts: 0,
       count_answered: 0,
       attachments: [],
@@ -129,27 +137,30 @@ export default class Exam extends React.Component<Props, State> {
     allShown: false,
     updateIntervalId: 0,
   };
-  updateInterval: NodeJS.Timeout;
-  cutVersionInterval: NodeJS.Timeout;
+  updateInterval: number | undefined;
+  cutVersionInterval: number | undefined;
   debouncedUpdatePDFWidth: this["updatePDFWidth"];
 
-  componentDidMount() {
-    this.updateInterval = setInterval(this.pollZoom, RERENDER_INTERVAL);
-    window.addEventListener("resize", this.onResize);
+  constructor(props: Props) {
+    super(props);
     this.debouncedUpdatePDFWidth = debounce(
       this.updatePDFWidth,
       RERENDER_INTERVAL,
     );
+  }
 
+  componentDidMount() {
+    this.updateInterval = window.setInterval(this.pollZoom, RERENDER_INTERVAL);
+    window.addEventListener("resize", this.onResize);
     this.loadMetaData();
 
-    this.cutVersionInterval = setInterval(this.updateCutVersion, 60000);
+    this.cutVersionInterval = window.setInterval(this.updateCutVersion, 60000);
 
     this.loadPDF();
   }
 
   loadMetaData = () => {
-    fetchapi(`/api/exam/${this.props.filename}/metadata`)
+    fetchapi(`/api/exam/metadata/${this.props.filename}/`)
       .then(res => {
         this.setState({
           canEdit: res.value.canEdit,
@@ -165,7 +176,7 @@ export default class Exam extends React.Component<Props, State> {
   loadPDF = async () => {
     try {
       const pdf = await pdfjs.getDocument(
-        "/api/pdf/exam/" + this.props.filename,
+        "/api/exam/pdf/exam/" + this.props.filename + "/",
       ).promise;
       const w = this.state.width * this.state.dpr;
       this.setState({ pdf, renderer: await createSectionRenderer(pdf, w) });
@@ -246,20 +257,18 @@ export default class Exam extends React.Component<Props, State> {
   };
 
   updateCutVersion = () => {
-    fetchapi(`/api/exam/${this.props.filename}/cutversions`)
+    fetchapi(`/api/exam/cutversions/${this.props.filename}/`)
       .then(res => {
         const versions = res.value;
-        this.setState(prevState => {
-          const newState = { ...prevState };
-          if (newState.sections) {
-            newState.sections.forEach(section => {
-              if (section.kind === SectionKind.Answer) {
-                section.cutVersion = versions[section.oid];
-              }
-            });
-          }
-          return newState;
-        });
+        this.setState(prevState => ({
+          sections: prevState.sections
+            ? prevState.sections.map(section =>
+                section.kind === SectionKind.Answer
+                  ? { ...section, cutVersion: versions[section.oid] }
+                  : section,
+              )
+            : undefined,
+        }));
       })
       .catch(err => {
         this.setState({
@@ -283,7 +292,7 @@ export default class Exam extends React.Component<Props, State> {
       );
     }
 
-    fetchpost(`/api/exam/${this.props.filename}/newanswersection`, {
+    fetchpost(`/api/exam/addcut/${this.props.filename}/`, {
       pageNum: section.start.page,
       relHeight: relHeight,
     })
@@ -303,55 +312,59 @@ export default class Exam extends React.Component<Props, State> {
   };
 
   gotoPDF = () => {
-    window.open(`/api/pdf/exam/${this.props.filename}?download`, "_blank");
+    window.open(
+      `/api/exam/pdf/exam/${this.props.filename}/?download`,
+      "_blank",
+    );
   };
 
   reportProblem = () => {
     const subject = encodeURIComponent("[VIS] Community Solutions: Feedback");
     const body = encodeURIComponent(
-      `Concerning the exam '${this.state.savedMetaData.displayname}' of the course '${this.state.savedMetaData.category}' ...`,
+      `Concerning the exam '${this.state.savedMetaData.displayname}' of the course '${this.state.savedMetaData.category_displayname}' ...`,
     );
     window.location.href = `mailto:communitysolutions@vis.ethz.ch?subject=${subject}&body=${body}`;
   };
 
   setAllHidden = (hidden: boolean) => {
-    this.setState(prevState => {
-      const newState = { ...prevState };
-      if (newState.sections) {
-        newState.sections.forEach(section => {
-          if (section.kind === SectionKind.Answer) {
-            section.hidden = hidden;
-          }
-        });
-      }
-      newState.allShown = !hidden;
-      return newState;
-    });
+    this.setState(prevState => ({
+      sections: prevState.sections
+        ? prevState.sections.map(section =>
+            section.kind === SectionKind.Answer
+              ? { ...section, hidden: hidden }
+              : section,
+          )
+        : undefined,
+      allShown: !hidden,
+    }));
   };
 
   toggleHidden = (sectionOid: string) => {
-    this.setState(prevState => {
-      const newState = { ...prevState };
-      if (newState.sections) {
-        for (const section of newState.sections) {
-          if (
-            section.kind === SectionKind.Answer &&
-            section.oid === sectionOid
-          ) {
-            if (!section.hidden) {
-              newState.allShown = false;
-            }
-            section.hidden = !section.hidden;
-          }
-        }
-      }
-      return newState;
-    });
+    this.setState(prevState => ({
+      allShown: prevState.sections
+        ? prevState.sections.every(
+            section =>
+              section.kind === SectionKind.Answer &&
+              section.oid === sectionOid &&
+              section.hidden,
+          )
+        : true,
+      sections: prevState.sections
+        ? prevState.sections.map(section =>
+            section.kind === SectionKind.Answer && section.oid === sectionOid
+              ? {
+                  ...section,
+                  hidden: !section.hidden,
+                }
+              : section,
+          )
+        : undefined,
+    }));
   };
 
   toggleAddingSectionActive = () => {
-    this.setState((state, props) => {
-      return { addingSectionsActive: !state.addingSectionsActive };
+    this.setState(prevState => {
+      return { addingSectionsActive: !prevState.addingSectionsActive };
     });
   };
 
@@ -359,11 +372,9 @@ export default class Exam extends React.Component<Props, State> {
     if (!this.state.editingMetaData) {
       window.scrollTo(0, 0);
     }
-    this.setState(state => {
-      return {
-        editingMetaData: !state.editingMetaData,
-      };
-    });
+    this.setState(prevState => ({
+      editingMetaData: !prevState.editingMetaData,
+    }));
   };
 
   setAllDone = () => {
@@ -375,14 +386,16 @@ export default class Exam extends React.Component<Props, State> {
     if (this.state.editingMetaData) {
       this.toggleEditingMetadataActive();
     }
-    fetchpost(`/api/exam/${this.props.filename}/metadata`, update).then(res => {
-      this.setState(prev => ({
-        savedMetaData: {
-          ...prev.savedMetaData,
-          ...update,
-        },
-      }));
-    });
+    fetchpost(`/api/exam/setmetadata/${this.props.filename}/`, update).then(
+      res => {
+        this.setState(prevState => ({
+          savedMetaData: {
+            ...prevState.savedMetaData,
+            ...update,
+          },
+        }));
+      },
+    );
   };
 
   metaDataChanged = (newMetaData: ExamMetaData) => {
@@ -393,7 +406,7 @@ export default class Exam extends React.Component<Props, State> {
   };
 
   markPaymentExamChecked = () => {
-    fetchpost(`/api/exam/${this.props.filename}/markpaymentchecked`, {})
+    fetchpost(`/api/payment/markexamchecked/${this.props.filename}/`, {})
       .then(() => {
         this.loadMetaData();
       })
@@ -485,8 +498,8 @@ export default class Exam extends React.Component<Props, State> {
             onFinishEdit={this.toggleEditingMetadataActive}
           />
         )}
-        {this.state.savedMetaData.is_payment_exam &&
-          !this.state.savedMetaData.payment_exam_checked && (
+        {this.state.savedMetaData.is_oral_transcript &&
+          !this.state.savedMetaData.oral_transcript_checked && (
             <div {...styles.checkWrapper}>
               This is a transcript of an oral exam. It needs to be checked
               whether it is a valid transcript.
@@ -496,10 +509,10 @@ export default class Exam extends React.Component<Props, State> {
               </button>
             </div>
           )}
-        {this.state.savedMetaData.has_printonly && (
+        {this.state.savedMetaData.is_printonly && (
           <PrintExam
             title="exam"
-            examtype="printonly"
+            examtype="exam"
             filename={this.props.filename}
           />
         )}
@@ -513,7 +526,11 @@ export default class Exam extends React.Component<Props, State> {
           )}
         {this.state.savedMetaData.legacy_solution && (
           <div {...styles.linkBanner}>
-            <a href={this.state.savedMetaData.legacy_solution} target="_blank">
+            <a
+              href={this.state.savedMetaData.legacy_solution}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Legacy Solution in VISki
             </a>
             {this.state.canEdit && [
@@ -521,6 +538,8 @@ export default class Exam extends React.Component<Props, State> {
               <a
                 href={"/legacy/transformwiki/" + wikitransform}
                 target="_blank"
+                key="key"
+                rel="noopener noreferrer"
               >
                 Transform VISki to Markdown
               </a>,
@@ -529,7 +548,11 @@ export default class Exam extends React.Component<Props, State> {
         )}
         {this.state.savedMetaData.master_solution && (
           <div {...styles.linkBanner}>
-            <a href={this.state.savedMetaData.master_solution} target="_blank">
+            <a
+              href={this.state.savedMetaData.master_solution}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Official Solution (external)
             </a>
           </div>
@@ -538,8 +561,9 @@ export default class Exam extends React.Component<Props, State> {
           !this.state.savedMetaData.solution_printonly && (
             <div {...styles.linkBanner}>
               <a
-                href={"/api/pdf/solution/" + this.props.filename}
+                href={"/api/exam/pdf/solution/" + this.props.filename + "/"}
                 target="_blank"
+                rel="noopener noreferrer"
               >
                 Official Solution
               </a>
@@ -547,7 +571,11 @@ export default class Exam extends React.Component<Props, State> {
           )}
         {this.state.savedMetaData.attachments.map(att => (
           <div {...styles.linkBanner} key={att.filename}>
-            <a href={"/api/filestore/" + att.filename} target="_blank">
+            <a
+              href={"/api/filestore/get/" + att.filename + "/"}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               {att.displayname}
             </a>
           </div>

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { NotificationInfo } from "../interfaces";
-import * as moment from "moment";
+import moment from "moment";
 import { css } from "glamor";
 import { fetchpost } from "../fetch-utils";
 import Colors from "../colors";
@@ -44,9 +44,8 @@ const styles = {
 
 export default class NotificationComponent extends React.Component<Props> {
   readNotification = (notification: NotificationInfo) => {
-    fetchpost("/api/notifications/setread", {
-      read: 1,
-      notificationoid: notification.oid,
+    fetchpost("/api/notification/setread/" + notification.oid + "/", {
+      read: true,
     });
   };
 
