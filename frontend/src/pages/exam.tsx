@@ -1,17 +1,24 @@
 import * as React from "react";
 import { createSectionRenderer, SectionRenderer } from "../split-render";
 import { loadSections } from "../exam-loader";
-import { ExamMetaData, PdfSection, Section, SectionKind } from "../interfaces";
+import {
+  ExamMetaData,
+  PdfSection,
+  Section,
+  SectionKind,
+  AnswerSection,
+} from "../interfaces";
 import * as pdfjs from "pdfjs-dist";
 import { debounce } from "lodash";
 import { css } from "glamor";
 import PdfSectionComp from "../components/pdf-section";
 import AnswerSectionComponent from "../components/answer-section";
-import { fetchapi, fetchpost } from "../fetch-utils";
+import { fetchGet, fetchPost } from "../fetch-utils";
 import MetaData from "../components/metadata";
 import Colors from "../colors";
 import PrintExam from "../components/print-exam";
 import globalcss from "../globalcss";
+import { TOCNode, TOC } from "../components/table-of-contents";
 
 const RERENDER_INTERVAL = 500;
 const MAX_WIDTH = 1200;
@@ -80,6 +87,7 @@ interface Props {
 }
 
 interface State {
+  moveTarget?: AnswerSection;
   pdf?: pdfjs.PDFDocumentProxy;
   renderer?: SectionRenderer;
   width: number;
@@ -87,11 +95,12 @@ interface State {
   canEdit: boolean;
   sections?: Section[];
   allShown: boolean;
-  addingSectionsActive: boolean;
+  editingSectionsActive: boolean;
   editingMetaData: boolean;
   savedMetaData: ExamMetaData;
   updateIntervalId: number;
   error?: string;
+  toc?: TOCNode;
 }
 
 function widthFromWindow(): number {
@@ -104,7 +113,7 @@ export default class Exam extends React.Component<Props, State> {
   state: State = {
     width: widthFromWindow(),
     dpr: window.devicePixelRatio,
-    addingSectionsActive: false,
+    editingSectionsActive: false,
     canEdit: false,
     editingMetaData: false,
     savedMetaData: {
@@ -160,7 +169,7 @@ export default class Exam extends React.Component<Props, State> {
   }
 
   loadMetaData = () => {
-    fetchapi(`/api/exam/metadata/${this.props.filename}/`)
+    fetchGet(`/api/exam/metadata/${this.props.filename}/`)
       .then(res => {
         this.setState({
           canEdit: res.value.canEdit,
@@ -171,6 +180,24 @@ export default class Exam extends React.Component<Props, State> {
       .catch(err => {
         this.setState({ error: err.toString() });
       });
+  };
+
+  generateTableOfContents = (sections: Section[] | undefined) => {
+    if (sections === undefined) {
+      return undefined;
+    }
+    const rootNode = new TOCNode("[root]", "");
+    for (const section of sections) {
+      if (section.kind === SectionKind.Answer) {
+        if (section.cutHidden) continue;
+        const parts = section.name.split(" > ");
+        if (parts.length === 1 && parts[0].length === 0) continue;
+        const jumpTarget = `${section.oid}-${parts.join("-")}`;
+        rootNode.add(parts, jumpTarget);
+      }
+    }
+    if (rootNode.children.length === 0) return undefined;
+    return rootNode;
   };
 
   loadPDF = async () => {
@@ -249,7 +276,10 @@ export default class Exam extends React.Component<Props, State> {
   loadSectionsFromBackend = (numPages: number) => {
     loadSections(this.props.filename, numPages)
       .then(sections => {
-        this.setState({ sections: sections });
+        this.setState({
+          sections: sections,
+          toc: this.generateTableOfContents(sections),
+        });
       })
       .catch(err => {
         this.setState({ error: err.toString() });
@@ -257,7 +287,7 @@ export default class Exam extends React.Component<Props, State> {
   };
 
   updateCutVersion = () => {
-    fetchapi(`/api/exam/cutversions/${this.props.filename}/`)
+    fetchGet(`/api/exam/cutversions/${this.props.filename}/`)
       .then(res => {
         const versions = res.value;
         this.setState(prevState => ({
@@ -291,24 +321,46 @@ export default class Exam extends React.Component<Props, State> {
         relHeight,
       );
     }
-
-    fetchpost(`/api/exam/addcut/${this.props.filename}/`, {
-      pageNum: section.start.page,
-      relHeight: relHeight,
-    })
-      .then(() => {
-        this.setState({
-          error: "",
-        });
-        if (this.state.pdf) {
-          this.loadSectionsFromBackend(this.state.pdf.numPages);
-        }
+    const moveTarget = this.state.moveTarget;
+    if (moveTarget) {
+      fetchPost(`/api/exam/editcut/${moveTarget.oid}/`, {
+        pageNum: section.start.page,
+        relHeight: relHeight,
       })
-      .catch(err => {
-        this.setState({
-          error: err.toString(),
+        .then(() => {
+          this.setState({
+            error: "",
+            moveTarget: undefined,
+          });
+          if (this.state.pdf) {
+            this.loadSectionsFromBackend(this.state.pdf.numPages);
+          }
+        })
+        .catch(err => {
+          this.setState({
+            error: err.toString(),
+          });
         });
-      });
+    } else {
+      fetchPost(`/api/exam/addcut/${this.props.filename}/`, {
+        name: "",
+        pageNum: section.start.page,
+        relHeight: relHeight,
+      })
+        .then(() => {
+          this.setState({
+            error: "",
+          });
+          if (this.state.pdf) {
+            this.loadSectionsFromBackend(this.state.pdf.numPages);
+          }
+        })
+        .catch(err => {
+          this.setState({
+            error: err.toString(),
+          });
+        });
+    }
   };
 
   gotoPDF = () => {
@@ -362,9 +414,9 @@ export default class Exam extends React.Component<Props, State> {
     }));
   };
 
-  toggleAddingSectionActive = () => {
+  toggleEditingSectionActive = () => {
     this.setState(prevState => {
-      return { addingSectionsActive: !prevState.addingSectionsActive };
+      return { editingSectionsActive: !prevState.editingSectionsActive };
     });
   };
 
@@ -386,7 +438,7 @@ export default class Exam extends React.Component<Props, State> {
     if (this.state.editingMetaData) {
       this.toggleEditingMetadataActive();
     }
-    fetchpost(`/api/exam/setmetadata/${this.props.filename}/`, update).then(
+    fetchPost(`/api/exam/setmetadata/${this.props.filename}/`, update).then(
       res => {
         this.setState(prevState => ({
           savedMetaData: {
@@ -406,7 +458,7 @@ export default class Exam extends React.Component<Props, State> {
   };
 
   markPaymentExamChecked = () => {
-    fetchpost(`/api/payment/markexamchecked/${this.props.filename}/`, {})
+    fetchPost(`/api/payment/markexamchecked/${this.props.filename}/`, {})
       .then(() => {
         this.loadMetaData();
       })
@@ -416,7 +468,51 @@ export default class Exam extends React.Component<Props, State> {
         });
       });
   };
-
+  setHidden = (section: PdfSection, hidden: boolean) => {
+    const { cutOid } = section;
+    if (cutOid) {
+      fetchPost(`/api/exam/editcut/${cutOid}/`, {
+        hidden,
+      }).then(() => {
+        this.setState(prevState => {
+          const newSections = prevState.sections
+            ? prevState.sections.map(section =>
+                section.kind === SectionKind.Pdf && section.cutOid === cutOid
+                  ? { ...section, hidden }
+                  : section.kind === SectionKind.Answer &&
+                    section.oid === cutOid
+                  ? { ...section, cutHidden: hidden }
+                  : section,
+              )
+            : undefined;
+          return {
+            sections: newSections,
+            toc: this.generateTableOfContents(newSections),
+          };
+        });
+      });
+    } else {
+      fetchPost(`/api/exam/addcut/${this.props.filename}/`, {
+        name: "",
+        pageNum: section.end.page,
+        relHeight: section.end.position,
+        hidden,
+      })
+        .then(() => {
+          this.setState({
+            error: "",
+          });
+          if (this.state.pdf) {
+            this.loadSectionsFromBackend(this.state.pdf.numPages);
+          }
+        })
+        .catch(err => {
+          this.setState({
+            error: err.toString(),
+          });
+        });
+    }
+  };
   render() {
     if (!this.state.savedMetaData.canView) {
       if (
@@ -473,9 +569,10 @@ export default class Exam extends React.Component<Props, State> {
                 </div>
               ),
               <div key="cuts">
-                <button onClick={this.toggleAddingSectionActive}>
-                  {(this.state.addingSectionsActive && "Disable Adding Cuts") ||
-                    "Enable Adding Cuts"}
+                <button onClick={this.toggleEditingSectionActive}>
+                  {(this.state.editingSectionsActive &&
+                    "Disable Editing Cuts") ||
+                    "Enable Editing Cuts"}
                 </button>
               </div>,
             ]}
@@ -582,46 +679,77 @@ export default class Exam extends React.Component<Props, State> {
         ))}
         {(renderer && sections && (
           <div style={{ width: width }} {...styles.wrapper}>
+            {this.state.toc && <TOC toc={this.state.toc} />}
             {sections.map(e => {
               switch (e.kind) {
                 case SectionKind.Answer:
                   return (
-                    <AnswerSectionComponent
-                      key={e.oid}
-                      isAdmin={this.props.isAdmin}
-                      isExpert={this.state.savedMetaData.isExpert}
-                      filename={this.props.filename}
-                      oid={e.oid}
-                      width={width}
-                      canDelete={this.state.canEdit}
-                      onSectionChange={() =>
-                        this.state.pdf
-                          ? this.loadSectionsFromBackend(
-                              this.state.pdf.numPages,
-                            )
-                          : false
-                      }
-                      onToggleHidden={() => this.toggleHidden(e.oid)}
-                      hidden={e.hidden}
-                      cutVersion={e.cutVersion}
-                    />
+                    (!e.cutHidden ||
+                      (this.state.canEdit &&
+                        this.state.editingSectionsActive)) && (
+                      <AnswerSectionComponent
+                        isMoveTarget={this.state.moveTarget === e}
+                        moveEnabled={this.state.editingSectionsActive}
+                        moveTargetChange={(wantsToBeMoved: boolean) =>
+                          this.setState({
+                            moveTarget: wantsToBeMoved ? e : undefined,
+                          })
+                        }
+                        name={e.name}
+                        key={e.oid}
+                        isAdmin={this.props.isAdmin}
+                        isExpert={this.state.savedMetaData.isExpert}
+                        filename={this.props.filename}
+                        oid={e.oid}
+                        width={width}
+                        canDelete={this.state.canEdit}
+                        onSectionChange={() =>
+                          this.state.pdf
+                            ? this.loadSectionsFromBackend(
+                                this.state.pdf.numPages,
+                              )
+                            : false
+                        }
+                        onCutNameChange={(newName: string) => {
+                          e.name = newName;
+                          this.setState({
+                            toc: this.generateTableOfContents(
+                              this.state.sections,
+                            ),
+                          });
+                        }}
+                        onToggleHidden={() => this.toggleHidden(e.oid)}
+                        hidden={e.hidden}
+                        cutVersion={e.cutVersion}
+                      />
+                    )
                   );
                 case SectionKind.Pdf:
                   return (
-                    <PdfSectionComp
-                      key={e.key}
-                      section={e}
-                      renderer={renderer}
-                      width={width}
-                      dpr={dpr}
-                      renderText={!this.state.addingSectionsActive}
-                      // ts does not like it if this is undefined...
-                      onClick={
-                        this.state.canEdit && this.state.addingSectionsActive
-                          ? this.addSection
-                          : ev => ev
-                      }
-                    />
+                    (!e.hidden ||
+                      (this.state.canEdit &&
+                        this.state.editingSectionsActive)) && (
+                      <PdfSectionComp
+                        canHide={
+                          this.state.canEdit && this.state.editingSectionsActive
+                        }
+                        setHidden={(newHidden: boolean) =>
+                          this.setHidden(e, newHidden)
+                        }
+                        key={e.key}
+                        section={e}
+                        renderer={renderer}
+                        width={width}
+                        dpr={dpr}
+                        renderText={!this.state.editingSectionsActive}
+                        // ts does not like it if this is undefined...
+                        onClick={
+                          this.state.canEdit && this.state.editingSectionsActive
+                            ? this.addSection
+                            : ev => ev
+                        }
+                      />
+                    )
                   );
                 default:
                   return null as never;

@@ -11,8 +11,10 @@ export interface AnswerSection {
   answers: Answer[];
   allow_new_answer: boolean; // whether the current user can add an answer
   allow_new_legacy_answer: boolean; // whether a legacy answer can be posted
+  cutHidden: boolean;
   hidden: boolean; // whether the element is currently hidden
   cutVersion: number; // version of the answer section, should reload if changed
+  name: string;
 }
 
 export interface Answer {
@@ -51,9 +53,11 @@ export interface Comment {
 
 export interface PdfSection {
   key: React.Key;
+  cutOid?: string;
   kind: SectionKind.Pdf;
   start: CutPosition;
   end: CutPosition;
+  hidden: boolean;
 }
 
 export interface CutPosition {
@@ -65,6 +69,8 @@ export interface ServerCutPosition {
   relHeight: number;
   oid: string;
   cutVersion: number;
+  name: string;
+  hidden: boolean;
 }
 
 export interface Attachment {
@@ -221,4 +227,11 @@ export interface FeedbackEntry {
   time: string;
   read: boolean;
   done: boolean;
+}
+
+export interface FAQEntry {
+  oid: string;
+  question: string;
+  answer: string;
+  order: number;
 }

@@ -1,13 +1,19 @@
 import * as React from "react";
 import { AnswerSection, SectionKind } from "../interfaces";
 import { loadAnswerSection } from "../exam-loader";
-import { fetchpost } from "../fetch-utils";
+import { fetchPost } from "../fetch-utils";
 import { css } from "glamor";
 import AnswerComponent from "./answer";
 import GlobalConsts from "../globalconsts";
+import { Edit } from "react-feather";
+import { Link } from "react-router-dom";
 import moment from "moment";
 
 interface Props {
+  name: string;
+  moveEnabled: boolean;
+  isMoveTarget: boolean;
+  moveTargetChange: (wantsToBeMoved: boolean) => void;
   isAdmin: boolean;
   isExpert: boolean;
   filename: string;
@@ -15,12 +21,15 @@ interface Props {
   width: number;
   canDelete: boolean;
   onSectionChange: () => void;
+  onCutNameChange: (newName: string) => void;
   onToggleHidden: () => void;
   hidden: boolean;
   cutVersion: number;
 }
 
 interface State {
+  name: string;
+  editingName: boolean;
   section?: AnswerSection;
   addingAnswer: boolean;
   addingLegacyAnswer: boolean;
@@ -63,16 +72,28 @@ const styles = {
       display: "none",
     },
   }),
+  namePart: css({
+    display: "inline-block",
+    backgroundColor: "#dadada",
+    padding: "0.25rem",
+    margin: "0.2rem",
+    borderRadius: "3px",
+  }),
 };
 
 export default class AnswerSectionComponent extends React.Component<
   Props,
   State
 > {
-  state: State = {
-    addingAnswer: false,
-    addingLegacyAnswer: false,
-  };
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      name: this.props.name,
+      editingName: false,
+      addingAnswer: false,
+      addingLegacyAnswer: false,
+    };
+  }
 
   componentDidMount() {
     loadAnswerSection(this.props.oid)
@@ -104,10 +125,13 @@ export default class AnswerSectionComponent extends React.Component<
     // eslint-disable-next-line no-restricted-globals
     const confirmation = confirm("Remove answer section with all answers?");
     if (confirmation) {
-      fetchpost(`/api/exam/removecut/${this.props.oid}/`, {}).then(() => {
+      fetchPost(`/api/exam/removecut/${this.props.oid}/`, {}).then(() => {
         this.props.onSectionChange();
       });
     }
+  };
+  moveSection = () => {
+    this.props.moveTargetChange(!this.props.isMoveTarget);
   };
 
   addAnswer = (legacy: boolean) => {
@@ -139,20 +163,81 @@ export default class AnswerSectionComponent extends React.Component<
     });
   };
 
+  updateName = async () => {
+    try {
+      await fetchPost(`/api/exam/editcut/${this.props.oid}/`, {
+        name: this.state.name,
+      });
+      this.setState({
+        editingName: false,
+      });
+      this.props.onCutNameChange(this.state.name);
+    } catch (e) {
+      return;
+    }
+  };
+
   render() {
     const { section } = this.state;
     if (!section) {
       return <div>Loading...</div>;
     }
+    const nameParts = this.state.name.split(" > ");
+    const id = `${this.props.oid}-${nameParts.join("-")}`;
+    const name = (
+      <div>
+        {this.state.editingName ? (
+          <>
+            <input
+              type="text"
+              value={this.state.name || ""}
+              placeholder="Name"
+              onChange={e => this.setState({ name: e.target.value })}
+            />
+            <button onClick={this.updateName}>Save</button>
+          </>
+        ) : (
+          <>
+            {this.state.name.length > 0 && (
+              <Link to={`#${encodeURI(id)}`} id={id}>
+                {nameParts.map((part, i) => (
+                  <div {...styles.namePart} key={part + i}>
+                    {part}
+                  </div>
+                ))}
+              </Link>
+            )}
+            {this.props.canDelete && (
+              <button onClick={() => this.setState({ editingName: true })}>
+                <Edit size={12} />
+              </button>
+            )}
+          </>
+        )}
+      </div>
+    );
+    const editingSection = (
+      <div {...styles.rightButton}>
+        {this.props.canDelete && (
+          <button onClick={this.removeSection}>Remove</button>
+        )}
+        {this.props.moveEnabled && this.props.canDelete && (
+          <button onClick={this.moveSection}>
+            {this.props.isMoveTarget ? "Cancel" : "Move"}
+          </button>
+        )}
+      </div>
+    );
     if (this.props.hidden && section.answers.length > 0) {
       return (
         <div {...styles.wrapper}>
+          {name}
           <div key="showhidebutton" {...styles.threebuttons}>
             <div />
             <div>
               <button onClick={this.props.onToggleHidden}>Show Answers</button>
             </div>
-            <div />
+            {editingSection}
           </div>
           <div {...styles.divideLine} />
         </div>
@@ -160,6 +245,7 @@ export default class AnswerSectionComponent extends React.Component<
     }
     return (
       <div {...styles.wrapper}>
+        {name}
         {(section.answers.length > 0 || this.state.addingAnswer) && (
           <div {...styles.answerWrapper}>
             {this.state.addingAnswer && (
@@ -243,13 +329,7 @@ export default class AnswerSectionComponent extends React.Component<
               <button onClick={this.props.onToggleHidden}>Hide Answers</button>
             )}
           </div>
-          <div {...styles.rightButton}>
-            {this.props.canDelete && (
-              <button onClick={this.removeSection}>
-                Remove Answer Section
-              </button>
-            )}
-          </div>
+          {editingSection}
         </div>
         <div {...styles.divideLine} />
       </div>
