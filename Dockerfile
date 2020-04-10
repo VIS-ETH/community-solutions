@@ -30,8 +30,12 @@ RUN pip3 install -r requirements.txt
 
 COPY cinit.yml /etc/cinit.d/community-solutions.yml
 
-# prevent guincorn from buffering prints from python workers
+# prevent gunicorn from buffering prints from python workers
 ENV PYTHONUNBUFFERED True
+
+# Get redis from official image
+COPY --from=redis:5 /usr/local/bin/redis-server .
+COPY redis.conf .
 
 COPY --from=0 /usr/src/app/build/manifest.json ./manifest.json
 COPY --from=0 /usr/src/app/build/index.html ./index.html
