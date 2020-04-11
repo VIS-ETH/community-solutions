@@ -7,7 +7,7 @@ from myauth.models import get_my_user, MyUser
 from categories.models import Category, MetaCategory
 from django.conf import settings
 from django.shortcuts import get_object_or_404
-
+from django.views.decorators.cache import cache_page
 
 @response.request_get()
 @auth_check.require_login
@@ -17,6 +17,7 @@ def list_categories(request):
 
 @response.request_get()
 @auth_check.require_login
+@cache_page(15 * 60)
 def list_categories_with_meta(request):
     categories = Category.objects.select_related('meta').order_by('displayname').all()
     res = [
@@ -218,6 +219,7 @@ def remove_user_from_set(request, slug):
 
 @response.request_get()
 @auth_check.require_login
+@cache_page(15 * 60)
 def list_metacategories(request):
     categories = MetaCategory.objects.select_related('parent').prefetch_related('metacategory_set', 'category_set').all()
     tree = {}
