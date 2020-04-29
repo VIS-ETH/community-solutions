@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'graphene_django',
     'answers.apps.AnswersConfig',
     'categories.apps.CategoriesConfig',
     'faq.apps.FaqConfig',
@@ -85,7 +86,14 @@ INSTALLED_APPS = [
     'payments.apps.PaymentsConfig',
     'scoreboard.apps.ScoreboardConfig',
     'testing.apps.TestingConfig',
+    "django_filters",
 ]
+GRAPHENE = {
+    'SCHEMA': 'exams.schema.schema',
+    'MIDDLEWARE': [
+        'graphene_django.debug.DjangoDebugMiddleware',
+    ]
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -95,7 +103,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'csp.middleware.CSPMiddleware',
+#    'csp.middleware.CSPMiddleware',
     'util.middleware.parse_request_middleware',
 ]
 
@@ -196,3 +204,4 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "static/")

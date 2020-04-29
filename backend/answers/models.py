@@ -65,7 +65,7 @@ class ExamType(models.Model):
 
 
 class AnswerSection(models.Model):
-    exam = models.ForeignKey('Exam', on_delete=models.CASCADE)
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name="answerSections")
     author = models.ForeignKey('auth.User', null=True, on_delete=models.SET_NULL)
     page_num = models.IntegerField()
     rel_height = models.FloatField()

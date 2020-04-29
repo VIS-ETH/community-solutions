@@ -14,7 +14,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path, re_path, include
+from django.conf.urls import url
 from django.views.static import serve
+from django.views.decorators.csrf import csrf_exempt
+from graphene_django.views import GraphQLView
 
 from . import views
 
@@ -31,10 +34,12 @@ urlpatterns = [
     path('api/notification/', include('notifications.urls')),
     path('api/payment/', include('payments.urls')),
     path('api/scoreboard/', include('scoreboard.urls')),
-    re_path(r'^static/(?P<path>.*)$', views.cached_serve, {
-       'document_root': 'static',
-    }),
+    url(r"^graphql$", csrf_exempt(GraphQLView.as_view(graphiql=True))),
 ]
+    #re_path(r'^static/(?P<path>.*)$', views.cached_serve, {
+    #   'document_root': 'static',
+    #}),
+#]
 
 handler400 = views.handler400
 handler403 = views.handler403
