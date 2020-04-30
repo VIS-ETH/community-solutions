@@ -1,0 +1,279 @@
+schema {
+  query: Query
+}
+
+type Answer implements Node {
+  id: ID!
+  answerSection: AnswerSection!
+  author: User!
+  text: String!
+  time: DateTime!
+  edittime: DateTime!
+  upvotes: [User!]!
+  downvotes: [User!]!
+  expertvotes: [User!]!
+  flagged: [User!]!
+  isLegacyAnswer: Boolean!
+  longId: String!
+  commentSet(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): CommentConnection!
+}
+
+type AnswerConnection {
+  pageInfo: PageInfo!
+  edges: [AnswerEdge]!
+}
+
+type AnswerEdge {
+  node: Answer
+  cursor: String!
+}
+
+type AnswerSection implements Node {
+  id: ID!
+  exam: Exam!
+  author: User
+  pageNum: Int!
+  relHeight: Float!
+  cutVersion: Int!
+  name: String!
+  hidden: Boolean!
+  answerSet(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): AnswerConnection!
+}
+
+type AnswerSectionConnection {
+  pageInfo: PageInfo!
+  edges: [AnswerSectionEdge]!
+}
+
+type AnswerSectionEdge {
+  node: AnswerSection
+  cursor: String!
+}
+
+enum CategoryForm {
+  WRITTEN
+  ORAL
+}
+
+enum CategoryPermission {
+  PUBLIC
+  INTERN
+  HIDDEN
+  NONE
+}
+
+enum CategorySemester {
+  _
+  FS
+  HS
+  BOTH
+}
+
+type CategoryType {
+  id: ID!
+  displayname: String!
+  slug: String!
+  form: CategoryForm!
+  remark: String!
+  semester: CategorySemester!
+  permission: CategoryPermission!
+  moreExamsLink: String!
+  hasPayments: Boolean!
+  admins: [User!]!
+  experts: [User!]!
+  examSet(before: String, after: String, first: Int, last: Int): ExamConnection!
+}
+
+type Comment implements Node {
+  id: ID!
+  answer: Answer!
+  author: User!
+  text: String!
+  time: DateTime!
+  edittime: DateTime!
+  longId: String!
+}
+
+type CommentConnection {
+  pageInfo: PageInfo!
+  edges: [CommentEdge]!
+}
+
+type CommentEdge {
+  node: Comment
+  cursor: String!
+}
+
+scalar DateTime
+
+type DjangoDebug {
+  sql: [DjangoDebugSQL]
+}
+
+type DjangoDebugSQL {
+  vendor: String!
+  alias: String!
+  sql: String
+  duration: Float!
+  rawSql: String!
+  params: String!
+  startTime: Float!
+  stopTime: Float!
+  isSlow: Boolean!
+  isSelect: Boolean!
+  transId: String
+  transStatus: String
+  isoLevel: String
+  encoding: String
+}
+
+type Exam implements Node {
+  id: ID!
+  filename: String!
+  displayname: String!
+  category: CategoryType
+  examType: ExamType!
+  remark: String!
+  resolveAlias: String!
+  public: Boolean!
+  finishedCuts: Boolean!
+  finishedWikiTransfer: Boolean!
+  needsPayment: Boolean!
+  importClaim: User
+  importClaimTime: DateTime
+  isPrintonly: Boolean!
+  hasSolution: Boolean!
+  solutionPrintonly: Boolean!
+  masterSolution: String!
+  legacySolution: String!
+  isOralTranscript: Boolean!
+  oralTranscriptUploader: User
+  oralTranscriptChecked: Boolean!
+  answerSections(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): AnswerSectionConnection!
+}
+
+type ExamConnection {
+  pageInfo: PageInfo!
+  edges: [ExamEdge]!
+}
+
+type ExamEdge {
+  node: Exam
+  cursor: String!
+}
+
+type ExamType implements Node {
+  id: ID!
+  displayname: String!
+  order: Int!
+  examSet(before: String, after: String, first: Int, last: Int): ExamConnection!
+}
+
+interface Node {
+  id: ID!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+type Query {
+  categories: [CategoryType]
+  exams(before: String, after: String, first: Int, last: Int): ExamConnection
+  exam(filename: String): Exam
+  examTypes: [ExamType]
+  answerSections: [AnswerSection]
+  answers: [Answer]
+  comments: [Comment]
+  user(username: String): User
+  node(id: ID!): Node
+  _debug: DjangoDebug
+}
+
+type User {
+  id: ID!
+  password: String!
+  lastLogin: DateTime
+  isSuperuser: Boolean!
+  username: String!
+  firstName: String!
+  lastName: String!
+  email: String!
+  isStaff: Boolean!
+  isActive: Boolean!
+  dateJoined: DateTime!
+  importClaimSet(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): ExamConnection!
+  oralTranscriptSet(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): ExamConnection!
+  answersectionSet(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): AnswerSectionConnection!
+  answerSet(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): AnswerConnection!
+  upvotedAnswerSet(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): AnswerConnection!
+  downvotedAnswerSet(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): AnswerConnection!
+  expertvoteAnswerSet(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): AnswerConnection!
+  flaggedAnswerSet(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): AnswerConnection!
+  commentSet(
+    before: String
+    after: String
+    first: Int
+    last: Int
+  ): CommentConnection!
+  categoryAdminSet: [CategoryType!]!
+  categoryExpertSet: [CategoryType!]!
+}
