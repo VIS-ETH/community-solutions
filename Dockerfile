@@ -17,5 +17,7 @@ COPY cinit.yml /etc/cinit.d/community-solutions.yml
 # prevent guincorn from buffering prints from python workers
 ENV PYTHONUNBUFFERED True
 COPY ./backend/ ./
+RUN python3 manage.py check
 RUN python3 manage.py graphql_schema --schema exams.schema.schema --out schema.json
+
 EXPOSE 80
