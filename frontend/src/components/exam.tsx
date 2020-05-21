@@ -1,29 +1,33 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
-import {
-  ExamMetaData,
-  Section,
-  SectionKind,
-  EditMode,
-  EditState,
-  CutVersions,
-  PdfSection,
-} from "../interfaces";
-import AnswerSectionComponent from "./answer-section";
-import PdfSectionCanvas from "../pdf/pdf-section-canvas";
 import { useRequest } from "@umijs/hooks";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { fetchGet } from "../api/fetch-utils";
 import { loadCutVersions } from "../api/hooks";
 import useSet from "../hooks/useSet";
+import {
+  CutVersions,
+  EditMode,
+  EditState,
+  ExamMetaData,
+  PdfSection,
+  Section,
+  SectionKind,
+} from "../interfaces";
+import { ExamSVG } from "../pages/exam-page";
 import PDF from "../pdf/pdf-renderer";
-import { fetchGet } from "../api/fetch-utils";
+import PdfSectionCanvas from "../pdf/pdf-section-canvas";
+import AnswerSectionComponent from "./answer-section";
+import PdfSectionSvg from "./pdf-section-svg";
 
 interface Props {
+  examSVG: ExamSVG;
   metaData: ExamMetaData;
   sections: Section[];
   width: number;
   editState: EditState;
   setEditState: (newEditState: EditState) => void;
   reloadCuts: () => void;
-  renderer: PDF;
+  renderer: PDF | undefined;
+  requestRenderer: () => void;
   onCutNameChange: (oid: string, name: string) => void;
   onSectionHiddenChange: (
     section: string | [number, number],
@@ -65,6 +69,8 @@ function useObjectFromMap<S, T, K extends string | number | symbol>(
 
 const Exam: React.FC<Props> = React.memo(
   ({
+    requestRenderer,
+    examSVG,
     metaData,
     sections,
     width,
@@ -98,6 +104,37 @@ const Exam: React.FC<Props> = React.memo(
         };
       },
       [editState, metaData.filename, onAddCut, onMoveCut],
+    );
+
+    const masterSvg = useMemo(() => {
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      /*for (const attribute of examSVG.attributes) {
+        svg.setAttribute(attribute.name, attribute.value);
+      }*/
+
+      svg.appendChild(examSVG.defs);
+      for (let i = 0; i < examSVG.pages.length; i++) {
+        const page = examSVG.pages[i];
+        const symbol = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "symbol",
+        );
+
+        symbol.id = `${metaData.filename}-page${i}`;
+        for (let j = 0; j < page.children.length; j++) {
+          symbol.appendChild(page.children[j]);
+        }
+        svg.append(symbol);
+      }
+      return svg;
+    }, [examSVG, metaData.filename]);
+    const mountMasterSvg = useCallback(
+      (div: HTMLDivElement) => {
+        if (div === null) return;
+        while (div.lastChild) div.removeChild(div.lastChild);
+        div.appendChild(masterSvg);
+      },
+      [masterSvg],
     );
 
     const [visible, show, hide] = useSet<string>();
@@ -160,8 +197,13 @@ const Exam: React.FC<Props> = React.memo(
       },
       [sections, getAddCutHandler],
     );
+    const needsCanvas = editState.mode !== EditMode.None;
+    useEffect(() => {
+      if (needsCanvas) requestRenderer();
+    }, [needsCanvas, requestRenderer]);
     return (
       <>
+        <div ref={mountMasterSvg} />
         {sections.map(section => {
           if (section.kind === SectionKind.Answer) {
             if (displayHiddenAnswerSections || !section.cutHidden) {
@@ -212,25 +254,35 @@ const Exam: React.FC<Props> = React.memo(
                   {pageCounter < section.start.page && ++pageCounter && (
                     <div id={`page-${pageCounter}`} />
                   )}
-                  {renderer && (
-                    <PdfSectionCanvas
-                      /* PDF cut data */
-                      oid={section.cutOid}
-                      page={section.start.page}
+                  {!needsCanvas || renderer === undefined ? (
+                    <PdfSectionSvg
+                      name={metaData.filename}
+                      examSVG={examSVG}
                       start={section.start.position}
                       end={section.end.position}
-                      hidden={section.hidden}
-                      /* Handler */
-                      onSectionHiddenChange={onSectionHiddenChange}
-                      displayHideShowButtons={displayHideShowButtons}
-                      renderer={renderer}
-                      targetWidth={width}
-                      onVisibleChange={onChangeListeners[section.key]}
-                      /* Add cut */
-                      snap={snap}
-                      addCutText={addCutText}
-                      onAddCut={addCutHandlers[section.key]}
+                      page={section.start.page}
                     />
+                  ) : (
+                    renderer && (
+                      <PdfSectionCanvas
+                        /* PDF cut data */
+                        oid={section.cutOid}
+                        page={section.start.page}
+                        start={section.start.position}
+                        end={section.end.position}
+                        hidden={section.hidden}
+                        /* Handler */
+                        onSectionHiddenChange={onSectionHiddenChange}
+                        displayHideShowButtons={displayHideShowButtons}
+                        renderer={renderer}
+                        targetWidth={width}
+                        onVisibleChange={onChangeListeners[section.key]}
+                        /* Add cut */
+                        snap={snap}
+                        addCutText={addCutText}
+                        onAddCut={addCutHandlers[section.key]}
+                      />
+                    )
                   )}
                 </React.Fragment>
               );

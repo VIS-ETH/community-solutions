@@ -14,7 +14,7 @@ import {
 import React, { useCallback, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { loadSections } from "../api/exam-loader";
-import { fetchPost } from "../api/fetch-utils";
+import { fetchPost, fetchGet } from "../api/fetch-utils";
 import { loadCuts, loadExamMetaData, loadSplitRenderer } from "../api/hooks";
 import { UserContext, useUser } from "../auth";
 import Exam from "../components/exam";
@@ -71,6 +71,8 @@ interface ExamPageContentProps {
   metaData: ExamMetaData;
   sections?: Section[];
   renderer?: PDF;
+  requestRenderer: () => void;
+  examSVG?: ExamSVG;
   reloadCuts: () => void;
   mutateCuts: (mutation: (old: ServerCutResponse) => ServerCutResponse) => void;
   toggleEditing: () => void;
@@ -79,6 +81,8 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
   metaData,
   sections,
   renderer,
+  requestRenderer,
+  examSVG,
   reloadCuts,
   mutateCuts,
   toggleEditing,
@@ -141,9 +145,13 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
 
   const [visibleSplits, addVisible, removeVisible] = useSet<PdfSection>();
   const [panelIsOpen, togglePanel] = useToggle();
-  const [editState, setEditState] = useState<EditState>({
+  const [editState, sa] = useState<EditState>({
     mode: EditMode.None,
   });
+  const setEditState = useCallback((a: EditState) => {
+    console.log(a);
+    sa(a);
+  }, []);
 
   const visibleChangeListener = useCallback(
     (section: PdfSection, v: boolean) =>
@@ -319,8 +327,9 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
 
       <ContentContainer>
         <div ref={sizeRef} style={{ maxWidth }} className="mx-auto my-3">
-          {width && sections && renderer && (
+          {width && sections && examSVG && (
             <Exam
+              examSVG={examSVG}
               metaData={metaData}
               sections={sections}
               width={width}
@@ -328,6 +337,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
               setEditState={setEditState}
               reloadCuts={reloadCuts}
               renderer={renderer}
+              requestRenderer={requestRenderer}
               onCutNameChange={runUpdateCutName}
               onSectionHiddenChange={onSectionHiddenChange}
               onAddCut={runAddCut}
@@ -359,6 +369,24 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
     </>
   );
 };
+export interface ExamSVG {
+  attributes: NamedNodeMap;
+  defs: SVGElement;
+  pages: SVGElement[];
+}
+const loadSvg = async (filename: string): Promise<ExamSVG> => {
+  const str = await (await fetch(`/api/exam/svg/exam/${filename}/`)).text();
+  const domParser = new DOMParser();
+  const document = domParser.parseFromString(str, "image/svg+xml");
+  const svg = document.children[0];
+  const defs = svg.children[0];
+  const pages = [...svg.children[1].children];
+  return {
+    attributes: svg.attributes,
+    defs: defs as SVGElement,
+    pages: pages as SVGElement[],
+  };
+};
 
 const ExamPage: React.FC<{}> = () => {
   const { filename } = useParams() as { filename: string };
@@ -380,13 +408,18 @@ const ExamPage: React.FC<{}> = () => {
   } = useRequest(() => loadCuts(filename), {
     cacheKey: `exam-cuts-${filename}`,
   });
-  const { error: pdfError, loading: pdfLoading, data } = useRequest(() =>
-    loadSplitRenderer(filename),
+  const { error: pdfError, data, run: runGetRenderer } = useRequest(
+    () => loadSplitRenderer(filename),
+    { manual: true },
   );
-  const [pdf, renderer] = data ? data : [];
+  const { data: examSVG, loading: pdfLoading } = useRequest(() =>
+    loadSvg(filename),
+  );
+  const [, renderer] = data ? data : [];
   const sections = useMemo(
-    () => (cuts && pdf ? loadSections(pdf.numPages, cuts) : undefined),
-    [pdf, cuts],
+    () =>
+      cuts && examSVG ? loadSections(examSVG.pages.length, cuts) : undefined,
+    [examSVG, cuts],
   );
   const [editing, toggleEditing] = useToggle();
   const error = metaDataError || cutsError || pdfError;
@@ -434,9 +467,13 @@ const ExamPage: React.FC<{}> = () => {
               }}
             >
               <ExamPageContent
+                requestRenderer={
+                  renderer === undefined ? runGetRenderer : () => {}
+                }
                 metaData={metaData}
                 sections={sections}
                 renderer={renderer}
+                examSVG={examSVG}
                 reloadCuts={reloadCuts}
                 mutateCuts={mutateCuts}
                 toggleEditing={toggleEditing}

@@ -14,8 +14,7 @@ import {
   ServerCutResponse,
   UserInfo,
 } from "../interfaces";
-import PDF from "../pdf/pdf-renderer";
-import { getDocument, PDFDocumentProxy } from "../pdf/pdfjs";
+import { PDFDocumentProxy } from "../pdf/pdfjs";
 import { fetchGet, fetchPost } from "./fetch-utils";
 
 const loadUserInfo = async (username: string) => {
@@ -205,6 +204,7 @@ export const loadExamMetaData = async (filename: string) => {
     .value as ExamMetaData;
 };
 export const loadSplitRenderer = async (filename: string) => {
+  const { PDF, getDocument } = await import("../pdf/");
   const pdf = await new Promise<PDFDocumentProxy>((resolve, reject) =>
     getDocument(`/api/exam/pdf/exam/${filename}`).promise.then(resolve, reject),
   );

@@ -187,12 +187,13 @@ const ExamPanel: React.FC<ExamPanelProps> = ({
               </IconButton>
               <IconButton
                 tooltip="Add new cuts"
-                onClick={() =>
+                onClick={() => {
+                  console.log("jo hi");
                   setEditState({
                     mode: EditMode.Add,
                     snap,
-                  })
-                }
+                  });
+                }}
                 icon="PLUS"
                 active={editState.mode === EditMode.Add}
               >

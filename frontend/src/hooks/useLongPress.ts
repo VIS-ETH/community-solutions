@@ -27,6 +27,7 @@ const useLongPress = <T>(
   const pos = useRef<Point>([0, 0]);
   const style = useRef<HTMLStyleElement | undefined>();
   const handler = useCallback(() => {
+    console.log("Too long");
     timer.current = undefined;
     onHold();
   }, [timer, onHold]);
@@ -44,11 +45,14 @@ const useLongPress = <T>(
 
   const onPointerUp = useCallback(
     (e: React.PointerEvent<T>) => {
+      console.log("up");
       removeStyle(style.current);
       if (timer.current) {
         window.clearTimeout(timer.current);
         timer.current = undefined;
         onClick(e);
+      } else {
+        console.log("WTF");
       }
     },
     [timer, onClick],
@@ -56,16 +60,17 @@ const useLongPress = <T>(
 
   const onPointerMove = useCallback(
     (e: React.PointerEvent<T>) => {
-      if (timer) {
+      if (timer.current) {
         const [x, y] = pos.current;
         const d = (e.clientX - x) ** 2 + (e.clientY - y) ** 2;
         if (d > longPressDistanceSq) {
           window.clearTimeout(timer.current);
           timer.current = undefined;
+          onClick(e);
         }
       }
     },
-    [timer, pos, longPressDistanceSq],
+    [timer, pos, longPressDistanceSq, onClick],
   );
   return { onPointerDown, onPointerUp, onPointerMove } as const;
 };

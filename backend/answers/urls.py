@@ -41,6 +41,7 @@ urlpatterns = [
     path('remove/printonly/<str:filename>/', views_files.remove_printonly, name='remove_printonly'),
     path('remove/solution/<str:filename>/', views_files.remove_solution, name='remove_solution'),
     path('pdf/exam/<str:filename>/', views_files.get_exam_pdf, name='get_exam_pdf'),
+    path('svg/exam/<str:filename>/', views_files.get_exam_svg, name='get_exam_svg'),
     path('pdf/solution/<str:filename>/', views_files.get_solution_pdf, name='get_solution_pdf'),
     path('pdf/printonly/<str:filename>/', views_files.get_printonly_pdf, name='get_printonly_pdf'),
     path('printpdf/exam/<str:filename>/', views_files.print_exam, name='printexam'),
