@@ -11,6 +11,7 @@ COPY ./frontend/.prettierrc.json ./.prettierrc.json
 COPY ./frontend/public ./public
 COPY ./frontend/src ./src
 RUN yarn run check-format || ( >&2 echo -e '\n\n=========\nSome code has not been autoformated. See "Editing frontend code" in README.md.\n=========\n\n'; exit 1 )
+RUN yarn run lint || ( >&2 echo -e '\n\n=========\nYour code violates our set of linting rules.\nSee "Editing frontend code" in README.md.\n=========\n\n'; exit 1 )
 RUN yarn run build
 
 
@@ -34,11 +35,12 @@ COPY cinit.yml /etc/cinit.d/community-solutions.yml
 ENV PYTHONUNBUFFERED True
 
 COPY --from=0 /usr/src/app/build/manifest.json ./manifest.json
-COPY --from=0 /usr/src/app/build/index.html ./index.html
+COPY --from=0 /usr/src/app/build/index.html ./templates/index.html
 COPY --from=0 /usr/src/app/build/favicon.ico ./favicon.ico
 COPY --from=0 /usr/src/app/build/static ./static
 COPY ./frontend/public/exam10.pdf ./exam10.pdf
 COPY ./frontend/public/static ./static
 COPY ./backend/ ./
+RUN python3 manage.py check
 
 EXPOSE 80

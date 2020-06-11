@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEBUG = os.environ.get('RUNTIME_POSTGRES_DB_USER', 'docker') == 'docker'
 IN_ENVIRON = 'RUNTIME_POSTGRES_DB_SERVER' in os.environ
 TESTING = sys.argv[1:2] == ['test']
-STAGING = os.environ['DEPLOYMENT_DOMAIN'].endswith('svis.ethz.ch')
+STAGING = os.environ.get('DEPLOYMENT_DOMAIN', '').endswith('svis.ethz.ch')
 
 SECRET_KEY = 'VERY SAFE SECRET KEY' if DEBUG else os.environ['RUNTIME_COMMUNITY_SOLUTIONS_SESSION_SECRET']
 API_KEY = 'API_KEY' if DEBUG else os.environ['RUNTIME_COMMUNITY_SOLUTIONS_API_KEY']
@@ -38,6 +38,7 @@ COMSOL_EXAM_ALLOWED_EXTENSIONS = {'pdf'}
 COMSOL_IMAGE_ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'svg', 'gif'}
 COMSOL_FILESTORE_ALLOWED_EXTENSIONS = {'pdf', 'zip', 'tar.gz', 'tar.xz'}
 COMSOL_CATEGORY_SLUG_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+COMSOL_FRONTEND_GLOB_ID = os.environ.get('RUNTIME_FRONTEND_GLOB_ID', 'vseth-1116-vis')
 
 ALLOWED_HOSTS = []
 REAL_ALLOWED_HOSTS = []
@@ -58,8 +59,10 @@ if DEBUG:
 else:
     allowed = ['https://{}/static/'.format(host) for host in REAL_ALLOWED_HOSTS]
     CSP_SCRIPT_SRC = ("'unsafe-eval'", *allowed)
-CSP_STYLE_SRC = ("'self'", "'unsafe-inline'")
-CSP_IMG_SRC = ("'self'", "https://static.vis.ethz.ch")
+CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://static.vseth.ethz.ch")
+CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com")
+CSP_CONNECT_SRC = ("'self'", "https://static.vseth.ethz.ch")
+CSP_IMG_SRC = ("'self'", "data:", "https://static.vis.ethz.ch", "https://static.vseth.ethz.ch")
 
 
 # Application definition
@@ -105,7 +108,7 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

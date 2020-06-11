@@ -1,13 +1,16 @@
 from util import response, legacy_importer
 from answers.models import Exam
-from django.shortcuts import get_object_or_404, redirect
+from django.conf import settings
+from django.shortcuts import get_object_or_404, redirect, render
 from django.http import HttpResponse, Http404
 from django.views.decorators.csrf import ensure_csrf_cookie
+import json
 
 
 @ensure_csrf_cookie
 def index(request):
-    return response.send_file('index.html')
+    context = { 'GLOB_ID': settings.COMSOL_FRONTEND_GLOB_ID }
+    return render(request, 'index.html', context)
 
 
 def favicon(request):
