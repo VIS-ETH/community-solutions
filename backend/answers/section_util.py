@@ -26,7 +26,7 @@ def get_answer_response(request, answer, ignore_exam_admin=False):
         'expertvotes': answer.expertvotes.count(),
         'authorId': '' if answer.is_legacy_answer else answer.author.username,
         'authorDisplayName': 'Old VISki Solution' if answer.is_legacy_answer else get_my_user(answer.author).displayname(),
-        'canEdit': answer.author == request.user or (answer.is_legacy_answer and exam_admin),
+        'canEdit': answer.author == request.user,
         'isUpvoted': request.user in answer.upvotes.all(),
         'isDownvoted': request.user in answer.downvotes.all(),
         'isExpertVoted': request.user in answer.expertvotes.all(),
