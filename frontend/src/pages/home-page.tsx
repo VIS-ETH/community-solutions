@@ -30,7 +30,9 @@ import { CategoryMetaData, MetaCategory } from "../interfaces";
 import useTitle from "../hooks/useTitle";
 import { loadMetaCategories } from "../api/hooks";
 import useSearch from "../hooks/useSearch";
-import Fuse from "fuse.js";
+import { Result } from "quick-score";
+
+type SearchKey = "displayname"[];
 
 enum Mode {
   Alphabetical,
@@ -56,20 +58,20 @@ const addCategory = async (category: string) => {
 };
 
 const mapToCategories = (
-  categories: Fuse.FuseResult<CategoryMetaData>[],
+  categories: Result<CategoryMetaData, SearchKey>[],
   meta1: MetaCategory[],
 ) => {
-  const categoryMap = new Map<string, Fuse.FuseResult<CategoryMetaData>>();
+  const categoryMap = new Map<string, Result<CategoryMetaData, SearchKey>>();
   for (const category of categories)
     categoryMap.set(category.item.slug, category);
   const meta1Map: Map<
     string,
-    Array<[string, Fuse.FuseResult<CategoryMetaData>[]]>
+    Array<[string, Result<CategoryMetaData, SearchKey>[]]>
   > = new Map();
   for (const { displayname: meta1display, meta2 } of meta1) {
     const meta2Map: Map<
       string,
-      Fuse.FuseResult<CategoryMetaData>[]
+      Result<CategoryMetaData, SearchKey>[]
     > = new Map();
     for (const {
       displayname: meta2display,
@@ -164,15 +166,9 @@ const HomePage: React.FC<{}> = () => {
   const searchResult = useSearch(
     categories ?? [],
     {
-      includeScore: true,
-      includeMatches: true,
-      keys: ["displayname"],
-      minMatchCharLength: 2,
-      useExtendedSearch: true,
-      ignoreLocation: true,
-      threshold: 0.2,
+      keys: ["displayname" as const],
     },
-    debouncedFilter.length ? debouncedFilter : undefined,
+    debouncedFilter,
   );
   const filteredMetaCategories = useMemo(
     () =>

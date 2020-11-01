@@ -1,30 +1,16 @@
 import { Card, CardBody, CardFooter, Progress } from "@vseth/components";
+import { Result } from "quick-score";
 import React from "react";
 import { useHistory } from "react-router-dom";
 import { CategoryMetaData } from "../interfaces";
+import { highlight } from "../utils/search-utils";
 import { focusOutline } from "../utils/style";
-import Fuse from "fuse.js";
-import { useMemo } from "react";
-import { css } from "emotion";
-import { processMatch, getMatch } from "../utils/fuse-utils";
-
-const highlighted = css`
-  background-color: var(--yellow);
-`;
 
 interface Props {
-  category: Fuse.FuseResult<CategoryMetaData>;
+  category: Result<CategoryMetaData, "displayname"[]>;
 }
 const CategoryCard: React.FC<Props> = ({ category }) => {
   const history = useHistory();
-  const m = useMemo(
-    () =>
-      processMatch(
-        getMatch(category, "displayname"),
-        category.item.displayname,
-      ),
-    [category],
-  );
   const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
     if (e.keyCode === 13) {
       history.push(`/category/${category.item.slug}`);
@@ -39,11 +25,7 @@ const CategoryCard: React.FC<Props> = ({ category }) => {
     >
       <CardBody>
         <h5>
-          {m.map(([str, isMatch], i) => (
-            <span key={i} className={isMatch ? highlighted : undefined}>
-              {str}
-            </span>
-          ))}
+          {highlight(category.item.displayname, category.matches.displayname)}
         </h5>
         <div>
           Exams:{" "}

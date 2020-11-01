@@ -1,4 +1,4 @@
-import Fuse from "fuse.js";
+import { QuickScore, Options } from "quick-score";
 import { useMemo } from "react";
 
 /**
@@ -9,27 +9,17 @@ import { useMemo } from "react";
  * @param pattern The pattern that should be searched for
  * @param searchOptions Options passed to the fuse.js search method
  */
-const useSearch = <T>(
+const useSearch = <T extends object, K extends (keyof T)[]>(
   data: T[],
-
-  options?: Fuse.IFuseOptions<T>,
-  pattern?: string | Fuse.Expression,
-  searchOptions?: Fuse.FuseSearchOptions,
+  options: Options<K>,
+  pattern: string,
 ) => {
-  const fuse = useMemo(() => new Fuse(data, options), [data, options]);
-  const allMatch = useMemo(() => {
-    return data.map((item, refIndex) => ({
-      item,
-      refIndex,
-      score: 0,
-      matches: [],
-    }));
-  }, [data]);
-  const res = useMemo(
-    () =>
-      pattern === undefined ? allMatch : fuse.search(pattern, searchOptions),
-    [fuse, pattern, searchOptions, allMatch],
-  );
+  const qs = useMemo(() => new QuickScore<T, K>(data, options), [
+    data,
+    options,
+  ]);
+
+  const res = useMemo(() => qs.search(pattern), [qs, pattern]);
 
   return res;
 };
