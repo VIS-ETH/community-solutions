@@ -167,6 +167,7 @@ const HomePage: React.FC<{}> = () => {
     categories ?? [],
     {
       keys: ["displayname" as const],
+      minimumScore: 0.1,
     },
     debouncedFilter,
   );
