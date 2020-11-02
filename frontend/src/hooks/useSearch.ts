@@ -2,12 +2,12 @@ import { QuickScore, Options } from "quick-score";
 import { useMemo } from "react";
 
 /**
- * A React wrapper around the fuse.js search method that returns all data source elements
+ * A React wrapper around the quick-score search method that returns all data source elements
  * if pattern is undefined.
- * @param data The array that should be used as the fuse.js data source
- * @param options An object of fuse.js options
+ * @param data The array that should be used as the quick-score data source
+ * @param options An object of quick-score options
  * @param pattern The pattern that should be searched for
- * @param searchOptions Options passed to the fuse.js search method
+ * @param searchOptions Options passed to the quick-score search method
  */
 const useSearch = <T extends object, K extends (keyof T)[]>(
   data: T[],
