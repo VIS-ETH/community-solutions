@@ -14,7 +14,6 @@ import {
   ModalFooter,
   ModalHeader,
   Row,
-  Select,
   Spinner,
   ButtonGroup,
 } from "@vseth/components";
@@ -163,12 +162,16 @@ const HomePage: React.FC<{}> = () => {
     [categoriesWithDefault, isAdmin],
   );
   const debouncedFilter = useDebounce(filter, 50);
-  const searchResult = useSearch(
-    categories ?? [],
-    {
+  const searchConfig = useMemo(
+    () => ({
       keys: ["displayname" as const],
       minimumScore: 0.1,
-    },
+    }),
+    [],
+  );
+  const searchResult = useSearch(
+    categories ?? [],
+    searchConfig,
     debouncedFilter,
   );
   const filteredMetaCategories = useMemo(
