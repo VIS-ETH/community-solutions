@@ -19,10 +19,10 @@ import ModQueue from "./pages/modqueue-page";
 import NotFoundPage from "./pages/not-found-page";
 import Scoreboard from "./pages/scoreboard-page";
 import UploadTranscriptPage from "./pages/submittranscript-page";
-import TutorialPage from "./pages/tutorial-page";
 import UploadPdfPage from "./pages/uploadpdf-page";
 import UserPage from "./pages/userinfo-page";
 import { css } from "emotion";
+import SearchPage from "./pages/search-page";
 const minHeight = css`
   min-height: 100vh;
 `;
@@ -75,7 +75,6 @@ const App: React.FC<{}> = () => {
                 <Switch>
                   <UserRoute exact path="/" component={HomePage} />
                   <Route exact path="/login" component={LoginPage} />
-                  <Route exact path="/tutorial" component={TutorialPage} />
                   <UserRoute
                     exact
                     path="/uploadpdf"
@@ -103,6 +102,7 @@ const App: React.FC<{}> = () => {
                     path="/user/:username"
                     component={UserPage}
                   />
+                  <UserRoute exact path="/search/" component={SearchPage} />
                   <UserRoute exact path="/scoreboard" component={Scoreboard} />
                   <UserRoute exact path="/modqueue" component={ModQueue} />
                   <Route component={NotFoundPage} />
