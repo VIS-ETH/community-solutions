@@ -27,6 +27,7 @@ services:
     environment:
       - KEYCLOAK_USER=admin
       - KEYCLOAK_PASSWORD=admin
+      - CLIENT_ROLES=admin
     ports:
       - "8083:8080"
   community-solutions:
