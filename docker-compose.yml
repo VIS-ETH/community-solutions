@@ -28,6 +28,7 @@ services:
       - KEYCLOAK_USER=admin
       - KEYCLOAK_PASSWORD=admin
       - CLIENT_ROLES=admin
+      - CLIENT_SCOPES=profile,roles,home-organization
     ports:
       - "8083:8080"
   community-solutions:
