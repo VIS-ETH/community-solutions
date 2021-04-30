@@ -7,7 +7,7 @@ from typing import Union
 
 from django.views.decorators.csrf import csrf_exempt
 from myauth.models import MyUser, get_my_user
-from documents.models import Comment, Document, DocumentFile, DocumentTransfer
+from documents.models import Comment, Document, DocumentFile, TransferRequest
 from myauth import auth_check
 from django.views import View
 from django.conf import settings
@@ -206,7 +206,7 @@ class DocumentElementView(View):
         document = get_object_or_404(Document, author__username=username, slug=slug)
 
         if not document.current_user_can_edit(request):
-            transfer_exists = DocumentTransfer.objects.filter(
+            transfer_exists = TransferRequest.objects.filter(
                 document=document, user=request.user.pk
             ).exists()
             if transfer_exists and "author" in request.DATA:
@@ -435,13 +435,13 @@ class DocumentFileElementView(View):
         return response.success(value=success)
 
 
-class DocumentTransferView(View):
+class TransferRequestView(View):
     @auth_check.require_login
     def get(self, request: HttpRequest, username: str, document_slug: str):
         document = get_object_or_404(
             Document, author__username=username, slug=document_slug
         )
-        objects = DocumentTransfer.objects.filter(document=document).all()
+        objects = TransferRequest.objects.filter(document=document).all()
         return response.succuess(values=[object.user.username for object in objects])
 
     @response.required_args("username")
@@ -453,17 +453,17 @@ class DocumentTransferView(View):
         if not document.current_user_can_edit(request):
             return response.not_allowed()
         username = request.DATA["username"]
-        if DocumentTransfer.objects.filter(
+        if TransferRequest.objects.filter(
             document=document, user__username=username
         ).exists():
             return response.not_allowed()
-        transfer = DocumentTransfer(document=document, user__username=username)
+        transfer = TransferRequest(document=document, user__username=username)
         transfer.save()
 
         return response.success(username)
 
 
-class DocumentTransferElementView(View):
+class TransferRequestElementView(View):
     @auth_check.require_login
     def get(
         self,
@@ -473,7 +473,7 @@ class DocumentTransferElementView(View):
         other_username: str,
     ):
         get_object_or_404(
-            DocumentTransfer,
+            TransferRequest,
             document__author__username=username,
             document__slug=document_slug,
             user__username=other_username,
@@ -494,7 +494,7 @@ class DocumentTransferElementView(View):
         if not document.current_user_can_edit(request):
             return response.not_allowed()
         transfer = get_object_or_404(
-            DocumentTransfer,
+            TransferRequest,
             document__author__username=username,
             document__slug=document_slug,
             user__username=other_username,
