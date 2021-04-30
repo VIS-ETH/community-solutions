@@ -1,6 +1,7 @@
 import { useRequest } from "@umijs/hooks";
 import {
   Button,
+  ConnectionObjectBothAltIcon,
   DeleteIcon,
   FormGroup,
   InputField,
@@ -48,7 +49,7 @@ const DocumentSettings: React.FC<Props> = ({ slug, data, mutate }) => {
     createOptions(
       Object.fromEntries(
         categories.map(
-          category => [category.slug, category.displayname] as const,
+          (category) => [category.slug, category.displayname] as const,
         ),
       ) as { [key: string]: string },
     );
@@ -56,8 +57,8 @@ const DocumentSettings: React.FC<Props> = ({ slug, data, mutate }) => {
   const [loading, updateDocument] = useUpdateDocument(
     data.author,
     slug,
-    result => {
-      mutate(s => ({ ...s, ...result }));
+    (result) => {
+      mutate((s) => ({ ...s, ...result }));
       setDisplayName(undefined);
       setCategory(undefined);
       if (result.slug !== data.slug) {
@@ -97,7 +98,7 @@ const DocumentSettings: React.FC<Props> = ({ slug, data, mutate }) => {
           <InputField
             label="Display Name"
             value={displayName ?? data.display_name}
-            onChange={e => setDisplayName(e.currentTarget.value)}
+            onChange={(e) => setDisplayName(e.currentTarget.value)}
           />
           <FormGroup>
             <label className="form-input-label">Category</label>
@@ -122,7 +123,7 @@ const DocumentSettings: React.FC<Props> = ({ slug, data, mutate }) => {
               value={descriptionDraftText ?? data.description}
               onChange={setDescriptionDraftText}
               imageHandler={imageHandler}
-              preview={value => <MarkdownText value={value} />}
+              preview={(value) => <MarkdownText value={value} />}
               undoStack={descriptionUndoStack}
               setUndoStack={setDescriptionUndoStack}
             />
@@ -149,7 +150,7 @@ const DocumentSettings: React.FC<Props> = ({ slug, data, mutate }) => {
       )}
       <h3 className="mt-5 mb-4">Files</h3>
       <ListGroup className="mb-2">
-        {data.files.map(file => (
+        {data.files.map((file) => (
           <DocumentFileItem
             key={file.oid}
             document={data}
@@ -162,6 +163,24 @@ const DocumentSettings: React.FC<Props> = ({ slug, data, mutate }) => {
         <Button onClick={toggleAddModalIsOpen}>
           Add
           <PlusIcon className="ml-2" />
+        </Button>
+      </div>
+
+      <h3 className="mt-5 mb-4">Transfer Ownership</h3>
+      <div className="d-flex flex-wrap justify-content-between align-items-center">
+        <div className="d-flex flex-column">
+          <h6>Transfer ownership of this document</h6>
+          <div>
+            Transferring this document will make another user the primary owner
+            of the document. You can only request the transferral of a document,
+            the other user still has to accept the request. You will loose
+            permissions to edit this summary when the transfer request is
+            accepted.
+          </div>
+        </div>
+
+        <Button color="secondary" onClick={toggleDeleteModalIsOpen}>
+          Add Request <ConnectionObjectBothAltIcon className="ml-2" />
         </Button>
       </div>
 
