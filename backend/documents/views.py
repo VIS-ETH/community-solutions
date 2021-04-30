@@ -7,7 +7,7 @@ from typing import Union
 
 from django.views.decorators.csrf import csrf_exempt
 from myauth.models import MyUser, get_my_user
-from documents.models import Comment, Document, DocumentFile
+from documents.models import Comment, Document, DocumentFile, DocumentTransfer
 from myauth import auth_check
 from django.views import View
 from django.conf import settings
@@ -204,8 +204,16 @@ class DocumentElementView(View):
     @auth_check.require_login
     def put(self, request: HttpRequest, username: str, slug: str):
         document = get_object_or_404(Document, author__username=username, slug=slug)
+
         if not document.current_user_can_edit(request):
+            transfer_exists = DocumentTransfer.objects.filter(
+                document=document, user=request.user.pk
+            ).exists()
+            if transfer_exists and "author" in request.DATA:
+                document.author = request.user
+                return response.success(value=get_document_obj(document, request))
             return response.not_allowed()
+
         if "display_name" in request.DATA:
             document.display_name = request.DATA["display_name"]
             document.slug = create_document_slug(
@@ -425,6 +433,74 @@ class DocumentFileElementView(View):
         )
 
         return response.success(value=success)
+
+
+class DocumentTransferView(View):
+    @auth_check.require_login
+    def get(self, request: HttpRequest, username: str, document_slug: str):
+        document = get_object_or_404(
+            Document, author__username=username, slug=document_slug
+        )
+        objects = DocumentTransfer.objects.filter(document=document).all()
+        return response.succuess(values=[object.user.username for object in objects])
+
+    @response.required_args("username")
+    @auth_check.require_login
+    def post(self, request: HttpRequest, username: str, document_slug: str):
+        document = get_object_or_404(
+            Document, author__username=username, slug=document_slug
+        )
+        if not document.current_user_can_edit(request):
+            return response.not_allowed()
+        username = request.DATA["username"]
+        if DocumentTransfer.objects.filter(
+            document=document, user__username=username
+        ).exists():
+            return response.not_allowed()
+        transfer = DocumentTransfer(document=document, user__username=username)
+        transfer.save()
+
+        return response.success(username)
+
+
+class DocumentTransferElementView(View):
+    @auth_check.require_login
+    def get(
+        self,
+        request: HttpRequest,
+        username: str,
+        document_slug: str,
+        other_username: str,
+    ):
+        get_object_or_404(
+            DocumentTransfer,
+            document__author__username=username,
+            document__slug=document_slug,
+            user__username=other_username,
+        )
+        return response.succuess(values=other_username)
+
+    @auth_check.require_login
+    def delete(
+        self,
+        request: HttpRequest,
+        username: str,
+        document_slug: str,
+        other_username: str,
+    ):
+        document = get_object_or_404(
+            Document, author__username=username, slug=document_slug
+        )
+        if not document.current_user_can_edit(request):
+            return response.not_allowed()
+        transfer = get_object_or_404(
+            DocumentTransfer,
+            document__author__username=username,
+            document__slug=document_slug,
+            user__username=other_username,
+        )
+        transfer.delete()
+        return response.succuess()
 
 
 @response.request_get()

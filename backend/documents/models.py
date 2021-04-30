@@ -21,6 +21,10 @@ class Document(ExportModelOperationsMixin("document"), models.Model):
         is_owner = self.author.pk == request.user.pk
         return is_owner
 
+class TransferRequest(models.Model):
+    document = models.ForeignKey("Document", related_name="transfer_requests", on_delete=models.CASCADE)
+    user = models.ForeignKey("auth.User", related_name="document_transfer_requests", on_delete=models.CASCADE)
+
 
 class Comment(ExportModelOperationsMixin("document_comment"), CommentMixin):
     document = models.ForeignKey(
