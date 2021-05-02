@@ -54,7 +54,7 @@ COMSOL_DOCUMENT_SLUG_CHARS = (
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-"
 )
 
-COMSOL_FRONTEND_GLOB_ID = os.environ.get("FRONTEND_GLOB_ID", "vseth-1116-vis")
+COMSOL_FRONTEND_GLOB_ID = os.environ.get("FRONTEND_GLOB_ID", "") or "vseth-1116-vis"
 
 # The following config settings configure the config with which a keycloak js client instance is
 # constructed in the React frontend.
@@ -72,6 +72,7 @@ FRONTEND_SERVER_DATA = {
 }
 
 FAVICON_URL = os.environ.get("FRONTEND_FAVICON_URL", "/favicon.ico")
+IS_PREVIEW = os.environ.get("PDEP_IS_PREVIEW", "") == "TRUE"
 
 
 # The public / private key path in the testing directory should only be used for unit testing and nothing else
