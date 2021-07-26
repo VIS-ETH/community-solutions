@@ -138,8 +138,10 @@ const App: React.FC<{}> = () => {
   const [debugOptions, setDebugOptions] = useState(defaultDebugOptions);
   return (
     <VSETHContext>
-      <Modal isOpen={loggedOut}>
-        <ModalHeader>You've been logged out due to inactivity</ModalHeader>
+      <Modal isOpen={loggedOut} toggle={() => setLoggedOut(false)}>
+        <ModalHeader toggle={() => setLoggedOut(false)}>
+          You've been logged out due to inactivity
+        </ModalHeader>
         <ModalBody>
           Your session has expired due to inactivity, you have to log in again
           to continue.
