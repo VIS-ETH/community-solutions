@@ -1,3 +1,4 @@
+from django.http.response import HttpResponse
 from util import response
 from myauth import auth_check
 from answers.models import Exam, Answer, AnswerSection
@@ -92,9 +93,20 @@ def get_cut_versions(request, filename):
 
 @response.request_get()
 @auth_check.require_login
-def get_answersection(request, oid):
+def get_answersection(request: HttpResponse, oid: int):
     section = get_object_or_404(
-        AnswerSection.objects.select_related('exam').prefetch_related(
-            'answer_set', 'answer_set__comments', 'answer_set__upvotes', 'answer_set__downvotes', 'answer_set__expertvotes', 'answer_set__flagged'),
-        pk=oid)
-    return response.success(value=section_util.get_answersection_response(request, section))
+        AnswerSection.objects.select_related("exam").prefetch_related(
+            "answer_set",
+            "answer_set__author",
+            "answer_set__comments",
+            "answer_set__comments__author",
+            "answer_set__upvotes",
+            "answer_set__downvotes",
+            "answer_set__expertvotes",
+            "answer_set__flagged",
+        ),
+        pk=oid,
+    )
+    return response.success(
+        value=section_util.get_answersection_response(request, section)
+    )
