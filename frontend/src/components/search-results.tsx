@@ -1,33 +1,20 @@
+import { css } from "@emotion/css";
 import {
   Badge,
   Breadcrumb,
   BreadcrumbItem,
   Card,
-  CardColumns,
   Col,
   Pagination,
   PaginationItem,
   PaginationLink,
   Row,
 } from "@vseth/components";
-import { css } from "@emotion/css";
 import { escapeRegExp } from "lodash";
 import React from "react";
 import { Link } from "react-router-dom";
 import MarkdownText from "../components/markdown-text";
 import { HighlightedMatch, SearchResponse } from "../interfaces";
-
-const columnStyle = css`
-  column-gap: 0;
-  grid-column-gap: 0;
-  margin: 0 -0.75em;
-  padding-top: 1em;
-  padding-bottom: 1em;
-  column-count: 1;
-  @media (min-width: 900px) {
-    column-count: 2;
-  }
-`;
 
 const HighlightedContent: React.FC<{
   content: HighlightedMatch;
@@ -67,12 +54,12 @@ interface Props {
 }
 const SearchResults: React.FC<Props> = React.memo(({ data }) => {
   return (
-    <CardColumns className={columnStyle}>
+    <div>
       {data.map((result) => {
         if (result.type === "exam") {
           return (
             <div className="px-2" key={`exam-${result.filename}`}>
-              <Card className="mb-3 px-3 pb-3 pt-2 position-static">
+              <Card className="mb-2 px-3 pb-3 pt-2 position-static">
                 <Row>
                   <Col
                     xs="auto"
@@ -211,7 +198,7 @@ const SearchResults: React.FC<Props> = React.memo(({ data }) => {
           );
         }
       })}
-    </CardColumns>
+    </div>
   );
 });
 export default SearchResults;
