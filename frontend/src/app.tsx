@@ -162,7 +162,22 @@ const App: React.FC<{}> = () => {
                 <main className="main__container pb-5">
                   <Routes>
                     <Route  path="/" element={<UserContentWrapper ><HomePage/></UserContentWrapper>} />
-                    
+                    <Route  path="/uploadpdf" element={<UserContentWrapper ><UploadPdfPage/></UserContentWrapper>} />
+                    <Route  path="/submittranscript" element={<UserContentWrapper ><UploadTranscriptPage/></UserContentWrapper>} />
+                    <Route  path="/feedback" element={<UserContentWrapper ><FeedbackPage/></UserContentWrapper>} />
+                    <Route  path="/category/:slug" element={<UserContentWrapper ><CategoryPage/></UserContentWrapper>} />
+                    <Route  path="/user/:author/document/:slug" element={<UserContentWrapper ><DocumentPage/></UserContentWrapper>} />
+                    <Route  path="/exams/:filename" element={<UserContentWrapper ><ExamPage/></UserContentWrapper>} />
+                    <Route  path="/user/:username" element={<UserContentWrapper ><UserPage/></UserContentWrapper>} />
+                    <Route  path="/scoreboard" element={<UserContentWrapper ><Scoreboard/></UserContentWrapper>} />
+                    <Route  path="/modqueue" element={<UserContentWrapper ><ModQueue/></UserContentWrapper>} />
+                    <Route  path="/search" element={<UserContentWrapper ><SearchPage/></UserContentWrapper>} />
+               
+
+                    <Route  path="/faq" element={<UserContentWrapper ><FAQ/></UserContentWrapper>} />
+
+                    <Route path="/login" element={<LoginPage isHome={false}/>} />      
+          
                     <Route element={<NotFoundPage/>} />
                   </Routes>
                 </main>
