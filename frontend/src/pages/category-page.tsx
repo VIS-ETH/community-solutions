@@ -14,7 +14,7 @@ import {
 import { BreadcrumbItem } from "@vseth/components/dist/components/Breadcrumb/Breadcrumb";
 import { css } from "@emotion/css";
 import React, { useCallback, useMemo, useState } from "react";
-import { Link, useHistory, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   loadCategoryMetaData,
   loadMetaCategories,
@@ -44,8 +44,8 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
   const { data, loading, run } = useRequest(loadMetaCategories, {
     cacheKey: "meta-categories",
   });
-  const history = useHistory();
-  const [removeLoading, remove] = useRemoveCategory(() => history.push("/"));
+  const navigate = useNavigate();
+  const [removeLoading, remove] = useRemoveCategory(() => navigate("/"));
   const [confirm, modals] = useConfirm();
   const onRemove = useCallback(
     () =>
@@ -230,12 +230,12 @@ const CategoryPage: React.FC<{}> = () => {
     () => loadCategoryMetaData(slug),
     { cacheKey: `category-${slug}` },
   );
-  const history = useHistory();
+  const navigate = useNavigate();
   const onMetaDataChange = useCallback(
     (newMetaData: CategoryMetaData) => {
       mutate(newMetaData);
       if (slug !== newMetaData.slug) {
-        history.push(`/category/${newMetaData.slug}`);
+        navigate(`/category/${newMetaData.slug}`);
       }
     },
     [mutate, history, slug],

@@ -14,12 +14,12 @@ import {
   Spinner,
 } from "@vseth/components";
 import React, { useMemo, useState } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { loadCategories, uploadPdf } from "../api/hooks";
 import FileInput from "./file-input";
 
 const UploadPdfCard: React.FC<{}> = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const {
     error: categoriesError,
     loading: categoriesLoading,
@@ -31,7 +31,7 @@ const UploadPdfCard: React.FC<{}> = () => {
     run: upload,
   } = useRequest(uploadPdf, {
     manual: true,
-    onSuccess: filename => history.push(`/exams/${filename}`),
+    onSuccess: filename => navigate(`/exams/${filename}`),
   });
   const [validationError, setValidationError] = useState("");
   const error = categoriesError || uploadError || validationError;

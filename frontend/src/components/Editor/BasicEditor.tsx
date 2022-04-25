@@ -37,8 +37,8 @@ interface Props {
   value: string;
   onChange: (newValue: string) => void;
 
-  getSelectionRangeRef: React.RefObject<() => Range | undefined>;
-  setSelectionRangeRef: React.RefObject<(newSelection: Range) => void>;
+  getSelectionRangeRef: React.MutableRefObject<() => Range | undefined>;
+  setSelectionRangeRef: React.MutableRefObject<(newSelection: Range) => void>;
 
   textareaElRef: React.MutableRefObject<HTMLTextAreaElement>;
 
@@ -54,8 +54,7 @@ const BasicEditor: React.FC<Props> = ({
 }) => {
   const preElRef = useRef<HTMLPreElement>(null);
 
-  // tslint:disable-next-line: no-any
-  (getSelectionRangeRef as any).current = () => {
+  getSelectionRangeRef.current = () => {
     const textarea = textareaElRef.current;
     if (textarea === null) return;
     return {
@@ -64,8 +63,7 @@ const BasicEditor: React.FC<Props> = ({
     };
   };
 
-  // tslint:disable-next-line: no-any
-  (setSelectionRangeRef as any).current = (newSelection: Range) => {
+  setSelectionRangeRef.current = (newSelection: Range) => {
     const textarea = textareaElRef.current;
     if (textarea === null) return;
     setTimeout(() => {
@@ -74,7 +72,7 @@ const BasicEditor: React.FC<Props> = ({
     }, 0);
   };
 
-  const onTextareaChange = useCallback(
+  const onTextareaChange: React.ChangeEventHandler<HTMLTextAreaElement> = useCallback(
     (e) => {
       const newContent = e.currentTarget.value;
       onChange(newContent);

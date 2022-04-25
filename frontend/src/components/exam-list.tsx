@@ -65,7 +65,7 @@ const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
 
   return (
     <>
-      {error && <Alert color="danger">{error}</Alert>}
+      {error && <Alert color="danger">{error.toString()}</Alert>}
       {loading && <Spinner />}
       <Row className="d-flex flex-between">
         <Col md={6} xs={12} className="text-center text-md-left">

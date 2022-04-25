@@ -8,7 +8,7 @@ import {
   Spinner,
 } from "@vseth/components";
 import React, { useState } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useCreateDocument } from "../api/hooks";
 import { useUser } from "../auth";
 
@@ -20,9 +20,9 @@ interface Props {
 const CreateDocumentForm: React.FC<Props> = ({ categorySlug, toggle }) => {
   const { username } = useUser()!;
   const [displayName, setDisplayName] = useState("");
-  const history = useHistory();
+  const navigate = useNavigate();
   const [loading, run] = useCreateDocument(({ slug }) => {
-    history.push(`/user/${username}/document/${slug}/`);
+    navigate(`/user/${username}/document/${slug}/`);
   });
   return (
     <>

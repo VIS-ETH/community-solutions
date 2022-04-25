@@ -8,7 +8,7 @@ const containerStyle = css`
   box-sizing: border-box;
 `;
 
-const Container: React.FC<{}> = ({ children }) => {
+const Container: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
   return <div className={containerStyle}>{children}</div>;
 };
 export default Container;

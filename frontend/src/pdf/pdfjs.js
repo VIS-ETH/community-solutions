@@ -7,8 +7,10 @@
 // eslint-disable-next-line import/no-webpack-loader-syntax
 import PdfjsWorker from "worker-loader?publicPath=/static/!pdfjs-dist/build/pdf.worker.js";
 import { GlobalWorkerOptions } from "pdfjs-dist";
+import x from "pdfjs-dist";
 
 if (typeof window !== "undefined" && "Worker" in window) {
   GlobalWorkerOptions.workerPort = new PdfjsWorker();
 }
 export * from "pdfjs-dist";
+export default x;

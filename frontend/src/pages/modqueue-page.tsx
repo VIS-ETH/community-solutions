@@ -105,7 +105,7 @@ const ModQueue: React.FC = () => {
         </div>
       )}
       <h2>Import Queue</h2>
-      {error && <div>{error}</div>}
+      {error && <div>{error.toString()}</div>}
       <div className="position-relative">
         <LoadingOverlay loading={examsLoading} />
         <Table>

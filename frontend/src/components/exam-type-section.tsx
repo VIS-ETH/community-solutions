@@ -2,7 +2,7 @@ import { useRequest } from "@umijs/hooks";
 import { Badge, Card, Col, DeleteIcon, Row } from "@vseth/components";
 import { css } from "@emotion/css";
 import React from "react";
-import { Link, useHistory } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { fetchPost } from "../api/fetch-utils";
 import { useUser } from "../auth";
 import useConfirm from "../hooks/useConfirm";
@@ -39,7 +39,7 @@ const ExamTypeSection: React.FC<ExamTypeCardProps> = ({
 }) => {
   const user = useUser()!;
   const catAdmin = user.isCategoryAdmin;
-  const history = useHistory();
+  const navigate = useNavigate();
   const allSelected = exams.every((exam) => selected.has(exam.filename));
   const someSelected = exams.some((exam) => selected.has(exam.filename));
   const checked = someSelected;
@@ -83,7 +83,7 @@ const ExamTypeSection: React.FC<ExamTypeCardProps> = ({
             className={`${focusOutline} p-3`}
             onKeyDown={(e) => {
               if (e.keyCode === 13 && exam.canView) {
-                history.push(`/exams/${exam.filename}`);
+                navigate(`/exams/${exam.filename}`);
               }
             }}
             tabIndex={0}

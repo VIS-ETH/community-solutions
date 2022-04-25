@@ -11,7 +11,7 @@ const gridStyles = css`
   grid-column-gap: 9px;
   grid-row-gap: 9px;
 `;
-const ExamGrid: React.FC<{}> = ({ children }) => {
+const ExamGrid: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
   return <div className={gridStyles}>{children}</div>;
 };
 export default ExamGrid;

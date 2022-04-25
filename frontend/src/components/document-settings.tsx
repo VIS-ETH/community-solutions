@@ -16,7 +16,7 @@ import {
   Spinner,
 } from "@vseth/components";
 import React, { useState } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { imageHandler } from "../api/fetch-utils";
 import {
   loadCategories,
@@ -42,7 +42,7 @@ interface Props {
 }
 
 const DocumentSettings: React.FC<Props> = ({ slug, data, mutate }) => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const { loading: categoriesLoading, data: categories } =
     useRequest(loadCategories);
   const categoryOptions =
@@ -63,7 +63,7 @@ const DocumentSettings: React.FC<Props> = ({ slug, data, mutate }) => {
       setDisplayName(undefined);
       setCategory(undefined);
       if (result.slug !== data.slug) {
-        history.replace(`/user/${result.author}/document/${result.slug}`);
+        navigate (`/user/${result.author}/document/${result.slug}`, {replace: true});
       }
     },
   );
@@ -75,7 +75,7 @@ const DocumentSettings: React.FC<Props> = ({ slug, data, mutate }) => {
   const [deleteLoading, deleteDocument] = useDeleteDocument(
     data.author,
     slug,
-    () => data && history.push(`/category/${data.category}`),
+    () => data && navigate(`/category/${data.category}`),
   );
   const [deleteModalIsOpen, toggleDeleteModalIsOpen] = useToggle();
 

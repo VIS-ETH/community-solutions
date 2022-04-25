@@ -84,7 +84,7 @@ const transitionStyles = {
   exited: { transform: "translate(100%)" },
 };
 
-const Panel: React.FC<PanelProps> = ({
+const Panel: React.FC<React.PropsWithChildren<PanelProps>> = ({
   children,
   isOpen,
   toggle,

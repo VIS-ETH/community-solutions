@@ -13,7 +13,7 @@ import {
   VSETHContext,
 } from "@vseth/components";
 import React, { useEffect, useState } from "react";
-import { Route, Switch } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import {
   authenticationStatus,
   fetchGet,
@@ -24,7 +24,7 @@ import {
   refreshToken,
 } from "./api/fetch-utils";
 import { notLoggedIn, SetUserContext, User, UserContext } from "./auth";
-import UserRoute from "./auth/UserRoute";
+import UserContentWrapper from "./auth/UserRoute";
 import { DebugContext, defaultDebugOptions } from "./components/Debug";
 import DebugModal from "./components/Debug/DebugModal";
 import ExamsNavbar from "./components/exams-navbar";
@@ -150,7 +150,7 @@ const App: React.FC<{}> = () => {
           </div>
         </ModalBody>
       </Modal>
-      <Route component={HashLocationHandler} />
+      <HashLocationHandler/>
       <DebugContext.Provider value={debugOptions}>
         <UserContext.Provider value={user}>
           <SetUserContext.Provider value={setUser}>
@@ -160,54 +160,11 @@ const App: React.FC<{}> = () => {
               <div>
                 <ExamsNavbar />
                 <main className="main__container pb-5">
-                  <Switch>
-                    <UserRoute exact path="/" component={HomePage} />
-                    <Route exact path="/login" component={LoginPage} />
-                    <UserRoute
-                      exact
-                      path="/uploadpdf"
-                      component={UploadPdfPage}
-                    />
-                    <UserRoute
-                      exact
-                      path="/submittranscript"
-                      component={UploadTranscriptPage}
-                    />
-                    <UserRoute exact path="/faq" component={FAQ} />
-                    <UserRoute
-                      exact
-                      path="/feedback"
-                      component={FeedbackPage}
-                    />
-                    <UserRoute
-                      exact
-                      path="/category/:slug"
-                      component={CategoryPage}
-                    />
-                    <UserRoute
-                      exact
-                      path="/user/:author/document/:slug"
-                      component={DocumentPage}
-                    />
-                    <UserRoute
-                      exact
-                      path="/exams/:filename"
-                      component={ExamPage}
-                    />
-                    <UserRoute
-                      exact
-                      path="/user/:username"
-                      component={UserPage}
-                    />
-                    <UserRoute exact path="/search/" component={SearchPage} />
-                    <UserRoute
-                      exact
-                      path="/scoreboard"
-                      component={Scoreboard}
-                    />
-                    <UserRoute exact path="/modqueue" component={ModQueue} />
-                    <Route component={NotFoundPage} />
-                  </Switch>
+                  <Routes>
+                    <Route  path="/" element={<UserContentWrapper ><HomePage/></UserContentWrapper>} />
+                    
+                    <Route element={<NotFoundPage/>} />
+                  </Routes>
                 </main>
               </div>
               <div className="py-3">

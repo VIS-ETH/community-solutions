@@ -66,7 +66,7 @@ interface ExamPanelProps {
   setDisplayOptions: (newOptions: DisplayOptions) => void;
 }
 
-const ExamPanel: React.FC<ExamPanelProps> = ({
+const ExamPanel: React.FC<React.PropsWithChildren<ExamPanelProps>> = ({
   isOpen,
   toggle,
   metaData,

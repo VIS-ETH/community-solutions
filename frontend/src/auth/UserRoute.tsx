@@ -1,40 +1,27 @@
 import React from "react";
-import { Route, RouteProps } from "react-router-dom";
+import { IndexRouteProps, LayoutRouteProps, PathRouteProps, Route, RouteProps, Routes } from "react-router-dom";
 import { useUser } from ".";
 import LoadingOverlay from "../components/loading-overlay";
 import LoginOverlay from "../pages/login-page";
 
-const UserRouteContent = <T extends RouteProps>({
-  props,
-  loginProps,
-}: {
-  props: T;
-  loginProps: Parameters<typeof LoginOverlay>[0];
-}) => {
+export const UserContentWrapper = <T extends React.FC<{}>>({
+  children,
+  loginProps = {isHome: false},
+}: React.PropsWithChildren<{
+  loginProps?: Parameters<typeof LoginOverlay>[0];
+}>) => {
   const user = useUser();
+
   if (user !== undefined && !user.loggedin) {
     return <LoginOverlay {...loginProps} />;
   } else {
     return (
       <>
         <LoadingOverlay loading={user === undefined} />
-        {user !== undefined && <Route {...props} />}
+        {user !== undefined && children}
       </>
     );
   }
 };
-const UserRoute = <T extends RouteProps>(props: T) => {
-  return (
-    <Route
-      exact={props.exact}
-      path={props.path}
-      render={() => (
-        <UserRouteContent
-          props={props}
-          loginProps={{ isHome: props.path === "/" }}
-        />
-      )}
-    />
-  );
-};
-export default UserRoute;
+
+export default UserContentWrapper;
