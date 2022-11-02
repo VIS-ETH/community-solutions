@@ -13,7 +13,8 @@ from util import response
 
 if "SIP_S3_FILES_HOST" in os.environ:
     endpoint = (
-        ("https://" if os.environ["SIP_S3_FILES_USE_SSL"] == "true" else "http://")
+        ("https://" if os.environ["SIP_S3_FILES_USE_SSL"]
+         == "true" else "http://")
         + os.environ["SIP_S3_FILES_HOST"]
         + ":"
         + os.environ["SIP_S3_FILES_PORT"]
@@ -25,10 +26,24 @@ if "SIP_S3_FILES_HOST" in os.environ:
         "config": Config(signature_version="s3v4"),
         "region_name": "vis-is-great-1",
     }
-    s3 = boto3.resource("s3", **options)
+
+    # s3_cors will be exported to configure_cors
+    s3_cors = boto3.resource("s3", **options)
+    s3 = s3_cors
     s3_client = boto3.client("s3", **options)
     s3_bucket_name = os.environ["SIP_S3_FILES_BUCKET"]
     s3_bucket = s3.Bucket(s3_bucket_name)
+
+    # this serves as a way to remove the need for having "minio" in the hosts file
+    # if a MINIO_LOCALHOST env is set to true, this will be applied
+    localhost_mode = os.getenv("MINIO_LOCALHOST", "false").lower() == "true"
+    if localhost_mode:
+        options_dev = options.copy()
+        options_dev["endpoint_url"] = "http://localhost:" + \
+            os.environ["SIP_S3_FILES_PORT"]
+        s3 = boto3.resource("s3", **options_dev)
+        s3_client = boto3.client("s3", **options_dev)
+        s3_bucket = s3.Bucket(s3_bucket_name)
 
 
 def save_uploaded_file_to_disk(dest: str, uploaded_file: UploadedFile):
@@ -67,7 +82,8 @@ def save_file_to_s3(
 
 def delete_file(directory, filename):
     try:
-        s3_client.delete_object(Bucket=s3_bucket_name, Key=directory + filename)
+        s3_client.delete_object(Bucket=s3_bucket_name,
+                                Key=directory + filename)
     except ClientError:
         return False
     return True
@@ -75,7 +91,8 @@ def delete_file(directory, filename):
 
 def delete_files(directory: str, filenames):
     try:
-        objects_to_delete = [{"Key": directory + filename} for filename in filenames]
+        objects_to_delete = [{"Key": directory + filename}
+                             for filename in filenames]
         s3_client.delete_objects(
             Bucket=s3_bucket_name, Delete={"Objects": objects_to_delete}
         )
