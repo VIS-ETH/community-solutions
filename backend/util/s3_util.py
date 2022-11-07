@@ -35,8 +35,8 @@ if "SIP_S3_FILES_HOST" in os.environ:
     s3_bucket = s3.Bucket(s3_bucket_name)
 
     # this serves as a way to remove the need for having "minio" in the hosts file
-    # if a MINIO_LOCALHOST env is set to true, this will be applied
-    localhost_mode = os.getenv("MINIO_LOCALHOST", "false").lower() == "true"
+    # if a SIP_S3_FILES_USE_LOCALHOST env is set to true, this will be applied
+    localhost_mode = os.getenv("SIP_S3_FILES_USE_LOCALHOST", "false").lower() == "true"
     if localhost_mode:
         options_dev = options.copy()
         options_dev["endpoint_url"] = "http://localhost:" + \

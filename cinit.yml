@@ -51,7 +51,7 @@ programs:
       - SIP_S3_FILES_SECRET_KEY:
       - SIP_S3_FILES_BUCKET:
       - SIP_S3_FILES_USE_SSL:
-      - MINIO_LOCALHOST:
+      - SIP_S3_FILES_USE_LOCALHOST:
   - name: gunicorn
     path: /usr/local/bin/gunicorn
     args:
@@ -79,7 +79,7 @@ programs:
       - SIP_S3_FILES_SECRET_KEY:
       - SIP_S3_FILES_BUCKET:
       - SIP_S3_FILES_USE_SSL:
-      - MINIO_LOCALHOST:
+      - SIP_S3_FILES_USE_LOCALHOST:
 
       - SIP_POSTGRES_DB_SERVER:
       - SIP_POSTGRES_DB_PORT:
