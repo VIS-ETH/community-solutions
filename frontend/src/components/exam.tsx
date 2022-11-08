@@ -11,7 +11,7 @@ import {
 } from "../interfaces";
 import AnswerSectionComponent from "./answer-section";
 import PdfSectionCanvas from "../pdf/pdf-section-canvas";
-import { useRequest } from "@umijs/hooks";
+import { useRequest } from "ahooks";
 import { loadCutVersions } from "../api/hooks";
 import useSet from "../hooks/useSet";
 import PDF from "../pdf/pdf-renderer";
@@ -110,8 +110,8 @@ const Exam: React.FC<Props> = React.memo(
       editState.mode === EditMode.Add
         ? "Add Cut"
         : editState.mode === EditMode.Move
-        ? "Move Cut"
-        : undefined;
+          ? "Move Cut"
+          : undefined;
     const hash = document.location.hash.substr(1);
     useEffect(() => {
       let cancelled = false;
@@ -122,7 +122,7 @@ const Exam: React.FC<Props> = React.memo(
             const sectionId = res.value.sectionId;
             show(sectionId);
           })
-          .catch(() => {});
+          .catch(() => { });
 
         // This line below is bad code, should be properly fixed by making hash-location-handler better
         window.location.hash = hash;

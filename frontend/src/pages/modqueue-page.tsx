@@ -1,4 +1,4 @@
-import { useRequest } from "@umijs/hooks";
+import { useRequest } from "ahooks";
 import { Badge, Button, Container, Table } from "@vseth/components";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";

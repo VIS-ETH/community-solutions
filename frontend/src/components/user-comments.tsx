@@ -22,51 +22,23 @@ interface UserCommentsProps {
 }
 
 const UserComments: React.FC<UserCommentsProps> = ({ username }) => {
-  const [page, setPage] = useState(0); // to indicate what page of answers should be loaded
-  const [error, loading, data] = useUserComments(username, -1);
-  const [comments, setComments] = useState(data);
-  const [lastElement, setLastElement] = useState<HTMLDivElement | null>(null);
+  const PAGE_SIZE = 30; // loads a limited amount of new elements at a time when scrolling down
+  const SCROLL_THRESHOLD = 4000; // bigger number means new elements will be loaded earlier when scrolling down
+  const [loading, data, loadingMore, loadMore] = useUserComments(username, PAGE_SIZE);
 
-  const PAGE_SIZE = 10; // loads a limited amount of new elements at a time when scrolling down
-
-  useEffect(() => {
-    if (data)
-      setComments([...data]);
-  }, [data]);
-
-  // resets the cards if we're on a new users page
-  useEffect(() => {
-    setPage(0);
-    setComments(undefined);
-  }, [username]);
-
-  // sets the observer to the last element once it is rendered
-  useEffect(() => {
-    // called if the last answer is seen, resulting in a new set of answers being loaded
-    const handleObserver = (
-      entities: IntersectionObserverEntry[],
-      observer: IntersectionObserver,
-    ) => {
-      const first = entities[0];
-      if (first.isIntersecting) {
-        setPage((no) => no + 1);
-      }
-    };
-    const observer = new IntersectionObserver(handleObserver);
-    if (lastElement) {
-      observer.observe(lastElement);
+  // loads more elements when scrolling down
+  const handleScroll = () => {
+    if (document.body.clientHeight <= window.scrollY + SCROLL_THRESHOLD) {
+      loadMore();
     }
-    return () => {
-      if (lastElement) {
-        observer.unobserve(lastElement);
-      }
-    };
-  }, [lastElement]);
+  };
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll, { passive: true });
+  }, []);
 
   return (
     <>
-      {error && <Alert color="danger">{error.message}</Alert>}
-      {(!comments || comments.length === 0) && !loading && (
+      {(!data || data.total === 0) && !loading && (
         <Alert color="secondary">No comments</Alert>
       )}
       <div className={masonryStyle}>
@@ -74,18 +46,16 @@ const UserComments: React.FC<UserCommentsProps> = ({ username }) => {
           options={{ fitWidth: true, transitionDuration: 0 }}
           enableResizableChildren={true}
         >
-          {comments &&
-            comments.slice(0, (page + 1) * PAGE_SIZE).map((comment) => (
+          {data &&
+            data.list.map((comment) => (
               <div className="px-2 contribution-component" key={comment.oid}>
                 <SingleCommentComponent comment={comment} />
               </div>
             ))}
-          <div ref={(elem) => setLastElement(elem)} />
         </Masonry>
       </div>
-      {loading && (
-        <Spinner style={{ display: "flex", margin: "auto" }} />
-      )}
+      {(loading || loadingMore) && <Spinner style={{ display: "flex", margin: "auto" }} />
+      }
     </>
   );
 };

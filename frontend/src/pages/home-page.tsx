@@ -1,4 +1,4 @@
-import { useLocalStorageState, useRequest } from "@umijs/hooks";
+import { useLocalStorageState, useRequest } from "ahooks";
 import {
   Alert,
   Button,
@@ -152,7 +152,7 @@ const HomePage: React.FC<{}> = () => {
 };
 export const CategoryList: React.FC<{}> = () => {
   const { isAdmin } = useUser() as User;
-  const [mode, setMode] = useLocalStorageState("mode", Mode.Alphabetical);
+  const [mode, setMode] = useLocalStorageState("mode", { defaultValue: Mode.Alphabetical });
   const [filter, setFilter] = useState("");
   const { data, error, loading, run } = useRequest(loadCategoryData, {
     cacheKey: "category-data",
@@ -163,8 +163,8 @@ export const CategoryList: React.FC<{}> = () => {
     () =>
       categoriesWithDefault
         ? categoriesWithDefault.filter(
-            ({ slug }) => slug !== "default" || isAdmin,
-          )
+          ({ slug }) => slug !== "default" || isAdmin,
+        )
         : undefined,
     [categoriesWithDefault, isAdmin],
   );

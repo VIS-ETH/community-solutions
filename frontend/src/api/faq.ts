@@ -1,6 +1,6 @@
 import { fetchGet, fetchPost, fetchPut, fetchDelete } from "./fetch-utils";
 import { FAQEntry } from "../interfaces";
-import { useRequest } from "@umijs/hooks";
+import { useRequest } from "ahooks";
 import { useMutation } from "./hooks";
 
 const loadFAQs = async () => {
@@ -33,26 +33,26 @@ const sorted = (arg: FAQEntry[]) => arg.sort((a, b) => a.order - b.order);
 export const useFAQ = () => {
   const { data: faqs, mutate } = useRequest(loadFAQs, { cacheKey: "faqs" });
   const [, runAddFAQ] = useMutation(addFAQ, newFAQ => {
-    mutate(prevEntries => sorted([...prevEntries, newFAQ]));
+    mutate(prevEntries => sorted([...prevEntries ?? [], newFAQ]));
   });
   const [, runUpdateFAQ] = useMutation(updateFAQ, changed =>
     mutate(prevEntry =>
       sorted(
-        prevEntry.map(entry => (entry.oid === changed.oid ? changed : entry)),
+        prevEntry?.map(entry => (entry.oid === changed.oid ? changed : entry)) ?? [],
       ),
     ),
   );
   const [, runSwapFAQ] = useMutation(swapFAQ, ([newA, newB]) => {
     mutate(prevEntry =>
       sorted(
-        prevEntry.map(entry =>
+        prevEntry?.map(entry =>
           entry.oid === newA.oid ? newA : entry.oid === newB.oid ? newB : entry,
-        ),
+        ) ?? [],
       ),
     );
   });
   const [, runDeleteFAQ] = useMutation(deleteFAQ, removedOid =>
-    mutate(prevEntry => prevEntry.filter(entry => entry.oid !== removedOid)),
+    mutate(prevEntry => prevEntry?.filter(entry => entry.oid !== removedOid)),
   );
   return {
     faqs,

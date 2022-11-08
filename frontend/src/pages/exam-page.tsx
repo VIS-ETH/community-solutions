@@ -1,4 +1,4 @@
-import { useLocalStorageState, useRequest, useSize } from "@umijs/hooks";
+import { useLocalStorageState, useRequest, useSize } from "ahooks";
 import {
   Alert,
   Breadcrumb,
@@ -14,7 +14,7 @@ import {
   Row,
   Spinner,
 } from "@vseth/components";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { loadSections } from "../api/exam-loader";
 import { fetchPost } from "../api/fetch-utils";
@@ -72,9 +72,9 @@ interface ExamPageContentProps {
   sections?: Section[];
   renderer?: PDF;
   reloadCuts: () => void;
-  mutateCuts: (mutation: (old: ServerCutResponse) => ServerCutResponse) => void;
+  mutateCuts: (mutation: (old: ServerCutResponse | undefined) => ServerCutResponse) => void;
   mutateMetaData: (
-    x: ExamMetaData | undefined | ((data: ExamMetaData) => ExamMetaData),
+    data?: ExamMetaData | ((oldData?: ExamMetaData) => ExamMetaData | undefined),
   ) => void;
   toggleEditing: () => void;
 }
@@ -90,10 +90,11 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
   const { run: runMarkChecked } = useRequest(markAsChecked, {
     manual: true,
     onSuccess() {
-      mutateMetaData((metaData) => ({
-        ...metaData,
-        oral_transcript_checked: true,
-      }));
+      mutateMetaData((metaData) => (
+        metaData ? {
+          ...metaData,
+          oral_transcript_checked: true,
+        } : undefined));
     },
   });
   const user = useUser()!;
@@ -112,14 +113,16 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
     manual: true,
     onSuccess: (_data, [oid, update]) => {
       mutateCuts((oldCuts) =>
-        Object.keys(oldCuts).reduce((result, key) => {
-          result[key] = oldCuts[key].map((cutPosition) =>
-            cutPosition.oid === oid
-              ? { ...cutPosition, ...update }
-              : cutPosition,
-          );
-          return result;
-        }, {} as ServerCutResponse),
+        oldCuts ?
+          Object.keys(oldCuts).reduce((result, key) => {
+            result[key] = oldCuts[key].map((cutPosition) =>
+              cutPosition.oid === oid
+                ? { ...cutPosition, ...update }
+                : cutPosition,
+            );
+            return result;
+          }, {} as ServerCutResponse)
+          : {},
       );
     },
   });
@@ -140,8 +143,9 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
     [runAddCut, metaData, runUpdate],
   );
 
-  const [size, sizeRef] = useSize<HTMLDivElement>();
-  const [maxWidth, setMaxWidth] = useLocalStorageState("max-width", 1000);
+  const sizeRef = useRef(null);
+  const size = useSize(sizeRef);
+  const [maxWidth, setMaxWidth] = useLocalStorageState("max-width", { defaultValue: 1000 });
 
   const [visibleSplits, addVisible, removeVisible] = useSet<PdfSection>();
   const [panelIsOpen, togglePanel] = useToggle();
@@ -162,7 +166,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
     return s;
   }, [visibleSplits]);
 
-  const width = size.width;
+  const width = size?.width;
   const [displayOptions, setDisplayOptions] = useState({
     displayHiddenPdfSections: false,
     displayHiddenAnswerSections: false,

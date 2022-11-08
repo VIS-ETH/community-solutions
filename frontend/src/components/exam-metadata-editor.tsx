@@ -1,4 +1,4 @@
-import { useRequest } from "@umijs/hooks";
+import { useRequest } from "ahooks";
 import {
   Alert,
   Button,
@@ -258,7 +258,7 @@ const ExamMetadataEditor: React.FC<Props> = ({
               options={options(examTypeOptions)}
               value={
                 examTypeOptions[
-                  formState.examtype as keyof typeof examTypeOptions
+                formState.examtype as keyof typeof examTypeOptions
                 ] || { value: formState.examtype, label: formState.examtype }
               }
               onChange={(option: any) =>

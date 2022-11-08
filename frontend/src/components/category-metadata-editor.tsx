@@ -1,4 +1,4 @@
-import { useRequest } from "@umijs/hooks";
+import { useRequest } from "ahooks";
 import {
   Alert,
   Button,
@@ -255,7 +255,7 @@ const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
               options={options(semesterOptions)}
               value={
                 semesterOptions[
-                  formState.semester as keyof typeof semesterOptions
+                formState.semester as keyof typeof semesterOptions
                 ]
               }
               onChange={(option: any) =>
@@ -292,7 +292,7 @@ const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
               options={options(permissionOptions)}
               value={
                 permissionOptions[
-                  formState.permission as keyof typeof permissionOptions
+                formState.permission as keyof typeof permissionOptions
                 ]
               }
               onChange={(option: any) =>

@@ -1,5 +1,5 @@
 import { css } from "@emotion/css";
-import { useDebounceFn } from "@umijs/hooks";
+import { useDebounceFn } from "ahooks";
 import {
   ArrowUpIcon,
   ButtonGroup,
@@ -90,7 +90,7 @@ const ExamPanel: React.FC<ExamPanelProps> = ({
   const [widthValue, setWidthValue] = useState(maxWidth);
   const { run: changeWidth } = useDebounceFn(
     (val: number) => setMaxWidth(val),
-    500,
+    { wait: 500 },
   );
   const handler = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.currentTarget.value);

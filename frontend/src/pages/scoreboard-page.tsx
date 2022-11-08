@@ -1,4 +1,4 @@
-import { useLocalStorageState, useRequest } from "@umijs/hooks";
+import { useLocalStorageState, useRequest } from "ahooks";
 import { Alert, Button, Container, Table } from "@vseth/components";
 import React from "react";
 import { Link } from "react-router-dom";
@@ -27,7 +27,7 @@ const Scoreboard: React.FC<{}> = () => {
   useTitle("Scoreboard");
   const [mode, setMode] = useLocalStorageState<Mode>(
     "scoreboard-mode",
-    "score",
+    { defaultValue: "score" },
   );
   const { error, loading, data } = useRequest(() => loadScoreboard(mode), {
     refreshDeps: [mode],

@@ -1,4 +1,4 @@
-import { useRequest } from "@umijs/hooks";
+import { useRequest } from "ahooks";
 import { ButtonGroup, MinusIcon, PlusIcon, Spinner } from "@vseth/components";
 import React from "react";
 import { fetchPost } from "../api/fetch-utils";

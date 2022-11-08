@@ -1,4 +1,4 @@
-import { useLocalStorageState, useRequest } from "@umijs/hooks";
+import { useLocalStorageState, useRequest } from "ahooks";
 import {
   Alert,
   Button,
@@ -113,7 +113,7 @@ const FeedbackReader: React.FC<{}> = () => {
 const FeedbackAdminView: React.FC<{}> = () => {
   const [mode, setMode] = useLocalStorageState<AdminMode>(
     "feedback-admin-mode",
-    AdminMode.Read,
+    { defaultValue: AdminMode.Read },
   );
   return (
     <Container>

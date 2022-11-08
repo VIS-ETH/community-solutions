@@ -1,4 +1,4 @@
-import { useRequest } from "@umijs/hooks";
+import { useRequest } from "ahooks";
 import { Container } from "@vseth/components";
 import React from "react";
 import CodeBlock from "./code-block";

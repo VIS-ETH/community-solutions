@@ -101,7 +101,7 @@ def list_flagged(request):
 
 @response.request_get()
 @auth_check.require_login
-def get_by_user(request, username, page=-1):
+def get_by_user(request, username: str, page: int, page_size: int):
     sorted_answers = Answer.objects \
         .filter(
             author__username=username,
@@ -115,31 +115,29 @@ def get_by_user(request, username, page=-1):
             delta_votes=F("downvotes_count")-F("upvotes_count")) \
         .order_by("-expert_count", "delta_votes", "time")
 
-    if page >= 0:
-        PAGE_SIZE = 20
-        sorted_answers = sorted_answers[page*PAGE_SIZE: (page+1)*PAGE_SIZE]
+    total = len(sorted_answers)
+    sorted_answers = sorted_answers[page*page_size: (page+1)*page_size]
 
     res = [
         section_util.get_answer_response(
             request, answer, ignore_exam_admin=True)
         for answer in sorted_answers
     ]
-    return response.success(value=res)
+    return response.success(value={"list": res, "total": total})
 
 
 @response.request_get()
 @auth_check.require_login
-def get_comments_by_user(request, username, page=-1):
+def get_comments_by_user(request, username, page: int, page_size: int):
     sorted_comments = Comment.objects \
         .filter(author__username=username) \
         .select_related(*section_util.get_comment_fields_to_preselect()) \
         .prefetch_related(*section_util.get_comment_fields_to_prefetch()) \
         .order_by("-time", "id")
 
-    if page >= 0:
-        PAGE_SIZE = 20
-        sorted_comments = sorted_comments[page*PAGE_SIZE: (page+1)*PAGE_SIZE]
+    total = len(sorted_comments)
+    sorted_comments = sorted_comments[page*page_size: (page+1)*page_size]
 
     res = [section_util.get_comment_response(request, comment)
            for comment in sorted_comments]
-    return response.success(value=res)
+    return response.success(value={"list": res, "total": total})

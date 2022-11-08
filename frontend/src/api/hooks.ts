@@ -1,3 +1,4 @@
+import { useInfiniteScroll } from "ahooks";
 import { useRequest } from "@umijs/hooks";
 import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 import {
@@ -155,35 +156,51 @@ export const useMarkAllAsRead = () => {
   });
   return [error, loading, run] as const;
 };
-const loadUserAnswers = async (username: string, page: number = -1) => {
-  const pageStr = page === -1 ? "" : `${page}/`;
-  return (await fetchGet(`/api/exam/listbyuser/${username}/${pageStr}`))
-    .value as Answer[];
+
+interface AnswerData {
+  list: Answer[];
+  total: number; // total amount of answers
+}
+const loadUserAnswers = async (username: string, page: number, pageSize: number) => {
+  return (await fetchGet(`/api/exam/listbyuser/${username}/${page}/${pageSize}/`))
+    .value as AnswerData;
 };
-export const useUserAnswers = (username: string, page: number = -1) => {
-  const { error, loading, data, run } = useRequest(
-    () => loadUserAnswers(username, page),
+export const useUserAnswers = (username: string, pageSize: number) => {
+  const { loading, data, loadingMore, loadMore, reload } = useInfiniteScroll(
+    (d) => 
     {
-      refreshDeps: [username, page],
-      cacheKey: `page-${page}-user-answers-${username}`,
+      const page = d ? Math.ceil(d.list.length / pageSize) : 0;
+      return loadUserAnswers(username, page, pageSize)
+    },
+    {
+      reloadDeps: [username],
+      isNoMore: (d) => d === undefined || d.list.length >= d.total,
     },
   );
-  return [error, loading, data, run] as const;
+  return [loading, data, loadingMore, loadMore, reload] as const;
 };
-const loadUserComments = async (username: string, page: number = -1) => {
-  const pageStr = page === -1 ? "" : `${page}/`;
-  return (await fetchGet(`/api/exam/listcommentsbyuser/${username}/${pageStr}`))
-    .value as SingleComment[];
+
+interface CommentData {
+  list: SingleComment[];
+  total: number; // total amount of comments
+}
+const loadUserComments = async (username: string, page: number, pageSize: number) => {
+  return (await fetchGet(`/api/exam/listcommentsbyuser/${username}/${page}/${pageSize}/`))
+    .value as CommentData;
 };
-export const useUserComments = (username: string, page: number = -1) => {
-  const { error, loading, data, run } = useRequest(
-    () => loadUserComments(username, page),
+export const useUserComments = (username: string, pageSize: number) => {
+  const { loading, data, loadingMore, loadMore, reload } = useInfiniteScroll(
+    (d) => 
     {
-      refreshDeps: [username, page],
-      cacheKey: `page-${page}-user-comments-${username}`,
+      const page = d ? Math.ceil(d.list.length / pageSize) : 0;
+      return loadUserComments(username, page, pageSize)
+    },
+    {
+      reloadDeps: [username],
+      isNoMore: (d) => d === undefined || d.list.length >= d.total,
     },
   );
-  return [error, loading, data, run] as const;
+  return [loading, data, loadingMore, loadMore, reload] as const;
 };
 export const loadCategories = async () => {
   return (await fetchGet("/api/category/listonlyadmin/"))

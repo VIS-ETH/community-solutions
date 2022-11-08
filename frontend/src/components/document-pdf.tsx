@@ -1,7 +1,7 @@
-import { useRequest, useSize } from "@umijs/hooks";
+import { useRequest, useSize } from "ahooks";
 import { Container } from "@vseth/components";
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
-import React from "react";
+import React, { useRef } from "react";
 import { getHeaders } from "../api/fetch-utils";
 import PDF from "../pdf/pdf-renderer";
 import PdfSectionCanvas from "../pdf/pdf-section-canvas";
@@ -37,7 +37,8 @@ const DocumentPdf: React.FC<DocumentPdfProps> = ({ url }) => {
       refreshDeps: [url],
     },
   );
-  const [size, sizeRef] = useSize<HTMLDivElement>();
+  const sizeRef = useRef(null);
+  const size = useSize(sizeRef);
   const renderer = data ? data[1] : undefined;
   return (
     <ContentContainer>
@@ -54,7 +55,7 @@ const DocumentPdf: React.FC<DocumentPdfProps> = ({ url }) => {
                   page={pageNumber}
                   start={0}
                   end={1}
-                  targetWidth={size.width}
+                  targetWidth={size?.width}
                   renderer={renderer}
                 />
               ))}

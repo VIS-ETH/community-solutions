@@ -12,7 +12,7 @@ import React from "react";
 import { useLocation, NavLink } from "react-router-dom";
 import { fetchGet } from "../api/fetch-utils";
 import { useUser } from "../auth";
-import { useRequest } from "@umijs/hooks";
+import { useRequest } from "ahooks";
 import { Link } from "react-router-dom";
 
 const loadUnreadCount = async () => {

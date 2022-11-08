@@ -1,8 +1,8 @@
-import { useInViewport } from "@umijs/hooks";
+import { useInViewport } from "ahooks";
 import { Card, ViewIcon, ViewOffIcon } from "@vseth/components";
 import { css, cx } from "@emotion/css";
 import * as React from "react";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { DebugContext } from "../components/Debug";
 import IconButton from "../components/icon-button";
 import PdfSectionCanvasOverlay from "../components/pdf-section-canvas-overlay";
@@ -30,12 +30,12 @@ const usePdf = (
   end: number,
   scale: number | undefined,
 ): [
-  HTMLCanvasElement | null,
-  number[] | undefined,
-  number,
-  number,
-  boolean,
-] => {
+    HTMLCanvasElement | null,
+    number[] | undefined,
+    number,
+    number,
+    boolean,
+  ] => {
   const [canvasElement, setCanvasElement] =
     useState<HTMLCanvasElement | null>(null);
   const [view, setView] = useState<number[]>();
@@ -119,7 +119,7 @@ const PdfSectionCanvas: React.FC<Props> = React.memo(
     addCutText,
     snap = true,
     displayHideShowButtons = false,
-    onSectionHiddenChange = () => {},
+    onSectionHiddenChange = () => { },
   }) => {
     const relativeHeight = end - start;
 
@@ -142,7 +142,8 @@ const PdfSectionCanvas: React.FC<Props> = React.memo(
       end,
       visible ? (currentScale ? currentScale * dpr : undefined) : undefined,
     );
-    const [inViewport, inViewportRef] = useInViewport<HTMLDivElement>();
+    const inViewportRef = useRef(null);
+    const [inViewport] = useInViewport(inViewportRef);
     const v = inViewport || false;
     useEffect(() => {
       if (onVisibleChange) onVisibleChange(v);
@@ -211,9 +212,8 @@ const PdfSectionCanvas: React.FC<Props> = React.memo(
             className="cover-container"
             style={{
               width: `${targetWidth}px`,
-              height: `${
-                containerHeight || targetWidth * relativeHeight * 1.414
-              }px`,
+              height: `${containerHeight || targetWidth * relativeHeight * 1.414
+                }px`,
               filter: hidden ? "contrast(0.5)" : undefined,
             }}
             ref={containerElement}

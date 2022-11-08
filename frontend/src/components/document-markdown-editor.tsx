@@ -1,4 +1,4 @@
-import { useRequest } from "@umijs/hooks";
+import { useRequest } from "ahooks";
 import { Button, SaveIcon, Spinner } from "@vseth/components";
 import React, { useState } from "react";
 import { imageHandler, NamedBlob } from "../api/fetch-utils";

@@ -1,9 +1,8 @@
 import { Alert, Spinner } from "@vseth/components";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect } from "react";
 import Masonry from "react-masonry-component";
 import { masonryStyle } from "../pages/userinfo-page";
 import { useUserAnswers } from "../api/hooks";
-import { Answer } from "../interfaces";
 import AnswerComponent from "./answer";
 // `transform: translateX(0)` fixes an issue on webkit browsers
 // where relative positioned elements aren't displayed in containers
@@ -22,68 +21,42 @@ interface UserAnswersProps {
 
 
 const UserAnswers: React.FC<UserAnswersProps> = ({ username }) => {
-  const [page, setPage] = useState(0); // to indicate what page of answers should be loaded
-  const [error, loading, data, reload] = useUserAnswers(username, -1);
-  const [answers, setAnswers] = useState(data);
-  const [lastElement, setLastElement] = useState<HTMLDivElement | null>(null);
+  const PAGE_SIZE = 20; // loads a limited amount of new elements at a time when scrolling down
+  const SCROLL_THRESHOLD = 4000; // bigger number means new elements will be loaded earlier when scrolling down
+  const [loading, data, loadingMore, loadMore] = useUserAnswers(username, PAGE_SIZE);
 
-  const PAGE_SIZE = 10; // loads a limited amount of new elements at a time when scrolling down
-
-  useEffect(() => {
-    if (data)
-      setAnswers([...data]);
-  }, [data]);
-
-  // resets the cards if we're on a new users page
-  useEffect(() => {
-    setPage(0);
-    setAnswers(undefined);
-  }, [username]);
-
-  // sets the observer to the last element once it is rendered
-  useEffect(() => {
-    // called if the last answer is seen, resulting in a new set of answers being loaded
-    const handleObserver = (entities: IntersectionObserverEntry[], observer: IntersectionObserver) => {
-      const first = entities[0];
-      if (first.isIntersecting) {
-        setPage(no => no + 1);
-      }
-    };
-    const observer = new IntersectionObserver(handleObserver);
-    if (lastElement) {
-      observer.observe(lastElement);
+  // loads more elements when scrolling down
+  const handleScroll = () => {
+    if (document.body.clientHeight <= window.scrollY + SCROLL_THRESHOLD) {
+      loadMore();
     }
-    return () => {
-      if (lastElement) {
-        observer.unobserve(lastElement);
-      }
-    }
-  }, [lastElement]);
+  };
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll, { passive: true });
+  }, []);
 
   return (
     <>
-      {error && <Alert color="danger">{error.message}</Alert>}
-      {(!answers || answers.length === 0) && !loading && <Alert color="secondary">No answers</Alert>}
+      {(!data || data.total === 0) && !loading && <Alert color="secondary">No answers</Alert>}
       <div className={masonryStyle}>
         <Masonry
           options={{ fitWidth: true, transitionDuration: 0 }}
           enableResizableChildren={true}
         >
-          {answers &&
-            answers.slice(0, (page + 1) * PAGE_SIZE).map((answer) => (
+          {data &&
+            data.list.map((answer) => (
               <div className="px-2 contribution-component" key={answer.oid}>
                 <AnswerComponent
                   hasId={false}
                   answer={answer}
                   isLegacyAnswer={answer.isLegacyAnswer}
-                  onSectionChanged={reload}
+                  onSectionChanged={loadMore}
                 />
               </div>
             ))}
-          <div ref={elem => setLastElement(elem)} />
         </Masonry>
       </div>
-      {loading && <Spinner style={{ "display": "flex", "margin": "auto" }} />}
+      {(loadingMore || loading) && <Spinner style={{ display: "flex", margin: "auto" }} />}
     </>
   );
 };

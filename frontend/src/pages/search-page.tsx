@@ -1,4 +1,4 @@
-import { useDebounce, useRequest } from "@umijs/hooks";
+import { useDebounce, useRequest } from "ahooks";
 import { Container, FormGroup } from "@vseth/components";
 import React, { useEffect, useState } from "react";
 import { StringParam, useQueryParam } from "use-query-params";
@@ -18,7 +18,7 @@ const SearchPage: React.FC<{}> = () => {
   const [query, setQuery] = useQueryParam("q", StringParam);
   const [optionalTerm, setTerm] = useState(query);
   const term = optionalTerm || "";
-  const debouncedTerm = useDebounce(term, 300);
+  const debouncedTerm = useDebounce(term, { wait: 300 });
   useEffect(() => {
     setQuery(debouncedTerm);
   }, [setQuery, debouncedTerm]);

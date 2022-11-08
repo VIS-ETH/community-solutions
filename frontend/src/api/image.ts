@@ -1,5 +1,5 @@
 import { fetchGet, fetchPost } from "./fetch-utils";
-import { useRequest } from "@umijs/hooks";
+import { useRequest } from "ahooks";
 import { remove } from "lodash-es";
 
 export const loadImage = async () => {
@@ -20,16 +20,15 @@ export const useImages = () => {
 
   const { run: runRemoveImage } = useRequest(removeImage, {
     manual: true,
-    fetchKey: id => id,
     onSuccess: removed => {
-      mutate(prev => prev.filter(image => image !== removed));
+      mutate(prev => prev?.filter(image => image !== removed));
       remove(removed);
     },
   });
   const { run: runUploadImage } = useRequest(uploadImage, {
     manual: true,
     onSuccess: added => {
-      mutate(prevSelected => [...prevSelected, added]);
+      mutate(prevSelected => [...prevSelected ?? [], added]);
     },
   });
   return {

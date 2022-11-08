@@ -1,6 +1,6 @@
-import { useClickAway } from "@umijs/hooks";
+import { useClickAway } from "ahooks";
 import { Button, ButtonProps, Tooltip } from "@vseth/components";
-import React, { useCallback, useState, useContext, useEffect } from "react";
+import React, { useCallback, useState, useContext, useEffect, useRef } from "react";
 import useLongPress from "../hooks/useLongPress";
 import { DebugContext } from "./Debug";
 
@@ -37,9 +37,10 @@ const TooltipButton: React.FC<TooltipButtonProps> = ({
   const [buttonId] = useState(() => id++);
   const longPress = useLongPress(
     () => isMobile && setState(true),
-    onClick ?? (() => {}),
+    onClick ?? (() => { }),
   );
-  const ref = useClickAway(() => setState(false));
+  const ref = useRef<HTMLButtonElement>(null);
+  useClickAway(() => setState(false), ref);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   return (
