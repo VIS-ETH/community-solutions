@@ -166,9 +166,8 @@ const loadUserAnswers = async (username: string, page: number, pageSize: number)
     .value as AnswerData;
 };
 export const useUserAnswers = (username: string, pageSize: number) => {
-  const { loading, data, loadingMore, loadMore, reload } = useInfiniteScroll(
-    (d) => 
-    {
+  const { loading, data, loadingMore, loadMore, reload, noMore } = useInfiniteScroll(
+    (d) => {
       const page = d ? Math.ceil(d.list.length / pageSize) : 0;
       return loadUserAnswers(username, page, pageSize)
     },
@@ -177,7 +176,7 @@ export const useUserAnswers = (username: string, pageSize: number) => {
       isNoMore: (d) => d === undefined || d.list.length >= d.total,
     },
   );
-  return [loading, data, loadingMore, loadMore, reload] as const;
+  return [loading, data, loadingMore, loadMore, reload, noMore] as const;
 };
 
 interface CommentData {
@@ -189,9 +188,8 @@ const loadUserComments = async (username: string, page: number, pageSize: number
     .value as CommentData;
 };
 export const useUserComments = (username: string, pageSize: number) => {
-  const { loading, data, loadingMore, loadMore, reload } = useInfiniteScroll(
-    (d) => 
-    {
+  const { loading, data, loadingMore, loadMore, reload, noMore } = useInfiniteScroll(
+    (d) => {
       const page = d ? Math.ceil(d.list.length / pageSize) : 0;
       return loadUserComments(username, page, pageSize)
     },
@@ -200,7 +198,7 @@ export const useUserComments = (username: string, pageSize: number) => {
       isNoMore: (d) => d === undefined || d.list.length >= d.total,
     },
   );
-  return [loading, data, loadingMore, loadMore, reload] as const;
+  return [loading, data, loadingMore, loadMore, reload, noMore] as const;
 };
 export const loadCategories = async () => {
   return (await fetchGet("/api/category/listonlyadmin/"))
