@@ -44,10 +44,10 @@ const DocumentFileItem: React.FC<Props> = ({ file, document, mutate }) => {
     document.slug,
     file.oid,
     () => {
-      mutate((s) => ({
+      mutate((s) => (s ? {
         ...s,
         files: s.files.filter((f) => f.oid !== file.oid),
-      }));
+      } : undefined));
     },
   );
   const [updateLoading, updateFile] = useUpdateDocumentFile(
@@ -57,10 +57,10 @@ const DocumentFileItem: React.FC<Props> = ({ file, document, mutate }) => {
     (file) => {
       setDisplayName(undefined);
       setFile(undefined);
-      mutate((s) => ({
+      mutate((s) => (s ? {
         ...s,
         files: s.files.map((f) => (f.oid !== file.oid ? f : file)),
-      }));
+      } : undefined));
       toggleEditIsOpen(false);
     },
   );

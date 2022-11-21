@@ -173,9 +173,9 @@ const LikeButton: React.FC<Props> = ({ document, mutate }) => {
       onClick={() => {
         updateDocument({ liked: !document.liked });
         if (!document.liked) {
-          mutate((s) => ({ ...s, liked: true, like_count: likeCount }));
+          mutate((s) => (s ? { ...s, liked: true, like_count: likeCount } : undefined));
         } else {
-          mutate((s) => ({ ...s, liked: false, like_count: nonLikeCount }));
+          mutate((s) => (s ? { ...s, liked: false, like_count: nonLikeCount } : undefined));
         }
       }}
     >

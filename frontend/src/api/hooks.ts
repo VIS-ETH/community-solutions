@@ -1,5 +1,5 @@
 import { useInfiniteScroll } from "ahooks";
-import { useRequest } from "@umijs/hooks";
+import { useRequest } from "ahooks";
 import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 import {
   Answer,
@@ -30,7 +30,7 @@ import {
   NamedBlob,
 } from "./fetch-utils";
 
-export declare type Mutate<R> = (x: R | undefined | ((data: R) => R)) => void;
+export declare type Mutate<R> = (x?: R | ((data?: R) => R | undefined)) => void;
 
 const loadUserInfo = async (username: string) => {
   return (await fetchGet(`/api/scoreboard/userinfo/${username}/`))

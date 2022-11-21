@@ -35,7 +35,7 @@ const CreateDocumentFileModal: React.FC<Props> = ({
     document.slug,
     (f) => {
       toggle(false);
-      mutate((s) => ({ ...s, files: [...s.files, f] }));
+      mutate((s : Document | undefined) => ((s) ? { ...s, files: [...s.files, f] } : undefined));
       setDisplayName("");
       setFile(undefined);
     },

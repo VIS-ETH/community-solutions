@@ -45,10 +45,10 @@ const DocumentCommentComponent = ({
     comment.oid,
     (res) => {
       setHasDraft(false);
-      mutate((document) => ({
+      mutate((document) => ((document) ? {
         ...document,
         comments: document.comments.map((c) => (c.oid !== res.oid ? c : res)),
-      }));
+      } : undefined));
     },
   );
   const [loading, deleteComment] = useDeleteDocumentComment(
@@ -56,10 +56,10 @@ const DocumentCommentComponent = ({
     documentSlug,
     comment.oid,
     () =>
-      mutate((document) => ({
+      mutate((document) => ((document) ? {
         ...document,
         comments: document.comments.filter((c) => c.oid !== comment.oid),
-      })),
+      } : undefined)),
   );
   const [hasDraft, setHasDraft] = useState(false);
   const [draftText, setDraftText] = useState("");

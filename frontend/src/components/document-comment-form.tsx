@@ -27,7 +27,7 @@ const DocumentCommentForm: React.FC<Props> = ({
     documentAuthor,
     documentSlug,
     document => {
-      mutate(data => ({ ...data, comments: [...data.comments, document] }));
+      mutate(data => (data ? { ...data, comments: [...data.comments, document] } : undefined));
       setDraftText("");
       setUndoStack({
         prev: [],
