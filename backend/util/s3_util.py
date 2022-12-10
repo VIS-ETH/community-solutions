@@ -13,8 +13,7 @@ from util import response
 
 if "SIP_S3_FILES_HOST" in os.environ:
     endpoint = (
-        ("https://" if os.environ["SIP_S3_FILES_USE_SSL"]
-         == "true" else "http://")
+        ("https://" if os.environ["SIP_S3_FILES_USE_SSL"] == "true" else "http://")
         + os.environ["SIP_S3_FILES_HOST"]
         + ":"
         + os.environ["SIP_S3_FILES_PORT"]
@@ -77,8 +76,7 @@ def save_file_to_s3(
 
 def delete_file(directory, filename):
     try:
-        s3_client.delete_object(Bucket=s3_bucket_name,
-                                Key=directory + filename)
+        s3_client.delete_object(Bucket=s3_bucket_name, Key=directory + filename)
     except ClientError:
         return False
     return True
@@ -86,8 +84,7 @@ def delete_file(directory, filename):
 
 def delete_files(directory: str, filenames):
     try:
-        objects_to_delete = [{"Key": directory + filename}
-                             for filename in filenames]
+        objects_to_delete = [{"Key": directory + filename} for filename in filenames]
         s3_client.delete_objects(
             Bucket=s3_bucket_name, Delete={"Objects": objects_to_delete}
         )

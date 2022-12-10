@@ -34,5 +34,4 @@ class Command(BaseCommand):
                     "The S3 server doesn't support put-bucket-cors - this is fine if you are using minio"
                 )
             else:
-                logger.error("put-bucket-cors failed: %s",
-                             e.response["Error"]["Code"])
+                logger.error("put-bucket-cors failed: %s", e.response["Error"]["Code"])
