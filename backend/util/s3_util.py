@@ -28,22 +28,17 @@ if "SIP_S3_FILES_HOST" in os.environ:
     }
 
     # s3_cors will be exported to configure_cors
+    # needs to contain the internal endpoint
     s3_cors = boto3.resource("s3", **options)
-    s3 = s3_cors
+    # minio is then not required in the hosts file anymore
+    if os.getenv("SIP_S3_FILES_USE_LOCALHOST", "false").lower() == "true":
+        options["endpoint_url"] = "http://localhost:" + os.environ["SIP_S3_FILES_PORT"]
+        s3 = boto3.resource("s3", **options)
+    else:
+        s3 = s3_cors
     s3_client = boto3.client("s3", **options)
     s3_bucket_name = os.environ["SIP_S3_FILES_BUCKET"]
     s3_bucket = s3.Bucket(s3_bucket_name)
-
-    # this serves as a way to remove the need for having "minio" in the hosts file
-    # if a SIP_S3_FILES_USE_LOCALHOST env is set to true, this will be applied
-    localhost_mode = os.getenv("SIP_S3_FILES_USE_LOCALHOST", "false").lower() == "true"
-    if localhost_mode:
-        options_dev = options.copy()
-        options_dev["endpoint_url"] = "http://localhost:" + \
-            os.environ["SIP_S3_FILES_PORT"]
-        s3 = boto3.resource("s3", **options_dev)
-        s3_client = boto3.client("s3", **options_dev)
-        s3_bucket = s3.Bucket(s3_bucket_name)
 
 
 def save_uploaded_file_to_disk(dest: str, uploaded_file: UploadedFile):
