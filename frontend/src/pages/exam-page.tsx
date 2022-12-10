@@ -3,7 +3,6 @@ import {
   Alert,
   Breadcrumb,
   BreadcrumbItem,
-  Button,
   Card,
   CardBody,
   CheckIcon,
@@ -46,6 +45,7 @@ import {
   ServerCutResponse,
 } from "../interfaces";
 import PDF from "../pdf/pdf-renderer";
+import { getAnswerSectionId } from "../utils/exam-utils";
 
 const addCut = async (
   filename: string,
@@ -170,6 +170,34 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
     displayEmptyCutLabels: false,
   });
 
+  const [expandedSections, expandSections, collapseSections] = useSet<string>();
+  const answerSections = useMemo(() => {
+    if (sections === undefined) return;
+    const answerSections: string[] = [];
+    for (const section of sections) {
+      if (section.kind === SectionKind.Answer) {
+        answerSections.push(section.oid);
+      }
+    }
+    return answerSections;
+  }, [sections]);
+  const allSectionsExpanded = useMemo(() => {
+    if (answerSections === undefined) return true;
+    return answerSections.every((section) => expandedSections.has(section));
+  }, [answerSections, expandedSections]);
+  const allSectionsCollapsed = useMemo(() => {
+    if (answerSections === undefined) return true;
+    return !answerSections.some((section) => expandedSections.has(section));
+  }, [answerSections, expandedSections]);
+  const collapseAllSections = useCallback(() => {
+    if (answerSections === undefined) return;
+    collapseSections(...answerSections);
+  }, [collapseSections, answerSections]);
+  const expandAllSections = useCallback(() => {
+    if (answerSections === undefined) return;
+    expandSections(...answerSections);
+  }, [expandSections, answerSections]);
+
   const toc = useMemo(() => {
     if (sections === undefined) {
       return undefined;
@@ -180,7 +208,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
         if (section.cutHidden) continue;
         const parts = section.name.split(" > ");
         if (parts.length === 1 && parts[0].length === 0) continue;
-        const jumpTarget = `${section.oid}-${parts.join("-")}`;
+        const jumpTarget = getAnswerSectionId(section.oid, section.name);
         rootNode.add(parts, jumpTarget);
       }
     }
@@ -343,6 +371,9 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
               }
               displayEmptyCutLabels={displayOptions.displayEmptyCutLabels}
               displayHideShowButtons={displayOptions.displayHideShowButtons}
+              expandedSections={expandedSections}
+              onCollapseSections={collapseSections}
+              onExpandSections={expandSections}
             />
           )}
         </div>
@@ -353,6 +384,10 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
         metaData={metaData}
         renderer={renderer}
         visiblePages={visiblePages}
+        allSectionsExpanded={allSectionsExpanded}
+        allSectionsCollapsed={allSectionsCollapsed}
+        onCollapseAllSections={collapseAllSections}
+        onExpandAllSections={expandAllSections}
         maxWidth={maxWidth}
         setMaxWidth={setMaxWidth}
         editState={editState}

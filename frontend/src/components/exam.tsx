@@ -16,6 +16,7 @@ import { loadCutVersions } from "../api/hooks";
 import useSet from "../hooks/useSet";
 import PDF from "../pdf/pdf-renderer";
 import { fetchGet } from "../api/fetch-utils";
+import { getAnswerSectionId } from "../utils/exam-utils";
 
 interface Props {
   metaData: ExamMetaData;
@@ -36,6 +37,10 @@ interface Props {
   displayHiddenAnswerSections?: boolean;
   displayHideShowButtons?: boolean;
   displayEmptyCutLabels?: boolean;
+
+  expandedSections: Set<string>;
+  onExpandSections: (...sections: string[]) => void;
+  onCollapseSections: (...sections: string[]) => void;
 }
 function notUndefined<T>(value: T | undefined): value is T {
   return value !== undefined;
@@ -75,6 +80,9 @@ const Exam: React.FC<Props> = React.memo(
     displayHiddenAnswerSections = false,
     displayHideShowButtons = true,
     displayEmptyCutLabels = false,
+    expandedSections,
+    onExpandSections,
+    onCollapseSections,
   }) => {
     const getAddCutHandler = useCallback(
       (section: PdfSection) => {
@@ -93,12 +101,11 @@ const Exam: React.FC<Props> = React.memo(
       [editState, metaData.filename, onAddCut, onMoveCut],
     );
 
-    const [visible, show, hide] = useSet<string>();
     const [cutVersions, setCutVersions] = useState<CutVersions>({});
     useRequest(() => loadCutVersions(metaData.filename), {
       pollingInterval: 60_000,
-      onSuccess: response => {
-        setCutVersions(oldVersions => ({ ...oldVersions, ...response }));
+      onSuccess: (response) => {
+        setCutVersions((oldVersions) => ({ ...oldVersions, ...response }));
       },
     });
     const snap =
@@ -117,10 +124,10 @@ const Exam: React.FC<Props> = React.memo(
       let cancelled = false;
       if (hash.length > 0) {
         fetchGet(`/api/exam/answer/${hash}/`)
-          .then(res => {
+          .then((res) => {
             if (cancelled) return;
             const sectionId = res.value.sectionId;
-            show(sectionId);
+            onExpandSections(sectionId);
           })
           .catch(() => {});
 
@@ -130,10 +137,10 @@ const Exam: React.FC<Props> = React.memo(
       return () => {
         cancelled = true;
       };
-    }, [hash, show, sections]);
+    }, [hash, expandedSections, sections, onExpandSections]);
     const onChangeListeners = useObjectFromMap(
       sections,
-      section => {
+      (section) => {
         if (section.kind === SectionKind.Pdf) {
           return [
             section.key,
@@ -147,7 +154,7 @@ const Exam: React.FC<Props> = React.memo(
     );
     const addCutHandlers = useObjectFromMap(
       sections,
-      section => {
+      (section) => {
         if (section.kind === SectionKind.Pdf) {
           return [section.key, getAddCutHandler(section)];
         } else {
@@ -158,7 +165,7 @@ const Exam: React.FC<Props> = React.memo(
     );
     return (
       <>
-        {sections.map(section => {
+        {sections.map((section) => {
           if (section.kind === SectionKind.Answer) {
             if (displayHiddenAnswerSections || section.has_answers) {
               return (
@@ -169,9 +176,9 @@ const Exam: React.FC<Props> = React.memo(
                   oid={section.oid}
                   onSectionChange={reloadCuts}
                   onToggleHidden={() =>
-                    visible.has(section.oid)
-                      ? hide(section.oid)
-                      : show(section.oid)
+                    expandedSections.has(section.oid)
+                      ? onCollapseSections(section.oid)
+                      : onExpandSections(section.oid)
                   }
                   cutName={section.name}
                   onCutNameChange={(name: string) =>
@@ -182,11 +189,11 @@ const Exam: React.FC<Props> = React.memo(
                       has_answers: !section.has_answers,
                     })
                   }
-                  hidden={!visible.has(section.oid)}
+                  hidden={!expandedSections.has(section.oid)}
                   has_answers={section.has_answers}
                   cutVersion={cutVersions[section.oid] || section.cutVersion}
-                  setCutVersion={newVersion =>
-                    setCutVersions(oldVersions => ({
+                  setCutVersion={(newVersion) =>
+                    setCutVersions((oldVersions) => ({
                       ...oldVersions,
                       [section.oid]: newVersion,
                     }))
@@ -206,7 +213,13 @@ const Exam: React.FC<Props> = React.memo(
                 />
               );
             } else {
-              return null;
+              // Return empty div so that jumping to hidden section from contents is still possible
+              const id = getAnswerSectionId(section.oid, section.name);
+              return (
+                <>
+                  <div id={id} style={{ visibility: "hidden" }} />
+                </>
+              );
             }
           } else {
             if (displayHiddenPdfSections || !section.hidden) {
