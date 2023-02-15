@@ -188,6 +188,7 @@ class Command(BaseCommand):
                 )
                 if i == 6:
                     answer.is_legacy_answer = True
+                answer.is_official_answer = False
                 objs.append(answer)
         Answer.objects.bulk_create(objs)
         

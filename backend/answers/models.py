@@ -159,7 +159,6 @@ class Answer(ExportModelOperationsMixin('answer'), BaseAnswer):
     flagged = models.ManyToManyField(
         'auth.User', related_name='flagged_answer_set')
 
-    # Might be preferrable to have IntegerChoices constraint or similar
     is_legacy_answer = models.BooleanField(default=False)
     is_official_answer = models.BooleanField(default=False)
 
@@ -172,7 +171,7 @@ class Answer(ExportModelOperationsMixin('answer'), BaseAnswer):
 #                                    name='no_official_legacy')
 #         ]
 
-
+"""
 class SolutionExcerpt(BaseAnswer):
     from_page_num = models.IntegerField()
     from_rel_height = models.FloatField()
@@ -181,7 +180,7 @@ class SolutionExcerpt(BaseAnswer):
     to_page_num = models.IntegerField()
     to_rel_height = models.FloatField()
     to_rel_width = models.FloatField(default=0.0)
-
+"""
 
 class Comment(ExportModelOperationsMixin('comment'), CommentMixin):
     answer = models.ForeignKey('Answer', on_delete=models.CASCADE, related_name="comments")
