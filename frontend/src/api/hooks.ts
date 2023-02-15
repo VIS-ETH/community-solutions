@@ -294,9 +294,10 @@ const updateAnswer = async (
   answerId: string,
   text: string,
   legacy_answer: boolean,
+  official_answer: boolean,
 ) => {
   return (
-    await fetchPost(`/api/exam/setanswer/${answerId}/`, { text, legacy_answer })
+    await fetchPost(`/api/exam/setanswer/${answerId}/`, { text, legacy_answer, official_answer })
   ).value as AnswerSection;
 };
 const removeAnswer = async (answerId: string) => {

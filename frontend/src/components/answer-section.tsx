@@ -57,16 +57,20 @@ interface AddButtonProps {
   allowLegacyAnswer: boolean;
   hasAnswerDraft: boolean;
   hasLegacyAnswerDraft: boolean;
+  hasOfficialAnswerDraft: boolean;
   onAnswer: () => void;
   onLegacyAnswer: () => void;
+  onOfficialAnswer: () => void;
 }
 const AddButton: React.FC<AddButtonProps> = ({
   allowAnswer,
   allowLegacyAnswer,
   hasAnswerDraft,
   hasLegacyAnswerDraft,
+  hasOfficialAnswerDraft,
   onAnswer,
   onLegacyAnswer,
+  onOfficialAnswer,
 }) => {
   const [isOpen, setOpen] = useState(false);
   const toggle = useCallback(() => setOpen(old => !old), []);
@@ -85,6 +89,12 @@ const AddButton: React.FC<AddButtonProps> = ({
             disabled={hasLegacyAnswerDraft}
           >
             Add Legacy Answer
+          </DropdownItem>
+          <DropdownItem
+            onClick={onOfficialAnswer}
+            disabled={hasOfficialAnswerDraft}
+          >
+            Add Official Answer
           </DropdownItem>
         </DropdownMenu>
       </ButtonDropdown>
@@ -177,12 +187,17 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
     }, [run]);
     const [hasDraft, setHasDraft] = useState(false);
     const [hasLegacyDraft, setHasLegacyDraft] = useState(false);
+    const [hasOfficialDraft, setHasOfficialDraft] = useState(false);
     const onAddAnswer = useCallback(() => {
       setHasDraft(true);
       if (hidden) onToggleHidden();
     }, [hidden, onToggleHidden]);
     const onAddLegacyAnswer = useCallback(() => {
       setHasLegacyDraft(true);
+      if (hidden) onToggleHidden();
+    }, [hidden, onToggleHidden]);
+    const onAddOfficialAnswer = useCallback(() => {
+      setHasOfficialDraft(true);
       if (hidden) onToggleHidden();
     }, [hidden, onToggleHidden]);
     const user = useUser()!;
@@ -274,6 +289,7 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
                   answer={answer}
                   onSectionChanged={setAnswerSection}
                   isLegacyAnswer={answer.isLegacyAnswer}
+                  isOfficialAnswer={answer.isOfficialAnswer}
                 />
               ))}
               {hasDraft && (
@@ -282,6 +298,7 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
                   onSectionChanged={setAnswerSection}
                   onDelete={() => setHasDraft(false)}
                   isLegacyAnswer={false}
+                  isOfficialAnswer={false}
                 />
               )}
               {hasLegacyDraft && (
@@ -290,7 +307,17 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
                   onSectionChanged={setAnswerSection}
                   onDelete={() => setHasLegacyDraft(false)}
                   isLegacyAnswer={true}
+                  isOfficialAnswer={false}
                 />
+              )}
+              {hasOfficialDraft && (
+	        <AnswerComponent
+		  section={data}
+		  onSectionChanged={setAnswerSection}
+		  onDelete={() => setHasOfficialDraft(false)}
+		  isLegacyAnswer={false}
+		  isOfficialAnswer={true}
+	        />
               )}
             </>
           )}
@@ -333,8 +360,10 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
                                 }
                                 hasAnswerDraft={hasDraft}
                                 hasLegacyAnswerDraft={hasLegacyDraft}
+                                hasOfficialAnswerDraft={hasOfficialDraft}
                                 onAnswer={onAddAnswer}
                                 onLegacyAnswer={onAddLegacyAnswer}
+                                onOfficialAnswer={onAddOfficialAnswer}
                               />
                             )
                           )}

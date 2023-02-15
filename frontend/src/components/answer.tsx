@@ -69,6 +69,7 @@ interface Props {
   onSectionChanged?: (newSection: AnswerSection) => void;
   onDelete?: () => void;
   isLegacyAnswer: boolean;
+  isOfficialAnswer: boolean;
   hasId?: boolean;
 }
 const AnswerComponent: React.FC<Props> = ({
@@ -77,6 +78,7 @@ const AnswerComponent: React.FC<Props> = ({
   onDelete,
   onSectionChanged,
   isLegacyAnswer,
+  isOfficialAnswer,
   hasId = true,
 }) => {
   const [viewSource, toggleViewSource] = useToggle(false);
@@ -108,8 +110,8 @@ const AnswerComponent: React.FC<Props> = ({
     if (answer === undefined && onDelete) onDelete();
   }, [onDelete, answer]);
   const save = useCallback(() => {
-    if (section) update(section.oid, draftText, isLegacyAnswer);
-  }, [section, draftText, update, isLegacyAnswer]);
+    if (section) update(section.oid, draftText, isLegacyAnswer, isOfficialAnswer);
+  }, [section, draftText, update, isLegacyAnswer, isOfficialAnswer]);
   const remove = useCallback(() => {
     if (answer) confirm("Remove answer?", () => removeAnswer(answer.oid));
   }, [confirm, removeAnswer, answer]);
@@ -137,8 +139,8 @@ const AnswerComponent: React.FC<Props> = ({
                   <LinkIcon size="1em" />
                 </Link>
               )}
-              {isLegacyAnswer ? (
-                answer?.authorDisplayName ?? "(Legacy Draft)"
+              {isLegacyAnswer || isOfficialAnswer ? (
+                answer?.authorDisplayName ?? (isLegacyAnswer ? "(Legacy Draft)" : "(Official Draft)")
               ) : (
                 <Link to={`/user/${answer?.authorId ?? username}`}>
                   <span className="text-dark font-weight-bold">

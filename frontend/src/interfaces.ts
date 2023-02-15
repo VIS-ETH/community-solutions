@@ -38,6 +38,7 @@ export interface Answer {
   filename: string; // filename of the corresponding exam
   sectionId: string; // id of section containing answer
   isLegacyAnswer: boolean; // whether this is a legacy answer
+  isOfficialAnswer: boolean; // whether this is an official answer
   divRef?: HTMLDivElement; // root div element for scroll jumping
 }
 
