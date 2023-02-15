@@ -11,6 +11,7 @@ export interface AnswerSection {
   answers: Answer[];
   allow_new_answer: boolean; // whether the current user can add an answer
   allow_new_legacy_answer: boolean; // whether a legacy answer can be posted
+  allow_new_official_answer: boolean;
   cutHidden: boolean;
   has_answers: boolean;
   hidden: boolean; // whether the element is currently hidden

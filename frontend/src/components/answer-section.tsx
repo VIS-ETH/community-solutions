@@ -55,6 +55,7 @@ const AnswerSectionButtonWrapper = (props: CardProps) => (
 interface AddButtonProps {
   allowAnswer: boolean;
   allowLegacyAnswer: boolean;
+  allowOfficialAnswer: boolean;
   hasAnswerDraft: boolean;
   hasLegacyAnswerDraft: boolean;
   hasOfficialAnswerDraft: boolean;
@@ -65,6 +66,7 @@ interface AddButtonProps {
 const AddButton: React.FC<AddButtonProps> = ({
   allowAnswer,
   allowLegacyAnswer,
+  allowOfficialAnswer,
   hasAnswerDraft,
   hasLegacyAnswerDraft,
   hasOfficialAnswerDraft,
@@ -74,47 +76,37 @@ const AddButton: React.FC<AddButtonProps> = ({
 }) => {
   const [isOpen, setOpen] = useState(false);
   const toggle = useCallback(() => setOpen(old => !old), []);
-  if (allowAnswer && allowLegacyAnswer) {
+  
+  const opts: [string, boolean, () => void, boolean][] = [
+    ["Add Answer", allowAnswer, onAnswer, hasAnswerDraft],
+    ["Add Legacy Answer", allowLegacyAnswer, onLegacyAnswer, hasLegacyAnswerDraft],
+    ["Add Official Answer", allowOfficialAnswer, onOfficialAnswer, hasOfficialAnswerDraft],
+  ];
+
+  if (opts.filter(item => item[1]).length > 1) {
     return (
       <ButtonDropdown isOpen={isOpen} toggle={toggle} className="text-left">
         <DropdownToggle size="sm" caret>
           Add Answer
         </DropdownToggle>
         <DropdownMenu>
-          <DropdownItem onClick={onAnswer} disabled={hasAnswerDraft}>
-            Add Answer
-          </DropdownItem>
-          <DropdownItem
-            onClick={onLegacyAnswer}
-            disabled={hasLegacyAnswerDraft}
-          >
-            Add Legacy Answer
-          </DropdownItem>
-          <DropdownItem
-            onClick={onOfficialAnswer}
-            disabled={hasOfficialAnswerDraft}
-          >
-            Add Official Answer
-          </DropdownItem>
+	  {opts.map(([it_text, it_visible, it_click, it_disabled]) =>
+	    it_visible && 
+	      <DropdownItem key={it_text} onClick={it_click} disabled={it_disabled}>
+                {it_text}
+              </ DropdownItem>,
+          )}
         </DropdownMenu>
       </ButtonDropdown>
     );
   } else {
     return (
       <ButtonGroup className="text-left">
-        {allowAnswer && (
-          <Button size="sm" onClick={onAnswer} disabled={hasAnswerDraft}>
-            Add Answer
-          </Button>
-        )}
-        {allowLegacyAnswer && (
-          <Button
-            size="sm"
-            onClick={onLegacyAnswer}
-            disabled={hasLegacyAnswerDraft}
-          >
-            Add Legacy Answer
-          </Button>
+        {opts.map(([it_text, it_visible, it_click, it_disabled]) => 
+          it_visible &&
+            <Button key={it_text} size="sm" onClick={it_click} disabled={it_disabled}>
+	      {it_text}
+	    </ Button>,
         )}
       </ButtonGroup>
     );
@@ -352,12 +344,12 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
                             has_answers &&
                             data &&
                             (data.allow_new_answer ||
-                              (data.allow_new_legacy_answer && isCatAdmin)) && (
+                              ((data.allow_new_legacy_answer || data.allow_new_official_answer)
+                                && isCatAdmin)) && (
                               <AddButton
                                 allowAnswer={data.allow_new_answer}
-                                allowLegacyAnswer={
-                                  data.allow_new_legacy_answer && isCatAdmin
-                                }
+                                allowLegacyAnswer={data.allow_new_legacy_answer && isCatAdmin}
+                                allowOfficialAnswer={data.allow_new_official_answer && isCatAdmin}
                                 hasAnswerDraft={hasDraft}
                                 hasLegacyAnswerDraft={hasLegacyDraft}
                                 hasOfficialAnswerDraft={hasOfficialDraft}
