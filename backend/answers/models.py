@@ -158,12 +158,19 @@ class Answer(ExportModelOperationsMixin('answer'), BaseAnswer):
     text = models.TextField()
     flagged = models.ManyToManyField(
         'auth.User', related_name='flagged_answer_set')
+
+    # Might be preferrable to have IntegerChoices constraint or similar
     is_legacy_answer = models.BooleanField(default=False)
+    is_official_answer = models.BooleanField(default=False)
 
     search_vector = SearchVectorField()
 
     class Meta:
         indexes = [GinIndex(fields=["search_vector"])]
+#         constraints = [
+#             models.CheckConstraint(check=Q(is_legacy_answer) ^ Q(is_official_answer),
+#                                    name='no_official_legacy')
+#         ]
 
 
 class SolutionExcerpt(BaseAnswer):

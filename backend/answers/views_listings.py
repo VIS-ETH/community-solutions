@@ -105,7 +105,8 @@ def get_by_user(request, username, page=-1):
     sorted_answers = Answer.objects \
         .filter(
             author__username=username,
-            is_legacy_answer=False) \
+            is_legacy_answer=False,
+            is_official_answer=False) \
         .select_related(*section_util.get_answer_fields_to_preselect()) \
         .prefetch_related(*section_util.get_answer_fields_to_prefetch()) \
         .annotate(

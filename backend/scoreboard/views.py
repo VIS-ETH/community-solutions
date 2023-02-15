@@ -11,10 +11,11 @@ def get_user_scores(user, res):
     res.update(
         {
             "score": user.scores.document_likes + user.scores.upvotes - user.scores.downvotes,
-            "score_answers": user.answer_set.filter(is_legacy_answer=False).count(),
+            "score_answers": user.answer_set.filter(is_legacy_answer=False, is_official_answer=False).count(),
             "score_comments": user.answers_comments.count(),
             "score_cuts": user.answersection_set.count(),
             "score_legacy": user.answer_set.filter(is_legacy_answer=True).count(),
+            "score_official": user.answer_set.filter(is_official_answer=True).count(),
             "score_documents": user.document_set.count(),
         }
     )
@@ -39,6 +40,7 @@ def get_scoreboard_top(scoretype, limit):
         score_documents=F("scores__documents"),
         score_cuts=F("scores__cuts"),
         score_legacy=F("scores__legacy"),
+        score_official=F("scores__official"),
     )
 
     if scoretype == "score":
@@ -53,6 +55,8 @@ def get_scoreboard_top(scoretype, limit):
         users = users.order_by("-score_cuts")
     elif scoretype == "score_legacy":
         users = users.order_by("-score_legacy")
+    elif scoretype == "score_official":
+        users = users.order_by("-score_official")
     else:
         return response.not_found()
 
@@ -65,6 +69,7 @@ def get_scoreboard_top(scoretype, limit):
             "score_comments",
             "score_cuts",
             "score_legacy",
+            "score_official",
             "score_documents",
         )
     )

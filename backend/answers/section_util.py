@@ -20,14 +20,22 @@ def get_answer_response(request, answer, ignore_exam_admin=False):
             'edittime': comment.edittime,
         } for comment in answer.comments.order_by('time', 'id').all()
     ]
+
+    if answer.is_legacy_answer:
+        author_display_name = 'Legacy Solution'
+    elif answer.is_official_answer:
+        author_display_name = 'Official Solution'
+    else:
+        author_display_name = get_my_user(answer.author).displayname()
+
     return {
         'oid': answer.id,
         'longId': answer.long_id,
         'upvotes': answer.upvotes.count() - answer.downvotes.count(),
         'expertvotes': answer.expertvotes.count(),
-        'authorId': '' if answer.is_legacy_answer else answer.author.username,
-        'authorDisplayName': 'Old VISki Solution' if answer.is_legacy_answer else get_my_user(answer.author).displayname(),
-        'canEdit': answer.author == request.user or (answer.is_legacy_answer and exam_admin),
+        'authorId': '' if answer.is_legacy_answer or answer.is_official_answer else answer.author.username,
+        'authorDisplayName': author_display_name,
+        'canEdit': answer.author == request.user or ((answer.is_legacy_answer or answer.is_official_answer) and exam_admin),
         'isUpvoted': request.user in answer.upvotes.all(),
         'isDownvoted': request.user in answer.downvotes.all(),
         'isExpertVoted': request.user in answer.expertvotes.all(),
@@ -40,6 +48,7 @@ def get_answer_response(request, answer, ignore_exam_admin=False):
         'filename': answer.answer_section.exam.filename,
         'sectionId': answer.answer_section.id,
         'isLegacyAnswer': answer.is_legacy_answer,
+        'isOfficialAnswer': answer.is_official_answer,
     }
 
 
@@ -71,8 +80,9 @@ def get_answersection_response(request, section):
     return {
         'oid': section.id,
         'answers': answers,
-        'allow_new_answer': not section.answer_set.filter(author=request.user, is_legacy_answer=False).exists(),
+        'allow_new_answer': not section.answer_set.filter(author=request.user, is_legacy_answer=False, is_official_answer=False).exists(),
         'allow_new_legacy_answer': not section.answer_set.filter(is_legacy_answer=True).exists(),
+        'allow_new_official_answer': not section.answer_set.filter(is_official_answer=False).exists(),
         'cutVersion': section.cut_version,
         'has_answers': section.has_answers,
     }

@@ -19,7 +19,7 @@ def get_answer(request, long_id):
         raise Http404()
 
 
-@response.request_post("text", "legacy_answer")
+@response.request_post("text", "legacy_answer", "official_answer")
 @auth_check.require_login
 def set_answer(request, oid):
     section = get_object_or_404(
@@ -38,15 +38,17 @@ def set_answer(request, oid):
         return response.not_allowed()
 
     legacy_answer = request.POST["legacy_answer"] != "false"
+    official_answer = request.POST["official_answer"] != "false"
+
     text = request.POST["text"]
 
-    if legacy_answer and not auth_check.has_admin_rights_for_exam(
-        request, section.exam
-    ):
+    if ((legacy_answer or official_answer) and not auth_check.has_admin_rights_for_exam(
+        request, section.exam)) or (legacy_answer and official_answer):
         return response.not_allowed()
-    where = {"answer_section": section, "is_legacy_answer": legacy_answer}
 
-    if not legacy_answer:
+    where = {"answer_section": section, "is_legacy_answer": legacy_answer, "is_official_answer": official_answer}
+
+    if not legacy_answer and not official_answer:
         where["author"] = request.user
 
     answer, created = None, False
@@ -59,7 +61,7 @@ def set_answer(request, oid):
             "edittime": timezone.now(),
         }
         answer, created = Answer.objects.update_or_create(**where, defaults=defaults)
-    if created and not legacy_answer:
+    if created and not legacy_answer and not official_answer:
         answer.upvotes.add(request.user)
         notification_util.new_answer_to_answer(answer)
 
