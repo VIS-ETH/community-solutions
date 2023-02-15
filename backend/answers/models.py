@@ -135,11 +135,9 @@ def generate_long_id():
     return res
 
 
-class Answer(ExportModelOperationsMixin('answer'), models.Model):
+class BaseAnswer(models.Model):
     answer_section = models.ForeignKey(
         'AnswerSection', on_delete=models.CASCADE)
-    author = models.ForeignKey('auth.User', on_delete=models.CASCADE)
-    text = models.TextField()
     time = models.DateTimeField(default=timezone.now)
     edittime = models.DateTimeField(default=timezone.now)
     upvotes = models.ManyToManyField(
@@ -148,16 +146,35 @@ class Answer(ExportModelOperationsMixin('answer'), models.Model):
         'auth.User', related_name='downvoted_answer_set')
     expertvotes = models.ManyToManyField(
         'auth.User', related_name='expertvote_answer_set')
+    long_id = models.CharField(
+        max_length=256, default=generate_long_id, unique=True)
+
+    class Meta:
+        abstract = True
+
+
+class Answer(ExportModelOperationsMixin('answer'), BaseAnswer):
+    author = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    text = models.TextField()
     flagged = models.ManyToManyField(
         'auth.User', related_name='flagged_answer_set')
     is_legacy_answer = models.BooleanField(default=False)
-    long_id = models.CharField(
-        max_length=256, default=generate_long_id, unique=True)
 
     search_vector = SearchVectorField()
 
     class Meta:
         indexes = [GinIndex(fields=["search_vector"])]
+
+
+class SolutionExcerpt(BaseAnswer):
+    from_page_num = models.IntegerField()
+    from_rel_height = models.FloatField()
+    from_rel_width = models.FloatField(default=0.0)
+
+    to_page_num = models.IntegerField()
+    to_rel_height = models.FloatField()
+    to_rel_width = models.FloatField(default=0.0)
+
 
 class Comment(ExportModelOperationsMixin('comment'), CommentMixin):
     answer = models.ForeignKey('Answer', on_delete=models.CASCADE, related_name="comments")
