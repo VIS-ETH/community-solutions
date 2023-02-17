@@ -141,11 +141,11 @@ class BaseAnswer(models.Model):
     time = models.DateTimeField(default=timezone.now)
     edittime = models.DateTimeField(default=timezone.now)
     upvotes = models.ManyToManyField(
-        'auth.User', related_name='upvoted_answer_set')
+        'auth.User', related_name='upvoted_%(class)s_set')
     downvotes = models.ManyToManyField(
-        'auth.User', related_name='downvoted_answer_set')
+        'auth.User', related_name='downvoted_%(class)s_set')
     expertvotes = models.ManyToManyField(
-        'auth.User', related_name='expertvote_answer_set')
+        'auth.User', related_name='expertvote_%(class)s_set')
     long_id = models.CharField(
         max_length=256, default=generate_long_id, unique=True)
 
@@ -171,7 +171,7 @@ class Answer(ExportModelOperationsMixin('answer'), BaseAnswer):
 #                                    name='no_official_legacy')
 #         ]
 
-"""
+
 class SolutionExcerpt(BaseAnswer):
     from_page_num = models.IntegerField()
     from_rel_height = models.FloatField()
@@ -180,9 +180,10 @@ class SolutionExcerpt(BaseAnswer):
     to_page_num = models.IntegerField()
     to_rel_height = models.FloatField()
     to_rel_width = models.FloatField(default=0.0)
-"""
+
 
 class Comment(ExportModelOperationsMixin('comment'), CommentMixin):
     answer = models.ForeignKey('Answer', on_delete=models.CASCADE, related_name="comments")
     long_id = models.CharField(
         max_length=256, default=generate_long_id, unique=True)
+
