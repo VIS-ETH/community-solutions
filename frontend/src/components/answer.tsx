@@ -142,7 +142,7 @@ const AnswerComponent: React.FC<Props> = ({
               {isLegacyAnswer || isOfficialAnswer ? (
                 answer?.authorDisplayName ?? (isLegacyAnswer ? "(Legacy Draft)" : "(Official Draft)")
               ) : (
-                <Link to={`/user/${answer?.authorId ?? username}`}>
+                <Link className="text-dark" to={`/user/${answer?.authorId ?? username}`}>
                   <span className="text-dark font-weight-bold">
                     {answer?.authorDisplayName ?? "(Draft)"}
                   </span>

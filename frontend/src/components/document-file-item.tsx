@@ -84,16 +84,16 @@ const DocumentFileItem: React.FC<Props> = ({ file, document, mutate }) => {
             <FileInput
               value={replaceFile}
               onChange={setFile}
-              accept=".pdf,.tex,.md,.txt,.zip"
+              accept=".pdf,.tex,.md,.txt,.zip,.apkg,.colpkg" // apkg=anki
             />
           </FormGroup>
         </ModalBody>
         <ModalFooter>
           <Button
             color="primary"
-            disabled={displayName === ""}
+            disabled={displayName?.trim() === ""}
             onClick={() =>
-              updateFile({ display_name: displayName, file: replaceFile })
+              updateFile({ display_name: displayName?.trim(), file: replaceFile })
             }
           >
             Save{" "}

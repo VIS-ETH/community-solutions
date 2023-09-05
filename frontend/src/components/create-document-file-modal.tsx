@@ -56,7 +56,7 @@ const CreateDocumentFileModal: React.FC<Props> = ({
           <FileInput
             value={file}
             onChange={setFile}
-            accept=".pdf,.tex,.md,.txt,.zip"
+            accept=".pdf,.tex,.md,.txt,.zip,.apkg,.colpkg" // apkg=anki
           />
           <div className="form-text text-muted">
             If you don't select any file we will create an empty markdown file
@@ -67,10 +67,10 @@ const CreateDocumentFileModal: React.FC<Props> = ({
       <ModalFooter>
         <Button
           color="primary"
-          disabled={loading || displayName === ""}
+          disabled={loading || displayName.trim() === ""}
           onClick={() =>
             createDocumentFile(
-              displayName,
+              displayName.trim(),
               file ??
                 new NamedBlob(
                   new Blob([], { type: "application/octet-stream" }),
