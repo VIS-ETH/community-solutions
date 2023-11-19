@@ -52,6 +52,7 @@ urlpatterns = [
          views_comments.remove_comment, name='removecomment'),
     path('claimexam/<str:filename>/', views.claim_exam, name='claimexam'),
     path('upload/exam/', views_files.upload_exam_pdf, name='upload_exam_pdf'),
+    path('convert/exam/<str:filename>', views_files.convert_exam_to_document, name='convert_exam_to_document'),
     path('upload/transcript/', views_files.upload_transcript,
          name='upload_transcript'),
     path('upload/printonly/', views_files.upload_printonly, name='upload_printonly'),

@@ -53,6 +53,13 @@ def save_uploaded_file_to_s3(
         )
 
 
+def copy_to_directory(
+    src_key: str,
+    target_key: str,
+):
+    s3_bucket.copy({'Bucket':s3_bucket_name, 'Key':src_key}, target_key)
+
+
 def save_file_to_s3(
     directory: str,
     filename: str,

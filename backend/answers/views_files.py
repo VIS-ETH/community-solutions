@@ -2,6 +2,7 @@ from util import response, s3_util, ethprint
 from myauth import auth_check
 from django.conf import settings
 from answers.models import Exam, ExamType
+from documents.models import Document, DocumentFile
 from categories.models import Category
 from django.shortcuts import get_object_or_404
 import os
@@ -71,6 +72,31 @@ def upload_transcript(request):
     )
     pdf_utils.analyze_pdf(exam, os.path.join(settings.COMSOL_UPLOAD_FOLDER, filename))
     return response.success(filename=filename)
+
+
+@response.request_post("slug")
+@response.request_post("display_name", optional=True)
+@auth_check.require_exam_admin
+def convert_exam_to_document(request, filename, exam):
+    document = get_object_or_404(Document, slug=request.POST["slug"])
+    if not document.current_user_can_edit(request):
+        return response.not_allowed()
+    target_filename = s3_util.generate_filename(
+            16, settings.COMSOL_DOCUMENT_DIR, ".pdf")
+    s3_util.copy_to_directory(
+        src_key=settings.COMSOL_EXAM_DIR + exam.filename, 
+        target_key=settings.COMSOL_DOCUMENT_DIR + target_filename
+    )
+    display_name = request.POST["display_name"] if "display_name" in request.POST else exam.displayname
+    document_file = DocumentFile(
+        display_name=display_name,
+        document=document,
+        filename=target_filename,
+        mime_type="application/pdf",
+    )
+    document_file.save()
+    remove_exam(request, filename=filename)
+    return response.success(filename=target_filename)
 
 
 def get_existing_exam(request):
