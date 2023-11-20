@@ -226,9 +226,20 @@ class DocumentElementView(View):
             document.save()
             if old_document_type.id > 3 and not old_document_type.type_set.exists():
                 old_document_type.delete()
+        if "transfer_owner" in request.DATA:
+            if not can_edit:
+                return response.not_allowed()
+            try:
+                updated_owner = MyUser.objects.get(username=request.DATA['transfer_owner'])
+            except:
+                return response.not_found()
+            if updated_owner.pk == document.author.pk:
+                return response.not_possible("User is already owner")
+            document.author = updated_owner
+            document.api_key = generate_api_key()
         
         document.save()
-        return response.success(value=get_document_obj(document, request))
+        return response.success(value=get_document_obj(document, request)) #Check whether API Key is passed if user losese edit access
 
     @auth_check.require_login
     def delete(self, request: HttpRequest, username: str, slug: str):
