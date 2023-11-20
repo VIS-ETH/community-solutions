@@ -2,6 +2,7 @@ import { useRequest } from "@umijs/hooks";
 import {
   Button,
   DeleteIcon,
+  UserIcon,
   FormGroup,
   InputField,
   ListGroup,
@@ -14,6 +15,8 @@ import {
   SaveIcon,
   Select,
   Spinner,
+  Input,
+  FormFeedback,
 } from "@vseth/components";
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
@@ -61,9 +64,14 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate }) => {
       mutate(s => ({ ...s, ...result }));
       setDisplayName(undefined);
       setCategory(undefined);
-      if (result.slug !== data.slug) {
-        history.replace(`/user/${result.author}/document/${result.slug}`);
+      setOwnerName(undefined);
+      setTransferSuccess(true);
+      if (result.slug !== data.slug || result.author !== data.author) {
+        !result.can_edit ? history.push(`/category/${data.category}`) : history.replace(`/user/${result.author}/document/${result.slug}`);
       }
+    },
+    error => {
+      setIsInvalidUser(true);
     },
   );
   const [regenerateLoading, regenerate] = useRegenerateDocumentAPIKey(
@@ -77,6 +85,10 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate }) => {
     () => data && history.push(`/category/${data.category}`),
   );
   const [deleteModalIsOpen, toggleDeleteModalIsOpen] = useToggle();
+  const [transferOwnerModalIsOpen, toggleOwnerModalIsOpen] = useToggle();
+  const [ownerName, setOwnerName] = useState<string | undefined>();
+  const [isInvalidUser, setIsInvalidUser] = useState<boolean | false>();
+  const [transferSuccess, setTransferSuccess] = useState<boolean | false>();
 
   const [displayName, setDisplayName] = useState<string | undefined>();
   const [category, setCategory] = useState<string | undefined>();
@@ -200,6 +212,18 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate }) => {
               Delete <DeleteIcon className="ml-2" />
             </Button>
           </div>
+          <div className="mt-3 d-flex flex-wrap justify-content-between align-items-center">
+            <div className="d-flex flex-column">
+                <h6>Transfer document ownership</h6>
+                <div>
+                  This will transfer the ownership (<b>score included</b>) of this document to another user.
+                </div>
+              </div>
+
+              <Button color="danger" onClick={toggleOwnerModalIsOpen}>
+                Transfer Ownership <UserIcon className="ml-2" />
+              </Button>
+          </div>
         </>
       )}
       <Modal isOpen={deleteModalIsOpen} toggle={toggleDeleteModalIsOpen}>
@@ -218,6 +242,46 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate }) => {
             loading={deleteDocument}
           >
             Delete this document
+          </Button>
+        </ModalFooter>
+      </Modal>
+      <Modal isOpen={transferOwnerModalIsOpen} toggle={toggleOwnerModalIsOpen}>
+        <ModalHeader toggle={toggleOwnerModalIsOpen}>
+          Are you absolutely sure?
+        </ModalHeader>
+        <ModalBody>
+          <p>Transfering ownership for a document will not only change the author of the document but also transfer the score to the new owner.</p>
+          <p><b>WARNING: The API Key for this document will be reset!</b></p>
+          <Input
+            label="Name"
+            type="text"
+            placeholder="Name"
+            value={ownerName}
+            onChange={e => {
+                setOwnerName(e.currentTarget.value.toLowerCase());
+                setIsInvalidUser(false);
+                setTransferSuccess(false);
+              }
+            }
+            required
+            invalid={isInvalidUser}
+            valid={transferSuccess}
+          />
+          <FormFeedback invalid>
+            User does not exist or is already owner!
+          </FormFeedback>
+          <FormFeedback valid>
+            Successfully transfered ownership!
+          </FormFeedback>
+        </ModalBody>        
+        <ModalFooter>
+          <Button onClick={toggleOwnerModalIsOpen}>Cancel</Button>
+          <Button
+            onClick={() => updateDocument({transfer_owner: ownerName})}
+            color="danger"
+            disabled={!ownerName || ownerName?.trim().length == 0}
+          >
+            Transfer Ownership
           </Button>
         </ModalFooter>
       </Modal>
