@@ -369,9 +369,10 @@ export const useRemoveAnswer = (
 export const useMutation = <B, T extends any[]>(
   service: (...args: T) => Promise<B>,
   onSuccess?: (res: B, params: T) => void,
+  onError?: (e: Error, params: T) => void,
 ) => {
-  const { loading, run } = useRequest(service, { manual: true, onSuccess });
-  return [loading, run] as const;
+  const { loading, run, error } = useRequest(service, { manual: true, onSuccess, onError });
+  return [loading, run, error ] as const;
 };
 
 export const removeCategory = async (slug: string) => {
@@ -484,25 +485,26 @@ export interface DocumentUpdate {
   liked?: boolean;
   description?: string;
   document_type?: string;
+  transfer_owner?: string;
 }
 export const updateDocument = async (
   author: string,
   documentSlug: string,
   data: DocumentUpdate,
 ) => {
-  return (await fetchPut(`/api/document/${author}/${documentSlug}/`, data))
-    .value as Document;
+  return (await fetchPut(`/api/document/${author}/${documentSlug}/`, data)).value as Document;
 };
 export const useUpdateDocument = (
   author: string,
   documentSlug: string,
   cb: (document: Document) => void,
+  err?: (error: Error) => void,
 ) =>
   useMutation(
     (data: DocumentUpdate) => updateDocument(author, documentSlug, data),
     cb,
+    err,
   );
-
 export const createDocumentComment = async (
   author: string,
   documentSlug: string,
