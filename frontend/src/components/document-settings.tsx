@@ -256,7 +256,7 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate }) => {
             placeholder="Username"
             value={transferOwnerName}
             onChange={e => {
-                setTransferOwnerName(e.currentTarget.value.toLowerCase());
+                setTransferOwnerName(e.currentTarget.value.toLowerCase().replaceAll(" ", "")); //not used trim to prevent manually inserting whitespace in between characters
                 setIsInvalidUser(false);
                 setTransferSuccess(false);
               }
@@ -278,9 +278,9 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate }) => {
           </Button>
           <Button
             onClick={() => updateDocument({transfer_owner: transferOwnerName})}
-            disabled={!transferOwnerName || transferOwnerName?.trim().length == 0}
+            disabled={!transferOwnerName || transferOwnerName?.length == 0}
             loading={updateDocument}
-            color={!transferOwnerName || transferOwnerName?.trim().length == 0 ? "white" : "danger"}
+            color={!transferOwnerName || transferOwnerName?.length == 0 ? "white" : "danger"}
           >
             Transfer Ownership
           </Button>
