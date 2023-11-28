@@ -55,11 +55,17 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate }) => {
     data.slug,
     result => {
       mutate(s => ({ ...s, ...result }));
-      setDisplayName(undefined);
-      setCategory(undefined);
-      if (result.slug !== data.slug) {
-        history.replace(`/user/${result.author}/document/${result.slug}`);
+      setTransferOwnerName(undefined);
+      setTransferSuccess(true);
+      if (result.slug !== data.slug || result.author !== data.author) {
+        !result.can_edit ? history.push(`/category/${data.category}`) : history.replace(`/user/${result.author}/document/${result.slug}`);
       }
+      if (transferOwnerModalIsOpen){
+        toggleOwnerModalIsOpen();
+      }
+    },
+    err => {
+      setIsInvalidUser(true);
     },
   );
   const [regenerateLoading, regenerate] = useRegenerateDocumentAPIKey(
@@ -73,6 +79,11 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate }) => {
     () => data && history.push(`/category/${data.category}`),
   );
   const [deleteModalIsOpen, toggleDeleteModalIsOpen] = useToggle();
+
+  const [transferOwnerModalIsOpen, toggleOwnerModalIsOpen] = useToggle();
+  const [transferOwnerName, setTransferOwnerName] = useState<string | undefined>();
+  const [isInvalidUser, setIsInvalidUser] = useState<boolean | false>();
+  const [transferSuccess, setTransferSuccess] = useState<boolean | false>();
 
   const [displayName, setDisplayName] = useState<string | undefined>();
   const [category, setCategory] = useState<string | undefined>();
@@ -182,22 +193,40 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate }) => {
       {data.can_delete && (
         <>
           <Title order={3}>Red Zone</Title>
-          <Flex wrap="wrap" justify="space-between" align="center" my="md">
-            <Flex direction="column">
-              <Title order={4}>Delete this document</Title>
-              <div>
-                Deleting the document will delete all associated files and all
-                comments. <b>This cannot be undone.</b>
-              </div>
-            </Flex>
+          <Flex direction={"column"}>
+            <Flex wrap="wrap" justify="space-between" align="center" my="md">
+              <Flex direction="column">
+                <Title order={4}>Delete this document</Title>
+                <div>
+                  Deleting the document will delete all associated files and all
+                  comments. <b>This cannot be undone.</b>
+                </div>
+              </Flex>
 
-            <Button
-              leftIcon={<Icon icon={ICONS.DELETE} />}
-              color="red"
-              onClick={toggleDeleteModalIsOpen}
-            >
-              Delete
-            </Button>
+              <Button
+                leftIcon={<Icon icon={ICONS.DELETE} />}
+                color="red"
+                onClick={toggleDeleteModalIsOpen}
+              >
+                Delete
+              </Button>
+            </Flex>
+            <Flex wrap="wrap" justify="space-between" align="center" mb="md">
+              <Flex direction="column">
+                <Title order={4}>Transfer document ownership</Title>
+                <div>
+                  This will transfer the ownership (<b>score included</b>) of this document to another user.
+                </div>
+              </Flex>
+
+              <Button
+                leftIcon={<Icon icon={ICONS.USER} />}
+                color="red"
+                onClick={toggleOwnerModalIsOpen}
+              >
+                Transfer Ownership
+              </Button>
+            </Flex>
           </Flex>
         </>
       )}
@@ -213,6 +242,38 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate }) => {
             <Button onClick={toggleDeleteModalIsOpen}>Not really</Button>
             <Button onClick={deleteDocument} color="red">
               Delete this document
+            </Button>
+          </Group>
+        </Modal.Body>
+      </Modal>
+      <Modal
+        opened={transferOwnerModalIsOpen}
+        title="Are you absolutely sure?"
+        onClose={toggleOwnerModalIsOpen}
+      >
+        <Modal.Body>
+          <p>Transfering ownership for a document will not only change the author of the document but also transfer the score to the new owner.</p>
+          <p><b>WARNING: The API Key for this document will be reset!</b></p>
+          <TextInput
+            label="Username"
+            value={transferOwnerName}
+            onChange={e => {
+              setTransferOwnerName(e.currentTarget.value.toLowerCase().replaceAll(" ", "")); //trim to prevent manually inserting whitespace in between characters
+              setIsInvalidUser(false);
+              setTransferSuccess(false);
+              }
+            }
+            error={isInvalidUser && "User does not exist or is already owner!"}
+          />
+          <Group position="right" mt="md">
+            <Button onClick={toggleOwnerModalIsOpen}>Not really</Button>
+            <Button 
+              onClick={() => updateDocument({transfer_owner: transferOwnerName})} 
+              color={!transferOwnerName || transferOwnerName?.length === 0 ? "white" : "red"}
+              disabled={!transferOwnerName || transferOwnerName?.length === 0 || isInvalidUser}
+              loading={loading}
+              >
+              Transfer ownership
             </Button>
           </Group>
         </Modal.Body>
