@@ -58,7 +58,7 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate }) => {
       setTransferOwnerName(undefined);
       setTransferSuccess(true);
       if (result.slug !== data.slug || result.author !== data.author) {
-        !result.can_edit ? history.push(`/category/${data.category}`) : history.replace(`/user/${result.author}/document/${result.slug}`);
+        history.push(`/category/${data.category}`);
       }
       if (transferOwnerModalIsOpen){
         toggleOwnerModalIsOpen();
