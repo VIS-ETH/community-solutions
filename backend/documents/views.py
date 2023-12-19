@@ -223,7 +223,7 @@ class DocumentElementView(View):
             document.api_key = generate_api_key()
         
         document.save()
-        return response.success(value=get_document_obj(document, request)) #Check whether API Key is passed if user losese edit access
+        return response.success(value=get_document_obj(document, request))
 
     @auth_check.require_login
     def delete(self, request: HttpRequest, username: str, slug: str):
