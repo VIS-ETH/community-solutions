@@ -484,7 +484,6 @@ export interface DocumentUpdate {
   category?: string;
   liked?: boolean;
   description?: string;
-  document_type?: string;
   transfer_owner?: string;
 }
 export const updateDocument = async (
