@@ -21,10 +21,4 @@ class Migration(migrations.Migration):
                 ('order', models.IntegerField(default=0)),
             ],
         ),
-        migrations.AddField(
-            model_name='document',
-            name='document_type',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.PROTECT, related_name='type_set', to='documents.documenttype'),
-            preserve_default=False,
-        ),
     ]
