@@ -26,7 +26,7 @@ import {
 import { useUser } from "../auth";
 import useConfirm from "../hooks/useConfirm";
 import useToggle from "../hooks/useToggle";
-import { Answer, AnswerSection } from "../interfaces";
+import { Answer, AnswerKind, AnswerSection } from "../interfaces";
 import { copy } from "../utils/clipboard";
 import CodeBlock from "./code-block";
 import CommentSectionComponent from "./comment-section";
@@ -55,7 +55,7 @@ interface Props {
   answer?: Answer;
   onSectionChanged?: (newSection: AnswerSection) => void;
   onDelete?: () => void;
-  isLegacyAnswer: boolean;
+  answerKind: AnswerKind;
   hasId?: boolean;
 }
 const AnswerComponent: React.FC<Props> = ({
@@ -63,7 +63,7 @@ const AnswerComponent: React.FC<Props> = ({
   answer,
   onDelete,
   onSectionChanged,
-  isLegacyAnswer,
+  answerKind,
   hasId = true,
 }) => {
   const [viewSource, toggleViewSource] = useToggle(false);
@@ -93,12 +93,14 @@ const AnswerComponent: React.FC<Props> = ({
     if (answer === undefined && onDelete) onDelete();
   }, [onDelete, answer]);
   const save = useCallback(() => {
-    if (section) update(section.oid, draftText, isLegacyAnswer);
-  }, [section, draftText, update, isLegacyAnswer]);
+    if (section) update(section.oid, draftText, answerKind);
+  }, [section, draftText, update, answerKind]);
   const remove = useCallback(() => {
     if (answer) confirm("Remove answer?", () => removeAnswer(answer.oid));
   }, [confirm, removeAnswer, answer]);
   const [hasCommentDraft, setHasCommentDraft] = useState(false);
+
+  const isDraft = !answer;
 
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
   const canEdit = section && onSectionChanged && (answer?.canEdit || false);
@@ -129,8 +131,10 @@ const AnswerComponent: React.FC<Props> = ({
                   </Text>
                 </Link>
               )}
-              {isLegacyAnswer ? (
-                answer?.authorDisplayName ?? "(Legacy Draft)"
+              {answerKind != AnswerKind.Personal ? (
+                answerKind == AnswerKind.Legacy ? 
+                  (isDraft ? "Legacy (Draft)" : "Legacy Answer") :
+                  (isDraft ? "Official (Draft)" : "Official Answer")
               ) : (
                 <Anchor
                   component={Link}

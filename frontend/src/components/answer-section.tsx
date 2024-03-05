@@ -17,7 +17,7 @@ import { useAnswers, useRemoveSplit } from "../api/hooks";
 import { useUser } from "../auth";
 import useInitialState from "../hooks/useInitialState";
 import HideAnswerSectionModal from "../components/hide-answer-section-overlay";
-import { AnswerSection } from "../interfaces";
+import { AnswerKind, AnswerSection } from "../interfaces";
 import AnswerComponent from "./answer";
 import IconButton from "./icon-button";
 import ThreeButtons from "./three-columns";
@@ -277,7 +277,7 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
                   section={data}
                   answer={answer}
                   onSectionChanged={setAnswerSection}
-                  isLegacyAnswer={answer.isLegacyAnswer}
+                  answerKind={answer.kind}
                 />
               ))}
               {hasDraft && (
@@ -285,7 +285,7 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
                   section={data}
                   onSectionChanged={setAnswerSection}
                   onDelete={() => setHasDraft(false)}
-                  isLegacyAnswer={false}
+                  answerKind={AnswerKind.Personal}
                 />
               )}
               {hasLegacyDraft && (
@@ -293,7 +293,7 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
                   section={data}
                   onSectionChanged={setAnswerSection}
                   onDelete={() => setHasLegacyDraft(false)}
-                  isLegacyAnswer={true}
+                  answerKind={AnswerKind.Legacy}
                 />
               )}
             </div>
