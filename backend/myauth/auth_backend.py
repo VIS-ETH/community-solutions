@@ -134,7 +134,7 @@ def add_auth(request: HttpRequest):
                     existing_user.last_name = claims["family_name"]
 
                 if changed:
-                    existing_user.save()
+                    existing_user.update()
             else:
                 old_existing_user = MyUser.objects.filter(
                     username=preferred_username

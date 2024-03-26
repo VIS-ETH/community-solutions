@@ -12,7 +12,7 @@ ARG git_commit="<none>"
 #
 # The `combined` stage extends the `backend` target with files built in the `frontend-build` step. Includes everything, production-ready
 
-FROM eu.gcr.io/vseth-public/base:echo AS backend
+FROM eu.gcr.io/vseth-public/base:foxtrott AS backend
 LABEL maintainer='cat@vis.ethz.ch'
 
 WORKDIR /app
@@ -25,7 +25,7 @@ RUN apt-get install -y --no-install-recommends \
 	python3-setuptools python3-cryptography \
 	smbclient poppler-utils \
   pgbouncer
-RUN	pip3 install -r requirements.txt
+RUN	pip3 install -r requirements.txt --break-system-packages
 RUN	rm -rf /var/lib/apt/lists/*
 
 COPY ./backend/ ./
