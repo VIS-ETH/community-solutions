@@ -259,8 +259,9 @@ const DocumentPage: React.FC<Props> = () => {
               </Alert>
               <Button
                 leftSection={<IconDownload />}
-                onClick={() =>
-                  download(`/api/document/file/${activeFile?.filename}`)
+                onClick={() => {
+                  download(`/api/document/file/${activeFile?.filename}`);
+                }
                 }
               >
                 Download

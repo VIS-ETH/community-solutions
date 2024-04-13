@@ -36,13 +36,13 @@ export const useDocumentDownload = (doc: Document | undefined) => {
               ? new AbortController()
               : undefined;
           if (controller !== undefined) controllers.push(controller);
-          const responseFile = await fetch(
+          const response = await fetch(
             `/api/document/file/${file.filename}`,
             {
               signal: controller?.signal,
             },
           )
-            .then(r => r.arrayBuffer())
+            .then(r => r)
             .catch(e => {
               if (
                 window.DOMException !== undefined &&
@@ -52,11 +52,18 @@ export const useDocumentDownload = (doc: Document | undefined) => {
                 return;
               console.error(e);
               abort();
-            });
+            });          
           if (cancel) return;
+          if (response === undefined) return;
+          const responseFile = response.arrayBuffer();
           if (responseFile === undefined) return;
           const ext = file.filename.slice(file.filename.lastIndexOf("."));
-          zip.file(file.display_name + ext, responseFile);
+          const displayExt = file.display_name.slice(file.display_name.lastIndexOf("."));
+          var displayName = file.display_name
+          if (ext === displayExt) {
+            displayName = file.display_name.slice(0, file.display_name.lastIndexOf("."));
+          }
+          zip.file(displayName + ext, responseFile);
         }),
       );
       if (cancel) return;
