@@ -43,7 +43,7 @@ import {
   IconFlag,
   IconLink,
   IconPencilCancel,
-  IconPlus,
+  IconMessageCirclePlus,
   IconStarFilled,
   IconTrash,
   IconX,
@@ -342,7 +342,7 @@ const AnswerComponent: React.FC<Props> = ({
                   <Button
                     size="sm"
                     onClick={() => setHasCommentDraft(true)}
-                    leftSection={<IconPlus />}
+                    leftSection={<IconMessageCirclePlus />}
                     disabled={hasCommentDraft}
                   >
                     Add Comment
@@ -413,6 +413,7 @@ const AnswerComponent: React.FC<Props> = ({
             hasDraft={hasCommentDraft}
             answer={answer}
             onSectionChanged={onSectionChanged}
+            onChainReply={() => setHasCommentDraft(true)}
             onDraftDelete={() => setHasCommentDraft(false)}
           />
         )}

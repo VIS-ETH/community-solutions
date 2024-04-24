@@ -1,9 +1,10 @@
 .show-more {
   text-decoration: underline;
   cursor: pointer;
+  margin-left: 3em;
 }
 
-.list-group {
+.comment-tree {
   margin-left: 3em;
   margin-top: 0.5em;
 
@@ -25,7 +26,7 @@
 /** Each child of the Stack, including comments and the "show more" text.
   * We don't distinguish them for drawing the left tree lines, because the "show
   * more" text means there are more comments and the tree isn't done. */
-.list-group > div {
+.comment-tree > div {
   /** Set element itself to relative so the before/after pseudo-elements can use
     * absolute positioning relative to this element. */
   position: relative;
@@ -76,4 +77,12 @@
       width: 1em;
     }
   }
+}
+
+.continuingTree.comment-tree > div:last-child::after {
+  display: block;
+}
+
+.chain-reply:only-child {
+  margin-left: auto;
 }

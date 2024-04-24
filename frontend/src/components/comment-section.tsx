@@ -1,25 +1,31 @@
-import { Stack, Text } from "@mantine/core";
+import { Button, Group, Stack, Text } from "@mantine/core";
 import classes from "./comment-section.module.css";
 import React, { useState } from "react";
 import { Answer, AnswerSection } from "../interfaces";
 import CommentComponent from "./comment";
+import { IconMessageCirclePlus } from "@tabler/icons-react";
+import clsx from "clsx";
+
 
 interface Props {
   hasDraft: boolean;
   answer: Answer;
   onSectionChanged: (newSection: AnswerSection) => void;
+  onChainReply: () => void;
   onDraftDelete: () => void;
 }
 const CommentSectionComponent: React.FC<Props> = ({
   hasDraft,
   answer,
   onSectionChanged,
+  onChainReply,
   onDraftDelete,
 }) => {
   const [expanded, setExpanded] = useState(false);
+  const theresMore = answer.comments.length > 3 && !expanded;
   return (
     <>
-      <Stack gap="0" className={classes.listGroup}>
+      <Stack gap="0" className={clsx(classes.commentTree, theresMore ? classes.continuingTree : [])}>
         {(expanded ? answer.comments : answer.comments.slice(0, 3)).map(
           comment => (
             <CommentComponent
@@ -38,7 +44,9 @@ const CommentSectionComponent: React.FC<Props> = ({
             onDelete={onDraftDelete}
           />
         )}
-        {answer.comments.length > 3 && !expanded && (
+      </Stack>
+      <Group justify="space-between">
+        {theresMore && (
           <Text
             pt="xs"
             onClick={() => setExpanded(true)}
@@ -51,7 +59,12 @@ const CommentSectionComponent: React.FC<Props> = ({
             )}
           </Text>
         )}
-      </Stack>
+        {answer.comments.length > 0 && !hasDraft && (
+          <Button variant="transparent" leftSection={<IconMessageCirclePlus />} color="dark" onClick={onChainReply} className={classes.chainReply}>
+            Add Comment
+          </Button>
+        )}
+      </Group>
     </>
   );
 };
