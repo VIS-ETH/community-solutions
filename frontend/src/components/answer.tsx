@@ -71,7 +71,7 @@ const AnswerComponent: React.FC<Props> = ({
   isLegacyAnswer,
   hasId = true,
 }) => {
-  const [viewSource, {toggle: toggleViewSource}] = useDisclosure();
+  const [viewSource, { toggle: toggleViewSource }] = useDisclosure();
   const [setFlaggedLoading, setFlagged] = useSetFlagged(onSectionChanged);
   const [resetFlaggedLoading, resetFlagged] =
     useResetFlaggedVote(onSectionChanged);
@@ -378,10 +378,7 @@ const AnswerComponent: React.FC<Props> = ({
                     </Menu.Item>
                   )}
                   {!editing && canEdit && (
-                    <Menu.Item
-                      leftSection={<IconEdit />}
-                      onClick={startEdit}
-                    >
+                    <Menu.Item leftSection={<IconEdit />} onClick={startEdit}>
                       Edit
                     </Menu.Item>
                   )}
@@ -402,7 +399,8 @@ const AnswerComponent: React.FC<Props> = ({
           )}
         </Group>
       </Card>
-      {answer && onSectionChanged &&
+      {answer &&
+        onSectionChanged &&
         (hasCommentDraft || answer.comments.length > 0) && (
           <CommentSectionComponent
             hasDraft={hasCommentDraft}

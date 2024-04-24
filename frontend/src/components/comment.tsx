@@ -35,7 +35,7 @@ const CommentComponent: React.FC<Props> = ({
   onSectionChanged,
   onDelete,
 }) => {
-  const [viewSource, {toggle: toggleViewSource}] = useDisclosure();
+  const [viewSource, { toggle: toggleViewSource }] = useDisclosure();
   const { isAdmin, username } = useUser()!;
   const [confirm, modals] = useConfirm();
   const [editing, setEditing] = useState(false);

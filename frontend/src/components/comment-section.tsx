@@ -6,7 +6,6 @@ import CommentComponent from "./comment";
 import { IconMessageCirclePlus } from "@tabler/icons-react";
 import clsx from "clsx";
 
-
 interface Props {
   hasDraft: boolean;
   answer: Answer;
@@ -25,7 +24,13 @@ const CommentSectionComponent: React.FC<Props> = ({
   const theresMore = answer.comments.length > 3 && !expanded;
   return (
     <>
-      <Stack gap="0" className={clsx(classes.commentTree, theresMore ? classes.continuingTree : [])}>
+      <Stack
+        gap="0"
+        className={clsx(
+          classes.commentTree,
+          theresMore ? classes.continuingTree : [],
+        )}
+      >
         {(expanded ? answer.comments : answer.comments.slice(0, 3)).map(
           comment => (
             <CommentComponent
@@ -47,7 +52,9 @@ const CommentSectionComponent: React.FC<Props> = ({
       </Stack>
       <Group justify="space-between">
         {theresMore && (
-          <Button variant="transparent" color="dark"
+          <Button
+            variant="transparent"
+            color="dark"
             onClick={() => setExpanded(true)}
             className={classes.showMore}
           >
@@ -59,7 +66,13 @@ const CommentSectionComponent: React.FC<Props> = ({
           </Button>
         )}
         {answer.comments.length > 0 && !hasDraft && (
-          <Button variant="transparent" leftSection={<IconMessageCirclePlus />} color="dark" onClick={onChainReply} className={classes.chainReply}>
+          <Button
+            variant="transparent"
+            leftSection={<IconMessageCirclePlus />}
+            color="dark"
+            onClick={onChainReply}
+            className={classes.chainReply}
+          >
             Add Comment
           </Button>
         )}
