@@ -317,6 +317,17 @@ const AnswerComponent: React.FC<Props> = ({
           {(answer === undefined || editing) && (
             <Button
               size="sm"
+              color="red"
+              variant="subtle"
+              onClick={onCancel}
+              leftSection={<IconPencilCancel />}
+            >
+              {editing ? "Cancel" : "Delete Draft"}
+            </Button>
+          )}
+          {(answer === undefined || editing) && (
+            <Button
+              size="sm"
               onClick={save}
               loading={updating}
               disabled={draftText.trim().length === 0}
@@ -325,85 +336,69 @@ const AnswerComponent: React.FC<Props> = ({
               Save
             </Button>
           )}
-          {onSectionChanged && (
-            <Flex align="center">
-              {(answer === undefined || editing) && (
-                <Button
-                  size="sm"
-                  color="red"
-                  onClick={onCancel}
-                  leftSection={<IconPencilCancel />}
-                >
-                  {editing ? "Cancel" : "Delete Draft"}
-                </Button>
-              )}
-              <Button.Group ml="md">
-                {answer !== undefined && (
-                  <Button
-                    size="sm"
-                    onClick={() => setHasCommentDraft(true)}
-                    leftSection={<IconMessageCirclePlus />}
-                    disabled={hasCommentDraft}
+          {onSectionChanged && answer !== undefined && (
+            <Button.Group ml="md">
+              <Button
+                size="sm"
+                onClick={() => setHasCommentDraft(true)}
+                leftSection={<IconMessageCirclePlus />}
+                disabled={hasCommentDraft}
+              >
+                Add Comment
+              </Button>
+              <Menu withinPortal>
+                <Menu.Target>
+                  <Button leftSection={<IconDots />}>More</Button>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  {answer.flagged === 0 && (
+                    <Menu.Item
+                      leftSection={<IconFlag />}
+                      onClick={() => setFlagged(answer.oid, true)}
+                    >
+                      Flag as Inappropriate
+                    </Menu.Item>
+                  )}
+                  <Menu.Item
+                    leftSection={<IconLink />}
+                    onClick={() =>
+                      copy(
+                        `${document.location.origin}/exams/${answer.filename}#${answer.longId}`,
+                      )
+                    }
                   >
-                    Add Comment
-                  </Button>
-                )}
-                {answer !== undefined && (
-                  <Menu withinPortal>
-                    <Menu.Target>
-                      <Button leftSection={<IconDots />}>More</Button>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                      {answer.flagged === 0 && (
-                        <Menu.Item
-                          leftSection={<IconFlag />}
-                          onClick={() => setFlagged(answer.oid, true)}
-                        >
-                          Flag as Inappropriate
-                        </Menu.Item>
-                      )}
-                      <Menu.Item
-                        leftSection={<IconLink />}
-                        onClick={() =>
-                          copy(
-                            `${document.location.origin}/exams/${answer.filename}#${answer.longId}`,
-                          )
-                        }
-                      >
-                        Copy Permalink
-                      </Menu.Item>
-                      {isAdmin && answer.flagged > 0 && (
-                        <Menu.Item
-                          leftSection={<IconFlag />}
-                          onClick={() => resetFlagged(answer.oid)}
-                        >
-                          Remove all inappropriate flags
-                        </Menu.Item>
-                      )}
-                      {!editing && canEdit && (
-                        <Menu.Item
-                          leftSection={<IconEdit />}
-                          onClick={startEdit}
-                        >
-                          Edit
-                        </Menu.Item>
-                      )}
-                      {answer && canRemove && (
-                        <Menu.Item leftSection={<IconTrash />} onClick={remove}>
-                          Delete
-                        </Menu.Item>
-                      )}
-                      <Menu.Item
-                        leftSection={<IconCode />}
-                        onClick={toggleViewSource}
-                      >
-                        Toggle Source Code Mode
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-                )}
-              </Button.Group>
-            </Flex>
+                    Copy Permalink
+                  </Menu.Item>
+                  {isAdmin && answer.flagged > 0 && (
+                    <Menu.Item
+                      leftSection={<IconFlag />}
+                      onClick={() => resetFlagged(answer.oid)}
+                    >
+                      Remove all inappropriate flags
+                    </Menu.Item>
+                  )}
+                  {!editing && canEdit && (
+                    <Menu.Item
+                      leftSection={<IconEdit />}
+                      onClick={startEdit}
+                    >
+                      Edit
+                    </Menu.Item>
+                  )}
+                  {answer && canRemove && (
+                    <Menu.Item leftSection={<IconTrash />} onClick={remove}>
+                      Delete
+                    </Menu.Item>
+                  )}
+                  <Menu.Item
+                    leftSection={<IconCode />}
+                    onClick={toggleViewSource}
+                  >
+                    Toggle Source Code Mode
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            </Button.Group>
           )}
         </Group>
       </Card>
