@@ -47,8 +47,7 @@ const CommentSectionComponent: React.FC<Props> = ({
       </Stack>
       <Group justify="space-between">
         {theresMore && (
-          <Text
-            pt="xs"
+          <Button variant="transparent" color="dark"
             onClick={() => setExpanded(true)}
             className={classes.showMore}
           >
@@ -57,7 +56,7 @@ const CommentSectionComponent: React.FC<Props> = ({
             ) : (
               <>Show {answer.comments.length - 3} more comments...</>
             )}
-          </Text>
+          </Button>
         )}
         {answer.comments.length > 0 && !hasDraft && (
           <Button variant="transparent" leftSection={<IconMessageCirclePlus />} color="dark" onClick={onChainReply} className={classes.chainReply}>
