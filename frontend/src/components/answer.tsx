@@ -114,11 +114,10 @@ const AnswerComponent: React.FC<Props> = ({
     <>
       {modals}
       <Card
-        mb="md"
         withBorder
-        shadow="md"
+        shadow="sm"
         id={hasId ? answer?.longId : undefined}
-        className={classes.answerWrapperStyle}
+        radius="sm"
       >
         <Card.Section px="md" py="md" withBorder bg="gray.0">
           <Flex justify="space-between" align="center">
@@ -407,18 +406,16 @@ const AnswerComponent: React.FC<Props> = ({
             </Flex>
           )}
         </Group>
-
-        {answer &&
-          onSectionChanged &&
-          (hasCommentDraft || answer.comments.length > 0) && (
-            <CommentSectionComponent
-              hasDraft={hasCommentDraft}
-              answer={answer}
-              onSectionChanged={onSectionChanged}
-              onDraftDelete={() => setHasCommentDraft(false)}
-            />
-          )}
       </Card>
+      {answer && onSectionChanged &&
+        (hasCommentDraft || answer.comments.length > 0) && (
+          <CommentSectionComponent
+            hasDraft={hasCommentDraft}
+            answer={answer}
+            onSectionChanged={onSectionChanged}
+            onDraftDelete={() => setHasCommentDraft(false)}
+          />
+        )}
     </>
   );
 };

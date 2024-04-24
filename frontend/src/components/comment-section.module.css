@@ -4,7 +4,8 @@
 }
 
 .list-group {
-  margin-top: 1em;
+  margin-left: 3em;
+  margin-top: 0.5em;
 
   :first-child {
     border-top-left-radius: var(--mantine-radius-sm);
@@ -14,5 +15,65 @@
   :last-child {
     border-bottom-left-radius: var(--mantine-radius-sm);
     border-bottom-right-radius: var(--mantine-radius-sm);
+  }
+
+  @media (max-width: $mantine-breakpoint-md) {
+    margin-left: 2em;
+  }
+}
+
+/** Each child of the Stack, including comments and the "show more" text.
+  * We don't distinguish them for drawing the left tree lines, because the "show
+  * more" text means there are more comments and the tree isn't done. */
+.list-group > div {
+  /** Set element itself to relative so the before/after pseudo-elements can use
+    * absolute positioning relative to this element. */
+  position: relative;
+
+  /** Show a curved line */
+  &::before {
+    content: "";
+    box-sizing: border box;
+    display: block;
+    /** 2em is arbitrary but should be less than .list-group margin-left */
+    width: 2em;
+    /** 50% since the line should join the comment's vertical center, plus 0.5em
+      * for removing gap between comment Stack and answer (.list-group margin-top) */
+    height: calc(50% + 0.5em);
+    top: -0.5em;
+    left: -2em;
+    position: absolute;
+    border-left: 3px solid var(--mantine-color-gray-3);
+    border-bottom: 3px solid var(--mantine-color-gray-3);
+    border-bottom-left-radius: 0.5em;
+  }
+
+  /** Show a straight line joining to the next comment's line */
+  &::after {
+    content: "";
+    display: block;
+    box-sizing: border box;
+    width: 2em;
+    height: 100%;
+    bottom: 0;
+    left: -2em;
+    position: absolute;
+    border-left: 3px solid var(--mantine-color-gray-3);
+  }
+
+  &:last-child::after {
+    display: none;
+  }
+
+  @media (max-width: $mantine-breakpoint-md) {
+    &::before {
+      left: -1em;
+      width: 1em;
+    }
+
+    &::after {
+      left: -1em;
+      width: 1em;
+    }
   }
 }

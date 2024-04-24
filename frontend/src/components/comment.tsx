@@ -82,7 +82,7 @@ const CommentComponent: React.FC<Props> = ({
     <Paper
       radius={0}
       withBorder
-      shadow="none"
+      shadow="xs"
       p="sm"
       style={{ marginBottom: "-1px" }}
     >

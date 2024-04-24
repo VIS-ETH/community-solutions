@@ -38,20 +38,20 @@ const CommentSectionComponent: React.FC<Props> = ({
             onDelete={onDraftDelete}
           />
         )}
+        {answer.comments.length > 3 && !expanded && (
+          <Text
+            pt="xs"
+            onClick={() => setExpanded(true)}
+            className={classes.showMore}
+          >
+            {answer.comments.length === 4 ? (
+              "Show 1 more comment..."
+            ) : (
+              <>Show {answer.comments.length - 3} more comments...</>
+            )}
+          </Text>
+        )}
       </Stack>
-      {answer.comments.length > 3 && !expanded && (
-        <Text
-          pt="xs"
-          onClick={() => setExpanded(true)}
-          className={classes.showMore}
-        >
-          {answer.comments.length === 4 ? (
-            "Show 1 more comment..."
-          ) : (
-            <>Show {answer.comments.length - 3} more comments...</>
-          )}
-        </Text>
-      )}
     </>
   );
 };

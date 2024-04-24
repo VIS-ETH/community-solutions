@@ -269,38 +269,42 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
           </NameCard>
         )}
         <Container fluid py="md" px="md">
-          {!hidden && data && (
-            <div>
-              {data.answers.map(answer => (
-                <AnswerComponent
-                  key={answer.oid}
-                  section={data}
-                  answer={answer}
-                  onSectionChanged={setAnswerSection}
-                  isLegacyAnswer={answer.isLegacyAnswer}
-                />
-              ))}
-              {hasDraft && (
-                <AnswerComponent
-                  section={data}
-                  onSectionChanged={setAnswerSection}
-                  onDelete={() => setHasDraft(false)}
-                  isLegacyAnswer={false}
-                />
-              )}
-              {hasLegacyDraft && (
-                <AnswerComponent
-                  section={data}
-                  onSectionChanged={setAnswerSection}
-                  onDelete={() => setHasLegacyDraft(false)}
-                  isLegacyAnswer={true}
-                />
-              )}
-            </div>
-          )}
-          <AnswerSectionButtonWrapper
-          // color={isBeingMoved || !has_answers ? "primary" : undefined}
-          >
+            {!hidden && data && (
+              <>
+                {data.answers.map(answer => (
+                  <div className={classes.answerWrapper} key={answer.oid}>
+                    <AnswerComponent
+                      key={answer.oid}
+                      section={data}
+                      answer={answer}
+                      onSectionChanged={setAnswerSection}
+                      isLegacyAnswer={answer.isLegacyAnswer}
+                    />
+                  </div>
+                ))}
+                {hasDraft && (
+                  <div className={classes.answerWrapper}>
+                    <AnswerComponent
+                      section={data}
+                      onSectionChanged={setAnswerSection}
+                      onDelete={() => setHasDraft(false)}
+                      isLegacyAnswer={false}
+                    />
+                  </div>
+                )}
+                {hasLegacyDraft && (
+                  <div className={classes.answerWrapper}>
+                    <AnswerComponent
+                      section={data}
+                      onSectionChanged={setAnswerSection}
+                      onDelete={() => setHasLegacyDraft(false)}
+                      isLegacyAnswer={true}
+                    />
+                  </div>
+                )}
+              </>
+            )}
+            <AnswerSectionButtonWrapper>
             <div>
               {data === undefined ? (
                 <ThreeButtons center={<Loader />} />
