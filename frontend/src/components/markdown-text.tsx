@@ -13,6 +13,7 @@ import { useMemo } from "react";
 import CodeBlock from "./code-block";
 import { Alert, createStyles, Table } from "@mantine/core";
 import ErrorBoundary from "./error-boundary";
+import OfficialSolution from "./OfficialSolution";
 
 const useStyles = createStyles(theme => ({
   blockquoteStyle: {
@@ -64,6 +65,7 @@ const transformImageUri = (uri: string) => {
 
 const createComponents = (
   regex: RegExp | undefined,
+  solution_file?: string
 ): Components => ({
   table: ({ children }) => {
     return <Table>{children}</Table>;
@@ -93,6 +95,14 @@ const createComponents = (
   },
   code({node, className, children, ...props}) {
     const match = /language-(\w+)/.exec(className || '')
+    const language=match ? match[1] : undefined
+    console.log(language)
+    console.log(solution_file)
+    if(language=="official"){
+      console.log(children)
+      return (<OfficialSolution solution_file={solution_file } value={children}/>)
+  
+    }
     return match ? (
       <CodeBlock language={match ? match[1] : undefined} value={String(children).replace(/\n$/, '')} {...props} />
     ) : (
@@ -113,14 +123,16 @@ interface Props {
    * be highlighted.
    */
   regex?: RegExp;
+
+  solution_file?: string;
 }
 
 // Example that triggers the error: $\begin{\pmatrix}$
 const errorMessage = <Alert color="red" title="Rendering error">An error ocurred when rendering this content. This is likely caused by invalid LaTeX syntax.</Alert>;
 
-const MarkdownText: React.FC<Props> = ({ value, regex }) => {
+const MarkdownText: React.FC<Props> = ({ value, regex, solution_file }) => {
   const macros = {}; // Predefined macros. Will be edited by KaTex while rendering!
-  const renderers = useMemo(() => createComponents(regex), [regex]);
+  const renderers = useMemo(() => createComponents(regex,solution_file ), [regex]);
   const { classes, cx } = useStyles();
   if (value.length === 0) {
     return <div />;
