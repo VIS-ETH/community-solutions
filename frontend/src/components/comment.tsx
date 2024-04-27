@@ -21,7 +21,7 @@ interface Props {
   comment?: Comment;
   onSectionChanged: (newSection: AnswerSection) => void;
   onDelete?: () => void;
-  solution_file?: string;
+  solutionFile?: string;
   targetWidth?: number
 }
 const CommentComponent: React.FC<Props> = ({
@@ -29,7 +29,7 @@ const CommentComponent: React.FC<Props> = ({
   comment,
   onSectionChanged,
   onDelete,
-  solution_file,
+  solutionFile,
   targetWidth,
 }) => {
   const [viewSource, toggleViewSource] = useToggle(false);
@@ -165,7 +165,7 @@ const CommentComponent: React.FC<Props> = ({
             preview={value => (
               <MarkdownText 
                 value={value} 
-                solution_file={solution_file} 
+                solutionFile={solutionFile} 
                 targetWidth={targetWidth}
               />
             )}
@@ -199,7 +199,7 @@ const CommentComponent: React.FC<Props> = ({
           ) : (
             <MarkdownText 
               value={comment.text} 
-              solution_file={solution_file} 
+              solutionFile={solutionFile} 
               targetWidth={targetWidth} 
             />
           )}

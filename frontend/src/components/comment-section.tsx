@@ -17,7 +17,7 @@ interface Props {
   answer: Answer;
   onSectionChanged: (newSection: AnswerSection) => void;
   onDraftDelete: () => void;
-  solution_file?: string;
+  solutionFile?: string;
   targetWidth?: number
 }
 const CommentSectionComponent: React.FC<Props> = ({
@@ -25,7 +25,7 @@ const CommentSectionComponent: React.FC<Props> = ({
   answer,
   onSectionChanged,
   onDraftDelete,
-  solution_file,
+  solutionFile,
   targetWidth,
 }) => {
   const [expanded, setExpanded] = useState(false);
@@ -39,7 +39,7 @@ const CommentSectionComponent: React.FC<Props> = ({
               onSectionChanged={onSectionChanged}
               comment={comment}
               key={comment.oid}
-              solution_file={solution_file}
+              solutionFile={solutionFile}
               targetWidth={targetWidth}
             />
           ),
@@ -50,7 +50,7 @@ const CommentSectionComponent: React.FC<Props> = ({
             onSectionChanged={onSectionChanged}
             comment={undefined}
             onDelete={onDraftDelete}
-            solution_file={solution_file}
+            solutionFile={solutionFile}
             targetWidth={targetWidth}
           />
         )}

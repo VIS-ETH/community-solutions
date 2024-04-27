@@ -65,7 +65,7 @@ const transformImageUri = (uri: string) => {
 
 const createComponents = (
   regex: RegExp | undefined,
-  solution_file?: string,
+  solutionFile?: string,
   targetWidth?:number
 ): Components => ({
   table: ({ children }) => {
@@ -101,12 +101,12 @@ const createComponents = (
       return useMemo(() => {
         return (
           <OfficialSolution
-            solution_file={solution_file}
+            solutionFile={solutionFile}
             value={String(children).replace(/\n$/, "")}
             targetWidth={targetWidth}
           />
         );
-      }, [solution_file, children, targetWidth]);
+      }, [solutionFile, children, targetWidth]);
     }
     return match ? (
       <CodeBlock
@@ -133,7 +133,7 @@ interface Props {
    */
   regex?: RegExp;
 
-  solution_file?: string;
+  solutionFile?: string;
   targetWidth?: number
 }
 
@@ -145,10 +145,10 @@ const errorMessage = (
   </Alert>
 );
 
-const MarkdownText: React.FC<Props> = ({ value, regex, solution_file,targetWidth }) => {
+const MarkdownText: React.FC<Props> = ({ value, regex, solutionFile,targetWidth }) => {
   const macros = {}; // Predefined macros. Will be edited by KaTex while rendering!
   const renderers = useMemo(
-    () => createComponents(regex, solution_file, targetWidth),
+    () => createComponents(regex, solutionFile, targetWidth),
     [regex],
   );
   const { classes, cx } = useStyles();
