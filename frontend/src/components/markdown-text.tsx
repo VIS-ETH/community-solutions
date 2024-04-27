@@ -13,7 +13,6 @@ import { useMemo } from "react";
 import CodeBlock from "./code-block";
 import { Alert, createStyles, Table } from "@mantine/core";
 import ErrorBoundary from "./error-boundary";
-import OfficialSolution from "./OfficialSolution";
 
 const useStyles = createStyles(theme => ({
   blockquoteStyle: {
@@ -63,13 +62,13 @@ const transformImageUri = (uri: string) => {
   }
 };
 
-export type ComponentGenerator = (
-  elem: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>,
+export type ComponentRenderer = (
+  props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>,
 ) => React.ReactElement;
 
 const createComponents = (
   regex: RegExp | undefined,
-  languages?: { [key: string]: ComponentGenerator },
+  languages?: { [key: string]: ComponentRenderer },
 ): Components => ({
   table: ({ children }) => {
     return <Table>{children}</Table>;
@@ -131,7 +130,7 @@ interface Props {
    */
   regex?: RegExp;
 
-  languages?: { [key: string]: ComponentGenerator };
+  languages?: { [key: string]: ComponentRenderer };
 }
 
 // Example that triggers the error: $\begin{\pmatrix}$
