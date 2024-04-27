@@ -10,6 +10,7 @@ import {
   Anchor,
   Box,
   Paper,
+  Skeleton,
 } from "@mantine/core";
 import { differenceInSeconds, formatDistanceToNow } from "date-fns";
 import React, { useCallback, useState } from "react";
@@ -36,6 +37,7 @@ import IconButton from "./icon-button";
 import MarkdownText from "./markdown-text";
 import Score from "./score";
 import TooltipButton from "./TooltipButton";
+import { officialSolutionLanguage } from "./OfficialSolution";
 
 const answerWrapperStyle = css`
   margin-bottom: 1em;
@@ -58,7 +60,7 @@ interface Props {
   answerKind: AnswerKind;
   hasId?: boolean;
   solutionFile?: string;
-  targetWidth?: number
+  targetWidth?: number;
 }
 const AnswerComponent: React.FC<Props> = ({
   section,
@@ -68,7 +70,7 @@ const AnswerComponent: React.FC<Props> = ({
   answerKind,
   hasId = true,
   solutionFile,
-  targetWidth
+  targetWidth,
 }) => {
   const [viewSource, toggleViewSource] = useToggle(false);
   const [setFlaggedLoading, setFlagged] = useSetFlagged(onSectionChanged);
@@ -301,7 +303,13 @@ const AnswerComponent: React.FC<Props> = ({
                 onChange={setDraftText}
                 imageHandler={imageHandler}
                 preview={value => (
-                  <MarkdownText value={value} solutionFile={solutionFile} targetWidth={targetWidth} />
+                  <MarkdownText
+                    value={value}
+                    languages={officialSolutionLanguage(
+                      solutionFile,
+                      targetWidth,
+                    )}
+                  />
                 )}
                 undoStack={undoStack}
                 setUndoStack={setUndoStack}
@@ -323,8 +331,19 @@ const AnswerComponent: React.FC<Props> = ({
               ) : (
                 <MarkdownText
                   value={answer?.text ?? ""}
-                  solutionFile={solutionFile}
-                  targetWidth={targetWidth}
+                  /*
+                    If section is undefined then answer is being displayed on users profile and we can not access solutionFile,
+                    instead of rendering the solution pdf we will instead just render a skeleton and link to the answer
+                  */
+                  languages={
+                    section
+                      ? officialSolutionLanguage(solutionFile, targetWidth)
+                      : {
+                          official: _ => {
+                            return <Skeleton animate={false} height={150} />;
+                          },
+                        }
+                  }
                 />
               )}
             </Box>

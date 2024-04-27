@@ -63,10 +63,13 @@ const transformImageUri = (uri: string) => {
   }
 };
 
+export type ComponentGenerator = (
+  elem: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>,
+) => React.ReactElement;
+
 const createComponents = (
   regex: RegExp | undefined,
-  solutionFile?: string,
-  targetWidth?:number
+  languages?: { [key: string]: ComponentGenerator },
 ): Components => ({
   table: ({ children }) => {
     return <Table>{children}</Table>;
@@ -97,16 +100,11 @@ const createComponents = (
   code({ node, className, children, ...props }) {
     const match = /language-(\w+)/.exec(className || "");
     const language = match ? match[1] : undefined;
-    if (language == "official") {
-      return useMemo(() => {
-        return (
-          <OfficialSolution
-            solutionFile={solutionFile}
-            value={String(children).replace(/\n$/, "")}
-            targetWidth={targetWidth}
-          />
-        );
-      }, [solutionFile, children, targetWidth]);
+    if (language && languages && languages[language]) {
+      console.log(language);
+      return languages[language]({
+        ...{ node, className, children, ...props },
+      });
     }
     return match ? (
       <CodeBlock
@@ -133,8 +131,7 @@ interface Props {
    */
   regex?: RegExp;
 
-  solutionFile?: string;
-  targetWidth?: number
+  languages?: { [key: string]: ComponentGenerator };
 }
 
 // Example that triggers the error: $\begin{\pmatrix}$
@@ -145,11 +142,11 @@ const errorMessage = (
   </Alert>
 );
 
-const MarkdownText: React.FC<Props> = ({ value, regex, solutionFile,targetWidth }) => {
+const MarkdownText: React.FC<Props> = ({ value, regex, languages }) => {
   const macros = {}; // Predefined macros. Will be edited by KaTex while rendering!
   const renderers = useMemo(
-    () => createComponents(regex, solutionFile, targetWidth),
-    [regex],
+    () => createComponents(regex, languages),
+    [regex, languages],
   );
   const { classes, cx } = useStyles();
   if (value.length === 0) {

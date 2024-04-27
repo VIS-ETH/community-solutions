@@ -15,6 +15,7 @@ import MarkdownText from "./markdown-text";
 import SmallButton from "./small-button";
 import { Icon, ICONS } from "vseth-canine-ui";
 import { Anchor, Button, Flex, Paper, Text } from "@mantine/core";
+import { officialSolutionLanguage } from "./OfficialSolution";
 
 interface Props {
   answer: Answer;
@@ -165,8 +166,7 @@ const CommentComponent: React.FC<Props> = ({
             preview={value => (
               <MarkdownText 
                 value={value} 
-                solutionFile={solutionFile} 
-                targetWidth={targetWidth}
+                languages={officialSolutionLanguage(solutionFile, targetWidth)}
               />
             )}
             undoStack={undoStack}
@@ -199,8 +199,7 @@ const CommentComponent: React.FC<Props> = ({
           ) : (
             <MarkdownText 
               value={comment.text} 
-              solutionFile={solutionFile} 
-              targetWidth={targetWidth} 
+              languages={officialSolutionLanguage(solutionFile, targetWidth)}
             />
           )}
         </div>
