@@ -21,12 +21,14 @@ interface Props {
   comment?: Comment;
   onSectionChanged: (newSection: AnswerSection) => void;
   onDelete?: () => void;
+  solution_file?: string;
 }
 const CommentComponent: React.FC<Props> = ({
   answer,
   comment,
   onSectionChanged,
   onDelete,
+  solution_file
 }) => {
   const [viewSource, toggleViewSource] = useToggle(false);
   const { isAdmin, username } = useUser()!;
@@ -158,7 +160,7 @@ const CommentComponent: React.FC<Props> = ({
             value={draftText}
             onChange={setDraftText}
             imageHandler={imageHandler}
-            preview={value => <MarkdownText value={value} />}
+            preview={value => <MarkdownText value={value} solution_file={solution_file} />}
             undoStack={undoStack}
             setUndoStack={setUndoStack}
           />
@@ -187,7 +189,7 @@ const CommentComponent: React.FC<Props> = ({
           {viewSource ? (
             <CodeBlock value={comment.text} language="markdown" />
           ) : (
-            <MarkdownText value={comment.text} />
+            <MarkdownText value={comment.text}  solution_file={solution_file}/>
           )}
         </div>
       )}

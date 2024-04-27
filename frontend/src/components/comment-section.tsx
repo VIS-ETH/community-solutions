@@ -17,12 +17,14 @@ interface Props {
   answer: Answer;
   onSectionChanged: (newSection: AnswerSection) => void;
   onDraftDelete: () => void;
+  solution_file?: string;
 }
 const CommentSectionComponent: React.FC<Props> = ({
   hasDraft,
   answer,
   onSectionChanged,
   onDraftDelete,
+  solution_file,
 }) => {
   const [expanded, setExpanded] = useState(false);
   return (
@@ -35,6 +37,7 @@ const CommentSectionComponent: React.FC<Props> = ({
               onSectionChanged={onSectionChanged}
               comment={comment}
               key={comment.oid}
+              solution_file={solution_file}
             />
           ),
         )}
@@ -44,6 +47,7 @@ const CommentSectionComponent: React.FC<Props> = ({
             onSectionChanged={onSectionChanged}
             comment={undefined}
             onDelete={onDraftDelete}
+            solution_file={solution_file}
           />
         )}
       </Stack>
