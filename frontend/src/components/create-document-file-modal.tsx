@@ -31,6 +31,11 @@ const CreateDocumentFileModal: React.FC<Props> = ({
     },
   );
 
+  const trimV2 = (displayName:string) => {
+    let trimmedName = displayName;
+    return trimmedName.replace(/[^a-zA-Z0-9]/g, '');
+  }
+
   return (
     <>
       <Stack>
@@ -55,7 +60,7 @@ const CreateDocumentFileModal: React.FC<Props> = ({
         <Button
           loading={loading}
           leftSection={<IconPlus />}
-          disabled={loading || displayName.trim() === ""}
+          disabled={loading || trimV2(displayName) == ""}
           onClick={() =>
             createDocumentFile(
               displayName.trim(),
