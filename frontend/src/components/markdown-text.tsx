@@ -106,7 +106,7 @@ const createComponents = (
             targetWidth={targetWidth}
           />
         );
-      }, [solution_file, children]);
+      }, [solution_file, children, targetWidth]);
     }
     return match ? (
       <CodeBlock
@@ -134,7 +134,7 @@ interface Props {
   regex?: RegExp;
 
   solution_file?: string;
-  targetWidth?:number
+  targetWidth?: number
 }
 
 // Example that triggers the error: $\begin{\pmatrix}$
