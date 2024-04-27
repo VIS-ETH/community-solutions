@@ -37,7 +37,7 @@ import IconButton from "./icon-button";
 import MarkdownText from "./markdown-text";
 import Score from "./score";
 import TooltipButton from "./TooltipButton";
-import { officialSolutionLanguage } from "./OfficialSolution";
+import { officialSolutionLanguage } from "./official-solution";
 
 const answerWrapperStyle = css`
   margin-bottom: 1em;

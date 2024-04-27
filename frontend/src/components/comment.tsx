@@ -15,7 +15,7 @@ import MarkdownText from "./markdown-text";
 import SmallButton from "./small-button";
 import { Icon, ICONS } from "vseth-canine-ui";
 import { Anchor, Button, Flex, Paper, Text } from "@mantine/core";
-import { officialSolutionLanguage } from "./OfficialSolution";
+import { officialSolutionLanguage } from "./official-solution";
 
 interface Props {
   answer: Answer;
