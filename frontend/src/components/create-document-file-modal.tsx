@@ -60,7 +60,7 @@ const CreateDocumentFileModal: React.FC<Props> = ({
         <Button
           loading={loading}
           leftSection={<IconPlus />}
-          disabled={loading || trimV2(displayName) == ""}
+          disabled={loading || trimV2(displayName) === ""}
           onClick={() =>
             createDocumentFile(
               displayName.trim(),
