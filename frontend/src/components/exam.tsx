@@ -210,6 +210,7 @@ const Exam: React.FC<Props> = React.memo(
                     editState.cut === section.oid
                   }
                   solution_file={metaData.has_solution? metaData.solution_file: undefined}
+                  targetWidth={width}
                 />
               );
             } else {

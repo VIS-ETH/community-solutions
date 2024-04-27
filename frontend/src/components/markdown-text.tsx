@@ -65,7 +65,8 @@ const transformImageUri = (uri: string) => {
 
 const createComponents = (
   regex: RegExp | undefined,
-  solution_file?: string
+  solution_file?: string,
+  targetWidth?:number
 ): Components => ({
   table: ({ children }) => {
     return <Table>{children}</Table>;
@@ -98,7 +99,7 @@ const createComponents = (
     const language=match ? match[1] : undefined
     if(language=="official"){
       return (useMemo(()=>{
-        return (<OfficialSolution solution_file={solution_file } value={String(children).replace(/\n$/, '')}/>)
+        return (<OfficialSolution solution_file={solution_file } value={String(children).replace(/\n$/, '')} targetWidth={targetWidth}/>)
 
       },[solution_file,children]))
   
@@ -125,14 +126,15 @@ interface Props {
   regex?: RegExp;
 
   solution_file?: string;
+  targetWidth?:number
 }
 
 // Example that triggers the error: $\begin{\pmatrix}$
 const errorMessage = <Alert color="red" title="Rendering error">An error ocurred when rendering this content. This is likely caused by invalid LaTeX syntax.</Alert>;
 
-const MarkdownText: React.FC<Props> = ({ value, regex, solution_file }) => {
+const MarkdownText: React.FC<Props> = ({ value, regex, solution_file,targetWidth }) => {
   const macros = {}; // Predefined macros. Will be edited by KaTex while rendering!
-  const renderers = useMemo(() => createComponents(regex,solution_file ), [regex]);
+  const renderers = useMemo(() => createComponents(regex,solution_file,targetWidth) , [regex]);
   const { classes, cx } = useStyles();
   if (value.length === 0) {
     return <div />;

@@ -137,6 +137,7 @@ interface Props {
   displayEmptyCutLabels: boolean;
   displayHideShowButtons: boolean;
   solution_file?: string
+  targetWidth:number
 }
 
 const AnswerSectionComponent: React.FC<Props> = React.memo(
@@ -161,6 +162,7 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
     onHasAnswersChange,
     has_answers,
     solution_file,
+    targetWidth
     
   }) => {
     const [data, setData] = useState<AnswerSection | undefined>();
@@ -282,6 +284,7 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
                   onSectionChanged={setAnswerSection}
                   answerKind={answer.kind}
                   solution_file= {solution_file}
+                  targetWidth={targetWidth}
                 />
               ))}
               {hasDraft && (
@@ -291,6 +294,7 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
                   onDelete={() => setHasDraft(false)}
                   answerKind={AnswerKind.Personal}
                   solution_file= {solution_file}
+                  targetWidth={targetWidth}
                 />
               )}
               {hasLegacyDraft && (
@@ -300,6 +304,7 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
                   onDelete={() => setHasLegacyDraft(false)}
                   answerKind={AnswerKind.Legacy}
                   solution_file= {solution_file}
+                  targetWidth={targetWidth}
                 />
               )}
             </div>

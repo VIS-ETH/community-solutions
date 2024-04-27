@@ -57,7 +57,8 @@ interface Props {
   onDelete?: () => void;
   answerKind: AnswerKind;
   hasId?: boolean;
-  solution_file?: string
+  solution_file?: string;
+  targetWidth:number
 }
 const AnswerComponent: React.FC<Props> = ({
   section,
@@ -67,6 +68,7 @@ const AnswerComponent: React.FC<Props> = ({
   answerKind,
   hasId = true,
   solution_file,
+  targetWidth
 }) => {
   const [viewSource, toggleViewSource] = useToggle(false);
   const [setFlaggedLoading, setFlagged] = useSetFlagged(onSectionChanged);
@@ -290,7 +292,7 @@ const AnswerComponent: React.FC<Props> = ({
                 value={draftText}
                 onChange={setDraftText}
                 imageHandler={imageHandler}
-                preview={value => <MarkdownText value={value} solution_file={solution_file}/>}
+                preview={value => <MarkdownText value={value} solution_file={solution_file} targetWidth={targetWidth}/>}
                 undoStack={undoStack}
                 setUndoStack={setUndoStack}
               />
