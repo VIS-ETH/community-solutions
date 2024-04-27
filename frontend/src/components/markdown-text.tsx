@@ -96,10 +96,7 @@ const createComponents = (
   code({node, className, children, ...props}) {
     const match = /language-(\w+)/.exec(className || '')
     const language=match ? match[1] : undefined
-    console.log(language)
-    console.log(solution_file)
     if(language=="official"){
-      console.log(children)
       return (<OfficialSolution solution_file={solution_file } value={children}/>)
   
     }
