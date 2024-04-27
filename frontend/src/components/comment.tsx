@@ -28,7 +28,7 @@ const CommentComponent: React.FC<Props> = ({
   comment,
   onSectionChanged,
   onDelete,
-  solution_file
+  solution_file,
 }) => {
   const [viewSource, toggleViewSource] = useToggle(false);
   const { isAdmin, username } = useUser()!;
@@ -160,7 +160,9 @@ const CommentComponent: React.FC<Props> = ({
             value={draftText}
             onChange={setDraftText}
             imageHandler={imageHandler}
-            preview={value => <MarkdownText value={value} solution_file={solution_file} />}
+            preview={value => (
+              <MarkdownText value={value} solution_file={solution_file} />
+            )}
             undoStack={undoStack}
             setUndoStack={setUndoStack}
           />
@@ -189,7 +191,7 @@ const CommentComponent: React.FC<Props> = ({
           {viewSource ? (
             <CodeBlock value={comment.text} language="markdown" />
           ) : (
-            <MarkdownText value={comment.text}  solution_file={solution_file}/>
+            <MarkdownText value={comment.text} solution_file={solution_file} />
           )}
         </div>
       )}

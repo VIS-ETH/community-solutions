@@ -1,8 +1,8 @@
 import { css } from "@emotion/css";
-import ReactMarkdown, { Components }  from "react-markdown";
+import ReactMarkdown, { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
-import rehypeKatex from 'rehype-katex';
+import rehypeKatex from "rehype-katex";
 // Import mchem plugin to register macros for chemical equations in katex.
 // The plugin registers macros when it is imported. We do this after we import "rehype-katex"
 // which transitively imports katex such that the global variables which katex uses are set up.
@@ -74,7 +74,7 @@ const createComponents = (
   p: ({ children }) => {
     if (regex === undefined) return <span>{children}</span>;
     const arr = [];
-    const value = String(children)
+    const value = String(children);
     const m = regex.test(value);
     if (!m) return <span>{children}</span>;
     let i = 0;
@@ -94,24 +94,32 @@ const createComponents = (
     }
     return <>{arr}</>;
   },
-  code({node, className, children, ...props}) {
-    const match = /language-(\w+)/.exec(className || '')
-    const language=match ? match[1] : undefined
-    if(language=="official"){
-      return (useMemo(()=>{
-        return (<OfficialSolution solution_file={solution_file } value={String(children).replace(/\n$/, '')} targetWidth={targetWidth}/>)
-
-      },[solution_file,children]))
-  
+  code({ node, className, children, ...props }) {
+    const match = /language-(\w+)/.exec(className || "");
+    const language = match ? match[1] : undefined;
+    if (language == "official") {
+      return useMemo(() => {
+        return (
+          <OfficialSolution
+            solution_file={solution_file}
+            value={String(children).replace(/\n$/, "")}
+            targetWidth={targetWidth}
+          />
+        );
+      }, [solution_file, children]);
     }
     return match ? (
-      <CodeBlock language={match ? match[1] : undefined} value={String(children).replace(/\n$/, '')} {...props} />
+      <CodeBlock
+        language={match ? match[1] : undefined}
+        value={String(children).replace(/\n$/, "")}
+        {...props}
+      />
     ) : (
       <code className={className} {...props}>
         {children}
       </code>
-    )
-  }
+    );
+  },
 });
 
 interface Props {
@@ -130,11 +138,19 @@ interface Props {
 }
 
 // Example that triggers the error: $\begin{\pmatrix}$
-const errorMessage = <Alert color="red" title="Rendering error">An error ocurred when rendering this content. This is likely caused by invalid LaTeX syntax.</Alert>;
+const errorMessage = (
+  <Alert color="red" title="Rendering error">
+    An error ocurred when rendering this content. This is likely caused by
+    invalid LaTeX syntax.
+  </Alert>
+);
 
 const MarkdownText: React.FC<Props> = ({ value, regex, solution_file,targetWidth }) => {
   const macros = {}; // Predefined macros. Will be edited by KaTex while rendering!
-  const renderers = useMemo(() => createComponents(regex,solution_file,targetWidth) , [regex]);
+  const renderers = useMemo(
+    () => createComponents(regex, solution_file, targetWidth),
+    [regex],
+  );
   const { classes, cx } = useStyles();
   if (value.length === 0) {
     return <div />;
@@ -146,7 +162,7 @@ const MarkdownText: React.FC<Props> = ({ value, regex, solution_file,targetWidth
           children={value}
           urlTransform={transformImageUri}
           remarkPlugins={[remarkMath, remarkGfm]}
-          rehypePlugins={[[rehypeKatex, {macros: macros}]]}
+          rehypePlugins={[[rehypeKatex, { macros: macros }]]}
           components={renderers}
         />
       </ErrorBoundary>
