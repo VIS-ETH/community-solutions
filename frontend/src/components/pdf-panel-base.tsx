@@ -5,7 +5,7 @@ import {
   Stack,
   Title,
   Text,
-  TextInput,
+  NumberInput,
 } from "@mantine/core";
 import React, { useCallback, useMemo, useState } from "react";
 import { useThrottledCallback } from "@mantine/hooks";
@@ -101,14 +101,6 @@ const PdfPanelBase: React.FC<PdfPanelBaseProps> = ({
     return inViewPages ? Math.min(...Array.from(inViewPages)) : undefined;
   }, [inViewPages]);
 
-  const [InputPage, setInputPage] = useState(1);
-
-  useEffect(() => {
-    if (inViewPage != null) {
-      setInputPage(inViewPage);
-    }
-  }, [inViewPage]);
-
   return (
     <Panel isOpen={isOpen} toggle={toggle}>
       <Stack gap="xs">
@@ -125,7 +117,7 @@ const PdfPanelBase: React.FC<PdfPanelBaseProps> = ({
         <Title order={6}>Pages</Title>
         {!!renderer && (
           <Pagination
-            value={InputPage}
+            value={inViewPage}
             total={visiblePages?.size ?? renderer.document.numPages}
             getItemProps={page => ({
               component: "a",
@@ -136,19 +128,23 @@ const PdfPanelBase: React.FC<PdfPanelBaseProps> = ({
             withControls={false}
           />
         )}
-        <TextInput
-          leftSectionPointerEvents="none"
-          label="Navigate to page"
-          placeholder="20"
-          onKeyDown={event => {
-            const value = parseInt(event.currentTarget.value, 10);
-            if (event.key === "Enter" && !isNaN(value) && value > 0) {
-              setInputPage(value);
-              const newUrl = `${window.location.href.split("#")[0]}#page-${String(value)}`;
-              window.location.href = newUrl;
-            }
-          }}
-        />
+        {!!renderer && (
+          <NumberInput
+            label="Navigate to page"
+            placeholder="20"
+            onKeyDown={event => {
+              const value = event.currentTarget.value;
+              if (event.key === "Enter") {
+                const newUrl = `${window.location.href.split("#")[0]}#page-${String(value)}`;
+                window.location.href = newUrl;
+              }
+            }}
+            clampBehavior="strict"
+            min={1}
+            max={renderer.document.numPages}
+            hideControls
+          />
+        )}
         <Title order={6}>Size</Title>
         <Slider
           label={null}
