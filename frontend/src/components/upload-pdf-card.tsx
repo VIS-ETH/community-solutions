@@ -4,7 +4,7 @@ import { Alert, Button, Card } from "@mantine/core";
 import React, { useMemo, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { loadCategories, uploadPdf } from "../api/hooks";
-import { ICONS, Icon } from "vseth-canine-ui";
+import { IconCloudUpload } from "@tabler/icons-react";
 
 const UploadPdfCard: React.FC<{}> = () => {
   const history = useHistory();
@@ -47,7 +47,7 @@ const UploadPdfCard: React.FC<{}> = () => {
   };
   return (
     <Card withBorder shadow="md">
-      <Card.Section withBorder p="md" bg="gray.0">
+      <Card.Section withBorder p="md">
         <Title order={4}>Upload PDF</Title>
       </Card.Section>
       <div>
@@ -57,7 +57,7 @@ const UploadPdfCard: React.FC<{}> = () => {
             <FileInput
               label="File"
               placeholder="Click to choose file..."
-              icon={<Icon icon={ICONS.CLOUD_UP} />}
+              leftSection={<IconCloudUpload />}
               value={file}
               onChange={setFile}
               accept="application/pdf"
@@ -73,12 +73,12 @@ const UploadPdfCard: React.FC<{}> = () => {
               label="Category"
               placeholder="Choose category..."
               searchable
-              nothingFound="No category found"
+              nothingFoundMessage="No category found"
               data={options}
-              onChange={(value: string) => setCategory(value)}
+              onChange={(value: string | null) => value && setCategory(value)}
               required
             />
-            <Button variant="brand" type="submit" loading={loading}>
+            <Button type="submit" loading={loading}>
               Submit
             </Button>
           </Stack>

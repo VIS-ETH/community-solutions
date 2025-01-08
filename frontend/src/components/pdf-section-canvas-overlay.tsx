@@ -7,24 +7,8 @@ import React, {
   useContext,
 } from "react";
 import { determineOptimalCutPositions } from "../pdf/snap";
-import { css } from "@emotion/css";
 import { DebugContext } from "./Debug";
-
-const wrapperStyle = css`
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  touch-action: none;
-  user-select: none;
-  cursor: pointer;
-`;
-const badgeStyle = css`
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform: translateY(-50%);
-`;
+import classes from "./pdf-section-canvas-overlay.module.css";
 
 interface Props {
   canvas: HTMLCanvasElement;
@@ -80,7 +64,7 @@ const PdfSectionCanvasOverlay: React.FC<Props> = React.memo(
     };
     return (
       <div
-        className={wrapperStyle}
+        className={classes.wrapper}
         onPointerMove={pointerMove}
         onPointerLeave={leave}
         ref={ref}
@@ -112,7 +96,7 @@ const PdfSectionCanvasOverlay: React.FC<Props> = React.memo(
           <div
             style={{
               transform: `translateY(${displayPos}px) translateY(-50%)`,
-              backgroundColor: snap && snapBad ? "red" : "black",
+              backgroundColor: snap && snapBad ? "red" : "var(--mantine-color-text)",
               height: "3px",
               position: "absolute",
               width: "100%",
@@ -121,9 +105,10 @@ const PdfSectionCanvasOverlay: React.FC<Props> = React.memo(
             id="add-cut"
           >
             <Badge
-              color={snap && snapBad ? "red" : "black"}
+              color={snap && snapBad ? "red" : "var(--mantine-color-text)"}
               size="lg"
-              className={badgeStyle}
+              className={classes.badge}
+              variant="filled"
             >
               {addCutText}
             </Badge>

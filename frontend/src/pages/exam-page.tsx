@@ -31,7 +31,6 @@ import ContentContainer from "../components/secondary-container";
 import { TOC, TOCNode } from "../components/table-of-contents";
 import useSet from "../hooks/useSet";
 import useTitle from "../hooks/useTitle";
-import useToggle from "../hooks/useToggle";
 import {
   CutUpdate,
   EditMode,
@@ -44,7 +43,14 @@ import {
 } from "../interfaces";
 import PDF from "../pdf/pdf-renderer";
 import { getAnswerSectionId } from "../utils/exam-utils";
-import { ICONS, Icon } from "vseth-canine-ui";
+import {
+  IconChevronRight,
+  IconDownload,
+  IconEdit,
+  IconFileCheck,
+  IconLink,
+} from "@tabler/icons-react";
+import { useDisclosure } from "@mantine/hooks";
 
 const addCut = async (
   filename: string,
@@ -142,24 +148,17 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
   const [size, sizeRef] = useSize<HTMLDivElement>();
   const [maxWidth, setMaxWidth] = useLocalStorageState("max-width", 1000);
 
-  const [visibleSplits, addVisible, removeVisible] = useSet<PdfSection>();
-  const [panelIsOpen, togglePanel] = useToggle();
+  const [inViewSplits, addInViewSplit, removeInViewSplit] = useSet<PdfSection>();
+  const [panelIsOpen, {toggle: togglePanel}] = useDisclosure();
   const [editState, setEditState] = useState<EditState>({
     mode: EditMode.None,
   });
 
-  const visibleChangeListener = useCallback(
+  const inViewChangeListener = useCallback(
     (section: PdfSection, v: boolean) =>
-      v ? addVisible(section) : removeVisible(section),
-    [addVisible, removeVisible],
+      v ? addInViewSplit(section) : removeInViewSplit(section),
+    [addInViewSplit, removeInViewSplit],
   );
-  const visiblePages = useMemo(() => {
-    const s = new Set<number>();
-    for (const split of visibleSplits) {
-      s.add(split.start.page);
-    }
-    return s;
-  }, [visibleSplits]);
 
   const width = size.width;
   const [displayOptions, setDisplayOptions] = useState({
@@ -168,6 +167,25 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
     displayHideShowButtons: false,
     displayEmptyCutLabels: false,
   });
+
+  const inViewPages = useMemo(() => {
+    const s = new Set<number>();
+    for (const split of inViewSplits) {
+      s.add(split.start.page);
+    }
+    return s;
+  }, [inViewSplits]);
+
+  const visiblePages = useMemo(() => {
+    const s = new Set<number>();
+    if (!sections) return undefined;
+    for (const section of sections) {
+      if (section.kind === SectionKind.Pdf && (!section.hidden || displayOptions.displayHiddenPdfSections)) {
+        s.add(section.start.page);
+      }
+    }
+    return s;
+  }, [sections, displayOptions]);
 
   const [expandedSections, expandSections, collapseSections] = useSet<string>();
   const answerSections = useMemo(() => {
@@ -223,7 +241,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
           <Group>
             <IconButton
               color="gray"
-              iconName={ICONS.DOWNLOAD}
+              icon={<IconDownload />}
               tooltip="Download"
               onClick={() => window.open(metaData.exam_file, "_blank")}
             />
@@ -235,13 +253,13 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
                     <IconButton
                       color="gray"
                       tooltip="Mark as checked"
-                      iconName={ICONS.CHECK}
+                      icon={<IconFileCheck />}
                       onClick={() => runMarkChecked(metaData.filename)}
                     />
                   )}
                 <IconButton
                   color="gray"
-                  iconName={ICONS.EDIT}
+                  icon={<IconEdit />}
                   tooltip="Edit"
                   onClick={() => toggleEditing()}
                 />
@@ -251,7 +269,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
         </Flex>
         <Grid>
           {!metaData.canView && (
-            <Grid.Col md={6} lg={4}>
+            <Grid.Col span={{ md: 6, lg: 4 }}>
               <Card m="xs">
                 {metaData.needs_payment && !metaData.hasPayed ? (
                   <>
@@ -266,7 +284,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
             </Grid.Col>
           )}
           {metaData.is_printonly && (
-            <Grid.Col md={6} lg={4}>
+            <Grid.Col span={{ md: 6, lg: 4 }}>
               <PrintExam
                 title="exam"
                 examtype="exam"
@@ -275,7 +293,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
             </Grid.Col>
           )}
           {metaData.has_solution && metaData.solution_printonly && (
-            <Grid.Col md={6} lg={4}>
+            <Grid.Col span={{ md: 6, lg: 4 }}>
               <PrintExam
                 title="solution"
                 examtype="solution"
@@ -284,7 +302,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
             </Grid.Col>
           )}
           {metaData.master_solution && (
-            <Grid.Col md={4} lg={3}>
+            <Grid.Col span={{ md: 4, lg: 3 }}>
               <Button
                 fullWidth
                 color="gray"
@@ -293,7 +311,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
                 href={metaData.master_solution}
                 target="_blank"
                 rel="noopener noreferrer"
-                leftIcon={<Icon icon={ICONS.LINK} />}
+                leftSection={<IconLink />}
               >
                 Official Solution (external)
               </Button>
@@ -301,7 +319,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
           )}
 
           {metaData.has_solution && !metaData.solution_printonly && (
-            <Grid.Col md={4} lg={3}>
+            <Grid.Col span={{ md: 4, lg: 3 }}>
               <Button
                 fullWidth
                 color="gray"
@@ -310,14 +328,14 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
                 variant="light"
                 target="_blank"
                 rel="noopener noreferrer"
-                leftIcon={<Icon icon={ICONS.DOWNLOAD} />}
+                leftSection={<IconDownload />}
               >
                 Official Solution
               </Button>
             </Grid.Col>
           )}
           {metaData.attachments.map(attachment => (
-            <Grid.Col md={4} lg={3} key={attachment.filename}>
+            <Grid.Col span={{ md: 4, lg: 3 }} key={attachment.filename}>
               <Button
                 fullWidth
                 component="a"
@@ -325,7 +343,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
                 href={`/api/filestore/get/${attachment.filename}/`}
                 target="_blank"
                 rel="noopener noreferrer"
-                leftIcon={<Icon icon={ICONS.DOWNLOAD} />}
+                leftSection={<IconDownload />}
               >
                 {attachment.displayname}
               </Button>
@@ -334,7 +352,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
         </Grid>
         {toc && (
           <Grid>
-            <Grid.Col lg={12}>
+            <Grid.Col span={{ lg: 12 }}>
               <TOC toc={toc} />
             </Grid.Col>
           </Grid>
@@ -355,7 +373,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
               onUpdateCut={onSectionChange}
               onAddCut={runAddCut}
               onMoveCut={runMoveCut}
-              visibleChangeListener={visibleChangeListener}
+              inViewChangeListener={inViewChangeListener}
               displayHiddenPdfSections={displayOptions.displayHiddenPdfSections}
               displayHiddenAnswerSections={
                 displayOptions.displayHiddenAnswerSections
@@ -374,6 +392,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
         toggle={togglePanel}
         metaData={metaData}
         renderer={renderer}
+        inViewPages={inViewPages}
         visiblePages={visiblePages}
         allSectionsExpanded={allSectionsExpanded}
         allSectionsCollapsed={allSectionsCollapsed}
@@ -428,13 +447,13 @@ const ExamPage: React.FC<{}> = () => {
     () => (cuts && pdf ? loadSections(pdf.numPages, cuts) : undefined),
     [pdf, cuts],
   );
-  const [editing, toggleEditing] = useToggle();
+  const [editing, {toggle: toggleEditing}] = useDisclosure();
   const error = metaDataError || cutsError || pdfError;
   const user = useUser()!;
   return (
     <div>
       <Container size="xl">
-        <Breadcrumbs separator={<Icon icon={ICONS.RIGHT} size={10} />}>
+        <Breadcrumbs separator={<IconChevronRight />}>
           <Anchor component={Link} tt="uppercase" size="xs" to="/">
             Home
           </Anchor>

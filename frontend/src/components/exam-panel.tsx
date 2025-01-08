@@ -2,21 +2,24 @@ import {
   Button,
   Checkbox,
   Grid,
-  Slider,
-  Pagination,
   Stack,
   Text,
   Title,
+  Anchor,
 } from "@mantine/core";
-import { useDebounceFn } from "@umijs/hooks";
-import React, { useCallback, useState } from "react";
-import { Link } from "react-router-dom";
-import { Icon, ICONS } from "vseth-canine-ui";
+import React, { useCallback } from "react";
 import { EditMode, EditState, ExamMetaData } from "../interfaces";
 import PDF from "../pdf/pdf-renderer";
 import serverData from "../utils/server-data";
 import IconButton from "./icon-button";
-import Panel from "./panel";
+import PdfPanelBase from "./pdf-panel-base";
+import {
+  IconArrowsMaximize,
+  IconArrowsMinimize,
+  IconMessageBolt,
+  IconPlus,
+  IconX,
+} from "@tabler/icons-react";
 
 export interface DisplayOptions {
   displayHiddenPdfSections: boolean;
@@ -30,7 +33,8 @@ interface ExamPanelProps {
   toggle: () => void;
   metaData: ExamMetaData;
   renderer?: PDF;
-  visiblePages: Set<number>;
+  inViewPages?: Set<number>;
+  visiblePages?: Set<number>;
 
   allSectionsExpanded: boolean;
   allSectionsCollapsed: boolean;
@@ -52,6 +56,7 @@ const ExamPanel: React.FC<ExamPanelProps> = ({
   toggle,
   metaData,
   renderer,
+  inViewPages,
   visiblePages,
 
   allSectionsExpanded,
@@ -73,15 +78,6 @@ const ExamPanel: React.FC<ExamPanelProps> = ({
     editState.mode === EditMode.Add || editState.mode === EditMode.Move
       ? editState.snap
       : true;
-  const [widthValue, setWidthValue] = useState(maxWidth);
-  const { run: changeWidth } = useDebounceFn(
-    (val: number) => setMaxWidth(val),
-    500,
-  );
-  const handler = (val: number) => {
-    changeWidth(val);
-    setWidthValue(val);
-  };
   const reportProblem = useCallback(() => {
     const subject = encodeURIComponent("Community Solutions: Feedback");
     const body = encodeURIComponent(
@@ -93,162 +89,132 @@ const ExamPanel: React.FC<ExamPanelProps> = ({
     name: T,
     value: DisplayOptions[T],
   ) => setDisplayOptions({ ...displayOptions, [name]: value });
-  const scrollToTop = useCallback(() => {
-    const c = document.documentElement.scrollTop || document.body.scrollTop;
-    if (c > 0) {
-      window.requestAnimationFrame(scrollToTop);
-      window.scrollTo(0, c - c / 10 - 1);
-    } else {
-      toggle();
-    }
-  }, [toggle]);
 
   return (
-    <Panel isOpen={isOpen} toggle={toggle}>
-      <Stack spacing="xs">
-        <div>
-          <Title order={2}>{metaData && metaData.displayname}</Title>
-          <Text size="sm" fs="italic">
-            {metaData && metaData.category_displayname}
-          </Text>
-        </div>
-        <Title order={6}>Pages</Title>
-        {!!renderer && (
-          <Pagination
-            total={renderer.document.numPages}
-            getItemProps={page => ({
-              component: "a",
-              href: `#page-${page}`,
-            })}
-            withControls={false}
-          />
-        )}
-        <Title order={6}>Size</Title>
-        <Slider
-          label={null}
-          min={500}
-          max={2000}
-          value={widthValue}
-          onChange={handler}
-        />
-        <Title order={6}>Actions</Title>
-        <Button.Group>
+    <PdfPanelBase
+      isOpen={isOpen}
+      toggle={toggle}
+      renderer={renderer}
+      title={metaData.displayname}
+      subtitle={metaData.category_displayname}
+      inViewPages={inViewPages}
+      visiblePages={visiblePages}
+      maxWidth={maxWidth}
+      setMaxWidth={setMaxWidth}
+      additionalActions={[
+        <IconButton
+          tooltip="Report problem"
+          icon={<IconMessageBolt />}
+          onClick={reportProblem}
+        />,
+        !allSectionsExpanded && (
           <IconButton
-            tooltip="Report problem"
-            iconName={ICONS.MESSAGE}
-            onClick={reportProblem}
+            tooltip="Expand all answers"
+            icon={<IconArrowsMaximize />}
+            onClick={onExpandAllSections}
           />
+        ),
+        !allSectionsCollapsed && (
           <IconButton
-            tooltip="Back to the top"
-            iconName={ICONS.ARROW_UP}
-            onClick={scrollToTop}
+            tooltip="Collapse all answers"
+            icon={<IconArrowsMinimize />}
+            onClick={onCollapseAllSections}
           />
-          {!allSectionsExpanded && (
-            <IconButton
-              tooltip="Expand all answers"
-              iconName={ICONS.ADJUST_UP_DOWN}
-              onClick={onExpandAllSections}
-            />
-          )}
-          {!allSectionsCollapsed && (
-            <IconButton
-              tooltip="Collapse all answers"
-              iconName={ICONS.ADJUST_UP_DOWN_ALT}
-              onClick={onCollapseAllSections}
-            />
-          )}
-        </Button.Group>
-
-        {canEdit && (
-          <>
-            <Title order={6}>Edit Mode</Title>
-            <Grid>
-              {editState.mode !== EditMode.None && (
-                <Grid.Col xs="auto">
-                  <Button
-                    size="sm"
-                    onClick={() => setEditState({ mode: EditMode.None })}
-                    leftIcon={<Icon icon={ICONS.CLOSE} />}
-                  >
-                    Stop Editing
-                  </Button>
-                </Grid.Col>
-              )}
-              {editState.mode !== EditMode.Add && (
-                <Grid.Col xs="auto">
-                  <Button
-                    size="sm"
-                    onClick={() =>
-                      setEditState({
-                        mode: EditMode.Add,
-                        snap,
-                      })
-                    }
-                    leftIcon={<Icon icon={ICONS.PLUS} />}
-                  >
-                    Add Cuts
-                  </Button>
-                </Grid.Col>
-              )}
-            </Grid>
-            <div>
-              {editState.mode !== EditMode.None && (
-                <Checkbox
-                  name="check"
-                  label="Snap"
-                  checked={editState.snap}
-                  onChange={e =>
-                    setEditState({ ...editState, snap: e.target.checked })
+        ),
+      ]}
+    >
+      {canEdit && (
+        <>
+          <Title order={6}>Edit Mode</Title>
+          <Grid>
+            {editState.mode !== EditMode.None && (
+              <Grid.Col span={{ xs: "auto" }}>
+                <Button
+                  size="sm"
+                  onClick={() => setEditState({ mode: EditMode.None })}
+                  leftSection={<IconX />}
+                >
+                  Stop Editing
+                </Button>
+              </Grid.Col>
+            )}
+            {editState.mode !== EditMode.Add && (
+              <Grid.Col span={{ xs: "auto" }}>
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    setEditState({
+                      mode: EditMode.Add,
+                      snap,
+                    })
                   }
-                />
-              )}
-            </div>
-            <Title order={6}>Display Options</Title>
-            <Stack spacing="xs">
+                  leftSection={<IconPlus />}
+                >
+                  Add Cuts
+                </Button>
+              </Grid.Col>
+            )}
+          </Grid>
+          <div>
+            {editState.mode !== EditMode.None && (
               <Checkbox
                 name="check"
-                label="Display hidden PDF sections"
-                checked={displayOptions.displayHiddenPdfSections}
+                label="Snap"
+                checked={editState.snap}
                 onChange={e =>
-                  setOption("displayHiddenPdfSections", e.target.checked)
+                  setEditState({ ...editState, snap: e.target.checked })
                 }
               />
-              <Checkbox
-                name="check"
-                label="Display hidden answer sections"
-                checked={displayOptions.displayHiddenAnswerSections}
-                onChange={e =>
-                  setOption("displayHiddenAnswerSections", e.target.checked)
-                }
-              />
-              <Checkbox
-                name="check"
-                label="Display Hide / Show buttons"
-                checked={displayOptions.displayHideShowButtons}
-                onChange={e =>
-                  setOption("displayHideShowButtons", e.target.checked)
-                }
-              />
-              <Checkbox
-                name="check"
-                label="Display empty cut labels"
-                checked={displayOptions.displayEmptyCutLabels}
-                onChange={e =>
-                  setOption("displayEmptyCutLabels", e.target.checked)
-                }
-              />
-            </Stack>
-          </>
-        )}
-        <Text size="sm" color="dimmed">
-          All answers are licensed as&nbsp;
-          <Link to="https://creativecommons.org/licenses/by-nc-sa/4.0/">
-            CC BY-NC-SA 4.0
-          </Link>
-          .
-        </Text>
-      </Stack>
-    </Panel>
+            )}
+          </div>
+          <Title order={6}>Display Options</Title>
+          <Stack gap="xs">
+            <Checkbox
+              name="check"
+              label="Display hidden PDF sections"
+              checked={displayOptions.displayHiddenPdfSections}
+              onChange={e =>
+                setOption("displayHiddenPdfSections", e.target.checked)
+              }
+            />
+            <Checkbox
+              name="check"
+              label="Display hidden answer sections"
+              checked={displayOptions.displayHiddenAnswerSections}
+              onChange={e =>
+                setOption("displayHiddenAnswerSections", e.target.checked)
+              }
+            />
+            <Checkbox
+              name="check"
+              label="Display Hide / Show buttons"
+              checked={displayOptions.displayHideShowButtons}
+              onChange={e =>
+                setOption("displayHideShowButtons", e.target.checked)
+              }
+            />
+            <Checkbox
+              name="check"
+              label="Display empty cut labels"
+              checked={displayOptions.displayEmptyCutLabels}
+              onChange={e =>
+                setOption("displayEmptyCutLabels", e.target.checked)
+              }
+            />
+          </Stack>
+        </>
+      )}
+      <Text size="sm" c="dimmed">
+        All answers are licensed as&nbsp;
+        <Anchor
+          c="blue"
+          href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
+          target="_blank"
+        >
+          CC BY-NC-SA 4.0
+        </Anchor>
+      </Text>
+    </PdfPanelBase>
   );
 };
 export default ExamPanel;

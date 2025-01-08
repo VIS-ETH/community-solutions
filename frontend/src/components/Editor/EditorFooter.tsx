@@ -1,14 +1,11 @@
-import { css } from "@emotion/css";
 import { Button, Group, Modal } from "@mantine/core";
 import * as React from "react";
 import { useCallback, useState } from "react";
 import { ImageHandle } from "./utils/types";
 import EditorHelp from "./EditorHelp";
+import classes from "./EditorFooter.module.css";
+import { useDisclosure } from "@mantine/hooks";
 
-const rowStyle = css`
-  text-align: right;
-  margin-left: -0.5rem;
-`;
 interface Props {
   onOpenOverlay: () => void;
   attachments: ImageHandle[];
@@ -19,13 +16,12 @@ const EditorFooter: React.FC<Props> = ({
   onDelete,
   onOpenOverlay,
 }) => {
-  const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const toggleHelp = useCallback(() => setIsHelpOpen(prev => !prev), []);
+  const [isHelpOpen, {toggle: toggleHelpModal, close: closeHelpModal}] = useDisclosure();
   return (
     <div>
-      <Group position="right" className={rowStyle}>
+      <Group justify="right" className={classes.row}>
         <Button.Group>
-          <Button variant="default" size="sm" onClick={toggleHelp}>
+          <Button variant="default" size="sm" onClick={toggleHelpModal}>
             Supported Functions
           </Button>
           <Button variant="default" size="sm" onClick={onOpenOverlay}>
@@ -36,7 +32,7 @@ const EditorFooter: React.FC<Props> = ({
       <Modal
         title="Help with Editor"
         opened={isHelpOpen}
-        onClose={toggleHelp}
+        onClose={closeHelpModal}
         size="min(90vw, 1500px)"
       >
         <Modal.Body>
