@@ -129,6 +129,7 @@ programs:
       - FRONTEND_UNLOCK_DEPOSIT_NOTICE:
 
       - BANNED_USERS:
+      - VIEWER_ROLE:
 
       - RUNTIME_JWT_PUBLIC_KEY:
       - prometheus_multiproc_dir: /dev/shm

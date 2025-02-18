@@ -72,6 +72,8 @@ env:
     secret:
       key: banned-users
       create: provided
+  - name: "VIEWER_ROLE"
+    value: "false"
 
 livenessProbe:
   httpGet:
