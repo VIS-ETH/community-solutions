@@ -142,6 +142,7 @@ DEPLOYMENT_DOMAINS = [PRIMARY_DEPLOYMENT_DOMAIN] + (
 )
 
 BANNED_USERS = os.environ.get("BANNED_USERS", "").split(",")
+VIEWER_ROLE = os.environ.get("VIEWER_ROLE", "false") == "true"
 
 ALLOWED_HOSTS = []
 REAL_ALLOWED_HOSTS = []

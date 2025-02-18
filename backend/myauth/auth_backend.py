@@ -3,6 +3,7 @@ from typing import Union
 import urllib.request
 import json
 
+from backend.settings import ALLOWED_ROLES
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.http.request import HttpRequest
@@ -117,6 +118,8 @@ def add_auth(request: HttpRequest):
         )
         if settings.IS_PREVIEW:
             roles = ["admin"]
+        if settings.VIEWER_ROLE and "viewer" not in roles and "admin" not in roles:
+            raise PermissionDenied("user does not have allowed roles")
         request.roles = roles
 
         with transaction.atomic():
