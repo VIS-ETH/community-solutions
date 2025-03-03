@@ -3,7 +3,6 @@ from typing import Union
 import urllib.request
 import json
 
-from backend.settings import ALLOWED_ROLES
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.http.request import HttpRequest
