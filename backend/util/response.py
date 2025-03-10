@@ -60,6 +60,8 @@ def data_dumper(obj):
 def success(**obj):
     return JsonResponse(obj, json_dumps_params={'default': data_dumper})
 
+def unauthorized():
+    return JsonResponse({'err': 'Unauthorized'}, status=401)
 
 def not_allowed():
     return JsonResponse({'err': 'Not allowed'}, status=403)
@@ -71,6 +73,10 @@ def not_found():
 
 def not_possible(msg):
     return JsonResponse({"err": msg}, status=400)
+
+
+def unsupported_media_type():
+    return JsonResponse({"err": "Unsupported Media Type"}, status=415)
 
 
 def internal_error():

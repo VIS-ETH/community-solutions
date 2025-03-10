@@ -14,7 +14,6 @@ import {
 } from "@mantine/core";
 import { useLocalStorageState, useRequest } from "@umijs/hooks";
 import React, { useCallback, useMemo, useState } from "react";
-import { Icon, ICONS } from "vseth-canine-ui";
 import { fetchGet, fetchPost } from "../api/fetch-utils";
 import { loadMetaCategories } from "../api/hooks";
 import { User, useUser } from "../auth";
@@ -26,7 +25,8 @@ import useSearch from "../hooks/useSearch";
 import useTitle from "../hooks/useTitle";
 import { CategoryMetaData, MetaCategory } from "../interfaces";
 import CourseCategoriesPanel from "../components/course-categories-panel";
-import useToggle from "../hooks/useToggle";
+import { IconPlus, IconSearch } from "@tabler/icons-react";
+import { useDisclosure } from "@mantine/hooks";
 
 const displayNameGetter = (data: CategoryMetaData) => data.displayname;
 
@@ -85,12 +85,12 @@ const mapToCategories = (
 const AddCategory: React.FC<{ onAddCategory: () => void }> = ({
   onAddCategory,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [addCategoryModalIsOpen, {open: openAddCategoryModal, close: closeAddCategoryModal}] = useDisclosure();
   const { loading, run } = useRequest(addCategory, {
     manual: true,
     onSuccess: () => {
       setCategoryName("");
-      setIsOpen(false);
+      closeAddCategoryModal();
       onAddCategory();
     },
   });
@@ -102,8 +102,8 @@ const AddCategory: React.FC<{ onAddCategory: () => void }> = ({
   return (
     <>
       <Modal
-        opened={isOpen}
-        onClose={() => setIsOpen(false)}
+        opened={addCategoryModalIsOpen}
+        onClose={closeAddCategoryModal}
         title="Add Category"
       >
         <Stack>
@@ -124,10 +124,12 @@ const AddCategory: React.FC<{ onAddCategory: () => void }> = ({
       <Paper withBorder shadow="md" style={{ minHeight: "10em" }}>
         <Tooltip label="Add a new category" withinPortal>
           <Button
+            color="dark"
             style={{ width: "100%", height: "100%" }}
-            onClick={() => setIsOpen(true)}
+            onClick={openAddCategoryModal}
+            leftSection={<IconPlus />}
           >
-            <Icon icon={ICONS.PLUS} size={40} />
+            Add new category
           </Button>
         </Tooltip>
       </Paper>
@@ -181,7 +183,7 @@ export const CategoryList: React.FC<{}> = () => {
   const onAddCategory = useCallback(() => {
     run();
   }, [run]);
-  const [panelIsOpen, togglePanel] = useToggle();
+  const [panelIsOpen, {toggle: togglePanel}] = useDisclosure();
 
   const slugify = (str: string): string =>
     str
@@ -212,7 +214,9 @@ export const CategoryList: React.FC<{}> = () => {
             value={filter}
             autoFocus
             onChange={e => setFilter(e.currentTarget.value)}
-            icon={<Icon icon={ICONS.SEARCH} size={12} />}
+            leftSection={
+              <IconSearch style={{ height: "15px", width: "15px" }} />
+            }
           />
         </Flex>
       </Container>

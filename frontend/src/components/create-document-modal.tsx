@@ -1,20 +1,20 @@
 import { Button, TextInput, Modal, Stack } from "@mantine/core";
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
-import { Icon, ICONS } from "vseth-canine-ui";
 import { useCreateDocument } from "../api/hooks";
 import { useUser } from "../auth";
+import { IconPlus } from "@tabler/icons-react";
 
 interface Props {
   categorySlug: string;
   isOpen: boolean;
-  toggle: () => void;
+  onClose: () => void;
 }
 
 const CreateDocumentForm: React.FC<Props> = ({
   categorySlug,
   isOpen,
-  toggle,
+  onClose,
 }) => {
   const { username } = useUser()!;
   const [displayName, setDisplayName] = useState("");
@@ -23,7 +23,7 @@ const CreateDocumentForm: React.FC<Props> = ({
     history.push(`/user/${username}/document/${slug}/`);
   });
   return (
-    <Modal opened={isOpen} title="Add Document" onClose={toggle}>
+    <Modal opened={isOpen} title="Add Document" onClose={onClose}>
       <Modal.Body>
         <Stack>
           <TextInput
@@ -38,10 +38,9 @@ const CreateDocumentForm: React.FC<Props> = ({
             added to the document in the settings tab.
           </div>
           <Button
-            variant="brand"
             disabled={loading || displayName.trim() === ""}
             onClick={() => run(displayName.trim(), categorySlug)}
-            leftIcon={<Icon icon={ICONS.PLUS} />}
+            leftSection={<IconPlus />}
             loading={loading}
           >
             Add

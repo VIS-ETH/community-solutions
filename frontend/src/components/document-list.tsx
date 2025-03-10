@@ -1,18 +1,19 @@
 import { Button, Paper, Tooltip, Title } from "@mantine/core";
-import React, { useEffect, useState, useMemo } from "react";
-import { Icon, ICONS } from "vseth-canine-ui";
+import React, { useEffect, useState } from "react";
 import { loadDocumentTypes, useDocuments } from "../api/hooks";
 import CreateDocumentForm from "./create-document-modal";
 import Grid from "./grid";
 import DocumentCard from "./document-card";
 import { Document } from "../interfaces";
+import { IconPlus } from "@tabler/icons-react";
+import { useDisclosure } from "@mantine/hooks";
 
 interface Props {
   slug: string;
 }
 
 const DocumentList: React.FC<Props> = ({ slug }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, {open, close}] = useDisclosure();
   const [documents] = useDocuments(slug);
   const [docTypes, setDocTypes] = useState<string[] | null>(null);
   const [sortedDocs, setSortedDocs] = useState<
@@ -31,7 +32,11 @@ const DocumentList: React.FC<Props> = ({ slug }) => {
     docTypes.forEach(type => currentDocTypes.set(type, []));
     documents.forEach(doc => currentDocTypes.get(doc.document_type)?.push(doc));
     currentDocTypes.forEach(docs =>
-      docs.sort((a, b) => b.like_count - a.like_count || a.display_name.localeCompare(b.display_name)),
+      docs.sort(
+        (a, b) =>
+          b.like_count - a.like_count ||
+          a.display_name.localeCompare(b.display_name),
+      ),
     );
     setSortedDocs(
       Array.from(currentDocTypes, ([type, docs]) => ({ type, docs })).filter(
@@ -44,7 +49,7 @@ const DocumentList: React.FC<Props> = ({ slug }) => {
       <CreateDocumentForm
         isOpen={isOpen}
         categorySlug={slug}
-        toggle={() => setIsOpen(r => !r)}
+        onClose={close}
       />
       <Title
         order={2}
@@ -77,9 +82,10 @@ const DocumentList: React.FC<Props> = ({ slug }) => {
           <Tooltip label="Add a new document">
             <Button
               style={{ width: "100%", height: "100%" }}
-              onClick={() => setIsOpen(true)}
+              onClick={open}
+              leftSection={<IconPlus />}
             >
-              <Icon icon={ICONS.PLUS} size={40} />
+              Add new document
             </Button>
           </Tooltip>
         </Paper>

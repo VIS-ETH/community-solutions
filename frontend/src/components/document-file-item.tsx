@@ -10,16 +10,21 @@ import {
   Title,
 } from "@mantine/core";
 import React, { useState } from "react";
-import { Icon, ICONS } from "vseth-canine-ui";
 import {
   Mutate,
   useDeleteDocumentFile,
   useUpdateDocumentFile,
 } from "../api/hooks";
-import useToggle from "../hooks/useToggle";
 import { Document, DocumentFile } from "../interfaces";
 import FileInput from "./file-input";
 import IconButton from "./icon-button";
+import {
+  IconDeviceFloppy,
+  IconEdit,
+  IconKey,
+  IconTrash,
+} from "@tabler/icons-react";
+import { useDisclosure } from "@mantine/hooks";
 
 interface Props {
   document: Document;
@@ -53,16 +58,16 @@ const DocumentFileItem: React.FC<Props> = ({ file, document, mutate }) => {
         ...s,
         files: s.files.map(f => (f.oid !== file.oid ? f : file)),
       }));
-      toggleEditIsOpen(false);
+      closeEditModal();
     },
   );
-  const [editIsOpen, toggleEditIsOpen] = useToggle();
-  const [keyIsOpen, toggleKeyIsOpen] = useToggle();
+  const [editIsOpen, {toggle: toggleEditIsOpen, close: closeEditModal}] = useDisclosure();
+  const [keyIsOpen, {toggle: toggleKeyIsOpen, close: closeKeyModal}] = useDisclosure();
   return (
     <>
       <Modal
         title="Edit {file.display_name}"
-        onClose={toggleEditIsOpen}
+        onClose={closeEditModal}
         opened={editIsOpen}
       >
         <Modal.Body>
@@ -78,7 +83,6 @@ const DocumentFileItem: React.FC<Props> = ({ file, document, mutate }) => {
             accept=".pdf,.tex,.md,.txt,.zip,.apkg,.colpkg" // apkg=anki
           />
           <Button
-            variant="brand"
             disabled={displayName?.trim() === ""}
             onClick={() =>
               updateFile({
@@ -86,7 +90,7 @@ const DocumentFileItem: React.FC<Props> = ({ file, document, mutate }) => {
                 file: replaceFile,
               })
             }
-            leftIcon={<Icon icon={ICONS.SAVE} />}
+            leftSection={<IconDeviceFloppy />}
             loading={updateLoading}
           >
             Save
@@ -95,7 +99,7 @@ const DocumentFileItem: React.FC<Props> = ({ file, document, mutate }) => {
       </Modal>
       <Modal
         title="Access Token"
-        onClose={toggleKeyIsOpen}
+        onClose={closeKeyModal}
         opened={keyIsOpen}
         size="lg"
       >
@@ -140,32 +144,30 @@ const DocumentFileItem: React.FC<Props> = ({ file, document, mutate }) => {
       <Card withBorder my="xs">
         <Flex justify="space-between" align="center">
           <Flex direction="column" gap="xs">
-            <Title order={3} inline>
-              {file.display_name || <i>Unnamed</i>}
-            </Title>
+            <Title order={3}>{file.display_name || <i>Unnamed</i>}</Title>
             <Group>
               <Badge>{file.filename}</Badge>{" "}
               <Badge color="gray">{file.mime_type}</Badge>
             </Group>
           </Flex>
           <Grid>
-            <Grid.Col xs="auto">
+            <Grid.Col span={{ xs: "auto" }}>
               <IconButton
-                iconName={ICONS.KEY}
+                icon={<IconKey />}
                 onClick={toggleKeyIsOpen}
                 tooltip="View access token"
               />
             </Grid.Col>
-            <Grid.Col xs="auto">
+            <Grid.Col span={{ xs: "auto" }}>
               <IconButton
-                iconName={ICONS.EDIT}
+                icon={<IconEdit />}
                 onClick={toggleEditIsOpen}
                 tooltip="Edit file"
               />
             </Grid.Col>
-            <Grid.Col xs="auto">
+            <Grid.Col span={{ xs: "auto" }}>
               <IconButton
-                iconName={ICONS.DELETE}
+                icon={<IconTrash />}
                 color="red"
                 onClick={deleteFile}
                 loading={deleteLoading}

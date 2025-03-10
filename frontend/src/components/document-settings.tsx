@@ -14,7 +14,6 @@ import {
 import { useRequest } from "@umijs/hooks";
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
-import { Icon, ICONS } from "vseth-canine-ui";
 import { imageHandler } from "../api/fetch-utils";
 import {
   loadCategories,
@@ -24,7 +23,6 @@ import {
   useRegenerateDocumentAPIKey,
   useUpdateDocument,
 } from "../api/hooks";
-import useToggle from "../hooks/useToggle";
 import { Document } from "../interfaces";
 import { createOptions, options } from "../utils/ts-utils";
 import CreateDocumentFileModal from "./create-document-file-modal";
@@ -33,6 +31,14 @@ import Editor from "./Editor";
 import { UndoStack } from "./Editor/utils/undo-stack";
 import IconButton from "./icon-button";
 import MarkdownText from "./markdown-text";
+import {
+  IconDeviceFloppy,
+  IconPlus,
+  IconReload,
+  IconTrash,
+} from "@tabler/icons-react";
+import Creatable from "./creatable";
+import { useDisclosure } from "@mantine/hooks";
 
 interface Props {
   data: Document;
@@ -82,7 +88,7 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate }) => {
     data.slug,
     () => data && history.push(`/category/${data.category}`),
   );
-  const [deleteModalIsOpen, toggleDeleteModalIsOpen] = useToggle();
+  const [deleteModalIsOpen, {toggle: toggleDeleteModalIsOpen, close: closeDeleteModal}] = useDisclosure();
 
   const [displayName, setDisplayName] = useState<string | undefined>();
   const [category, setCategory] = useState<string | undefined>();
@@ -95,16 +101,16 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate }) => {
     next: [],
   });
 
-  const [addModalIsOpen, toggleAddModalIsOpen] = useToggle(false);
+  const [addModalIsOpen, {toggle: toggleAddModalIsOpen, open: openAddModal, close: closeAddModal}] = useDisclosure();
   return (
     <>
       <Modal
         title="Add File"
         opened={addModalIsOpen}
-        onClose={toggleAddModalIsOpen}
+        onClose={closeAddModal}
       >
         <CreateDocumentFileModal
-          toggle={toggleAddModalIsOpen}
+          onClose={openAddModal}
           document={data}
           mutate={mutate}
         />
@@ -123,30 +129,27 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate }) => {
                 data={categoryOptions ? (options(categoryOptions) as any) : []}
                 value={
                   categoryOptions &&
-                  (category ? categoryOptions[category].value : undefined)
+                  (category ? categoryOptions[category].value : data.category)
                 }
-                onChange={(value: string) => {
-                  setCategory(value);
+                onChange={(value: string | null) => {
+                  value && setCategory(value);
                 }}
               />
             </Grid.Col>
             <Grid.Col span={6}>
-              <Select
-                label="Document type"
-                creatable
-                searchable
-                getCreateLabel={query =>
+              <Creatable
+                title="Document type"
+                getCreateLabel={(query: string) =>
                   `+ Create new document type "${query}"`
                 }
-                onCreate={query => {
+                onCreate={(query: string) => {
                   setDocumentType(query);
                   setDocumentTypeOptions([...(documentTypes ?? []), query]);
                   return query;
                 }}
                 data={documentTypeOptions}
                 value={
-                  documentTypeOptions &&
-                  (documentType ? documentType : data.document_type)
+                  documentTypeOptions && (documentType ?? data.document_type)
                 }
                 onChange={(value: string) => {
                   setDocumentType(value);
@@ -168,7 +171,7 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate }) => {
           <Flex justify="end">
             <Button
               loading={loading}
-              leftIcon={<Icon icon={ICONS.SAVE} />}
+              leftSection={<IconDeviceFloppy />}
               onClick={() =>
                 updateDocument({
                   display_name: displayName,
@@ -193,7 +196,7 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate }) => {
             loading={regenerateLoading}
             onClick={regenerate}
             size="sm"
-            iconName={ICONS.REPEAT}
+            icon={<IconReload />}
             tooltip="Regenerating the API token will invalidate the old one and generate a new one"
           />
         </Flex>
@@ -209,10 +212,7 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate }) => {
         ))}
       </List>
       <Flex justify="end">
-        <Button
-          leftIcon={<Icon icon={ICONS.PLUS} />}
-          onClick={toggleAddModalIsOpen}
-        >
+        <Button leftSection={<IconPlus />} onClick={toggleAddModalIsOpen}>
           Add
         </Button>
       </Flex>
@@ -229,7 +229,7 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate }) => {
             </Flex>
 
             <Button
-              leftIcon={<Icon icon={ICONS.DELETE} />}
+              leftSection={<IconTrash />}
               color="red"
               onClick={toggleDeleteModalIsOpen}
             >
@@ -241,12 +241,12 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate }) => {
       <Modal
         opened={deleteModalIsOpen}
         title="Are you absolutely sure?"
-        onClose={toggleDeleteModalIsOpen}
+        onClose={closeDeleteModal}
       >
         <Modal.Body>
           Deleting the document will delete all associated files and all
           comments. <b>This cannot be undone.</b>
-          <Group position="right" mt="md">
+          <Group justify="right" mt="md">
             <Button onClick={toggleDeleteModalIsOpen}>Not really</Button>
             <Button onClick={deleteDocument} color="red">
               Delete this document

@@ -1,4 +1,3 @@
-import { css } from "@emotion/css";
 import ReactMarkdown, { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -11,48 +10,11 @@ import "katex/dist/katex.min.css";
 import * as React from "react";
 import { useMemo } from "react";
 import CodeBlock from "./code-block";
-import { Alert, createStyles, Table } from "@mantine/core";
+import { Alert, Table } from "@mantine/core";
 import ErrorBoundary from "./error-boundary";
+import clsx from "clsx";
+import classes from "./markdown-text.module.css";
 
-const useStyles = createStyles(theme => ({
-  blockquoteStyle: {
-    [`& blockquote`]: {
-      padding: "0.3rem 0 0.3rem 0.6rem",
-      borderLeftStyle: "solid",
-      borderLeftWidth: "3px",
-      borderLeftColor: theme.colors.gray[7],
-      color: theme.colors.gray[7],
-      fill: theme.colors.gray[7],
-    },
-  },
-}));
-
-const wrapperStyle = css`
-  overflow-x: auto;
-  overflow-y: hidden;
-  & p:first-child {
-    margin-block-start: 0;
-  }
-  & p:last-child {
-    margin-block-end: 0;
-  }
-  & img {
-    max-width: 100%;
-  }
-  @media (max-width: 699px) {
-    & p {
-      margin-block-start: 0.5em;
-      margin-block-end: 0.5em;
-    }
-  }
-  & .katex {
-    font-size: 1rem;
-  }
-  // Undo effect of .overlay class defined in the theme css
-  & .overlay {
-    padding: unset;
-  }
-`;
 
 const transformImageUri = (uri: string) => {
   if (uri.includes("/")) {
@@ -71,14 +33,29 @@ const createComponents = (
   languages?: { [key: string]: ComponentRenderer },
 ): Components => ({
   table: ({ children }) => {
-    return <Table>{children}</Table>;
+    return <Table style={{ width: "auto" }} withColumnBorders={true}>{children}</Table>;
+  },
+  tbody: ({ children }) => {
+    return <Table.Tbody>{children}</Table.Tbody>;
+  },
+  thead: ({ children }) => {
+    return <Table.Thead>{children}</Table.Thead>;
+  },
+  td: ({ children }) => {
+    return <Table.Td>{children}</Table.Td>;
+  },
+  th: ({ children }) => {
+    return <Table.Th>{children}</Table.Th>;
+  },
+  tr: ({ children }) => {
+    return <Table.Tr>{children}</Table.Tr>;
   },
   p: ({ children }) => {
-    if (regex === undefined) return <span>{children}</span>;
+    if (regex === undefined) return <p>{children}</p>;
     const arr = [];
     const value = String(children);
     const m = regex.test(value);
-    if (!m) return <span>{children}</span>;
+    if (!m) return <p>{children}</p>;
     let i = 0;
     while (i < value.length) {
       const rest = value.substring(i);
@@ -152,18 +129,17 @@ const MarkdownText: React.FC<Props> = ({ value, regex, languages }) => {
     () => createComponents(regex, languages),
     [regex, languages],
   );
-  const { classes, cx } = useStyles();
   if (value.length === 0) {
     return <div />;
   }
   return (
-    <div className={cx(wrapperStyle, classes.blockquoteStyle)}>
+    <div className={clsx(classes.wrapperStyle, classes.blockquoteStyle)}>
       <ErrorBoundary fallback={errorMessage}>
         <ReactMarkdown
           children={value}
           urlTransform={transformImageUri}
           remarkPlugins={[remarkMath, remarkGfm]}
-          rehypePlugins={[[rehypeKatex, { macros: macros }]]}
+          rehypePlugins={[[rehypeKatex, { macros }]]}
           components={renderers}
         />
       </ErrorBoundary>

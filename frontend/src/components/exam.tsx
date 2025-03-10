@@ -31,7 +31,7 @@ interface Props {
   ) => Promise<void>;
   onAddCut: (filename: string, page: number, height: number) => void;
   onMoveCut: (cut: string, update: Partial<CutUpdate>) => void;
-  visibleChangeListener: (section: PdfSection, v: boolean) => void;
+  inViewChangeListener: (section: PdfSection, v: boolean) => void;
   displayHiddenPdfSections?: boolean;
   displayHiddenAnswerSections?: boolean;
   displayHideShowButtons?: boolean;
@@ -74,7 +74,7 @@ const Exam: React.FC<Props> = React.memo(
     onAddCut,
     onUpdateCut,
     onMoveCut,
-    visibleChangeListener,
+    inViewChangeListener,
     displayHiddenPdfSections = false,
     displayHiddenAnswerSections = false,
     displayHideShowButtons = true,
@@ -129,9 +129,6 @@ const Exam: React.FC<Props> = React.memo(
             onExpandSections(sectionId);
           })
           .catch(() => {});
-
-        // This line below is bad code, should be properly fixed by making hash-location-handler better
-        window.location.hash = hash;
       }
       return () => {
         cancelled = true;
@@ -143,13 +140,13 @@ const Exam: React.FC<Props> = React.memo(
         if (section.kind === SectionKind.Pdf) {
           return [
             section.key,
-            (v: boolean) => visibleChangeListener(section, v),
+            (v: boolean) => inViewChangeListener(section, v),
           ];
         } else {
           return undefined;
         }
       },
-      [sections, visibleChangeListener],
+      [sections, inViewChangeListener],
     );
     const addCutHandlers = useObjectFromMap(
       sections,
@@ -244,7 +241,7 @@ const Exam: React.FC<Props> = React.memo(
                       displayHideShowButtons={displayHideShowButtons}
                       renderer={renderer}
                       targetWidth={width}
-                      onVisibleChange={onChangeListeners[section.key]}
+                      onInViewChange={onChangeListeners[section.key]}
                       /* Add cut */
                       snap={snap}
                       addCutText={addCutText}
