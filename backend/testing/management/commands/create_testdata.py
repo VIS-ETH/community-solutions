@@ -7,6 +7,7 @@ from datetime import timedelta
 
 from myauth.models import MyUser
 from answers.models import Answer, AnswerSection, Comment, Exam, ExamType
+from documents.models import DocumentType
 from categories.models import Category, MetaCategory
 from feedback.models import Feedback
 from filestore.models import Attachment
@@ -315,6 +316,10 @@ class Command(BaseCommand):
                         payment_time=timezone.now() - timedelta(days=365),
                     ).save()
 
+    def create_document_type(self):
+        self.stdout.write("Create document type")
+        DocumentType(display_name="Documents").save()
+
     def handle(self, *args, **options):
         self.flush_db()
         self.create_users()
@@ -330,3 +335,4 @@ class Command(BaseCommand):
         self.create_attachments()
         self.create_notifications()
         self.create_payments()
+        self.create_document_type()
