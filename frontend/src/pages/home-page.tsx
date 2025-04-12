@@ -1,8 +1,10 @@
 import {
+  Affix,
   Alert,
   Button,
   Container,
   Flex,
+  Group,
   Loader,
   Modal,
   Paper,
@@ -289,12 +291,29 @@ export const CategoryList: React.FC<{}> = () => {
         </Container>
       </ContentContainer>
       {!loading ? (
-        <CourseCategoriesPanel
-          mode={mode}
-          isOpen={panelIsOpen}
-          toggle={togglePanel}
-          metaList={metaList}
-        />
+        <>
+          <CourseCategoriesPanel
+            mode={mode}
+            isOpen={panelIsOpen}
+            toggle={togglePanel}
+            metaList={metaList}
+          />
+          {/* Send Feedback Button */}
+          {!panelIsOpen && (
+          <Affix position={{ bottom: 80}}>
+            <Button
+              size = "xs"
+              onClick={() =>
+                window.open(
+                  "https://gitlab.ethz.ch/vseth/sip-com-apps/community-solutions/-/issues/new",
+                  "_blank"
+                )
+              }
+            >
+              Send Feedback
+            </Button>
+          </Affix>)}
+        </>
       ) : null}
     </>
   );

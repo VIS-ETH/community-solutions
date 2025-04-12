@@ -53,7 +53,6 @@ import {
 } from "./components/Navbar/constants";
 import makeVsethTheme from "./makeVsethTheme";
 
-const ISSUE_REPORT_URL = "https://gitlab.ethz.ch/vseth/sip-com-apps/community-solutions/-/issues/new"; // which URL to open for issue reporting
 import { useDisclosure } from "@mantine/hooks";
 
 const App: React.FC<{}> = () => {
@@ -349,13 +348,10 @@ const App: React.FC<{}> = () => {
           </SetUserContext.Provider>
         </UserContext.Provider>
       </DebugContext.Provider>
-      {process.env.NODE_ENV === "development" && (
+      {process.env.NODE_ENV === "developmentREMOVE" && (
         <>
           <Affix position={{ bottom: rem(10), left: rem(10) }}>
-          <Group>
             <Button onClick={toggleDebugPanel}>DEBUG</Button>
-            <Button variant="outline" color="red" onClick={() => window.open(ISSUE_REPORT_URL, "_blank")}>Report Issue</Button>
-            </Group>
           </Affix>
           <DebugModal
             isOpen={debugPanel}
