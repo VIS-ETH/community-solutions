@@ -310,7 +310,7 @@ export const CategoryList: React.FC<{}> = () => {
                 )
               }
             >
-              Send Feedback
+              Bugs and Requests
             </Button>
           </Affix>)}
         </>
