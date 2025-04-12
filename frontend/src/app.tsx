@@ -348,7 +348,7 @@ const App: React.FC<{}> = () => {
           </SetUserContext.Provider>
         </UserContext.Provider>
       </DebugContext.Provider>
-      {process.env.NODE_ENV === "developmentREMOVE" && (
+      {process.env.NODE_ENV === "development" && (
         <>
           <Affix position={{ bottom: rem(10), left: rem(10) }}>
             <Button onClick={toggleDebugPanel}>DEBUG</Button>
