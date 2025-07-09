@@ -256,7 +256,6 @@ const App: React.FC<{}> = () => {
       component={FeedbackPage}
     />
     <UserRoute
-      exact
       path="/category/:slug"
       component={CategoryPage}
     />
