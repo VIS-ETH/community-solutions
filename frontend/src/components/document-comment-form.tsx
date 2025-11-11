@@ -1,5 +1,5 @@
 import { Flex } from "@mantine/core";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { imageHandler } from "../api/fetch-utils";
 import { Mutate, useCreateDocumentComment } from "../api/hooks";
 import { Document } from "../interfaces";
@@ -18,7 +18,34 @@ const DocumentCommentForm: React.FC<Props> = ({
   documentSlug,
   mutate,
 }) => {
-  const [draftText, setDraftText] = useState("");
+  const localStorageKey = documentSlug + "_comment";
+  const [draftText, setDraftText] = useState(() => {
+    console.log("Ran state");
+    const cachedDraftText = localStorage.getItem(localStorageKey);
+    return cachedDraftText ? JSON.parse(cachedDraftText) : "";
+  });
+
+  // Retrieve cached draftText on first render, if present
+  {
+    /*useEffect(() => {
+      console.log("Retrieval ran");
+    const cachedDraftText = JSON.parse(localStorage.getItem(documentSlug + "_comment"));
+        if (cachedDraftText) {
+            setDraftText(cachedDraftText);
+        }
+    }, []);*/
+  }
+
+  // Cache draftText on change
+  useEffect(() => {
+    console.log("Caching ran");
+    if (draftText != "") {
+      localStorage.setItem(localStorageKey, JSON.stringify(draftText));
+    } else {
+      localStorage.removeItem(localStorageKey);
+    }
+  }, [draftText]);
+
   const [undoStack, setUndoStack] = useState<UndoStack>({
     prev: [],
     next: [],
@@ -33,6 +60,7 @@ const DocumentCommentForm: React.FC<Props> = ({
         prev: [],
         next: [],
       });
+      window.localStorage.removeItem(documentSlug + "_comment"); // Clear draft cache
     },
   );
 
