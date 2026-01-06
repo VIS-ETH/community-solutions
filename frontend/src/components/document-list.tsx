@@ -15,7 +15,7 @@ interface Props {
 }
 
 const DocumentList: React.FC<Props> = ({ slug }) => {
-  const [isOpen, {open, close}] = useDisclosure();
+  const [isOpen, { open, close }] = useDisclosure();
   const [documents] = useDocuments(slug);
   const [docTypes, setDocTypes] = useState<string[] | null>(null);
   const [sortedDocs, setSortedDocs] = useState<
@@ -48,11 +48,7 @@ const DocumentList: React.FC<Props> = ({ slug }) => {
   }, [docTypes, documents]);
   return (
     <>
-      <CreateDocumentForm
-        isOpen={isOpen}
-        categorySlug={slug}
-        onClose={close}
-      />
+      <CreateDocumentForm isOpen={isOpen} categorySlug={slug} onClose={close} />
       <Title
         order={2}
         mt="xl"

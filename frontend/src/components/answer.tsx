@@ -12,7 +12,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { differenceInSeconds } from "date-fns";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { imageHandler } from "../api/fetch-utils";
 import {
@@ -75,7 +75,8 @@ const AnswerComponent: React.FC<Props> = ({
   hasId = true,
 }) => {
   const [viewSource, { toggle: toggleViewSource }] = useDisclosure();
-  const [setFlaggedLoading, setAnswerFlagged] = useSetAnswerFlagged(onSectionChanged);
+  const [setFlaggedLoading, setAnswerFlagged] =
+    useSetAnswerFlagged(onSectionChanged);
   const [resetFlaggedLoading, resetAnswerFlagged] =
     useResetAnswerFlaggedVote(onSectionChanged);
   const [setExpertVoteLoading, setExpertVote] =
@@ -89,8 +90,21 @@ const AnswerComponent: React.FC<Props> = ({
   const { isAdmin, isExpert } = useUser()!;
   const [confirm, modals] = useConfirm();
   const [editing, setEditing] = useState(false);
+  const localStorageKey = answer ? answer.oid + "_answer" : "last_answer_draft";
+  const [draftText, setDraftText] = useState(() => {
+    const cachedDraftText = localStorage.getItem(localStorageKey);
+    return cachedDraftText ? JSON.parse(cachedDraftText) : "";
+  });
 
-  const [draftText, setDraftText] = useState("");
+  // Cache draftText on change
+  useEffect(() => {
+    if (draftText != "") {
+      localStorage.setItem(localStorageKey, JSON.stringify(draftText));
+    } else {
+      localStorage.removeItem(localStorageKey);
+    }
+  }, [draftText]);
+
   const [undoStack, setUndoStack] = useState<UndoStack>({ prev: [], next: [] });
   const startEdit = useCallback(() => {
     setDraftText(answer?.text ?? "");
@@ -99,9 +113,11 @@ const AnswerComponent: React.FC<Props> = ({
   const onCancel = useCallback(() => {
     setEditing(false);
     if (answer === undefined && onDelete) onDelete();
+    localStorage.removeItem(localStorageKey);
   }, [onDelete, answer]);
   const save = useCallback(() => {
     if (section) update(section.oid, draftText, isLegacyAnswer);
+    localStorage.removeItem(localStorageKey);
   }, [section, draftText, update, isLegacyAnswer]);
   const remove = useCallback(() => {
     if (answer) confirm("Remove answer?", () => removeAnswer(answer.oid));
@@ -124,7 +140,7 @@ const AnswerComponent: React.FC<Props> = ({
       >
         <Card.Section px="md" py="md" withBorder>
           <Flex justify="space-between" align="center">
-            <div >
+            <div>
               {!hasId && (
                 <Tooltip label="View Answer in Exam">
                   <Link
@@ -144,7 +160,7 @@ const AnswerComponent: React.FC<Props> = ({
                 </Tooltip>
               )}
               {isLegacyAnswer ? (
-                (answer?.authorDisplayName ?? "(Legacy Draft)")
+                answer?.authorDisplayName ?? "(Legacy Draft)"
               ) : (
                 <Anchor
                   component={Link}
@@ -381,10 +397,7 @@ const AnswerComponent: React.FC<Props> = ({
                     </Menu.Item>
                   )}
                   {!editing && canEdit && (
-                    <Menu.Item
-                      leftSection={<IconEdit />}
-                      onClick={startEdit}
-                    >
+                    <Menu.Item leftSection={<IconEdit />} onClick={startEdit}>
                       Edit
                     </Menu.Item>
                   )}

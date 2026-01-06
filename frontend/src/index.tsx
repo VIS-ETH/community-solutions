@@ -1,4 +1,4 @@
-import "./utils/faro-intialize"
+import "./utils/faro-intialize";
 
 import { createRoot } from "react-dom/client";
 import "./index.css";
@@ -28,7 +28,9 @@ const content = (
 );
 
 root.render(
-  (import.meta.env.VITE_FARO_DISABLE !== "true" && serverData.faro_url)
-    ? <FaroErrorBoundary>{content}</FaroErrorBoundary>
-    : content,
+  import.meta.env.VITE_FARO_DISABLE !== "true" && serverData.faro_url ? (
+    <FaroErrorBoundary>{content}</FaroErrorBoundary>
+  ) : (
+    content
+  ),
 );

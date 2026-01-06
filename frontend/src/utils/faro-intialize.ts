@@ -1,8 +1,8 @@
-import { createBrowserHistory } from 'history';
-import { Route } from 'react-router-dom';
+import { createBrowserHistory } from "history";
+import { Route } from "react-router-dom";
 
-import { trace, context } from '@opentelemetry/api';
-import { TracingInstrumentation } from '@grafana/faro-web-tracing';
+import { trace, context } from "@opentelemetry/api";
+import { TracingInstrumentation } from "@grafana/faro-web-tracing";
 
 import {
   createReactRouterV5Options,
@@ -11,8 +11,8 @@ import {
   ReactIntegration,
   faro,
   ReactRouterHistory,
-} from '@grafana/faro-react';
-import serverData from './server-data';
+} from "@grafana/faro-react";
+import serverData from "./server-data";
 
 const history = createBrowserHistory();
 
@@ -24,7 +24,7 @@ if (import.meta.env.VITE_FARO_DISABLE !== "true" && serverData.faro_url) {
 
     // Mandatory, the identification label of your application
     app: {
-      name: 'community-solutions-frontend',
+      name: "community-solutions-frontend",
     },
 
     instrumentations: [
@@ -46,5 +46,5 @@ if (import.meta.env.VITE_FARO_DISABLE !== "true" && serverData.faro_url) {
   // register OpenTelemetry API with Faro Web SDK instance
   faro.api.initOTEL(trace, context);
 
-  faro.api.pushLog(["Faro was initialized"])
+  faro.api.pushLog(["Faro was initialized"]);
 }

@@ -6,7 +6,7 @@ const JUMP_TIMEOUT = 40_000;
 // This is based on hash-location-handler.tsx
 
 const PermaLinkHandler: React.FC = () => {
-  const {search} = useLocation();
+  const { search } = useLocation();
   const searchParams = new URLSearchParams(search);
   const answer = searchParams.get("answer");
   const comment = searchParams.get("comment");

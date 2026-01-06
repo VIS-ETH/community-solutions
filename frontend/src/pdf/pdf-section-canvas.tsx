@@ -118,7 +118,8 @@ const PdfSectionCanvas: React.FC<Props> = React.memo(
     const relativeHeight = end - start;
 
     const { displayCanvasType } = useContext(DebugContext);
-    const [almostInView, containerElement] = useAlmostInViewport<HTMLDivElement>();
+    const [almostInView, containerElement] =
+      useAlmostInViewport<HTMLDivElement>();
     const [containerHeight, setContainerHeight] = useState(0);
     const [translateY, setTranslateY] = useState(0);
     const [currentScale, setCurrentScale] = useState<number | undefined>(
@@ -135,7 +136,11 @@ const PdfSectionCanvas: React.FC<Props> = React.memo(
       page,
       start,
       end,
-      almostInView ? (currentScale ? currentScale * dpr : undefined) : undefined,
+      almostInView
+        ? currentScale
+          ? currentScale * dpr
+          : undefined
+        : undefined,
     );
     const [inViewport, inViewportRef] = useInViewport<HTMLDivElement>();
     const v = inViewport || false;

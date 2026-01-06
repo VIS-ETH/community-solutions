@@ -1,9 +1,13 @@
 import { differenceInSeconds, formatDistanceToNow } from "date-fns";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { addNewComment, removeComment, updateComment } from "../api/comment";
 import { imageHandler } from "../api/fetch-utils";
-import { useMutation, useResetExamCommentFlaggedVote, useSetExamCommentFlagged } from "../api/hooks";
+import {
+  useMutation,
+  useResetExamCommentFlaggedVote,
+  useSetExamCommentFlagged,
+} from "../api/hooks";
 import { useUser } from "../auth";
 import useConfirm from "../hooks/useConfirm";
 import { Answer, AnswerSection, Comment } from "../interfaces";
@@ -42,13 +46,20 @@ const CommentComponent: React.FC<Props> = ({
   onSectionChanged,
   onDelete,
 }) => {
-  const [setFlaggedLoading, setExamCommentFlagged] = useSetExamCommentFlagged(onSectionChanged);
-  const [resetFlaggedLoading, resetExamCommentFlagged] = useResetExamCommentFlaggedVote(onSectionChanged);
-  const [viewSource, {toggle: toggleViewSource}] = useDisclosure();
+  const localStorageKey =
+    (comment === undefined ? answer.oid : comment.oid) + "_comment";
+  const [setFlaggedLoading, setExamCommentFlagged] =
+    useSetExamCommentFlagged(onSectionChanged);
+  const [resetFlaggedLoading, resetExamCommentFlagged] =
+    useResetExamCommentFlaggedVote(onSectionChanged);
+  const [viewSource, { toggle: toggleViewSource }] = useDisclosure();
   const { isAdmin, username } = useUser()!;
   const [confirm, modals] = useConfirm();
   const [editing, setEditing] = useState(false);
-  const [draftText, setDraftText] = useState("");
+  const [draftText, setDraftText] = useState(() => {
+    const cachedDraftText = localStorage.getItem(localStorageKey);
+    return cachedDraftText ? JSON.parse(cachedDraftText) : "";
+  });
   const [undoStack, setUndoStack] = useState<UndoStack>({ prev: [], next: [] });
   const [addNewLoading, runAddNewComment] = useMutation(addNewComment, res => {
     if (onDelete) onDelete();
@@ -70,6 +81,7 @@ const CommentComponent: React.FC<Props> = ({
     } else {
       runUpdateComment(comment.oid, draftText);
     }
+    localStorage.removeItem(localStorageKey); // Remove cached comment after sending
   };
   const onCancel = () => {
     if (comment === undefined) {
@@ -77,16 +89,28 @@ const CommentComponent: React.FC<Props> = ({
     } else {
       setEditing(false);
     }
+    localStorage.removeItem(localStorageKey); // Remove cached comment after sending
   };
   const startEditing = () => {
     if (comment === undefined) return;
     setDraftText(comment.text);
+    localStorage.removeItem(localStorageKey);
     setEditing(true);
   };
   const remove = () => {
     if (comment)
       confirm("Remove comment?", () => runRemoveComment(comment.oid));
   };
+
+  // Cache draftText on change
+  useEffect(() => {
+    if (draftText != "") {
+      localStorage.setItem(localStorageKey, JSON.stringify(draftText));
+    } else {
+      localStorage.removeItem(localStorageKey);
+    }
+  }, [draftText]);
+
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
 
   return (
@@ -115,9 +139,7 @@ const CommentComponent: React.FC<Props> = ({
           <Text component="span" mx={6} color="dimmed">
             ·
           </Text>
-          {comment && (
-            <TimeText time={comment.time} suffix="ago" />
-          )}
+          {comment && <TimeText time={comment.time} suffix="ago" />}
           {comment &&
             differenceInSeconds(
               new Date(comment.edittime),
@@ -127,7 +149,11 @@ const CommentComponent: React.FC<Props> = ({
                 <Text component="span" mx={6} color="dimmed">
                   ·
                 </Text>
-                <TimeText time={comment.edittime} prefix="edited" suffix="ago" />
+                <TimeText
+                  time={comment.edittime}
+                  prefix="edited"
+                  suffix="ago"
+                />
               </>
             )}
         </div>
@@ -177,7 +203,9 @@ const CommentComponent: React.FC<Props> = ({
           {comment && (
             <Menu withinPortal>
               <Menu.Target>
-                <Button size="xs" variant="light" color="gray" mr="md"><IconDots/></Button>
+                <Button size="xs" variant="light" color="gray" mr="md">
+                  <IconDots />
+                </Button>
               </Menu.Target>
               <Menu.Dropdown>
                 {comment.flaggedCount === 0 && (
@@ -189,14 +217,14 @@ const CommentComponent: React.FC<Props> = ({
                   </Menu.Item>
                 )}
                 <Menu.Item
-                        leftSection={<IconLink />}
-                        onClick={() =>
-                          copy(
-                            `${document.location.origin}/exams/${answer.filename}?comment=${comment.longId}&answer=${answer.longId}`,
-                          )
-                        }
-                      >
-                        Copy Permalink
+                  leftSection={<IconLink />}
+                  onClick={() =>
+                    copy(
+                      `${document.location.origin}/exams/${answer.filename}?comment=${comment.longId}&answer=${answer.longId}`,
+                    )
+                  }
+                >
+                  Copy Permalink
                 </Menu.Item>
                 {isAdmin && comment.flaggedCount > 0 && (
                   <Menu.Item
@@ -207,10 +235,7 @@ const CommentComponent: React.FC<Props> = ({
                   </Menu.Item>
                 )}
                 {!editing && comment.canEdit && (
-                  <Menu.Item
-                    leftSection={<IconEdit />}
-                    onClick={startEditing}
-                  >
+                  <Menu.Item leftSection={<IconEdit />} onClick={startEditing}>
                     Edit
                   </Menu.Item>
                 )}
@@ -220,18 +245,18 @@ const CommentComponent: React.FC<Props> = ({
                   </Menu.Item>
                 )}
                 {!editing && !comment.canEdit && (
-                <Menu.Item
-                  leftSection={<IconCode />}
-                  onClick={toggleViewSource}
-                >
-                  Toggle Source Code Mode
-                </Menu.Item>
+                  <Menu.Item
+                    leftSection={<IconCode />}
+                    onClick={toggleViewSource}
+                  >
+                    Toggle Source Code Mode
+                  </Menu.Item>
                 )}
               </Menu.Dropdown>
             </Menu>
           )}
-          </Flex>
         </Flex>
+      </Flex>
       {comment === undefined || editing ? (
         <>
           <Editor

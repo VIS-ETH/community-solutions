@@ -92,7 +92,7 @@ Toggle source code mode to see how to do this! It makes it much more pleasant fo
 `;
 
 const EditorHelp = () => {
-  const [viewSource, {toggle: toggleViewSource}] = useDisclosure();
+  const [viewSource, { toggle: toggleViewSource }] = useDisclosure();
 
   return (
     <div>

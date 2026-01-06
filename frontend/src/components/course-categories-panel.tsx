@@ -45,11 +45,14 @@ const CourseCategoriesPanel: React.FC<CourseCategoriesPanelProps> = ({
     element?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const [availableLetters, setAvailableLetters] = useState<Map<string, string>>(); //mapping between available letters and element id of first category card with that letter
-  
+  const [availableLetters, setAvailableLetters] =
+    useState<Map<string, string>>(); //mapping between available letters and element id of first category card with that letter
+
   useEffect(() => {
     const letters = new Map<string, string>();
-    const elems = Array.from(document.getElementsByClassName("category-card")).sort((a, b) => a.id.localeCompare(b.id)); //make sure to sort category cards by id (not guaranteed if mode isn't alphabetical)
+    const elems = Array.from(
+      document.getElementsByClassName("category-card"),
+    ).sort((a, b) => a.id.localeCompare(b.id)); //make sure to sort category cards by id (not guaranteed if mode isn't alphabetical)
     for (let i = 0; i < elems.length; i++) {
       const letter = elems[i].id.toUpperCase().at(0);
       if (letter && !letters.has(letter)) {
@@ -66,7 +69,8 @@ const CourseCategoriesPanel: React.FC<CourseCategoriesPanelProps> = ({
       toggle={toggle}
     >
       {mode === "alphabetical"
-        ? availableLetters && Array.from(availableLetters, ([letter, id]) => (
+        ? availableLetters &&
+          Array.from(availableLetters, ([letter, id]) => (
             <div key={letter}>
               <Title
                 order={5}
@@ -100,7 +104,11 @@ const CourseCategoriesPanel: React.FC<CourseCategoriesPanelProps> = ({
                     style={{
                       cursor: "pointer",
                     }}
-                    onClick={() => scrollToElementById(slugify(meta1display) + slugify(meta2display))}
+                    onClick={() =>
+                      scrollToElementById(
+                        slugify(meta1display) + slugify(meta2display),
+                      )
+                    }
                   >
                     {meta2display}
                   </Text>

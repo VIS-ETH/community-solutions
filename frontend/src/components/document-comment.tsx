@@ -26,7 +26,15 @@ import { UndoStack } from "./Editor/utils/undo-stack";
 import MarkdownText from "./markdown-text";
 import SmallButton from "./small-button";
 import TooltipButton from "./TooltipButton";
-import { IconChevronUp, IconEdit, IconFlag, IconFlagCancel, IconLink, IconTrash, IconX } from "@tabler/icons-react";
+import {
+  IconChevronUp,
+  IconEdit,
+  IconFlag,
+  IconFlagCancel,
+  IconLink,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react";
 import TimeText from "./time-text";
 import { copy } from "../utils/clipboard";
 
@@ -75,8 +83,10 @@ const DocumentCommentComponent = ({
   });
   const toggle = () => setHasDraft(e => !e);
 
-  const [setCommentFlaggedLoading, setCommentFlagged] = useSetDocumentCommentFlagged(reload);
-  const [resetCommentFlaggedLoading, resetCommentFlagged] = useResetDocumentCommentFlaggedVote(reload);
+  const [setCommentFlaggedLoading, setCommentFlagged] =
+    useSetDocumentCommentFlagged(reload);
+  const [resetCommentFlaggedLoading, resetCommentFlagged] =
+    useResetDocumentCommentFlaggedVote(reload);
 
   const flaggedLoading = setCommentFlaggedLoading || resetCommentFlaggedLoading;
 
@@ -117,9 +127,7 @@ const DocumentCommentComponent = ({
               <Text component="span" mx={6} color="dimmed">
                 ·
               </Text>
-              {comment && (
-                <TimeText time={comment.time} suffix="ago" />
-              )}
+              {comment && <TimeText time={comment.time} suffix="ago" />}
               {comment &&
                 differenceInSeconds(
                   new Date(comment.edittime),
@@ -129,53 +137,57 @@ const DocumentCommentComponent = ({
                     <Text component="span" color="dimmed" mx={6}>
                       ·
                     </Text>
-                    <TimeText time={comment.edittime} prefix="edited" suffix="ago" />
+                    <TimeText
+                      time={comment.edittime}
+                      prefix="edited"
+                      suffix="ago"
+                    />
                   </>
                 )}
             </Flex>
             <Flex>
               {comment &&
-              (comment.isFlagged ||
-                (comment.flaggedCount > 0 && isAdmin) ||
-                flaggedLoading) && (
-                <Paper shadow="xs" mr="md">
-                  <Button.Group>
-                    <TooltipButton
-                      tooltip="Flagged as Inappropriate"
-                      color="red"
-                      px={12}
-                      variant="filled"
-                      size="xs"
-                    >
-                      <IconFlag />
-                    </TooltipButton>
-                    <TooltipButton
-                      color="red"
-                      miw={30}
-                      tooltip={`${comment.flaggedCount} users consider this answer inappropriate.`}
-                      size="xs"
-                    >
-                      {comment.flaggedCount}
-                    </TooltipButton>
-                    <TooltipButton
-                      px={8}
-                      tooltip={
-                        comment.isFlagged
-                          ? "Remove inappropriate flag"
-                          : "Add inappropriate flag"
-                      }
-                      size="xs"
-                      loading={flaggedLoading}
-                      style={{ borderLeftWidth: 0 }}
-                      onClick={() =>
-                        setCommentFlagged(comment.oid, !comment.isFlagged)
-                      }
-                    >
-                      {comment.isFlagged ? <IconX /> : <IconChevronUp />}
-                    </TooltipButton>
-                  </Button.Group>
-                </Paper>
-              )}
+                (comment.isFlagged ||
+                  (comment.flaggedCount > 0 && isAdmin) ||
+                  flaggedLoading) && (
+                  <Paper shadow="xs" mr="md">
+                    <Button.Group>
+                      <TooltipButton
+                        tooltip="Flagged as Inappropriate"
+                        color="red"
+                        px={12}
+                        variant="filled"
+                        size="xs"
+                      >
+                        <IconFlag />
+                      </TooltipButton>
+                      <TooltipButton
+                        color="red"
+                        miw={30}
+                        tooltip={`${comment.flaggedCount} users consider this answer inappropriate.`}
+                        size="xs"
+                      >
+                        {comment.flaggedCount}
+                      </TooltipButton>
+                      <TooltipButton
+                        px={8}
+                        tooltip={
+                          comment.isFlagged
+                            ? "Remove inappropriate flag"
+                            : "Add inappropriate flag"
+                        }
+                        size="xs"
+                        loading={flaggedLoading}
+                        style={{ borderLeftWidth: 0 }}
+                        onClick={() =>
+                          setCommentFlagged(comment.oid, !comment.isFlagged)
+                        }
+                      >
+                        {comment.isFlagged ? <IconX /> : <IconChevronUp />}
+                      </TooltipButton>
+                    </Button.Group>
+                  </Paper>
+                )}
               <Button.Group>
                 <SmallButton
                   tooltip="Flag as inappropriate"
@@ -204,43 +216,42 @@ const DocumentCommentComponent = ({
                     tooltip="Remove all inappropriate flags"
                     size="xs"
                     color="white"
-                    onClick={() =>
-                      resetCommentFlagged(comment.oid)
-                    }>
-                      <IconFlagCancel />
-                    </SmallButton>
+                    onClick={() => resetCommentFlagged(comment.oid)}
+                  >
+                    <IconFlagCancel />
+                  </SmallButton>
                 )}
-              {(comment.canEdit || isAdmin) && (
-                <>
-                  <SmallButton
-                    tooltip="Delete comment"
-                    size="xs"
-                    color="white"
-                    onClick={deleteComment}
-                  >
-                    <IconTrash />
-                  </SmallButton>
-                  <SmallButton
-                    tooltip="Edit comment"
-                    size="xs"
-                    color="white"
-                    onClick={() => {
-                      toggle();
-                      setDraftText(comment.text);
-                      setUndoStack({
-                        prev: [],
-                        next: [],
-                      });
-                    }}
-                  >
-                    <IconEdit />
-                  </SmallButton>
-                </>
-              )}
+                {(comment.canEdit || isAdmin) && (
+                  <>
+                    <SmallButton
+                      tooltip="Delete comment"
+                      size="xs"
+                      color="white"
+                      onClick={deleteComment}
+                    >
+                      <IconTrash />
+                    </SmallButton>
+                    <SmallButton
+                      tooltip="Edit comment"
+                      size="xs"
+                      color="white"
+                      onClick={() => {
+                        toggle();
+                        setDraftText(comment.text);
+                        setUndoStack({
+                          prev: [],
+                          next: [],
+                        });
+                      }}
+                    >
+                      <IconEdit />
+                    </SmallButton>
+                  </>
+                )}
               </Button.Group>
             </Flex>
           </Flex>
-          <Divider/>
+          <Divider />
         </Card.Section>
         <MarkdownText value={comment.text} />
       </Card>

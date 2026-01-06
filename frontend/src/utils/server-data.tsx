@@ -6,14 +6,16 @@ interface IServerData {
   privacy_policy: string;
   unlock_deposit_notice: string;
   faro_url?: string;
-  announcements: [{
-    id: string,
-    variant: string | undefined,
-    color: string,
-    title: string,
-    content: string,
-    icon: string | undefined,
-  }]
+  announcements: [
+    {
+      id: string;
+      variant: string | undefined;
+      color: string;
+      title: string;
+      content: string;
+      icon: string | undefined;
+    },
+  ];
 }
 const getServerData = () => {
   const element = document.getElementById("server-data");

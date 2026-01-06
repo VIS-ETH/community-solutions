@@ -24,11 +24,11 @@ const CommentSectionComponent: React.FC<Props> = ({
   onDraftDelete,
 }) => {
   const [expanded, setExpanded] = useState(false);
-  const {search: searchParams} = useLocation();
+  const { search: searchParams } = useLocation();
   useEffect(() => {
     const params = new URLSearchParams(searchParams);
     const id = params.get("comment");
-    if (id && answer.comments.map((item) => item.longId).includes(id)) {
+    if (id && answer.comments.map(item => item.longId).includes(id)) {
       setExpanded(true);
     }
   }, [searchParams]);

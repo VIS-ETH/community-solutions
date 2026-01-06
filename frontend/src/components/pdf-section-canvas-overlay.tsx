@@ -96,7 +96,8 @@ const PdfSectionCanvasOverlay: React.FC<Props> = React.memo(
           <div
             style={{
               transform: `translateY(${displayPos}px) translateY(-50%)`,
-              backgroundColor: snap && snapBad ? "red" : "var(--mantine-color-text)",
+              backgroundColor:
+                snap && snapBad ? "red" : "var(--mantine-color-text)",
               height: "3px",
               position: "absolute",
               width: "100%",

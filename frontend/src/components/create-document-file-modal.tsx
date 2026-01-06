@@ -20,16 +20,16 @@ const CreateDocumentFileModal: React.FC<Props> = ({
   const [displayName, setDisplayName] = useState("");
   const [file, setFile] = useState<File | null>(null);
 
-  const {loading, error, run: createDocumentFile} = useCreateDocumentFile(
-    document.author,
-    document.slug,
-    f => {
-      onClose();
-      mutate(s => ({ ...s, files: [...s.files, f] }));
-      setDisplayName("");
-      setFile(null);
-    },
-  );
+  const {
+    loading,
+    error,
+    run: createDocumentFile,
+  } = useCreateDocumentFile(document.author, document.slug, f => {
+    onClose();
+    mutate(s => ({ ...s, files: [...s.files, f] }));
+    setDisplayName("");
+    setFile(null);
+  });
 
   return (
     <>

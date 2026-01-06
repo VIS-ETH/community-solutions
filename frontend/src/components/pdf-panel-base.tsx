@@ -1,19 +1,10 @@
-import {
-  Button,
-  Slider,
-  Pagination,
-  Stack,
-  Title,
-  Text,
-} from "@mantine/core";
+import { Button, Slider, Pagination, Stack, Title, Text } from "@mantine/core";
 import React, { useCallback, useMemo, useState } from "react";
 import { useThrottledCallback } from "@mantine/hooks";
 import PDF from "../pdf/pdf-renderer";
 import IconButton from "./icon-button";
 import Panel from "./panel";
-import {
-  IconArrowUp,
-} from "@tabler/icons-react";
+import { IconArrowUp } from "@tabler/icons-react";
 
 interface PdfPanelBaseProps {
   isOpen: boolean;
@@ -24,7 +15,7 @@ interface PdfPanelBaseProps {
   subtitle?: string;
 
   inViewPages?: Set<number>;
-  
+
   /**
    * Use this to limit the pagination to only the specified pages.
    */
@@ -98,12 +89,9 @@ const PdfPanelBase: React.FC<PdfPanelBaseProps> = ({
     }
   }, [toggle]);
 
-
-  const inViewPage = useMemo(
-    () => {
-      return inViewPages ? Math.min(...Array.from(inViewPages)) : undefined
-    }
-  , [inViewPages])  
+  const inViewPage = useMemo(() => {
+    return inViewPages ? Math.min(...Array.from(inViewPages)) : undefined;
+  }, [inViewPages]);
 
   return (
     <Panel isOpen={isOpen} toggle={toggle}>

@@ -5,7 +5,12 @@ import { fetchPost } from "../api/fetch-utils";
 import GlobalConsts from "../globalconsts";
 import { FeedbackEntry } from "../interfaces";
 import TooltipButton from "./TooltipButton";
-import { IconCheckbox, IconMail, IconMailOpened, IconSquare } from "@tabler/icons-react";
+import {
+  IconCheckbox,
+  IconMail,
+  IconMailOpened,
+  IconSquare,
+} from "@tabler/icons-react";
 import { lightFormat, parseISO } from "date-fns";
 
 const setFlag = async (oid: string, flag: "done" | "read", value: boolean) => {
@@ -46,15 +51,17 @@ const FeedbackEntryComponent: React.FC<Props> = ({ entry, entryChanged }) => {
             <TooltipButton
               variant={entry.done ? "default" : "filled"}
               tooltip={`Mark as ${entry.done ? "Not Done" : "Done"}`}
-              onClick={() => runSetFlag("done", !entry.done)}>
+              onClick={() => runSetFlag("done", !entry.done)}
+            >
               {entry.done ? <IconCheckbox /> : <IconSquare />}
             </TooltipButton>
             <TooltipButton
               variant={entry.read ? "default" : "filled"}
               tooltip={`Mark as ${entry.read ? "Unread" : "Read"}`}
               color={entry.read ? "brand.7" : "brand"}
-              onClick={() => runSetFlag("read", !entry.read)}>
-              {entry.read ? <IconMail /> :  <IconMailOpened />}
+              onClick={() => runSetFlag("read", !entry.read)}
+            >
+              {entry.read ? <IconMail /> : <IconMailOpened />}
             </TooltipButton>
           </Button.Group>
         </Group>

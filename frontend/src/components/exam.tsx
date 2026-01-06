@@ -168,7 +168,7 @@ const Exam: React.FC<Props> = React.memo(
     );
     return (
       <>
-        <PermaLinkHandler/>
+        <PermaLinkHandler />
         {sections.map(section => {
           if (section.kind === SectionKind.Answer) {
             if (displayHiddenAnswerSections || section.has_answers) {

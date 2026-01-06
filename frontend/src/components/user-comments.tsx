@@ -70,7 +70,7 @@ const UserComments: React.FC<UserCommentsProps> = ({ username }) => {
         {comments &&
           comments.slice(0, (page + 1) * PAGE_SIZE).map(comment => (
             <div key={comment.oid}>
-              <SingleCommentComponent comment={comment} reload={reload}/>
+              <SingleCommentComponent comment={comment} reload={reload} />
             </div>
           ))}
         <div ref={elem => setLastElement(elem)} />

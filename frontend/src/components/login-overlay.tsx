@@ -20,11 +20,7 @@ const LoginOverlay: React.FC<{}> = () => {
         <Text size="1.75rem" fw={700} mb="md" c="white">
           Please Sign in
         </Text>
-        <Button
-          size="lg"
-          variant="outline"
-          onClick={() => login()}
-        >
+        <Button size="lg" variant="outline" onClick={() => login()}>
           Sign in with AAI
         </Button>
       </div>

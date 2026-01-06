@@ -38,8 +38,8 @@ const TopHeader: React.FC<Props> = ({
           <img
             src={
               logo
-              ? logo
-              : "https://static.vseth.ethz.ch/assets/vseth-0000-vseth/logo-mono.svg"
+                ? logo
+                : "https://static.vseth.ethz.ch/assets/vseth-0000-vseth/logo-mono.svg"
             }
             className={classes.logo}
             alt="Logo of the student organization"
@@ -72,7 +72,7 @@ const TopHeader: React.FC<Props> = ({
               isExternal={true}
             />
           ) : undefined}
-          <ColorSchemeToggle/>
+          <ColorSchemeToggle />
         </div>
       </Container>
     </Container>

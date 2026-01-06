@@ -20,7 +20,6 @@ const DocumentCommentForm: React.FC<Props> = ({
 }) => {
   const localStorageKey = documentSlug + "_comment";
   const [draftText, setDraftText] = useState(() => {
-    console.log("Ran state");
     const cachedDraftText = localStorage.getItem(localStorageKey);
     return cachedDraftText ? JSON.parse(cachedDraftText) : "";
   });
@@ -38,7 +37,6 @@ const DocumentCommentForm: React.FC<Props> = ({
 
   // Cache draftText on change
   useEffect(() => {
-    console.log("Caching ran");
     if (draftText != "") {
       localStorage.setItem(localStorageKey, JSON.stringify(draftText));
     } else {
@@ -60,7 +58,7 @@ const DocumentCommentForm: React.FC<Props> = ({
         prev: [],
         next: [],
       });
-      window.localStorage.removeItem(documentSlug + "_comment"); // Clear draft cache
+      localStorage.removeItem(localStorageKey); // Clear draft cache
     },
   );
 
