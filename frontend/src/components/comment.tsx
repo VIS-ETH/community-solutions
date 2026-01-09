@@ -93,8 +93,9 @@ const CommentComponent: React.FC<Props> = ({
   };
   const startEditing = () => {
     if (comment === undefined) return;
-    setDraftText(comment.text);
-    localStorage.removeItem(localStorageKey);
+    setDraftText(
+      JSON.parse(localStorage.getItem(localStorageKey)) ?? comment.text ?? "",
+    );
     setEditing(true);
   };
   const remove = () => {

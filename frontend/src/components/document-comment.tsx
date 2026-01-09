@@ -9,7 +9,7 @@ import {
   Text,
 } from "@mantine/core";
 import { differenceInSeconds, formatDistanceToNow } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { imageHandler } from "../api/fetch-utils";
 import {
@@ -53,12 +53,14 @@ const DocumentCommentComponent = ({
   reload,
 }: Props) => {
   const { isAdmin } = useUser()!;
+  const localStorageKey = comment.oid + "_comment";
   const [editLoading, updateComment] = useUpdateDocumentComment(
     documentAuthor,
     documentSlug,
     comment.oid,
     res => {
       setHasDraft(false);
+      localStorage.removeItem(localStorageKey);
       mutate(document => ({
         ...document,
         comments: document.comments.map(c => (c.oid !== res.oid ? c : res)),
@@ -69,14 +71,29 @@ const DocumentCommentComponent = ({
     documentAuthor,
     documentSlug,
     comment.oid,
-    () =>
+    () => {
+      localStorage.removeItem(localStorageKey);
       mutate(document => ({
         ...document,
         comments: document.comments.filter(c => c.oid !== comment.oid),
-      })),
+      }));
+    },
   );
   const [hasDraft, setHasDraft] = useState(false);
-  const [draftText, setDraftText] = useState("");
+  const [draftText, setDraftText] = useState(() => {
+    const cachedDraftText = localStorage.getItem(localStorageKey);
+    return cachedDraftText ? JSON.parse(cachedDraftText) : "";
+  });
+
+  // Cache draftText on change
+  useEffect(() => {
+    if (draftText != "") {
+      localStorage.setItem(localStorageKey, JSON.stringify(draftText));
+    } else {
+      localStorage.removeItem(localStorageKey);
+    }
+  }, [draftText]);
+
   const [undoStack, setUndoStack] = useState<UndoStack>({
     prev: [],
     next: [],
@@ -237,7 +254,10 @@ const DocumentCommentComponent = ({
                       color="white"
                       onClick={() => {
                         toggle();
-                        setDraftText(comment.text);
+                        setDraftText(
+                          JSON.parse(localStorage.getItem(localStorageKey)) ??
+                            comment.text,
+                        );
                         setUndoStack({
                           prev: [],
                           next: [],
