@@ -90,7 +90,17 @@ const AnswerComponent: React.FC<Props> = ({
   const { isAdmin, isExpert } = useUser()!;
   const [confirm, modals] = useConfirm();
   const [editing, setEditing] = useState(false);
-  const localStorageKey = answer ? answer.oid + "_answer" : "last_answer_draft";
+  let localStorageKey;
+  if (answer) {
+    localStorageKey = answer.oid + "_answer";
+  } else if (section) {
+    localStorageKey = section.oid + "_unsent_answer";
+  } else {
+    // In theory, at least one of 'answer' and 'section'
+    // is always defined. We keep this last branch as fallback
+    localStorageKey = "last_answer_draft";
+  }
+
   const [draftText, setDraftText] = useState(() => {
     const cachedDraftText = localStorage.getItem(localStorageKey);
     return cachedDraftText ? JSON.parse(cachedDraftText) : "";
@@ -107,7 +117,9 @@ const AnswerComponent: React.FC<Props> = ({
 
   const [undoStack, setUndoStack] = useState<UndoStack>({ prev: [], next: [] });
   const startEdit = useCallback(() => {
-    setDraftText(answer?.text ?? "");
+    setDraftText(
+      JSON.parse(localStorage.getItem(localStorageKey)) ?? answer?.text ?? "",
+    );
     setEditing(true);
   }, [answer]);
   const onCancel = useCallback(() => {
