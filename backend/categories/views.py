@@ -1,6 +1,3 @@
-from django.db.models import Count, Exists, OuterRef, Q
-
-from answers.models import Answer
 from util import response
 from myauth import auth_check
 from myauth.models import get_my_user, MyUser

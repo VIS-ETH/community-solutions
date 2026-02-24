@@ -15,9 +15,9 @@ def get_answer(request, long_id):
             long_id=long_id
         )
         return response.success(value=section_util.get_answer_response(request, answer))
-    except Answer.DoesNotExist as e:
+    except Answer.DoesNotExist:
         raise Http404()
-    except Answer.MultipleObjectsReturned as e:
+    except Answer.MultipleObjectsReturned:
         raise Http404()
 
 

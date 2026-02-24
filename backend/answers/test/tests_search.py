@@ -1,12 +1,8 @@
-from answers.models import Exam, ExamPage, ExamType
+from answers.models import ExamPage
 from testing.tests import ComsolTestExamData
-from categories.models import Category
 import logging
-from time import sleep
 from django.contrib.postgres.search import SearchVector
-from django.core.files.uploadedfile import SimpleUploadedFile
 from os.path import dirname, join
-from base64 import b64encode
 
 logger = logging.getLogger(__name__)
 

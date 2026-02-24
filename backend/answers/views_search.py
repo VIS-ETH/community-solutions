@@ -1,18 +1,14 @@
 import re
 import random
-from unicodedata import category
 from django.db.models.functions import Concat
 from django.db.models import Q, F, When, Case, Value as V, Func, TextField
 from myauth import auth_check
-from myauth.models import get_my_user
 from util import response
-from answers.models import Answer, Comment, Exam, ExamPage, ExamType
+from answers.models import Answer, Comment, Exam, ExamPage
 from myauth.auth_check import has_admin_rights
 from django.contrib.postgres.search import (
     SearchQuery,
     SearchRank,
-    SearchVector,
-    TrigramSimilarity,
 )
 import logging
 import time

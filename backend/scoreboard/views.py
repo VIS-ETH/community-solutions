@@ -4,7 +4,7 @@ from util import response, func_cache
 from myauth import auth_check
 from myauth.models import MyUser
 from django.shortcuts import get_object_or_404
-from django.db.models import Count, F, Q, Value as V
+from django.db.models import F, Q, Value as V
 from django.db.models.functions import Concat
 
 

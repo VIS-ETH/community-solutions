@@ -15,7 +15,6 @@ Including another URLconf
 """
 
 from django.urls import path, re_path, include
-from django.views.static import serve
 from functools import wraps
 from util import response
 from django_prometheus import exports

@@ -1,6 +1,5 @@
 import logging
 import os.path
-from typing import Union
 
 from urllib import parse
 
@@ -16,7 +15,7 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.text import slugify
 from myauth import auth_check
-from myauth.models import MyUser, get_my_user
+from myauth.models import get_my_user
 from util import s3_util, response
 
 from documents.models import (

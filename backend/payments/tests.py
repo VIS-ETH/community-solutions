@@ -1,6 +1,5 @@
 from datetime import timedelta
 
-from answers.models import Exam
 from myauth.models import MyUser
 from payments.models import Payment
 from testing.tests import ComsolTest, ComsolTestExamsData

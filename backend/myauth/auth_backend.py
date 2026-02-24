@@ -99,10 +99,7 @@ def add_auth(request: HttpRequest):
             raise PermissionDenied("Not before invalid")
 
         sub = claims["sub"]
-        if (
-            not ("preferred_username" in claims)
-            or len(claims["preferred_username"]) == 0
-        ):
+        if "preferred_username" not in claims or len(claims["preferred_username"]) == 0:
             raise NoUsernameException(claims["given_name"], claims["family_name"], sub)
         preferred_username = claims["preferred_username"]
         if preferred_username in settings.BANNED_USERS:

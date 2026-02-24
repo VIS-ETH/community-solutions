@@ -12,7 +12,7 @@ from categories.models import Category, MetaCategory
 from feedback.models import Feedback
 from filestore.models import Attachment
 from images.models import Image
-from notifications.models import Notification, NotificationSetting, NotificationType
+from notifications.models import Notification, NotificationType
 from payments.models import Payment
 import os
 from answers import pdf_utils

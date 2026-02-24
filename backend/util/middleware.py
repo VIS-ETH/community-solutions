@@ -12,7 +12,7 @@ def parse_request_middleware(get_response):
                 )
                 request.DATA, files = parser.parse()
                 request.FILES.update(files)
-            except Exception as e:
+            except Exception:
                 import traceback
 
                 traceback.print_exc()
