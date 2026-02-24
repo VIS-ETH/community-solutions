@@ -7,19 +7,26 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='UserScore',
+            name="UserScore",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('upvotes', models.IntegerField()),
-                ('downvotes', models.IntegerField()),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("upvotes", models.IntegerField()),
+                ("downvotes", models.IntegerField()),
             ],
             options={
-                'managed': False,
+                "managed": False,
             },
         ),
     ]

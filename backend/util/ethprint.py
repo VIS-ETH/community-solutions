@@ -11,9 +11,9 @@ The following two system commands are required:
 - pdftops (included in the poppler-utils package)
 """
 
-SMB_SERVER = '//piastud01.d.ethz.ch/card-stud'
+SMB_SERVER = "//piastud01.d.ethz.ch/card-stud"
 MAX_JOB_TIME = 60  # time in seconds after the print job is aborted
-TMP_PS_FILES = '/tmp'
+TMP_PS_FILES = "/tmp"
 
 
 def start_job(nethz, password, exam, pdf_path):
@@ -29,7 +29,9 @@ def start_job(nethz, password, exam, pdf_path):
         return 1
 
     # Start print job
-    job = Thread(target=_print_pdf, args=(username, password, exam, pdf_path), kwargs={})
+    job = Thread(
+        target=_print_pdf, args=(username, password, exam, pdf_path), kwargs={}
+    )
     job.start()
 
     return 0
@@ -41,7 +43,7 @@ def _prepare_username(nethz):
     e.g. hansli -> d\hansli
     """
 
-    return u'd\\{nethz}'.format(nethz=nethz)
+    return "d\\{nethz}".format(nethz=nethz)
 
 
 def _check_smb_connection(username, password):
@@ -50,14 +52,18 @@ def _check_smb_connection(username, password):
     The return code is 0 if the user passes authentication, 1 otherwise.
     """
 
-    DEVNULL = open(os.devnull, 'w')
-    return subprocess.call([
-        'smbclient',
-        u'{smb_server}'.format(smb_server=SMB_SERVER),
-        '-c',
-        'exit',
-        u'--user={username}%{password}'.format(username=username, password=password),
-    ], stderr=subprocess.STDOUT, close_fds=True) # stdout=DEVNULL,
+    DEVNULL = open(os.devnull, "w")
+    return subprocess.call(
+        [
+            "smbclient",
+            "{smb_server}".format(smb_server=SMB_SERVER),
+            "-c",
+            "exit",
+            "--user={username}%{password}".format(username=username, password=password),
+        ],
+        stderr=subprocess.STDOUT,
+        close_fds=True,
+    )  # stdout=DEVNULL,
 
 
 def _print_pdf(username, password, exam, pdf_path):
@@ -72,14 +78,19 @@ def _print_pdf(username, password, exam, pdf_path):
         return 1
 
     # Send the PS file to the smb print queue
-    DEVNULL = open(os.devnull, 'w')
-    proc = subprocess.Popen([
-        'smbclient',
-        u'{smb_server}'.format(smb_server=SMB_SERVER),
-        '-c',
-        u'print "{ps_path}"'.format(ps_path=ps_path),
-        u'--user={username}%{password}'.format(username=username, password=password),
-    ], stdout=DEVNULL, stderr=subprocess.STDOUT, close_fds=True)
+    DEVNULL = open(os.devnull, "w")
+    proc = subprocess.Popen(
+        [
+            "smbclient",
+            "{smb_server}".format(smb_server=SMB_SERVER),
+            "-c",
+            'print "{ps_path}"'.format(ps_path=ps_path),
+            "--user={username}%{password}".format(username=username, password=password),
+        ],
+        stdout=DEVNULL,
+        stderr=subprocess.STDOUT,
+        close_fds=True,
+    )
 
     # Start timer to monitor the process
     timer = Timer(MAX_JOB_TIME, proc.kill)
@@ -92,8 +103,10 @@ def _print_pdf(username, password, exam, pdf_path):
 
     # Process killed by timer
     raise Exception(
-        u'Print Job with process #{proc_id} killed after {max_time} seconds: Timeout reached.'.format(proc_id=proc.pid,
-                                                                                                      max_time=MAX_JOB_TIME))
+        "Print Job with process #{proc_id} killed after {max_time} seconds: Timeout reached.".format(
+            proc_id=proc.pid, max_time=MAX_JOB_TIME
+        )
+    )
 
 
 def _generate_ps(exam, pdf_path):
@@ -104,7 +117,7 @@ def _generate_ps(exam, pdf_path):
     """
 
     # Get the PS file path
-    ps_path = os.path.join(TMP_PS_FILES, exam + '.ps')
+    ps_path = os.path.join(TMP_PS_FILES, exam + ".ps")
 
     # Check if the PS file already exists
     if os.path.isfile(ps_path):
@@ -112,15 +125,20 @@ def _generate_ps(exam, pdf_path):
         return ps_path
 
     # Convert the PDF file into a PS file
-    DEVNULL = open(os.devnull, 'w')
-    return_code = subprocess.call([
-        'pdftops',
-        '-paper',
-        'A4',
-        '-duplex',
-        u'{pdf_path}'.format(pdf_path=pdf_path),
-        u'{ps_path}'.format(ps_path=ps_path),
-    ], stdout=DEVNULL, stderr=subprocess.STDOUT, close_fds=True)
+    DEVNULL = open(os.devnull, "w")
+    return_code = subprocess.call(
+        [
+            "pdftops",
+            "-paper",
+            "A4",
+            "-duplex",
+            "{pdf_path}".format(pdf_path=pdf_path),
+            "{ps_path}".format(ps_path=ps_path),
+        ],
+        stdout=DEVNULL,
+        stderr=subprocess.STDOUT,
+        close_fds=True,
+    )
     if return_code:
         # Error occured during pdftops command
         return None

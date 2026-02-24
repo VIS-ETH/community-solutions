@@ -17,9 +17,13 @@ class Document(ExportModelOperationsMixin("document"), models.Model):
     display_name = models.CharField(max_length=256)
     description = models.CharField(max_length=4096)
     category = models.ForeignKey("categories.Category", on_delete=models.CASCADE)
-    document_type = models.ForeignKey('DocumentType', on_delete=models.PROTECT, related_name="type_set")
-    time = models.DateTimeField(default=timezone.now, null=True) #creation time
-    edittime = models.DateTimeField(default=timezone.now, null=True) #last modified time
+    document_type = models.ForeignKey(
+        "DocumentType", on_delete=models.PROTECT, related_name="type_set"
+    )
+    time = models.DateTimeField(default=timezone.now, null=True)  # creation time
+    edittime = models.DateTimeField(
+        default=timezone.now, null=True
+    )  # last modified time
     author = models.ForeignKey("auth.User", on_delete=models.CASCADE)
     likes = models.ManyToManyField("auth.User", related_name="liked_documents")
     api_key = models.CharField(max_length=1024, default=generate_api_key)
@@ -52,9 +56,11 @@ class Document(ExportModelOperationsMixin("document"), models.Model):
 
         super(Document, self).save(*args, **kwargs)
 
+
 class DocumentType(models.Model):
     display_name = models.CharField(max_length=256)
     order = models.IntegerField(default=0)
+
 
 class Comment(ExportModelOperationsMixin("document_comment"), CommentMixin):
     document = models.ForeignKey(

@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.urls import path, re_path, include
 from django.views.static import serve
 from functools import wraps
@@ -58,7 +59,7 @@ urlpatterns = [
 ]
 
 if DEBUG:
-    urlpatterns += [path("api/debug/", include('testing.urls'))]
+    urlpatterns += [path("api/debug/", include("testing.urls"))]
 
 handler400 = views.handler400
 handler403 = views.handler403

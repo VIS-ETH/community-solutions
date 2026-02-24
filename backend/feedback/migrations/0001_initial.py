@@ -16,14 +16,28 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Feedback',
+            name="Feedback",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.TextField()),
-                ('time', models.DateTimeField(default=django.utils.timezone.now)),
-                ('read', models.BooleanField(default=False)),
-                ('done', models.BooleanField(default=False)),
-                ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("text", models.TextField()),
+                ("time", models.DateTimeField(default=django.utils.timezone.now)),
+                ("read", models.BooleanField(default=False)),
+                ("done", models.BooleanField(default=False)),
+                (
+                    "author",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

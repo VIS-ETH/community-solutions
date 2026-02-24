@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('answers', '0010_add_gin_index'),
+        ("answers", "0010_add_gin_index"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='answersection',
-            name='has_answers',
+            model_name="answersection",
+            name="has_answers",
             field=models.BooleanField(default=True),
         ),
     ]

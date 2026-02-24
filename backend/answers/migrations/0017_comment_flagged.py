@@ -8,13 +8,16 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('answers', '0016_remove_exam_finished_wiki_transfer_and_more'),
+        ("answers", "0016_remove_exam_finished_wiki_transfer_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='comment',
-            name='flagged',
-            field=models.ManyToManyField(related_name='flagged_%(app_label)s_comments_set', to=settings.AUTH_USER_MODEL),
+            model_name="comment",
+            name="flagged",
+            field=models.ManyToManyField(
+                related_name="flagged_%(app_label)s_comments_set",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

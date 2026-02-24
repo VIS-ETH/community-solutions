@@ -2,27 +2,29 @@
 
 from django.db import migrations, models
 
+
 def set_order(apps, schema_editor):
-    Document = apps.get_model('documents', 'Document')
-    DocumentFile = apps.get_model('documents', 'DocumentFile')
+    Document = apps.get_model("documents", "Document")
+    DocumentFile = apps.get_model("documents", "DocumentFile")
 
     for document in Document.objects.all():
         document_files = DocumentFile.objects.filter(document=document).all()
         for index, document_file in enumerate(document_files):
             document_file.order = index
 
-        DocumentFile.objects.bulk_update(document_files, ['order'])
+        DocumentFile.objects.bulk_update(document_files, ["order"])
+
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('documents', '0015_comment_flagged'),
+        ("documents", "0015_comment_flagged"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='documentfile',
-            name='order',
+            model_name="documentfile",
+            name="order",
             field=models.IntegerField(default=0),
         ),
         migrations.RunPython(set_order),

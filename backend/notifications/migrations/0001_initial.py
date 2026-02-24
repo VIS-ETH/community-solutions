@@ -11,32 +11,76 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('answers', '0001_initial'),
+        ("answers", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='NotificationSetting',
+            name="NotificationSetting",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('type', models.IntegerField()),
-                ('enabled', models.BooleanField(default=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("type", models.IntegerField()),
+                ("enabled", models.BooleanField(default=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Notification',
+            name="Notification",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('type', models.IntegerField()),
-                ('time', models.DateTimeField(default=django.utils.timezone.now)),
-                ('title', models.CharField(max_length=256)),
-                ('text', models.TextField()),
-                ('read', models.BooleanField(default=False)),
-                ('answer', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='answers.Answer')),
-                ('receiver', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='notification_receiver_set', to=settings.AUTH_USER_MODEL)),
-                ('sender', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='notification_sender_set', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("type", models.IntegerField()),
+                ("time", models.DateTimeField(default=django.utils.timezone.now)),
+                ("title", models.CharField(max_length=256)),
+                ("text", models.TextField()),
+                ("read", models.BooleanField(default=False)),
+                (
+                    "answer",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="answers.Answer",
+                    ),
+                ),
+                (
+                    "receiver",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="notification_receiver_set",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "sender",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="notification_sender_set",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

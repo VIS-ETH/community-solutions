@@ -15,29 +15,93 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='MetaCategory',
+            name="MetaCategory",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('displayname', models.CharField(max_length=256)),
-                ('order', models.IntegerField(default=0)),
-                ('parent', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='categories.MetaCategory')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("displayname", models.CharField(max_length=256)),
+                ("order", models.IntegerField(default=0)),
+                (
+                    "parent",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="categories.MetaCategory",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Category',
+            name="Category",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('displayname', models.CharField(max_length=256)),
-                ('slug', models.CharField(max_length=256, unique=True)),
-                ('form', models.CharField(choices=[('written', 'written'), ('oral', 'oral')], default='written', max_length=256)),
-                ('remark', models.TextField(default='')),
-                ('semester', models.CharField(choices=[('--', '--'), ('FS', 'FS'), ('HS', 'HS')], default='--', max_length=2)),
-                ('permission', models.CharField(choices=[('public', 'public'), ('intern', 'intern'), ('hidden', 'hidden'), ('none', 'none')], default='public', max_length=64)),
-                ('more_exams_link', models.CharField(default='', max_length=512)),
-                ('has_payments', models.BooleanField(default=False)),
-                ('admins', models.ManyToManyField(related_name='category_admin_set', to=settings.AUTH_USER_MODEL)),
-                ('experts', models.ManyToManyField(related_name='category_expert_set', to=settings.AUTH_USER_MODEL)),
-                ('meta_categories', models.ManyToManyField(related_name='category_set', to='categories.MetaCategory')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("displayname", models.CharField(max_length=256)),
+                ("slug", models.CharField(max_length=256, unique=True)),
+                (
+                    "form",
+                    models.CharField(
+                        choices=[("written", "written"), ("oral", "oral")],
+                        default="written",
+                        max_length=256,
+                    ),
+                ),
+                ("remark", models.TextField(default="")),
+                (
+                    "semester",
+                    models.CharField(
+                        choices=[("--", "--"), ("FS", "FS"), ("HS", "HS")],
+                        default="--",
+                        max_length=2,
+                    ),
+                ),
+                (
+                    "permission",
+                    models.CharField(
+                        choices=[
+                            ("public", "public"),
+                            ("intern", "intern"),
+                            ("hidden", "hidden"),
+                            ("none", "none"),
+                        ],
+                        default="public",
+                        max_length=64,
+                    ),
+                ),
+                ("more_exams_link", models.CharField(default="", max_length=512)),
+                ("has_payments", models.BooleanField(default=False)),
+                (
+                    "admins",
+                    models.ManyToManyField(
+                        related_name="category_admin_set", to=settings.AUTH_USER_MODEL
+                    ),
+                ),
+                (
+                    "experts",
+                    models.ManyToManyField(
+                        related_name="category_expert_set", to=settings.AUTH_USER_MODEL
+                    ),
+                ),
+                (
+                    "meta_categories",
+                    models.ManyToManyField(
+                        related_name="category_set", to="categories.MetaCategory"
+                    ),
+                ),
             ],
         ),
     ]

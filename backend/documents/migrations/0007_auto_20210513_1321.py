@@ -8,13 +8,15 @@ import documents.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('documents', '0006_auto_20210415_1459'),
+        ("documents", "0006_auto_20210415_1459"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='document',
-            name='api_key',
-            field=models.CharField(default=documents.models.generate_api_key, max_length=1024),
+            model_name="document",
+            name="api_key",
+            field=models.CharField(
+                default=documents.models.generate_api_key, max_length=1024
+            ),
         ),
     ]

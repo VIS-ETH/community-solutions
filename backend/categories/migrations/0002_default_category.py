@@ -5,16 +5,14 @@ from django.db import migrations
 
 def add_default_category(apps, schema_editor):
     db_alias = schema_editor.connection.alias
-    Type = apps.get_model('categories', 'Category')
-    Type.objects.using(db_alias).create(displayname='default', slug='default')
+    Type = apps.get_model("categories", "Category")
+    Type.objects.using(db_alias).create(displayname="default", slug="default")
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('categories', '0001_initial'),
+        ("categories", "0001_initial"),
     ]
 
-    operations = [
-        migrations.RunPython(add_default_category)
-    ]
+    operations = [migrations.RunPython(add_default_category)]

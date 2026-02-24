@@ -32,7 +32,7 @@ def forwards_func(apps, schema_editor):
             logger.info(
                 "({finished}/{total}) {res}    {displayname}".format(
                     displayname=exam.displayname,
-                    res=u"[+]" if res else u"[-]",
+                    res="[+]" if res else "[-]",
                     finished=finished,
                     total=total,
                 )

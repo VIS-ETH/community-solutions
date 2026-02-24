@@ -6,7 +6,9 @@ from django.db import migrations, models
 
 class ConstrainedAlterField(migrations.AlterField):
     def database_forwards(self, app_label, schema_editor, from_state, to_state):
-        if self.constraint_exists(schema_editor, "document", "documents_document_slug_10ec7f96_uniq"):
+        if self.constraint_exists(
+            schema_editor, "document", "documents_document_slug_10ec7f96_uniq"
+        ):
             return
         return super().database_forwards(app_label, schema_editor, from_state, to_state)
 
@@ -25,7 +27,7 @@ class ConstrainedAlterField(migrations.AlterField):
 
 class ConstrainedAddIndex(migrations.AddIndex):
     def database_forwards(self, app_label, schema_editor, from_state, to_state):
-        if self.index_exists(schema_editor, 'documents_c_search__fb153e_gin'):
+        if self.index_exists(schema_editor, "documents_c_search__fb153e_gin"):
             return
         return super().database_forwards(app_label, schema_editor, from_state, to_state)
 
@@ -45,22 +47,23 @@ class ConstrainedAddIndex(migrations.AddIndex):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('documents', '0009_rename_duplicate_documents'),
+        ("documents", "0009_rename_duplicate_documents"),
     ]
 
     operations = [
         migrations.RemoveIndex(
-            model_name='comment',
-            name='documents_c_search__02d77d_gin',
+            model_name="comment",
+            name="documents_c_search__02d77d_gin",
         ),
         ConstrainedAlterField(
-            model_name='document',
-            name='slug',
+            model_name="document",
+            name="slug",
             field=models.CharField(max_length=256, unique=True),
         ),
         ConstrainedAddIndex(
-            model_name='comment',
+            model_name="comment",
             index=django.contrib.postgres.indexes.GinIndex(
-                fields=['search_vector'], name='documents_c_search__fb153e_gin'),
+                fields=["search_vector"], name="documents_c_search__fb153e_gin"
+            ),
         ),
     ]

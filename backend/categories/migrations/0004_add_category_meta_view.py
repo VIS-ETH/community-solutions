@@ -7,8 +7,8 @@ from django.conf import settings
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('categories', '0003_auto_20200123_1332'),
-        ('answers', '0001_initial'),
+        ("categories", "0003_auto_20200123_1332"),
+        ("answers", "0001_initial"),
     ]
 
     sql = """
@@ -28,6 +28,6 @@ class Migration(migrations.Migration):
     """
 
     operations = [
-        migrations.RunSQL('DROP VIEW IF EXISTS categories_categorymetadata;'),
-        migrations.RunSQL(sql)
+        migrations.RunSQL("DROP VIEW IF EXISTS categories_categorymetadata;"),
+        migrations.RunSQL(sql),
     ]

@@ -61,7 +61,7 @@ def upload_transcript(request):
         )
     except Exception as e:
         return response.internal_error(str(e))
-    
+
     exam = Exam(
         filename=filename,
         displayname=request.POST.get("displayname", file.name),
@@ -73,7 +73,7 @@ def upload_transcript(request):
         oral_transcript_uploader=request.user,
     )
     exam.save()
-    
+
     pdf_utils.analyze_pdf(exam, os.path.join(settings.COMSOL_UPLOAD_FOLDER, filename))
     return response.success(filename=filename)
 
@@ -190,6 +190,7 @@ def get_presigned_url_printonly(exam: Exam):
         content_type="application/pdf",
         display_name=exam.category.displayname + " " + exam.displayname + ".pdf",
     )
+
 
 @response.request_get()
 @auth_check.require_login

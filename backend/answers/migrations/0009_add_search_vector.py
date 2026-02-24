@@ -7,18 +7,18 @@ from django.contrib.postgres.search import SearchVector
 
 def forwards_func(apps, schema_editor):
     Answer = apps.get_model("answers", "Answer")
-    Answer.objects.update(search_vector=SearchVector('text'))
+    Answer.objects.update(search_vector=SearchVector("text"))
 
     Comment = apps.get_model("answers", "Comment")
-    Comment.objects.update(search_vector=SearchVector('text'))
+    Comment.objects.update(search_vector=SearchVector("text"))
 
     Exam = apps.get_model("answers", "Exam")
     Exam.objects.update(
-        search_vector=SearchVector('displayname') + SearchVector('remark')
+        search_vector=SearchVector("displayname") + SearchVector("remark")
     )
 
     ExamPage = apps.get_model("answers", "ExamPage")
-    ExamPage.objects.update(search_vector=SearchVector('text'))
+    ExamPage.objects.update(search_vector=SearchVector("text"))
 
 
 def reverse_func(apps, schema_editor):
@@ -28,101 +28,101 @@ def reverse_func(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('answers', '0008_trigram'),
+        ("answers", "0008_trigram"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='answer',
-            name='search_vector',
+            model_name="answer",
+            name="search_vector",
             field=django.contrib.postgres.search.SearchVectorField(null=True),
         ),
         migrations.AddField(
-            model_name='comment',
-            name='search_vector',
+            model_name="comment",
+            name="search_vector",
             field=django.contrib.postgres.search.SearchVectorField(null=True),
         ),
         migrations.AddField(
-            model_name='exam',
-            name='search_vector',
+            model_name="exam",
+            name="search_vector",
             field=django.contrib.postgres.search.SearchVectorField(null=True),
         ),
         migrations.AddField(
-            model_name='exampage',
-            name='search_vector',
+            model_name="exampage",
+            name="search_vector",
             field=django.contrib.postgres.search.SearchVectorField(null=True),
         ),
         migrations.RunPython(forwards_func, reverse_func),
         migrations.AlterField(
-            model_name='answer',
-            name='search_vector',
+            model_name="answer",
+            name="search_vector",
             field=django.contrib.postgres.search.SearchVectorField(null=False),
         ),
         migrations.AlterField(
-            model_name='comment',
-            name='search_vector',
+            model_name="comment",
+            name="search_vector",
             field=django.contrib.postgres.search.SearchVectorField(null=False),
         ),
         migrations.AlterField(
-            model_name='exam',
-            name='search_vector',
+            model_name="exam",
+            name="search_vector",
             field=django.contrib.postgres.search.SearchVectorField(null=False),
         ),
         migrations.AlterField(
-            model_name='exampage',
-            name='search_vector',
+            model_name="exampage",
+            name="search_vector",
             field=django.contrib.postgres.search.SearchVectorField(null=False),
         ),
         migrations.RunSQL(
-            sql='''
+            sql="""
             CREATE TRIGGER answer_update_trigger
             BEFORE INSERT OR UPDATE OF text
             ON answers_answer
             FOR EACH ROW EXECUTE PROCEDURE
             tsvector_update_trigger(search_vector, 'pg_catalog.english', text);
-            ''',
-
-            reverse_sql='''
+            """,
+            reverse_sql="""
             DROP TRIGGER IF EXISTS answer_update_trigger
             ON answers_answer;
-            '''),
+            """,
+        ),
         migrations.RunSQL(
-            sql='''
+            sql="""
             CREATE TRIGGER comment_update_trigger
             BEFORE INSERT OR UPDATE OF text
             ON answers_comment
             FOR EACH ROW EXECUTE PROCEDURE
             tsvector_update_trigger(search_vector, 'pg_catalog.english', text);
-            ''',
-
-            reverse_sql='''
+            """,
+            reverse_sql="""
             DROP TRIGGER IF EXISTS comment_update_trigger
             ON answers_comment;
-            '''),
+            """,
+        ),
         migrations.RunSQL(
-            sql='''
+            sql="""
             CREATE TRIGGER exam_update_trigger
             BEFORE INSERT OR UPDATE OF displayname, remark
             ON answers_exam
             FOR EACH ROW EXECUTE PROCEDURE
             tsvector_update_trigger(search_vector, 'pg_catalog.english', displayname, remark);
-            ''',
-
-            reverse_sql='''
+            """,
+            reverse_sql="""
             DROP TRIGGER IF EXISTS exam_update_trigger
             ON answers_exam;
-            '''),
+            """,
+        ),
         migrations.RunSQL(
-            sql='''
+            sql="""
             CREATE TRIGGER exampage_update_trigger
             BEFORE INSERT OR UPDATE OF text
             ON answers_exampage
             FOR EACH ROW EXECUTE PROCEDURE
             tsvector_update_trigger(search_vector, 'pg_catalog.english', text);
-            ''',
-
-            reverse_sql='''
+            """,
+            reverse_sql="""
             DROP TRIGGER IF EXISTS exampage_update_trigger
             ON answers_exampage;
-            '''),
+            """,
+        ),
     ]

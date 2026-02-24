@@ -7,13 +7,17 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('answers', '0012_auto_20210419_1841'),
+        ("answers", "0012_auto_20210419_1841"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='comment',
-            name='answer',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comments', to='answers.answer'),
+            model_name="comment",
+            name="answer",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="comments",
+                to="answers.answer",
+            ),
         ),
     ]

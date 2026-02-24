@@ -5,8 +5,11 @@ from django.db import migrations, models
 
 def remove_duplicates(apps, schema_editor):
     Document = apps.get_model("documents", "Document")
-    slug_set = Document.objects.values("slug").annotate(
-        dcount=models.Count("slug")).filter(dcount__gt=1)  # dcount > 1
+    slug_set = (
+        Document.objects.values("slug")
+        .annotate(dcount=models.Count("slug"))
+        .filter(dcount__gt=1)
+    )  # dcount > 1
     for odoc in slug_set:
         oslug = odoc["slug"]
         similar_set = Document.objects.filter(slug=oslug)

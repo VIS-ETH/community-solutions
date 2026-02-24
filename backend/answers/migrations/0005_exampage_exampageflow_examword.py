@@ -7,40 +7,81 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('answers', '0004_answersection_hidden'),
+        ("answers", "0004_answersection_hidden"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ExamPage',
+            name="ExamPage",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('page_number', models.IntegerField()),
-                ('width', models.FloatField()),
-                ('height', models.FloatField()),
-                ('text', models.TextField()),
-                ('exam', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='answers.Exam')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("page_number", models.IntegerField()),
+                ("width", models.FloatField()),
+                ("height", models.FloatField()),
+                ("text", models.TextField()),
+                (
+                    "exam",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="answers.Exam"
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='ExamPageFlow',
+            name="ExamPageFlow",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('order', models.IntegerField(default=0)),
-                ('page', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='answers.ExamPage')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("order", models.IntegerField(default=0)),
+                (
+                    "page",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="answers.ExamPage",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='ExamWord',
+            name="ExamWord",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('order', models.IntegerField(default=0)),
-                ('content', models.TextField()),
-                ('x_min', models.FloatField()),
-                ('y_min', models.FloatField()),
-                ('x_max', models.FloatField()),
-                ('y_max', models.FloatField()),
-                ('flow', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='answers.ExamPageFlow')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("order", models.IntegerField(default=0)),
+                ("content", models.TextField()),
+                ("x_min", models.FloatField()),
+                ("y_min", models.FloatField()),
+                ("x_max", models.FloatField()),
+                ("y_max", models.FloatField()),
+                (
+                    "flow",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="answers.ExamPageFlow",
+                    ),
+                ),
             ],
         ),
     ]

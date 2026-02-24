@@ -16,6 +16,4 @@ class Migration(migrations.Migration):
         ("answers", "0013_alter_comment_answer"),
     ]
 
-    operations = [
-        migrations.RunPython(rename_exams)
-    ]
+    operations = [migrations.RunPython(rename_exams)]

@@ -6,13 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('categories', '0002_default_category'),
+        ("categories", "0002_default_category"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='category',
-            name='semester',
-            field=models.CharField(choices=[('--', '--'), ('FS', 'FS'), ('HS', 'HS'), ('Both', 'Both')], default='--', max_length=4),
+            model_name="category",
+            name="semester",
+            field=models.CharField(
+                choices=[("--", "--"), ("FS", "FS"), ("HS", "HS"), ("Both", "Both")],
+                default="--",
+                max_length=4,
+            ),
         ),
     ]

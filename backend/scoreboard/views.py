@@ -11,7 +11,9 @@ from django.db.models.functions import Concat
 def get_user_scores(user, res):
     res.update(
         {
-            "score": user.scores.document_likes + user.scores.upvotes - user.scores.downvotes,
+            "score": user.scores.document_likes
+            + user.scores.upvotes
+            - user.scores.downvotes,
             "score_answers": user.answer_set.filter(kind=Answer.Kind.PERSONAL).count(),
             "score_comments": user.answers_comments.count(),
             "score_cuts": user.answersection_set.count(),

@@ -9,13 +9,17 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('documents', '0012_add_default_document_types'),
+        ("documents", "0012_add_default_document_types"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='comment',
-            name='author',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_comments', to=settings.AUTH_USER_MODEL),
+            model_name="comment",
+            name="author",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="%(app_label)s_comments",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

@@ -6,21 +6,29 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('categories', '0004_add_category_meta_view'),
+        ("categories", "0004_add_category_meta_view"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='CategoryMetaData',
+            name="CategoryMetaData",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('examcount_public', models.IntegerField()),
-                ('examcount_answered', models.IntegerField()),
-                ('total_cuts', models.IntegerField()),
-                ('answered_cuts', models.IntegerField()),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("examcount_public", models.IntegerField()),
+                ("examcount_answered", models.IntegerField()),
+                ("total_cuts", models.IntegerField()),
+                ("answered_cuts", models.IntegerField()),
             ],
             options={
-                'managed': False,
+                "managed": False,
             },
         ),
     ]

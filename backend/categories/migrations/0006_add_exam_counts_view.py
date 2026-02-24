@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('categories', '0005_categorymetadata'),
+        ("categories", "0005_categorymetadata"),
     ]
 
     sql = """
@@ -22,6 +22,6 @@ class Migration(migrations.Migration):
     """
 
     operations = [
-        migrations.RunSQL('DROP VIEW IF EXISTS categories_examcounts;'),
-        migrations.RunSQL(sql)
+        migrations.RunSQL("DROP VIEW IF EXISTS categories_examcounts;"),
+        migrations.RunSQL(sql),
     ]

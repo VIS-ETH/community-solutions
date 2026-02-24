@@ -7,29 +7,35 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 
-@response.request_post('text')
+@response.request_post("text")
 @auth_check.require_login
 def add_comment(request, oid):
     answer = get_object_or_404(Answer, pk=oid)
-    new_comment = Comment(answer=answer, author=request.user, text=request.POST['text'])
+    new_comment = Comment(answer=answer, author=request.user, text=request.POST["text"])
     new_comment.save()
     notification_util.new_comment_to_answer(answer, new_comment)
     notification_util.new_comment_to_comment(answer, new_comment)
     section_util.increase_section_version(answer.answer_section)
-    return response.success(value=section_util.get_answersection_response(request, answer.answer_section))
+    return response.success(
+        value=section_util.get_answersection_response(request, answer.answer_section)
+    )
 
 
-@response.request_post('text')
+@response.request_post("text")
 @auth_check.require_login
 def set_comment(request, oid):
     comment = get_object_or_404(Comment, pk=oid)
     if comment.author != request.user:
         return response.not_allowed()
-    comment.text = request.POST['text']
+    comment.text = request.POST["text"]
     comment.edittime = timezone.now()
     comment.save()
     section_util.increase_section_version(comment.answer.answer_section)
-    return response.success(value=section_util.get_answersection_response(request, comment.answer.answer_section))
+    return response.success(
+        value=section_util.get_answersection_response(
+            request, comment.answer.answer_section
+        )
+    )
 
 
 @response.request_post()
@@ -41,7 +47,9 @@ def remove_comment(request, oid):
     section = comment.answer.answer_section
     comment.delete()
     section_util.increase_section_version(comment.answer.answer_section)
-    return response.success(value=section_util.get_answersection_response(request, section))
+    return response.success(
+        value=section_util.get_answersection_response(request, section)
+    )
 
 
 @response.request_post("flagged")
@@ -57,7 +65,11 @@ def set_flagged(request, oid):
             comment.flagged.add(request.user)
         comment.save()
     section_util.increase_section_version(comment.answer.answer_section)
-    return response.success(value=section_util.get_answersection_response(request, comment.answer.answer_section))
+    return response.success(
+        value=section_util.get_answersection_response(
+            request, comment.answer.answer_section
+        )
+    )
 
 
 @response.request_post()
@@ -67,4 +79,8 @@ def reset_flagged(request, oid):
     comment.flagged.clear()
     comment.save()
     section_util.increase_section_version(comment.answer.answer_section)
-    return response.success(value=section_util.get_answersection_response(request, comment.answer.answer_section))
+    return response.success(
+        value=section_util.get_answersection_response(
+            request, comment.answer.answer_section
+        )
+    )

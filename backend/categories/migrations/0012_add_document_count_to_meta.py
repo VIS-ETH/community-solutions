@@ -51,6 +51,4 @@ class Migration(migrations.Migration):
     ;
     """
 
-    operations = [
-        migrations.RunSQL(sql, reverse_sql)
-    ]
+    operations = [migrations.RunSQL(sql, reverse_sql)]

@@ -11,20 +11,44 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('answers', '0001_initial'),
+        ("answers", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Payment',
+            name="Payment",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('payment_time', models.DateTimeField(default=django.utils.timezone.now)),
-                ('check_time', models.DateTimeField(null=True)),
-                ('refund_time', models.DateTimeField(null=True)),
-                ('uploaded_transcript', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='answers.Exam')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "payment_time",
+                    models.DateTimeField(default=django.utils.timezone.now),
+                ),
+                ("check_time", models.DateTimeField(null=True)),
+                ("refund_time", models.DateTimeField(null=True)),
+                (
+                    "uploaded_transcript",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="answers.Exam",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

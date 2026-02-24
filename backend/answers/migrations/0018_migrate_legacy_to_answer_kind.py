@@ -1,20 +1,22 @@
 from django.conf import settings
 from django.db import migrations, models
 
+
 def migrate_to_answer_kinds(apps, schema_editor):
     Answer = apps.get_model("answers", "Answer")
-    Answer.objects.filter(is_legacy_answer=True).update(kind='legacy')
+    Answer.objects.filter(is_legacy_answer=True).update(kind="legacy")
+
 
 def reverse_answer_kinds(apps, schema_editor):
     Answer = apps.get_model("answers", "Answer")
-    Answer.objects.filter(kind='legacy').update(is_legacy_answer=True)
+    Answer.objects.filter(kind="legacy").update(is_legacy_answer=True)
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scoreboard', '0004_add_answer_scores'),
-        ('answers', '0017_comment_flagged'),
+        ("scoreboard", "0004_add_answer_scores"),
+        ("answers", "0017_comment_flagged"),
     ]
 
     scoreboard_sql = """
@@ -137,14 +139,22 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name='answer',
-            name='kind',
-            field=models.CharField(choices=[('personal', 'Personal'), ('legacy', 'Legacy'), ('official', 'Official')], default='personal', max_length=16),
+            model_name="answer",
+            name="kind",
+            field=models.CharField(
+                choices=[
+                    ("personal", "Personal"),
+                    ("legacy", "Legacy"),
+                    ("official", "Official"),
+                ],
+                default="personal",
+                max_length=16,
+            ),
         ),
         migrations.RunPython(migrate_to_answer_kinds, reverse_answer_kinds),
         migrations.RunSQL(scoreboard_sql, reverse_scoreboard_sql),
         migrations.RemoveField(
-            model_name='answer',
-            name='is_legacy_answer',
+            model_name="answer",
+            name="is_legacy_answer",
         ),
     ]

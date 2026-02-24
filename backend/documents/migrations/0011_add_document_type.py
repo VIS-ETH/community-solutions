@@ -8,16 +8,24 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('documents', '0010_alter_slug_unique'),
+        ("documents", "0010_alter_slug_unique"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='DocumentType',
+            name="DocumentType",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('display_name', models.CharField(max_length=256)),
-                ('order', models.IntegerField(default=0)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("display_name", models.CharField(max_length=256)),
+                ("order", models.IntegerField(default=0)),
             ],
         ),
     ]

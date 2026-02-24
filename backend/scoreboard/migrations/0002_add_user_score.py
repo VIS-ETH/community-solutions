@@ -7,8 +7,8 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scoreboard', '0001_initial'),
-        ('answers', '0001_initial'),
+        ("scoreboard", "0001_initial"),
+        ("answers", "0001_initial"),
     ]
 
     sql = """
@@ -22,6 +22,6 @@ class Migration(migrations.Migration):
     """
 
     operations = [
-        migrations.RunSQL('DROP VIEW IF EXISTS scoreboard_userscore;'),
-        migrations.RunSQL(sql)
+        migrations.RunSQL("DROP VIEW IF EXISTS scoreboard_userscore;"),
+        migrations.RunSQL(sql),
     ]

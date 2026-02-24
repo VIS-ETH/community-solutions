@@ -8,13 +8,16 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('documents', '0014_document_edittime_document_time'),
+        ("documents", "0014_document_edittime_document_time"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='comment',
-            name='flagged',
-            field=models.ManyToManyField(related_name='flagged_%(app_label)s_comments_set', to=settings.AUTH_USER_MODEL),
+            model_name="comment",
+            name="flagged",
+            field=models.ManyToManyField(
+                related_name="flagged_%(app_label)s_comments_set",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

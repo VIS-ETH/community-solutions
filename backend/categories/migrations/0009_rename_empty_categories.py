@@ -18,6 +18,4 @@ class Migration(migrations.Migration):
         ("categories", "0008_count_ignore_hidden"),
     ]
 
-    operations = [
-        migrations.RunPython(rename_categories)
-    ]
+    operations = [migrations.RunPython(rename_categories)]

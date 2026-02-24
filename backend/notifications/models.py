@@ -11,18 +11,27 @@ class NotificationType(enum.Enum):
 
 
 class Notification(models.Model):
-    sender = models.ForeignKey('auth.User', related_name='notification_sender_set', null=True, on_delete=models.SET_NULL)
-    receiver = models.ForeignKey('auth.User', related_name='notification_receiver_set', on_delete=models.CASCADE)
+    sender = models.ForeignKey(
+        "auth.User",
+        related_name="notification_sender_set",
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+    receiver = models.ForeignKey(
+        "auth.User", related_name="notification_receiver_set", on_delete=models.CASCADE
+    )
     type = models.IntegerField()
     time = models.DateTimeField(default=timezone.now)
     title = models.CharField(max_length=256)
     text = models.TextField()
-    answer = models.ForeignKey('answers.Answer', null=True, on_delete=models.SET_NULL)
-    document = models.ForeignKey('documents.Document', null=True, on_delete=models.SET_NULL)
+    answer = models.ForeignKey("answers.Answer", null=True, on_delete=models.SET_NULL)
+    document = models.ForeignKey(
+        "documents.Document", null=True, on_delete=models.SET_NULL
+    )
     read = models.BooleanField(default=False)
 
 
 class NotificationSetting(models.Model):
-    user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
     type = models.IntegerField()
     enabled = models.BooleanField(default=True)

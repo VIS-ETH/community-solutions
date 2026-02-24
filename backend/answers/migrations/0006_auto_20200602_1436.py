@@ -7,23 +7,35 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('answers', '0005_exampage_exampageflow_examword'),
+        ("answers", "0005_exampage_exampageflow_examword"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='exampage',
-            name='exam',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='pages', to='answers.Exam'),
+            model_name="exampage",
+            name="exam",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="pages",
+                to="answers.Exam",
+            ),
         ),
         migrations.AlterField(
-            model_name='exampageflow',
-            name='page',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='flows', to='answers.ExamPage'),
+            model_name="exampageflow",
+            name="page",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="flows",
+                to="answers.ExamPage",
+            ),
         ),
         migrations.AlterField(
-            model_name='examword',
-            name='flow',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='words', to='answers.ExamPageFlow'),
+            model_name="examword",
+            name="flow",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="words",
+                to="answers.ExamPageFlow",
+            ),
         ),
     ]

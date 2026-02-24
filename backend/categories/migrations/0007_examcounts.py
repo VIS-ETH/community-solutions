@@ -6,19 +6,27 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('categories', '0006_add_exam_counts_view'),
+        ("categories", "0006_add_exam_counts_view"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ExamCounts',
+            name="ExamCounts",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('count_cuts', models.IntegerField()),
-                ('count_answered', models.IntegerField()),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("count_cuts", models.IntegerField()),
+                ("count_answered", models.IntegerField()),
             ],
             options={
-                'managed': False,
+                "managed": False,
             },
         ),
     ]

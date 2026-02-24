@@ -9,22 +9,21 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('auth', '0011_update_proxy_permissions'),
+        ("auth", "0011_update_proxy_permissions"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='MyUser',
-            fields=[
-            ],
+            name="MyUser",
+            fields=[],
             options={
-                'proxy': True,
-                'indexes': [],
-                'constraints': [],
+                "proxy": True,
+                "indexes": [],
+                "constraints": [],
             },
-            bases=('auth.user',),
+            bases=("auth.user",),
             managers=[
-                ('objects', django.contrib.auth.models.UserManager()),
+                ("objects", django.contrib.auth.models.UserManager()),
             ],
         ),
     ]

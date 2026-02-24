@@ -7,14 +7,14 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('documents', '0005_auto_20210404_0927'),
+        ("documents", "0005_auto_20210404_0927"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='document',
-            name='description',
-            field=models.CharField(default='', max_length=4096),
+            model_name="document",
+            name="description",
+            field=models.CharField(default="", max_length=4096),
             preserve_default=False,
         ),
     ]

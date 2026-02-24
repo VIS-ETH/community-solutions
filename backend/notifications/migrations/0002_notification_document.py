@@ -7,14 +7,18 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('documents', '0007_auto_20210513_1321'),
-        ('notifications', '0001_initial'),
+        ("documents", "0007_auto_20210513_1321"),
+        ("notifications", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='notification',
-            name='document',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='documents.document'),
+            model_name="notification",
+            name="document",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="documents.document",
+            ),
         ),
     ]

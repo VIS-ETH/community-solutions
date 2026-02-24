@@ -89,12 +89,12 @@ for announcement in announcements:
     allowed_keys = {"variant", "color", "title", "icon", "content", "id"}
     mandatory_keys = allowed_keys - {"id", "icon", "variant"}
     assert isinstance(announcement, dict), "An announcement was parsed incorrectly!"
-    assert announcement.keys() <= allowed_keys, (
-        f"Announcement has at least one invalid key {announcement.keys() - allowed_keys}"
-    )
-    assert announcement.keys() >= mandatory_keys, (
-        f"Announcement has at least one missing key {mandatory_keys - announcement.keys()}"
-    )
+    assert (
+        announcement.keys() <= allowed_keys
+    ), f"Announcement has at least one invalid key {announcement.keys() - allowed_keys}"
+    assert (
+        announcement.keys() >= mandatory_keys
+    ), f"Announcement has at least one missing key {mandatory_keys - announcement.keys()}"
 
 announcements = [
     {

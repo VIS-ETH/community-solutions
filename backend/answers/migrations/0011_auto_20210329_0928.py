@@ -9,18 +9,26 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('answers', '0011_answersection_has_answers'),
+        ("answers", "0011_answersection_has_answers"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='comment',
-            name='answer',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comments', to='answers.Answer'),
+            model_name="comment",
+            name="answer",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="comments",
+                to="answers.Answer",
+            ),
         ),
         migrations.AlterField(
-            model_name='comment',
-            name='author',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='answers_comments', to=settings.AUTH_USER_MODEL),
+            model_name="comment",
+            name="author",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="answers_comments",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]
