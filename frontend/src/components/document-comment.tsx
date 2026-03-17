@@ -290,7 +290,7 @@ const DocumentCommentComponent = ({
                   </SmallButton>
                   {isAdmin && (
                     <>
-                      {comment.flaggedCount > 1 && (
+                      {comment.flaggedCount > 0 && (
                         <SmallButton
                           tooltip="Remove all inappropriate flags"
                           size="xs"
@@ -300,7 +300,7 @@ const DocumentCommentComponent = ({
                           <IconFlagCancel />
                         </SmallButton>
                       )}
-                      {comment.markedAsAiCount > 1 && (
+                      {comment.markedAsAiCount > 0 && (
                         <SmallButton
                           tooltip="Remove all AI-generated marks"
                           size="xs"
