@@ -74,6 +74,7 @@ const UserAnswers: React.FC<UserAnswersProps> = ({ username }) => {
                 answer={answer}
                 answerKind={answer.kind}
                 onSectionChanged={reload}
+                stackBadges
               />
             </div>
           ))}

@@ -9,6 +9,7 @@ import {
   Anchor,
   Box,
   Paper,
+  Stack,
   Tooltip,
 } from "@mantine/core";
 import { differenceInSeconds } from "date-fns";
@@ -53,8 +54,10 @@ import {
   IconRobotOff,
   IconStarFilled,
   IconTrash,
-  IconX,
 } from "@tabler/icons-react";
+import FlaggedBadge from "./FlaggedBadge";
+import MarkedAsAiBadge from "./MarkedAsAiBadge";
+import ConditionalWrapper from "../utils/ConditionalWrapper";
 import classes from "./answer.module.css";
 import { useDisclosure } from "@mantine/hooks";
 import TimeText from "./time-text";
@@ -70,6 +73,7 @@ interface Props {
   onDelete?: () => void;
   answerKind: AnswerKind;
   hasId?: boolean;
+  stackBadges?: boolean;
 }
 const AnswerComponent: React.FC<Props> = ({
   section,
@@ -78,6 +82,7 @@ const AnswerComponent: React.FC<Props> = ({
   onSectionChanged,
   answerKind,
   hasId = true,
+  stackBadges = false,
 }) => {
   const [viewSource, { toggle: toggleViewSource }] = useDisclosure();
   const [setFlaggedLoading, setAnswerFlagged] =
@@ -253,89 +258,27 @@ const AnswerComponent: React.FC<Props> = ({
                     </Paper>
                   )}
                 {answer && (
-                  <>
-                    {answer.markedAsAiCount > 0 && (
-                      <Paper shadow="xs">
-                        <Button.Group>
-                          <TooltipButton
-                            tooltip="Marked as AI-generated"
-                            color="blue"
-                            px={12}
-                            variant="filled"
-                          >
-                            <IconRobot />
-                          </TooltipButton>
-                          <TooltipButton
-                            color="blue"
-                            miw={30}
-                            tooltip={`${answer.markedAsAiCount} user${answer.markedAsAiCount === 1 ? "" : "s"} consider${answer.markedAsAiCount === 1 ? "s" : ""} this answer AI-generated.`}
-                          >
-                            {answer.markedAsAiCount}
-                          </TooltipButton>
-                          <TooltipButton
-                            px={8}
-                            tooltip={
-                              answer.isMarkedAsAi
-                                ? "Remove AI-generated mark"
-                                : "Mark as AI-generated"
-                            }
-                            size="sm"
-                            loading={markedAsAiLoading}
-                            style={{ borderLeftWidth: 0 }}
-                            onClick={() =>
-                              setAnswerMarkedAsAi(
-                                answer.oid,
-                                !answer.isMarkedAsAi,
-                              )
-                            }
-                          >
-                            {answer.isMarkedAsAi ? (
-                              <IconX />
-                            ) : (
-                              <IconChevronUp />
-                            )}
-                          </TooltipButton>
-                        </Button.Group>
-                      </Paper>
-                    )}
-                    {answer.flaggedCount > 0 && (
-                      <Paper shadow="xs">
-                        <Button.Group>
-                          <TooltipButton
-                            tooltip="Flagged as Inappropriate"
-                            color="red"
-                            px={12}
-                            variant="filled"
-                          >
-                            <IconFlag />
-                          </TooltipButton>
-                          <TooltipButton
-                            color="red"
-                            miw={30}
-                            tooltip={`${answer.flaggedCount} users consider this answer inappropriate.`}
-                          >
-                            {answer.flaggedCount}
-                          </TooltipButton>
-                          <TooltipButton
-                            px={8}
-                            tooltip={
-                              answer.isFlagged
-                                ? "Remove inappropriate flag"
-                                : "Add inappropriate flag"
-                            }
-                            size="sm"
-                            loading={flaggedLoading}
-                            style={{ borderLeftWidth: 0 }}
-                            onClick={() =>
-                              setAnswerFlagged(answer.oid, !answer.isFlagged)
-                            }
-                          >
-                            {answer.isFlagged ? <IconX /> : <IconChevronUp />}
-                          </TooltipButton>
-                        </Button.Group>
-                      </Paper>
-                    )}
-                  </>
+                  <ConditionalWrapper
+                    condition={stackBadges}
+                    wrapper={children => <Stack gap={4}>{children}</Stack>}
+                  >
+                    <MarkedAsAiBadge
+                      count={answer.markedAsAiCount}
+                      isMarkedAsAi={answer.isMarkedAsAi}
+                      loading={markedAsAiLoading}
+                      onToggle={() =>
+                        setAnswerMarkedAsAi(answer.oid, !answer.isMarkedAsAi)
+                      }
+                    />
+                    <FlaggedBadge
+                      count={answer.flaggedCount}
+                      isFlagged={answer.isFlagged}
+                      loading={flaggedLoading}
+                      onToggle={() =>
+                        setAnswerFlagged(answer.oid, !answer.isFlagged)
+                      }
+                    />
+                  </ConditionalWrapper>
                 )}
                 {answer && onSectionChanged && (
                   <Score

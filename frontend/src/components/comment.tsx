@@ -15,7 +15,6 @@ import SmallButton from "./small-button";
 import { useOfficialSolutionLanguage } from "./official-solution";
 import { Anchor, Button, Flex, Group, Menu, Paper, Text } from "@mantine/core";
 import {
-  IconChevronUp,
   IconCode,
   IconDeviceFloppy,
   IconDots,
@@ -26,10 +25,10 @@ import {
   IconRobot,
   IconRobotOff,
   IconTrash,
-  IconX,
 } from "@tabler/icons-react";
+import FlaggedBadge from "./FlaggedBadge";
+import MarkedAsAiBadge from "./MarkedAsAiBadge";
 import { useDisclosure } from "@mantine/hooks";
-import TooltipButton from "./TooltipButton";
 import TimeText from "./time-text";
 import { copy } from "../utils/clipboard";
 
@@ -141,72 +140,20 @@ const CommentComponent: React.FC<Props> = ({
         <Flex>
           {comment && (
             <>
-              {comment.markedAsAiCount > 0 && (
-                <Paper shadow="xs" mr="md">
-                  <Button.Group>
-                    <TooltipButton
-                      tooltip="Marked as AI-generated"
-                      color="blue"
-                      px={12}
-                      variant="filled"
-                      size="xs"
-                    >
-                      <IconRobot />
-                    </TooltipButton>
-                    <TooltipButton
-                      color="blue"
-                      miw={30}
-                      tooltip={`${comment.markedAsAiCount} user${comment.markedAsAiCount === 1 ? "" : "s"} consider${comment.markedAsAiCount === 1 ? "s" : ""} this answer AI-generated.`}
-                      size="xs"
-                    >
-                      {comment.markedAsAiCount}
-                    </TooltipButton>
-                    <TooltipButton
-                      px={8}
-                      tooltip={comment.isMarkedAsAi ? "Remove AI-generated mark" : "Mark as AI-generated"}
-                      size="xs"
-                      loading={markedAsAiLoading}
-                      style={{ borderLeftWidth: 0 }}
-                      onClick={() => setExamCommentMarkedAsAi(comment.oid, !comment.isMarkedAsAi)}
-                    >
-                      {comment.isMarkedAsAi ? <IconX /> : <IconChevronUp />}
-                    </TooltipButton>
-                  </Button.Group>
-                </Paper>
-              )}
-              {comment.flaggedCount > 0 && (
-                <Paper shadow="xs" mr="md">
-                  <Button.Group>
-                    <TooltipButton
-                      tooltip="Flagged as Inappropriate"
-                      color="red"
-                      px={12}
-                      variant="filled"
-                      size="xs"
-                    >
-                      <IconFlag />
-                    </TooltipButton>
-                    <TooltipButton
-                      color="red"
-                      miw={30}
-                      tooltip={`${comment.flaggedCount} users consider this answer inappropriate.`}
-                      size="xs"
-                    >
-                      {comment.flaggedCount}
-                    </TooltipButton>
-                    <TooltipButton
-                      px={8}
-                      tooltip={comment.isFlagged ? "Remove inappropriate flag" : "Add inappropriate flag"}
-                      size="xs"
-                      loading={flaggedLoading}
-                      style={{ borderLeftWidth: 0 }}
-                      onClick={() => setExamCommentFlagged(comment.oid, !comment.isFlagged)}
-                    >
-                      {comment.isFlagged ? <IconX /> : <IconChevronUp />}
-                    </TooltipButton>
-                  </Button.Group>
-                </Paper>
-              )}
+              <MarkedAsAiBadge
+                count={comment.markedAsAiCount}
+                isMarkedAsAi={comment.isMarkedAsAi}
+                loading={markedAsAiLoading}
+                size="xs"
+                onToggle={() => setExamCommentMarkedAsAi(comment.oid, !comment.isMarkedAsAi)}
+              />
+              <FlaggedBadge
+                count={comment.flaggedCount}
+                isFlagged={comment.isFlagged}
+                loading={flaggedLoading}
+                size="xs"
+                onToggle={() => setExamCommentFlagged(comment.oid, !comment.isFlagged)}
+              />
             </>
           )}
           {comment && (
@@ -241,6 +188,14 @@ const CommentComponent: React.FC<Props> = ({
                       >
                         Copy Permalink
                 </Menu.Item>
+                {isAdmin && comment.markedAsAiCount > 0 && (
+                  <Menu.Item
+                    leftSection={<IconRobotOff />}
+                    onClick={() => resetExamCommentMarkedAsAi(comment.oid)}
+                  >
+                    Remove all AI-generated marks
+                  </Menu.Item>
+                )}
                 {isAdmin && comment.flaggedCount > 0 && (
                   <Menu.Item
                     leftSection={<IconFlag />}
