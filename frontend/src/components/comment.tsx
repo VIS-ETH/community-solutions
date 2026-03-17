@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { addNewComment, removeComment, updateComment } from "../api/comment";
 import { imageHandler } from "../api/fetch-utils";
-import { useMutation, useResetExamCommentFlaggedVote, useSetExamCommentFlagged } from "../api/hooks";
+import { useMutation, useResetExamCommentFlaggedVote, useResetExamCommentMarkedAsAi, useSetExamCommentFlagged, useSetExamCommentMarkedAsAi } from "../api/hooks";
 import { useUser } from "../auth";
 import useRemoveConfirm from "../hooks/useRemoveConfirm";
 import { Answer, AnswerSection, Comment } from "../interfaces";
@@ -23,6 +23,8 @@ import {
   IconFlag,
   IconLink,
   IconPencilCancel,
+  IconRobot,
+  IconRobotOff,
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
@@ -45,6 +47,8 @@ const CommentComponent: React.FC<Props> = ({
 }) => {
   const [setFlaggedLoading, setExamCommentFlagged] = useSetExamCommentFlagged(onSectionChanged);
   const [resetFlaggedLoading, resetExamCommentFlagged] = useResetExamCommentFlaggedVote(onSectionChanged);
+  const [setMarkedAsAiLoading, setExamCommentMarkedAsAi] = useSetExamCommentMarkedAsAi(onSectionChanged);
+  const [resetMarkedAsAiLoading, resetExamCommentMarkedAsAi] = useResetExamCommentMarkedAsAi(onSectionChanged);
   const [viewSource, {toggle: toggleViewSource}] = useDisclosure();
   const { isAdmin, username } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
@@ -90,6 +94,7 @@ const CommentComponent: React.FC<Props> = ({
       removeConfirm("Remove comment?", () => runRemoveComment(comment.oid));
   };
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
+  const markedAsAiLoading = setMarkedAsAiLoading || resetMarkedAsAiLoading;
 
   return (
     <Paper
@@ -134,54 +139,90 @@ const CommentComponent: React.FC<Props> = ({
             )}
         </div>
         <Flex>
-          {comment &&
-            (comment.isFlagged ||
-              (comment.flaggedCount > 0 && isAdmin) ||
-              flaggedLoading) && (
-              <Paper shadow="xs" mr="md">
-                <Button.Group>
-                  <TooltipButton
-                    tooltip="Flagged as Inappropriate"
-                    color="red"
-                    px={12}
-                    variant="filled"
-                    size="xs"
-                  >
-                    <IconFlag />
-                  </TooltipButton>
-                  <TooltipButton
-                    color="red"
-                    miw={30}
-                    tooltip={`${comment.flaggedCount} users consider this answer inappropriate.`}
-                    size="xs"
-                  >
-                    {comment.flaggedCount}
-                  </TooltipButton>
-                  <TooltipButton
-                    px={8}
-                    tooltip={
-                      comment.isFlagged
-                        ? "Remove inappropriate flag"
-                        : "Add inappropriate flag"
-                    }
-                    size="xs"
-                    loading={flaggedLoading}
-                    style={{ borderLeftWidth: 0 }}
-                    onClick={() =>
-                      setExamCommentFlagged(comment.oid, !comment.isFlagged)
-                    }
-                  >
-                    {comment.isFlagged ? <IconX /> : <IconChevronUp />}
-                  </TooltipButton>
-                </Button.Group>
-              </Paper>
-            )}
+          {comment && (
+            <>
+              {comment.markedAsAiCount > 0 && (
+                <Paper shadow="xs" mr="md">
+                  <Button.Group>
+                    <TooltipButton
+                      tooltip="Marked as AI-generated"
+                      color="blue"
+                      px={12}
+                      variant="filled"
+                      size="xs"
+                    >
+                      <IconRobot />
+                    </TooltipButton>
+                    <TooltipButton
+                      color="blue"
+                      miw={30}
+                      tooltip={`${comment.markedAsAiCount} user${comment.markedAsAiCount === 1 ? "" : "s"} consider${comment.markedAsAiCount === 1 ? "s" : ""} this answer AI-generated.`}
+                      size="xs"
+                    >
+                      {comment.markedAsAiCount}
+                    </TooltipButton>
+                    <TooltipButton
+                      px={8}
+                      tooltip={comment.isMarkedAsAi ? "Remove AI-generated mark" : "Mark as AI-generated"}
+                      size="xs"
+                      loading={markedAsAiLoading}
+                      style={{ borderLeftWidth: 0 }}
+                      onClick={() => setExamCommentMarkedAsAi(comment.oid, !comment.isMarkedAsAi)}
+                    >
+                      {comment.isMarkedAsAi ? <IconX /> : <IconChevronUp />}
+                    </TooltipButton>
+                  </Button.Group>
+                </Paper>
+              )}
+              {comment.flaggedCount > 0 && (
+                <Paper shadow="xs" mr="md">
+                  <Button.Group>
+                    <TooltipButton
+                      tooltip="Flagged as Inappropriate"
+                      color="red"
+                      px={12}
+                      variant="filled"
+                      size="xs"
+                    >
+                      <IconFlag />
+                    </TooltipButton>
+                    <TooltipButton
+                      color="red"
+                      miw={30}
+                      tooltip={`${comment.flaggedCount} users consider this answer inappropriate.`}
+                      size="xs"
+                    >
+                      {comment.flaggedCount}
+                    </TooltipButton>
+                    <TooltipButton
+                      px={8}
+                      tooltip={comment.isFlagged ? "Remove inappropriate flag" : "Add inappropriate flag"}
+                      size="xs"
+                      loading={flaggedLoading}
+                      style={{ borderLeftWidth: 0 }}
+                      onClick={() => setExamCommentFlagged(comment.oid, !comment.isFlagged)}
+                    >
+                      {comment.isFlagged ? <IconX /> : <IconChevronUp />}
+                    </TooltipButton>
+                  </Button.Group>
+                </Paper>
+              )}
+            </>
+          )}
           {comment && (
             <Menu withinPortal>
               <Menu.Target>
                 <Button size="xs" variant="light" color="gray" mr="md"><IconDots/></Button>
               </Menu.Target>
               <Menu.Dropdown>
+                {comment.markedAsAiCount === 0 && (
+                  <Menu.Item
+                    leftSection={<IconRobot />}
+                    onClick={() => setExamCommentMarkedAsAi(comment.oid, true)}
+                  >
+                    Mark as AI-generated
+                  </Menu.Item>
+                )}
                 {comment.flaggedCount === 0 && (
                   <Menu.Item
                     leftSection={<IconFlag />}

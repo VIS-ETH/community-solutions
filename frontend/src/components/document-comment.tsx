@@ -16,7 +16,9 @@ import {
   Mutate,
   useDeleteDocumentComment,
   useResetDocumentCommentFlaggedVote,
+  useResetDocumentCommentMarkedAsAi,
   useSetDocumentCommentFlagged,
+  useSetDocumentCommentMarkedAsAi,
   useUpdateDocumentComment,
 } from "../api/hooks";
 import { useUser } from "../auth";
@@ -26,7 +28,18 @@ import { UndoStack } from "./Editor/utils/undo-stack";
 import MarkdownText from "./markdown-text";
 import SmallButton from "./small-button";
 import TooltipButton from "./TooltipButton";
-import { IconChevronUp, IconEdit, IconFlag, IconFlagCancel, IconLink, IconTrash, IconX } from "@tabler/icons-react";
+import {
+  IconChevronDown,
+  IconChevronUp,
+  IconEdit,
+  IconFlag,
+  IconFlagCancel,
+  IconLink,
+  IconRobot,
+  IconRobotOff,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react";
 import TimeText from "./time-text";
 import { copy } from "../utils/clipboard";
 
@@ -35,14 +48,12 @@ interface Props {
   documentSlug: string;
   comment: DocumentComment;
   mutate: Mutate<Document>;
-  reload: () => void;
 }
 const DocumentCommentComponent = ({
   documentAuthor,
   documentSlug,
   comment,
   mutate,
-  reload,
 }: Props) => {
   const { isAdmin } = useUser()!;
   const [editLoading, updateComment] = useUpdateDocumentComment(
@@ -68,6 +79,7 @@ const DocumentCommentComponent = ({
       })),
   );
   const [hasDraft, setHasDraft] = useState(false);
+  const [showActions, setShowActions] = useState(false);
   const [draftText, setDraftText] = useState("");
   const [undoStack, setUndoStack] = useState<UndoStack>({
     prev: [],
@@ -75,10 +87,23 @@ const DocumentCommentComponent = ({
   });
   const toggle = () => setHasDraft(e => !e);
 
-  const [setCommentFlaggedLoading, setCommentFlagged] = useSetDocumentCommentFlagged(reload);
-  const [resetCommentFlaggedLoading, resetCommentFlagged] = useResetDocumentCommentFlaggedVote(reload);
+  const mutateComment = (res: DocumentComment) =>
+    mutate(document => ({
+      ...document,
+      comments: document.comments.map(c => (c.oid !== res.oid ? c : res)),
+    }));
+
+  const [setCommentFlaggedLoading, setCommentFlagged] =
+    useSetDocumentCommentFlagged(mutateComment);
+  const [setMarkedAsAiLoading, setCommentMarkedAsAi] =
+    useSetDocumentCommentMarkedAsAi(mutateComment);
+  const [resetCommentFlaggedLoading, resetCommentFlagged] =
+    useResetDocumentCommentFlaggedVote(mutateComment);
+  const [resetMarkedAsAiLoading, resetCommentMarkedAsAi] =
+    useResetDocumentCommentMarkedAsAi(mutateComment);
 
   const flaggedLoading = setCommentFlaggedLoading || resetCommentFlaggedLoading;
+  const markedAsAiLoading = setMarkedAsAiLoading || resetMarkedAsAiLoading;
 
   return (
     <div id={String(comment.oid)}>
@@ -117,9 +142,7 @@ const DocumentCommentComponent = ({
               <Text component="span" mx={6} c="dimmed">
                 ·
               </Text>
-              {comment && (
-                <TimeText time={comment.time} suffix="ago" />
-              )}
+              {comment && <TimeText time={comment.time} suffix="ago" />}
               {comment &&
                 differenceInSeconds(
                   new Date(comment.edittime),
@@ -129,118 +152,198 @@ const DocumentCommentComponent = ({
                     <Text component="span" c="dimmed" mx={6}>
                       ·
                     </Text>
-                    <TimeText time={comment.edittime} prefix="edited" suffix="ago" />
+                    <TimeText
+                      time={comment.edittime}
+                      prefix="edited"
+                      suffix="ago"
+                    />
                   </>
                 )}
             </Flex>
             <Flex>
-              {comment &&
-              (comment.isFlagged ||
-                (comment.flaggedCount > 0 && isAdmin) ||
-                flaggedLoading) && (
-                <Paper shadow="xs" mr="md">
-                  <Button.Group>
-                    <TooltipButton
-                      tooltip="Flagged as Inappropriate"
-                      color="red"
-                      px={12}
-                      variant="filled"
-                      size="xs"
-                    >
-                      <IconFlag />
-                    </TooltipButton>
-                    <TooltipButton
-                      color="red"
-                      miw={30}
-                      tooltip={`${comment.flaggedCount} users consider this answer inappropriate.`}
-                      size="xs"
-                    >
-                      {comment.flaggedCount}
-                    </TooltipButton>
-                    <TooltipButton
-                      px={8}
-                      tooltip={
-                        comment.isFlagged
-                          ? "Remove inappropriate flag"
-                          : "Add inappropriate flag"
-                      }
-                      size="xs"
-                      loading={flaggedLoading}
-                      style={{ borderLeftWidth: 0 }}
-                      onClick={() =>
-                        setCommentFlagged(comment.oid, !comment.isFlagged)
-                      }
-                    >
-                      {comment.isFlagged ? <IconX /> : <IconChevronUp />}
-                    </TooltipButton>
-                  </Button.Group>
-                </Paper>
+              {comment && (
+                <>
+                  {comment.markedAsAiCount > 0 && (
+                    <Paper shadow="xs" mr="md">
+                      <Button.Group>
+                        <TooltipButton
+                          tooltip="Marked as AI-generated"
+                          color="blue"
+                          px={12}
+                          variant="filled"
+                          size="xs"
+                        >
+                          <IconRobot />
+                        </TooltipButton>
+                        <TooltipButton
+                          color="blue"
+                          miw={30}
+                          tooltip={`${comment.markedAsAiCount} user${comment.markedAsAiCount === 1 ? "" : "s"} consider${comment.markedAsAiCount === 1 ? "s" : ""} this answer AI-generated.`}
+                          size="xs"
+                        >
+                          {comment.markedAsAiCount}
+                        </TooltipButton>
+                        <TooltipButton
+                          px={8}
+                          tooltip={
+                            comment.isMarkedAsAi
+                              ? "Remove AI-generated mark"
+                              : "Mark as AI-generated"
+                          }
+                          size="xs"
+                          loading={markedAsAiLoading}
+                          style={{ borderLeftWidth: 0 }}
+                          onClick={() =>
+                            setCommentMarkedAsAi(
+                              comment.oid,
+                              !comment.isMarkedAsAi,
+                            )
+                          }
+                        >
+                          {comment.isMarkedAsAi ? <IconX /> : <IconChevronUp />}
+                        </TooltipButton>
+                      </Button.Group>
+                    </Paper>
+                  )}
+                  {comment.flaggedCount > 0 && (
+                    <Paper shadow="xs" mr="md">
+                      <Button.Group>
+                        <TooltipButton
+                          tooltip="Flagged as Inappropriate"
+                          color="red"
+                          px={12}
+                          variant="filled"
+                          size="xs"
+                        >
+                          <IconFlag />
+                        </TooltipButton>
+                        <TooltipButton
+                          color="red"
+                          miw={30}
+                          tooltip={`${comment.flaggedCount} user${comment.flaggedCount === 1 ? "" : "s"} consider${comment.flaggedCount === 1 ? "s" : ""} this answer inappropriate.`}
+                          size="xs"
+                        >
+                          {comment.flaggedCount}
+                        </TooltipButton>
+                        <TooltipButton
+                          px={8}
+                          tooltip={
+                            comment.isFlagged
+                              ? "Remove inappropriate flag"
+                              : "Add inappropriate flag"
+                          }
+                          size="xs"
+                          loading={flaggedLoading}
+                          style={{ borderLeftWidth: 0 }}
+                          onClick={() =>
+                            setCommentFlagged(comment.oid, !comment.isFlagged)
+                          }
+                        >
+                          {comment.isFlagged ? <IconX /> : <IconChevronUp />}
+                        </TooltipButton>
+                      </Button.Group>
+                    </Paper>
+                  )}
+                </>
               )}
-              <Button.Group>
-                <SmallButton
-                  tooltip="Flag as inappropriate"
-                  size="xs"
-                  color="white"
-                  onClick={() =>
-                    setCommentFlagged(comment.oid, !comment.isFlagged)
-                  }
-                >
-                  <IconFlag />
-                </SmallButton>
-                <SmallButton
-                  tooltip="Copy Permalink"
-                  size="xs"
-                  color="white"
-                  onClick={() =>
-                    copy(
-                      `${document.location.origin}/user/${documentAuthor}/document/${documentSlug}?comment=${comment.oid}`,
-                    )
-                  }
-                >
-                  <IconLink />
-                </SmallButton>
-                {isAdmin && (
+              <SmallButton
+                tooltip={showActions ? "Hide actions" : "Show actions"}
+                size="xs"
+                color="white"
+                onClick={() => setShowActions(value => !value)}
+              >
+                {showActions ? <IconX /> : <IconChevronDown />}
+              </SmallButton>
+              {showActions && (
+                <Button.Group>
                   <SmallButton
-                    tooltip="Remove all inappropriate flags"
+                    tooltip="Mark as AI-generated"
                     size="xs"
                     color="white"
                     onClick={() =>
-                      resetCommentFlagged(comment.oid)
-                    }>
-                      <IconFlagCancel />
-                    </SmallButton>
-                )}
-              {(comment.canEdit || isAdmin) && (
-                <>
-                  <SmallButton
-                    tooltip="Delete comment"
-                    size="xs"
-                    color="white"
-                    onClick={deleteComment}
+                      setCommentMarkedAsAi(comment.oid, !comment.isMarkedAsAi)
+                    }
                   >
-                    <IconTrash />
+                    <IconRobot />
                   </SmallButton>
                   <SmallButton
-                    tooltip="Edit comment"
+                    tooltip="Flag as inappropriate"
                     size="xs"
                     color="white"
-                    onClick={() => {
-                      toggle();
-                      setDraftText(comment.text);
-                      setUndoStack({
-                        prev: [],
-                        next: [],
-                      });
-                    }}
+                    onClick={() =>
+                      setCommentFlagged(comment.oid, !comment.isFlagged)
+                    }
                   >
-                    <IconEdit />
+                    <IconFlag />
                   </SmallButton>
-                </>
+                  <SmallButton
+                    tooltip="Copy Permalink"
+                    size="xs"
+                    color="white"
+                    onClick={() =>
+                      copy(
+                        `${document.location.origin}/user/${documentAuthor}/document/${documentSlug}?comment=${comment.oid}`,
+                      )
+                    }
+                  >
+                    <IconLink />
+                  </SmallButton>
+                  {isAdmin && (
+                    <>
+                      {comment.flaggedCount > 1 && (
+                        <SmallButton
+                          tooltip="Remove all inappropriate flags"
+                          size="xs"
+                          color="white"
+                          onClick={() => resetCommentFlagged(comment.oid)}
+                        >
+                          <IconFlagCancel />
+                        </SmallButton>
+                      )}
+                      {comment.markedAsAiCount > 1 && (
+                        <SmallButton
+                          tooltip="Remove all AI-generated marks"
+                          size="xs"
+                          color="white"
+                          onClick={() => resetCommentMarkedAsAi(comment.oid)}
+                        >
+                          <IconRobotOff />
+                        </SmallButton>
+                      )}
+                    </>
+                  )}
+                  {(comment.canEdit || isAdmin) && (
+                    <>
+                      <SmallButton
+                        tooltip="Delete comment"
+                        size="xs"
+                        color="white"
+                        onClick={deleteComment}
+                      >
+                        <IconTrash />
+                      </SmallButton>
+                      <SmallButton
+                        tooltip="Edit comment"
+                        size="xs"
+                        color="white"
+                        onClick={() => {
+                          toggle();
+                          setDraftText(comment.text);
+                          setUndoStack({
+                            prev: [],
+                            next: [],
+                          });
+                        }}
+                      >
+                        <IconEdit />
+                      </SmallButton>
+                    </>
+                  )}
+                </Button.Group>
               )}
-              </Button.Group>
             </Flex>
           </Flex>
-          <Divider/>
+          <Divider />
         </Card.Section>
         <MarkdownText value={comment.text} />
       </Card>
