@@ -268,6 +268,8 @@ class Command(BaseCommand):
                     answer.downvotes.add(user)
                 elif (i + user.id) % 9 == 0:
                     answer.flagged.add(user)
+                elif (i + user.id) % 11 == 0:
+                    answer.marked_as_ai.add(user)
 
     def create_comments(self):
         self.stdout.write("Create comments")
@@ -306,6 +308,12 @@ class Command(BaseCommand):
             for i in range(comment.id % 5):
                 reporter = users[(comment.id + i) % len(users)]
                 comment.flagged.add(reporter)
+
+        for comment in comments[::31]:
+            # Create 1-4 (incl.) AI marks for this comment
+            for i in range(comment.id % 5):
+                marker = users[(comment.id + i + 1) % len(users)]
+                comment.marked_as_ai.add(marker)
 
     def create_feedback(self):
         self.stdout.write("Create feedback")
