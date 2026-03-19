@@ -172,7 +172,7 @@ interface Props {
 }
 
 const REGEX =
-  /page: (\d+)\r?\nfrom-relative-coords: \((0.\d+|1), (0.\d+|1)\)\r?\nto-relative-coords: \((0.\d+|1), (0.\d+|1)\)\r?\nurl: (\S+)/;
+  /page: (\d+)\r?\nfrom-relative-coords: \((0.\d+|1|0), (0.\d+|1|0)\)\r?\nto-relative-coords: \((0.\d+|1|0), (0.\d+|1|0)\)\r?\nurl: (\S+)/;
 
 const OfficialSolution: React.FC<Props> = React.memo(({ value }) => {
   const renderedPDF = useMemo(() => {
