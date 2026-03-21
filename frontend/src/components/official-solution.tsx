@@ -22,7 +22,10 @@ const DEFAULT_WIDTH = 500;
  * Fetches the actual PDF URL from the API based on the url type (solution/exam/document).
  * Uses useRequest with caching to prevent duplicate network requests on re-renders.
  */
-function usePdfUrl(url: string): string | undefined {
+export function usePdfUrl(url: string): {
+  loading: boolean,
+  url: string | undefined,
+} {
   const fetchPdfUrl = async () => {
     const parts = url.split("/");
     const type = parts[0]?.toLowerCase();
@@ -40,12 +43,15 @@ function usePdfUrl(url: string): string | undefined {
     }
   };
 
-  const { data } = useRequest(fetchPdfUrl, {
+  const { loading, data } = useRequest(fetchPdfUrl, {
     cacheKey: `pdf-url-${url}`,
     refreshDeps: [url],
   });
 
-  return data?.value;
+  return {
+    loading,
+    url: data?.value,
+  };
 }
 
 const PdfRenderer: React.FC<PProps> = React.memo(
@@ -53,7 +59,7 @@ const PdfRenderer: React.FC<PProps> = React.memo(
     const containerRef = useRef<HTMLDivElement>(null);
     const myCanvas = useRef<HTMLCanvasElement>(null);
     const [containerWidth, setContainerWidth] = useState<number>(DEFAULT_WIDTH);
-    const pdfUrl = usePdfUrl(url);
+    const {url: pdfUrl} = usePdfUrl(url);
 
     // Measure container width using ResizeObserver
     useEffect(() => {
