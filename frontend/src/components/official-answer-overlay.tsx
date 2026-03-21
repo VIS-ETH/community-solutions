@@ -48,7 +48,7 @@ async function pdfUrlPrefill(): Promise<ExamMetaData | undefined> {
 
 interface PdfSelectorProps {
   selectedPdf: string;
-  onCrop(markdown: string): void;
+  onCrop: (markdown: string) => void;
 }
 
 const PdfCutter: React.FC<PdfSelectorProps> = ({ selectedPdf, onCrop }) => {
@@ -77,8 +77,6 @@ const PdfCutter: React.FC<PdfSelectorProps> = ({ selectedPdf, onCrop }) => {
         if (entry.contentRect.width > 0) {
           setContainerRect(entry.contentRect);
           setCrop(undefined);
-        } else {
-          console.log(entry);
         }
       }
     });
@@ -161,7 +159,6 @@ const PdfCutter: React.FC<PdfSelectorProps> = ({ selectedPdf, onCrop }) => {
   }
 
   function handleInsert() {
-    console.log(containerRect, crop);
     if (!crop) return;
 
     const fromX = crop.x / containerRect.width;
@@ -213,7 +210,7 @@ const PdfCutter: React.FC<PdfSelectorProps> = ({ selectedPdf, onCrop }) => {
 };
 
 interface NavigatorProps {
-  onCrop(markdown: string): void;
+  onCrop: (markdown: string) => void;
 }
 
 const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
@@ -297,12 +294,6 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
       setSelectedPdf(examMetadata.has_solution ? `solution/${selectedExam}` : `exam/${selectedExam}`);
     }
   }, [selectedCategory, selectedExam, examMetadata, examMetadataLoading]);
-
-  console.log({
-    selectedCategory,
-    selectedExam,
-    selectedPdf,
-  })
 
   return (
     <div onClick={e => e.stopPropagation()}>
