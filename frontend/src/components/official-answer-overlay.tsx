@@ -1,0 +1,394 @@
+import { Button, Center, Grid, Modal, Pagination, Select } from "@mantine/core";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { loadAllCategories, loadExamMetaData, loadList } from "../api/hooks.js";
+import { useRequest } from "ahooks";
+import { createOptions, options } from "../utils/ts-utils.js";
+import { usePdfUrl } from "./official-solution.js";
+import type {
+  PDFDocumentProxy,
+  PDFDocumentLoadingTask,
+  RenderTask,
+} from "pdfjs-dist";
+import { getDocument } from "../pdf/pdfjs.js";
+import { ReactCrop, type Crop } from "react-image-crop";
+
+import "react-image-crop/dist/ReactCrop.css";
+import type { ExamMetaData } from "../interfaces.js";
+
+function formatOfficialAnswerMarkdown(
+  url: string,
+  page: number,
+  fromX: number,
+  fromY: number,
+  toX: number,
+  toY: number,
+) {
+  return `\`\`\`official
+page: ${page}
+from-relative-coords: (${fromX.toFixed(6)}, ${fromY.toFixed(6)})
+to-relative-coords: (${toX.toFixed(6)}, ${toY.toFixed(6)})
+url: ${url}
+\`\`\``;
+}
+
+async function pdfUrlPrefill(): Promise<ExamMetaData | undefined> {
+  const url = new URL(location.href);
+  if (url.pathname.startsWith("/exams/")) {
+    const exam = url.pathname.slice("/exams/".length);
+    try {
+      const metadata = await loadExamMetaData(exam);
+      return metadata;
+    } catch {
+      return undefined;
+    }
+  }
+
+  return undefined;
+}
+
+interface PdfSelectorProps {
+  selectedPdf: string;
+  onCrop(markdown: string): void;
+}
+
+const PdfCutter: React.FC<PdfSelectorProps> = ({ selectedPdf, onCrop }) => {
+  const { url: pdfUrl, loading } = usePdfUrl(selectedPdf);
+  const [pdfObject, setPdfObject] = useState<PDFDocumentProxy | null>();
+  const [page, setPage] = useState(1);
+  const [containerRect, setContainerRect] = useState<{
+    width: number;
+    height: number;
+  }>({
+    width: 1,
+    height: 1,
+  });
+  const [crop, setCrop] = useState<Crop>();
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Render at max width
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const resizeObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        if (entry.contentRect.width > 0) {
+          setContainerRect(entry.contentRect);
+          setCrop(undefined);
+        } else {
+          console.log(entry);
+        }
+      }
+    });
+
+    resizeObserver.observe(container);
+    // Set initial width
+    if (container.offsetWidth > 0) {
+      setContainerRect({
+        width: container.offsetWidth,
+        height: container.offsetHeight,
+      });
+    }
+
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  // Loading PDF, no rendering
+  // Necessary, because the page can change
+  useEffect(() => {
+    if (!pdfUrl || !canvasRef.current) return;
+    let active = true;
+
+    async function loadPdf() {
+      const loadingTask: PDFDocumentLoadingTask = getDocument(pdfUrl);
+      const pdf = await loadingTask.promise;
+
+      if (active) {
+        setPage(1);
+        setPdfObject(pdf);
+        setCrop(undefined);
+      }
+    }
+
+    void loadPdf();
+
+    return () => {
+      active = false;
+    };
+  }, [pdfUrl, canvasRef]);
+
+  // Rendering PDF
+  useEffect(() => {
+    if (!pdfObject || !canvasRef.current) return;
+
+    let active = true;
+    let renderTask: RenderTask | undefined;
+
+    async function renderPdf() {
+      const pdfPage = await pdfObject!.getPage(page);
+
+      if (!active) return;
+
+      const unscaledViewport = pdfPage.getViewport({ scale: 1 });
+      const scale = containerRect.width / unscaledViewport.width;
+
+      const viewport = pdfPage.getViewport({ scale });
+
+      const canvas = canvasRef.current;
+
+      if (canvas) {
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        renderTask = pdfPage.render({
+          canvas,
+          viewport,
+        });
+      }
+    }
+
+    void renderPdf();
+
+    return () => {
+      active = false;
+      renderTask?.cancel();
+    };
+  }, [pdfObject, page, containerRect]);
+
+  if (!pdfUrl && !loading) {
+    return <>Could not fetch PDF.</>;
+  }
+
+  function handleInsert() {
+    console.log(containerRect, crop);
+    if (!crop) return;
+
+    const fromX = crop.x / containerRect.width;
+    const fromY = crop.y / containerRect.height;
+    const toX = (crop.x + crop.width) / containerRect.width;
+    const toY = (crop.y + crop.height) / containerRect.height;
+
+    onCrop(
+      formatOfficialAnswerMarkdown(selectedPdf, page, fromX, fromY, toX, toY),
+    );
+  }
+
+  return (
+    <>
+      {pdfObject && (
+        <>
+          <Grid.Col span={{ md: 9 }}>
+            <Center>
+              <Pagination
+                value={page}
+                total={pdfObject.numPages}
+                onChange={value => {
+                  setPage(value);
+                }}
+              />
+            </Center>
+          </Grid.Col>
+          <Grid.Col span={{ md: 3 }}>
+            <Center>
+              <Button
+                disabled={!crop?.width || !crop.height}
+                onClick={handleInsert}
+              >
+                Save
+              </Button>
+            </Center>
+          </Grid.Col>
+        </>
+      )}
+      <Grid.Col ref={containerRef}>
+        <Center>
+          <ReactCrop crop={crop} onChange={crop => setCrop(crop)}>
+            <canvas ref={canvasRef} style={{ borderRadius: 5 }} />
+          </ReactCrop>
+        </Center>
+      </Grid.Col>
+    </>
+  );
+};
+
+interface NavigatorProps {
+  onCrop(markdown: string): void;
+}
+
+const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
+  const [selectedExam, setSelectedExam] = useState<string | undefined>(undefined);
+  const [selectedPdf, setSelectedPdf] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadPrefillData() {
+      const examMetadata = await pdfUrlPrefill();
+      if (examMetadata) {
+        setSelectedCategory(examMetadata.category);
+        setSelectedExam(examMetadata.filename);
+      }
+    }
+
+    void loadPrefillData();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const { loading: categoriesLoading, data: categories } = useRequest(loadAllCategories, {
+    cacheKey: "categories",
+  });
+  const categoriesMap = useMemo(
+    () =>
+      categories &&
+      createOptions(
+        Object.fromEntries(
+          categories
+            .filter(category => category.slug !== "default")
+            .map(category => [category.slug, category.displayname] as const),
+        ),
+      ),
+    [categories],
+  );
+
+  const { loading: examsLoading, data: exams } = useRequest(
+    () =>
+      selectedCategory
+        ? loadList(selectedCategory)
+        : Promise.resolve(undefined),
+    {
+      cacheKey: `category-${selectedCategory}`,
+      refreshDeps: [selectedCategory],
+    },
+  );
+  const examsMap = useMemo(
+    () =>
+      exams &&
+      createOptions(
+        Object.fromEntries(
+          exams.map(exam => [exam.filename, exam.displayname] as const),
+        ),
+      ),
+    [exams],
+  );
+
+  const { loading: examMetadataLoading, data: examMetadata } = useRequest(
+    () =>
+      selectedExam
+        ? loadExamMetaData(selectedExam)
+        : Promise.resolve(undefined),
+    {
+      cacheKey: `exam-metaData-${selectedExam}`,
+      refreshDeps: [selectedExam],
+    },
+  );
+
+  const solutionFile =
+    examMetadataLoading || !examMetadata ? false : examMetadata.has_solution;
+  const examFile = !examMetadataLoading && examMetadata;
+
+  useEffect(() => {
+    if (selectedCategory && selectedExam && examMetadata && !examMetadataLoading) {
+      // Eagerly load solution or else exam
+      setSelectedPdf(examMetadata.has_solution ? `solution/${selectedExam}` : `exam/${selectedExam}`);
+    }
+  }, [selectedCategory, selectedExam, examMetadata, examMetadataLoading]);
+
+  console.log({
+    selectedCategory,
+    selectedExam,
+    selectedPdf,
+  })
+
+  return (
+    <div onClick={e => e.stopPropagation()}>
+      <Grid>
+        <Grid.Col span={{ md: 6 }}>
+          <Select
+            label="Category"
+            data={categoriesMap ? options(categoriesMap) : undefined}
+            value={selectedCategory ?? null}
+            placeholder="Select category"
+            searchable
+            onChange={(value: string | null) => {
+              if (value) {
+                setSelectedCategory(value);
+                setSelectedExam(undefined);
+                setSelectedPdf(undefined);
+              }
+            }}
+          />
+        </Grid.Col>
+        <Grid.Col span={{ md: 6 }}>
+          {selectedCategory && (
+            <Select
+              label="Exam"
+              data={examsMap ? options(examsMap) : undefined}
+              value={selectedExam ?? null}
+              placeholder="Select exam"
+              onChange={(value: string | null) => {
+                if (value) {
+                  setSelectedExam(value);
+                  setSelectedPdf(undefined);
+                }
+              }}
+            />
+          )}
+        </Grid.Col>
+
+        {examFile && solutionFile && (
+          <>
+            <Grid.Col span={{ md: 6 }}>
+              <Button
+                fullWidth
+                onClick={() => {
+                  setSelectedPdf(`exam/${selectedExam}`);
+                }}
+              >
+                Cut from Exam
+              </Button>
+            </Grid.Col>
+            <Grid.Col span={{ md: 6 }}>
+              <Button
+                fullWidth
+                onClick={() => {
+                  setSelectedPdf(`solution/${selectedExam}`);
+                }}
+              >
+                Cut from Official Solution
+              </Button>
+            </Grid.Col>
+          </>
+        )}
+
+        {selectedPdf && <PdfCutter selectedPdf={selectedPdf} onCrop={onCrop} />}
+      </Grid>
+    </div>
+  );
+};
+
+interface OverlayProps {
+  isOpen: boolean;
+  onClose: () => void;
+  closeWithOfficialAnswer: (markdown: string) => void;
+}
+
+const OfficialAnswerOverlay: React.FC<OverlayProps> = ({
+  isOpen,
+  onClose,
+  closeWithOfficialAnswer,
+}) => {
+  return (
+    <Modal title="Embed PDF" size="lg" opened={isOpen} onClose={onClose}>
+      <Modal.Body>
+        <ExamNavigator onCrop={closeWithOfficialAnswer} />
+      </Modal.Body>
+    </Modal>
+  );
+};
+
+export default OfficialAnswerOverlay;
