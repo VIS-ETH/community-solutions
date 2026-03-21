@@ -14,6 +14,7 @@ import { ReactCrop, type Crop } from "react-image-crop";
 
 import "react-image-crop/dist/ReactCrop.css";
 import type { ExamMetaData } from "../interfaces.js";
+import { useLocation } from "react-router-dom";
 
 function formatOfficialAnswerMarkdown(
   url: string,
@@ -31,8 +32,7 @@ url: ${url}
 \`\`\``;
 }
 
-async function pdfUrlPrefill(): Promise<ExamMetaData | undefined> {
-  const url = new URL(location.href);
+async function pdfUrlPrefill(url: Location): Promise<ExamMetaData | undefined> {
   if (url.pathname.startsWith("/exams/")) {
     const exam = url.pathname.slice("/exams/".length);
     try {
@@ -217,12 +217,13 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
   const [selectedExam, setSelectedExam] = useState<string | undefined>(undefined);
   const [selectedPdf, setSelectedPdf] = useState<string | undefined>(undefined);
+  const location = useLocation();
 
   useEffect(() => {
     let active = true;
 
     async function loadPrefillData() {
-      const examMetadata = await pdfUrlPrefill();
+      const examMetadata = await pdfUrlPrefill(location);
       if (examMetadata && active) {
         setSelectedCategory(examMetadata.category);
         setSelectedExam(examMetadata.filename);
@@ -234,7 +235,7 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [location]);
 
   const { data: categories } = useRequest(loadAllCategories, {
     cacheKey: "categories",
