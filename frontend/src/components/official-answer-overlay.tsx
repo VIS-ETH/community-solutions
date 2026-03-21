@@ -67,7 +67,7 @@ const PdfCutter: React.FC<PdfSelectorProps> = ({ selectedPdf, onCrop }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Render at max width
+  // Track width of container to render pdf at full width
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -93,8 +93,8 @@ const PdfCutter: React.FC<PdfSelectorProps> = ({ selectedPdf, onCrop }) => {
     return () => resizeObserver.disconnect();
   }, []);
 
-  // Loading PDF, no rendering
-  // Necessary, because the page can change
+  // Loading PDF, to get amount of pages
+  // and speed up rendering later when page changes
   useEffect(() => {
     if (!pdfUrl || !canvasRef.current) return;
     let active = true;
@@ -117,7 +117,7 @@ const PdfCutter: React.FC<PdfSelectorProps> = ({ selectedPdf, onCrop }) => {
     };
   }, [pdfUrl, canvasRef]);
 
-  // Rendering PDF
+  // Rerender pdf when page, pdf, width changes
   useEffect(() => {
     if (!pdfObject || !canvasRef.current) return;
 
@@ -223,7 +223,7 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
 
     async function loadPrefillData() {
       const examMetadata = await pdfUrlPrefill();
-      if (examMetadata) {
+      if (examMetadata && active) {
         setSelectedCategory(examMetadata.category);
         setSelectedExam(examMetadata.filename);
       }
@@ -236,7 +236,7 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
     };
   }, []);
 
-  const { loading: categoriesLoading, data: categories } = useRequest(loadAllCategories, {
+  const { data: categories } = useRequest(loadAllCategories, {
     cacheKey: "categories",
   });
   const categoriesMap = useMemo(
@@ -252,7 +252,7 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
     [categories],
   );
 
-  const { loading: examsLoading, data: exams } = useRequest(
+  const { data: exams } = useRequest(
     () =>
       selectedCategory
         ? loadList(selectedCategory)
