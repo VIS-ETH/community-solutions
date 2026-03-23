@@ -17,6 +17,14 @@ import type { ExamMetaData } from "../interfaces.js";
 import { useLocation } from "react-router-dom";
 import { ReactRouterLocation } from "@grafana/faro-react";
 
+function formatCoordinate(c: number): string {
+  const rounded = Math.round(c * 1e6) / 1e6;
+
+  if (c <= 0) return "0";
+  if (c >= 1) return "1";
+  return "" + rounded;
+}
+
 function formatOfficialAnswerMarkdown(
   url: string,
   page: number,
@@ -27,8 +35,8 @@ function formatOfficialAnswerMarkdown(
 ) {
   return `\`\`\`official
 page: ${page}
-from-relative-coords: (${fromX.toFixed(6)}, ${fromY.toFixed(6)})
-to-relative-coords: (${toX.toFixed(6)}, ${toY.toFixed(6)})
+from-relative-coords: (${formatCoordinate(fromX)}, ${formatCoordinate(fromY)})
+to-relative-coords: (${formatCoordinate(toX)}, ${formatCoordinate(toY)})
 url: ${url}
 \`\`\``;
 }
