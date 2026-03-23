@@ -15,6 +15,7 @@ import { ReactCrop, type Crop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import type { ExamMetaData } from "../interfaces.js";
 import { useLocation } from "react-router-dom";
+import { ReactRouterLocation } from "@grafana/faro-react";
 
 function formatOfficialAnswerMarkdown(
   url: string,
@@ -32,7 +33,9 @@ url: ${url}
 \`\`\``;
 }
 
-async function pdfUrlPrefill(url: Location): Promise<ExamMetaData | undefined> {
+async function pdfUrlPrefill(
+  url: Location | ReactRouterLocation,
+): Promise<ExamMetaData | undefined> {
   if (url.pathname.startsWith("/exams/")) {
     const exam = url.pathname.slice("/exams/".length);
     try {
@@ -214,8 +217,12 @@ interface NavigatorProps {
 }
 
 const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
-  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
-  const [selectedExam, setSelectedExam] = useState<string | undefined>(undefined);
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
+    undefined,
+  );
+  const [selectedExam, setSelectedExam] = useState<string | undefined>(
+    undefined,
+  );
   const [selectedPdf, setSelectedPdf] = useState<string | undefined>(undefined);
   const location = useLocation();
 
@@ -290,9 +297,18 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
   const examFile = !examMetadataLoading && examMetadata;
 
   useEffect(() => {
-    if (selectedCategory && selectedExam && examMetadata && !examMetadataLoading) {
+    if (
+      selectedCategory &&
+      selectedExam &&
+      examMetadata &&
+      !examMetadataLoading
+    ) {
       // Eagerly load solution or else exam
-      setSelectedPdf(examMetadata.has_solution ? `solution/${selectedExam}` : `exam/${selectedExam}`);
+      setSelectedPdf(
+        examMetadata.has_solution
+          ? `solution/${selectedExam}`
+          : `exam/${selectedExam}`,
+      );
     }
   }, [selectedCategory, selectedExam, examMetadata, examMetadataLoading]);
 
