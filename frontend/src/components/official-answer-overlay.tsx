@@ -20,8 +20,8 @@ import { ReactRouterLocation } from "@grafana/faro-react";
 function formatCoordinate(c: number): string {
   const rounded = Math.round(c * 1e6) / 1e6;
 
-  if (c <= 0) return "0";
-  if (c >= 1) return "1";
+  if (rounded <= 0) return "0";
+  if (rounded >= 1) return "1";
   return "" + rounded;
 }
 
