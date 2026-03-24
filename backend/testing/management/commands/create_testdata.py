@@ -310,7 +310,7 @@ class Command(BaseCommand):
                 comment.flagged.add(reporter)
 
     def create_marked_as_ai_testcases(self):
-        self.stdout.write("Create marked as AI test cases (0, 2, 5 marks)")
+        self.stdout.write("Create marked as AI test cases (0, 2, 5, 6 marks)")
         all_users = list(MyUser.objects.all())
         answers = list(Answer.objects.all())
         comments = list(Comment.objects.all())
