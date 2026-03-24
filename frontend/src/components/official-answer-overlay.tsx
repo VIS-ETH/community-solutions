@@ -1,4 +1,13 @@
-import { Button, Center, Grid, Modal, Pagination, Select } from "@mantine/core";
+import {
+  Button,
+  Center,
+  Grid,
+  Group,
+  Modal,
+  Pagination,
+  Radio,
+  Select,
+} from "@mantine/core";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { loadAllCategories, loadExamMetaData, loadList } from "../api/hooks.js";
 import { useRequest } from "ahooks";
@@ -22,7 +31,7 @@ function formatCoordinate(c: number): string {
 
   if (rounded <= 0) return "0";
   if (rounded >= 1) return "1";
-  return "" + rounded;
+  return `${rounded}`;
 }
 
 function formatOfficialAnswerMarkdown(
@@ -220,6 +229,11 @@ const PdfCutter: React.FC<PdfSelectorProps> = ({ selectedPdf, onCrop }) => {
   );
 };
 
+const enum SelectedPdf {
+  Exam = "Exam",
+  Solution = "Solution",
+}
+
 interface NavigatorProps {
   onCrop: (markdown: string) => void;
 }
@@ -231,7 +245,9 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
   const [selectedExam, setSelectedExam] = useState<string | undefined>(
     undefined,
   );
-  const [selectedPdf, setSelectedPdf] = useState<string | undefined>(undefined);
+  const [selectedPdf, setSelectedPdf] = useState<SelectedPdf | undefined>(
+    undefined,
+  );
   const location = useLocation();
 
   useEffect(() => {
@@ -313,9 +329,7 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
     ) {
       // Eagerly load solution or else exam
       setSelectedPdf(
-        examMetadata.has_solution
-          ? `solution/${selectedExam}`
-          : `exam/${selectedExam}`,
+        examMetadata.has_solution ? SelectedPdf.Solution : SelectedPdf.Exam,
       );
     }
   }, [selectedCategory, selectedExam, examMetadata, examMetadataLoading]);
@@ -356,32 +370,42 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
           )}
         </Grid.Col>
 
-        {examFile && solutionFile && (
-          <>
-            <Grid.Col span={{ md: 6 }}>
-              <Button
-                fullWidth
-                onClick={() => {
-                  setSelectedPdf(`exam/${selectedExam}`);
-                }}
-              >
-                Cut from Exam
-              </Button>
-            </Grid.Col>
-            <Grid.Col span={{ md: 6 }}>
-              <Button
-                fullWidth
-                onClick={() => {
-                  setSelectedPdf(`solution/${selectedExam}`);
-                }}
-              >
-                Cut from Official Solution
-              </Button>
-            </Grid.Col>
-          </>
-        )}
+        <Grid.Col>
+          <Radio.Group
+            value={selectedPdf}
+            onChange={value => {
+              setSelectedPdf(value as SelectedPdf);
+            }}
+          >
+            <Center>
+              <Group>
+                <Radio
+                  defaultChecked={!solutionFile}
+                  disabled={!examFile}
+                  value={SelectedPdf.Exam}
+                  label="Cut from Exam"
+                />
+                <Radio
+                  defaultChecked={solutionFile}
+                  disabled={!solutionFile}
+                  value={SelectedPdf.Solution}
+                  label="Cut from Official Solution"
+                />
+              </Group>
+            </Center>
+          </Radio.Group>
+        </Grid.Col>
 
-        {selectedPdf && <PdfCutter selectedPdf={selectedPdf} onCrop={onCrop} />}
+        {selectedPdf && (
+          <PdfCutter
+            selectedPdf={
+              selectedPdf === SelectedPdf.Solution
+                ? `solution/${selectedExam}`
+                : `exam/${selectedExam}`
+            }
+            onCrop={onCrop}
+          />
+        )}
       </Grid>
     </div>
   );
