@@ -1,57 +1,33 @@
 import React from "react";
-import { Button, Paper } from "@mantine/core";
-import { IconChevronUp, IconRobot, IconX } from "@tabler/icons-react";
-import TooltipButton from "./TooltipButton";
+import { Text, Tooltip } from "@mantine/core";
+import { IconRobot } from "@tabler/icons-react";
 
 interface MarkedAsAiBadgeProps {
   count: number;
-  isMarkedAsAi: boolean;
-  loading: boolean;
-  size?: string;
-  onToggle: () => void;
 }
 
-const MarkedAsAiBadge: React.FC<MarkedAsAiBadgeProps> = ({
-  count,
-  isMarkedAsAi,
-  loading,
-  size,
-  onToggle,
-}) => {
-  if (count === 0) return null;
+const MarkedAsAiBadge: React.FC<MarkedAsAiBadgeProps> = ({ count }) => {
+  if (count < 1) return null;
+
+  const color = count >= 6 ? "red.7" : count >= 3 ? "yellow.7" : "blue.6";
+  const label =
+    count >= 6
+      ? "Very likely AI-generated"
+      : count >= 3
+        ? "Likely AI-generated"
+        : "Potentially AI-generated";
 
   return (
-    <Paper shadow="xs" mr="md">
-      <Button.Group>
-        <TooltipButton
-          tooltip="Marked as AI-generated"
-          color="blue"
-          px={12}
-          variant="filled"
-          size={size}
-        >
-          <IconRobot />
-        </TooltipButton>
-        <TooltipButton
-          color="blue"
-          miw={30}
-          tooltip={`${count} user${count === 1 ? "" : "s"} consider${count === 1 ? "s" : ""} this answer AI-generated.`}
-          size={size}
-        >
-          {count}
-        </TooltipButton>
-        <TooltipButton
-          px={8}
-          tooltip={isMarkedAsAi ? "Remove AI-generated mark" : "Mark as AI-generated"}
-          size={size ?? "sm"}
-          loading={loading}
-          style={{ borderLeftWidth: 0 }}
-          onClick={onToggle}
-        >
-          {isMarkedAsAi ? <IconX /> : <IconChevronUp />}
-        </TooltipButton>
-      </Button.Group>
-    </Paper>
+    <Tooltip
+      label="This is based on community reports and may not be accurate. Always use your own judgement when evaluating answers."
+      multiline
+      w={280}
+    >
+      <Text c={color} size="xs" mt={2} style={{ cursor: "default" }}>
+        <IconRobot size={12} style={{ verticalAlign: "middle", marginRight: 4 }} />
+        {label}
+      </Text>
+    </Tooltip>
   );
 };
 

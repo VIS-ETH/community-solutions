@@ -48,14 +48,13 @@ const SingleCommentComponent: React.FC<Props> = ({ comment, reload }) => {
     useSetExamCommentFlagged(reload);
   const [resetFlaggedLoading, resetExamCommentFlagged] =
     useResetExamCommentFlaggedVote(reload);
-  const [setMarkedAsAiLoading, setExamCommentMarkedAsAi] =
+  const [, setExamCommentMarkedAsAi] =
     useSetExamCommentMarkedAsAi(reload);
-  const [resetMarkedAsAiLoading, resetExamCommentMarkedAsAi] =
+  const [, resetExamCommentMarkedAsAi] =
     useResetExamCommentMarkedAsAi(reload);
   const { isAdmin } = useUser()!;
 
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
-  const markedAsAiLoading = setMarkedAsAiLoading || resetMarkedAsAiLoading;
 
   return (
     <Card withBorder shadow="md" mb="md">
@@ -121,27 +120,18 @@ const SingleCommentComponent: React.FC<Props> = ({ comment, reload }) => {
                   />
                 </>
               )}
+            <MarkedAsAiBadge count={comment.markedAsAiCount} />
           </Box>
           <Flex align="center">
             {comment && (
-              <>
-                <MarkedAsAiBadge
-                  count={comment.markedAsAiCount}
-                  isMarkedAsAi={comment.isMarkedAsAi}
-                  loading={markedAsAiLoading}
-                  onToggle={() =>
-                    setExamCommentMarkedAsAi(comment.oid, !comment.isMarkedAsAi)
-                  }
-                />
-                <FlaggedBadge
-                  count={comment.flaggedCount}
-                  isFlagged={comment.isFlagged}
-                  loading={flaggedLoading}
-                  onToggle={() =>
-                    setExamCommentFlagged(comment.oid, !comment.isFlagged)
-                  }
-                />
-              </>
+              <FlaggedBadge
+                count={comment.flaggedCount}
+                isFlagged={comment.isFlagged}
+                loading={flaggedLoading}
+                onToggle={() =>
+                  setExamCommentFlagged(comment.oid, !comment.isFlagged)
+                }
+              />
             )}
             {comment && (
               <Menu withinPortal>
@@ -151,7 +141,7 @@ const SingleCommentComponent: React.FC<Props> = ({ comment, reload }) => {
                   </Button>
                 </Menu.Target>
                 <Menu.Dropdown>
-                  {comment.markedAsAiCount === 0 && (
+                  {!comment.isMarkedAsAi && (
                     <Menu.Item
                       leftSection={<IconRobot />}
                       onClick={() =>

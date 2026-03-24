@@ -95,15 +95,14 @@ const DocumentCommentComponent = ({
 
   const [setCommentFlaggedLoading, setCommentFlagged] =
     useSetDocumentCommentFlagged(mutateComment);
-  const [setMarkedAsAiLoading, setCommentMarkedAsAi] =
+  const [, setCommentMarkedAsAi] =
     useSetDocumentCommentMarkedAsAi(mutateComment);
   const [resetCommentFlaggedLoading, resetCommentFlagged] =
     useResetDocumentCommentFlaggedVote(mutateComment);
-  const [resetMarkedAsAiLoading, resetCommentMarkedAsAi] =
+  const [, resetCommentMarkedAsAi] =
     useResetDocumentCommentMarkedAsAi(mutateComment);
 
   const flaggedLoading = setCommentFlaggedLoading || resetCommentFlaggedLoading;
-  const markedAsAiLoading = setMarkedAsAiLoading || resetMarkedAsAiLoading;
 
   return (
     <div id={String(comment.oid)}>
@@ -130,58 +129,50 @@ const DocumentCommentComponent = ({
       <Card withBorder shadow="md" my="sm">
         <Card.Section mb="sm">
           <Flex py="sm" px="md" justify="space-between" align="center">
-            <Flex align="center">
-              <Anchor component={Link} to={`/user/${comment.authorId}`}>
-                <Text fw={700} component="span">
-                  {comment.authorDisplayName}
+            <div>
+              <Flex align="center">
+                <Anchor component={Link} to={`/user/${comment.authorId}`}>
+                  <Text fw={700} component="span">
+                    {comment.authorDisplayName}
+                  </Text>
+                  <Text ml="0.25em" color="dimmed" component="span">
+                    @{comment.authorId}
+                  </Text>
+                </Anchor>
+                <Text component="span" mx={6} color="dimmed">
+                  ·
                 </Text>
-                <Text ml="0.25em" c="dimmed" component="span">
-                  @{comment.authorId}
-                </Text>
-              </Anchor>
-              <Text component="span" mx={6} c="dimmed">
-                ·
-              </Text>
-              {comment && <TimeText time={comment.time} suffix="ago" />}
-              {comment &&
-                differenceInSeconds(
-                  new Date(comment.edittime),
-                  new Date(comment.time),
-                ) > 1 && (
-                  <>
-                    <Text component="span" c="dimmed" mx={6}>
-                      ·
-                    </Text>
-                    <TimeText
-                      time={comment.edittime}
-                      prefix="edited"
-                      suffix="ago"
-                    />
-                  </>
-                )}
-            </Flex>
+                {comment && <TimeText time={comment.time} suffix="ago" />}
+                {comment &&
+                  differenceInSeconds(
+                    new Date(comment.edittime),
+                    new Date(comment.time),
+                  ) > 1 && (
+                    <>
+                      <Text component="span" color="dimmed" mx={6}>
+                        ·
+                      </Text>
+                      <TimeText
+                        time={comment.edittime}
+                        prefix="edited"
+                        suffix="ago"
+                      />
+                    </>
+                  )}
+              </Flex>
+              <MarkedAsAiBadge count={comment.markedAsAiCount} />
+            </div>
             <Flex>
               {comment && (
-                <>
-                  <MarkedAsAiBadge
-                    count={comment.markedAsAiCount}
-                    isMarkedAsAi={comment.isMarkedAsAi}
-                    loading={markedAsAiLoading}
-                    size="xs"
-                    onToggle={() =>
-                      setCommentMarkedAsAi(comment.oid, !comment.isMarkedAsAi)
-                    }
-                  />
-                  <FlaggedBadge
-                    count={comment.flaggedCount}
-                    isFlagged={comment.isFlagged}
-                    loading={flaggedLoading}
-                    size="xs"
-                    onToggle={() =>
-                      setCommentFlagged(comment.oid, !comment.isFlagged)
-                    }
-                  />
-                </>
+                <FlaggedBadge
+                  count={comment.flaggedCount}
+                  isFlagged={comment.isFlagged}
+                  loading={flaggedLoading}
+                  size="xs"
+                  onToggle={() =>
+                    setCommentFlagged(comment.oid, !comment.isFlagged)
+                  }
+                />
               )}
               <SmallButton
                 tooltip={showActions ? "Hide actions" : "Show actions"}

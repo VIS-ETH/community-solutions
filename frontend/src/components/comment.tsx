@@ -46,8 +46,8 @@ const CommentComponent: React.FC<Props> = ({
 }) => {
   const [setFlaggedLoading, setExamCommentFlagged] = useSetExamCommentFlagged(onSectionChanged);
   const [resetFlaggedLoading, resetExamCommentFlagged] = useResetExamCommentFlaggedVote(onSectionChanged);
-  const [setMarkedAsAiLoading, setExamCommentMarkedAsAi] = useSetExamCommentMarkedAsAi(onSectionChanged);
-  const [resetMarkedAsAiLoading, resetExamCommentMarkedAsAi] = useResetExamCommentMarkedAsAi(onSectionChanged);
+  const [, setExamCommentMarkedAsAi] = useSetExamCommentMarkedAsAi(onSectionChanged);
+  const [, resetExamCommentMarkedAsAi] = useResetExamCommentMarkedAsAi(onSectionChanged);
   const [viewSource, {toggle: toggleViewSource}] = useDisclosure();
   const { isAdmin, username } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
@@ -93,7 +93,6 @@ const CommentComponent: React.FC<Props> = ({
       removeConfirm("Remove comment?", () => runRemoveComment(comment.oid));
   };
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
-  const markedAsAiLoading = setMarkedAsAiLoading || resetMarkedAsAiLoading;
 
   return (
     <Paper
@@ -136,25 +135,17 @@ const CommentComponent: React.FC<Props> = ({
                 <TimeText time={comment.edittime} prefix="edited" suffix="ago" />
               </>
             )}
+          {comment && <MarkedAsAiBadge count={comment.markedAsAiCount} />}
         </div>
         <Flex>
           {comment && (
-            <>
-              <MarkedAsAiBadge
-                count={comment.markedAsAiCount}
-                isMarkedAsAi={comment.isMarkedAsAi}
-                loading={markedAsAiLoading}
-                size="xs"
-                onToggle={() => setExamCommentMarkedAsAi(comment.oid, !comment.isMarkedAsAi)}
-              />
-              <FlaggedBadge
-                count={comment.flaggedCount}
-                isFlagged={comment.isFlagged}
-                loading={flaggedLoading}
-                size="xs"
-                onToggle={() => setExamCommentFlagged(comment.oid, !comment.isFlagged)}
-              />
-            </>
+            <FlaggedBadge
+              count={comment.flaggedCount}
+              isFlagged={comment.isFlagged}
+              loading={flaggedLoading}
+              size="xs"
+              onToggle={() => setExamCommentFlagged(comment.oid, !comment.isFlagged)}
+            />
           )}
           {comment && (
             <Menu withinPortal>
@@ -162,7 +153,7 @@ const CommentComponent: React.FC<Props> = ({
                 <Button size="xs" variant="light" color="gray" mr="md"><IconDots/></Button>
               </Menu.Target>
               <Menu.Dropdown>
-                {comment.markedAsAiCount === 0 && (
+                {!comment.isMarkedAsAi && (
                   <Menu.Item
                     leftSection={<IconRobot />}
                     onClick={() => setExamCommentMarkedAsAi(comment.oid, true)}

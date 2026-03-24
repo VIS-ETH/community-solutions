@@ -9,7 +9,6 @@ import {
   Anchor,
   Box,
   Paper,
-  Stack,
   Tooltip,
 } from "@mantine/core";
 import { differenceInSeconds } from "date-fns";
@@ -57,7 +56,6 @@ import {
 } from "@tabler/icons-react";
 import FlaggedBadge from "./FlaggedBadge";
 import MarkedAsAiBadge from "./MarkedAsAiBadge";
-import ConditionalWrapper from "../utils/ConditionalWrapper";
 import classes from "./answer.module.css";
 import { useDisclosure } from "@mantine/hooks";
 import TimeText from "./time-text";
@@ -73,7 +71,6 @@ interface Props {
   onDelete?: () => void;
   answerKind: AnswerKind;
   hasId?: boolean;
-  stackBadges?: boolean;
 }
 const AnswerComponent: React.FC<Props> = ({
   section,
@@ -82,17 +79,14 @@ const AnswerComponent: React.FC<Props> = ({
   onSectionChanged,
   answerKind,
   hasId = true,
-  stackBadges = false,
 }) => {
   const [viewSource, { toggle: toggleViewSource }] = useDisclosure();
   const [setFlaggedLoading, setAnswerFlagged] =
     useSetAnswerFlagged(onSectionChanged);
   const [resetFlaggedLoading, resetAnswerFlagged] =
     useResetAnswerFlaggedVote(onSectionChanged);
-  const [setMarkedAsAiLoading, setAnswerMarkedAsAi] =
-    useSetAnswerMarkedAsAi(onSectionChanged);
-  const [resetMarkedAsAiLoading, resetAnswerMarkedAsAi] =
-    useResetAnswerMarkedAsAi(onSectionChanged);
+  const [, setAnswerMarkedAsAi] = useSetAnswerMarkedAsAi(onSectionChanged);
+  const [, resetAnswerMarkedAsAi] = useResetAnswerMarkedAsAi(onSectionChanged);
   const [setExpertVoteLoading, setExpertVote] =
     useSetExpertVote(onSectionChanged);
   const removeAnswer = useRemoveAnswer(onSectionChanged);
@@ -209,6 +203,7 @@ const AnswerComponent: React.FC<Props> = ({
                     />
                   </>
                 )}
+              {answer && <MarkedAsAiBadge count={answer.markedAsAiCount} />}
             </div>
             <Flex>
               <AnswerToolbar>
@@ -258,27 +253,14 @@ const AnswerComponent: React.FC<Props> = ({
                     </Paper>
                   )}
                 {answer && (
-                  <ConditionalWrapper
-                    condition={stackBadges}
-                    wrapper={children => <Stack gap={4}>{children}</Stack>}
-                  >
-                    <MarkedAsAiBadge
-                      count={answer.markedAsAiCount}
-                      isMarkedAsAi={answer.isMarkedAsAi}
-                      loading={markedAsAiLoading}
-                      onToggle={() =>
-                        setAnswerMarkedAsAi(answer.oid, !answer.isMarkedAsAi)
-                      }
-                    />
-                    <FlaggedBadge
-                      count={answer.flaggedCount}
-                      isFlagged={answer.isFlagged}
-                      loading={flaggedLoading}
-                      onToggle={() =>
-                        setAnswerFlagged(answer.oid, !answer.isFlagged)
-                      }
-                    />
-                  </ConditionalWrapper>
+                  <FlaggedBadge
+                    count={answer.flaggedCount}
+                    isFlagged={answer.isFlagged}
+                    loading={flaggedLoading}
+                    onToggle={() =>
+                      setAnswerFlagged(answer.oid, !answer.isFlagged)
+                    }
+                  />
                 )}
                 {answer && onSectionChanged && (
                   <Score
@@ -373,7 +355,7 @@ const AnswerComponent: React.FC<Props> = ({
                   <Button leftSection={<IconDots />}>More</Button>
                 </Menu.Target>
                 <Menu.Dropdown>
-                  {answer.markedAsAiCount === 0 && (
+                  {!answer.isMarkedAsAi && (
                     <Menu.Item
                       leftSection={<IconRobot />}
                       onClick={() => setAnswerMarkedAsAi(answer.oid, true)}
