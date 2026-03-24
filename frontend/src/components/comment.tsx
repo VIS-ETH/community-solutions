@@ -153,12 +153,19 @@ const CommentComponent: React.FC<Props> = ({
                 <Button size="xs" variant="light" color="gray" mr="md"><IconDots/></Button>
               </Menu.Target>
               <Menu.Dropdown>
-                {!comment.isMarkedAsAi && (
+                {!comment.isMarkedAsAi ? (
                   <Menu.Item
                     leftSection={<IconRobot />}
                     onClick={() => setExamCommentMarkedAsAi(comment.oid, true)}
                   >
                     Mark as AI-generated
+                  </Menu.Item>
+                ) : (
+                  <Menu.Item
+                    leftSection={<IconRobotOff />}
+                    onClick={() => setExamCommentMarkedAsAi(comment.oid, false)}
+                  >
+                    Remove AI-generated mark
                   </Menu.Item>
                 )}
                 {comment.flaggedCount === 0 && (

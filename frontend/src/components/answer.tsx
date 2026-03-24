@@ -355,12 +355,19 @@ const AnswerComponent: React.FC<Props> = ({
                   <Button leftSection={<IconDots />}>More</Button>
                 </Menu.Target>
                 <Menu.Dropdown>
-                  {!answer.isMarkedAsAi && (
+                  {!answer.isMarkedAsAi ? (
                     <Menu.Item
                       leftSection={<IconRobot />}
                       onClick={() => setAnswerMarkedAsAi(answer.oid, true)}
                     >
                       Mark as AI-generated
+                    </Menu.Item>
+                  ) : (
+                    <Menu.Item
+                      leftSection={<IconRobotOff />}
+                      onClick={() => setAnswerMarkedAsAi(answer.oid, false)}
+                    >
+                      Remove AI-generated mark
                     </Menu.Item>
                   )}
                   {answer.flaggedCount === 0 && (

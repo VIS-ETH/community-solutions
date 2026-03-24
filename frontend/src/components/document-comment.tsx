@@ -185,14 +185,14 @@ const DocumentCommentComponent = ({
               {showActions && (
                 <Button.Group>
                   <SmallButton
-                    tooltip="Mark as AI-generated"
+                    tooltip={comment.isMarkedAsAi ? "Remove AI-generated mark" : "Mark as AI-generated"}
                     size="xs"
                     color="white"
                     onClick={() =>
                       setCommentMarkedAsAi(comment.oid, !comment.isMarkedAsAi)
                     }
                   >
-                    <IconRobot />
+                    {comment.isMarkedAsAi ? <IconRobotOff /> : <IconRobot />}
                   </SmallButton>
                   <SmallButton
                     tooltip="Flag as inappropriate"

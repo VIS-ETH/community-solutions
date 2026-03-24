@@ -24,7 +24,10 @@ const MarkedAsAiBadge: React.FC<MarkedAsAiBadgeProps> = ({ count }) => {
       w={280}
     >
       <Text c={color} size="xs" mt={2} style={{ cursor: "default" }}>
-        <IconRobot size={12} style={{ verticalAlign: "middle", marginRight: 4 }} />
+        <IconRobot
+          size={12}
+          style={{ verticalAlign: "middle", marginRight: 4 }}
+        />
         {label}
       </Text>
     </Tooltip>

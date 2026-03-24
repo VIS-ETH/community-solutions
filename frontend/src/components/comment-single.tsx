@@ -141,7 +141,7 @@ const SingleCommentComponent: React.FC<Props> = ({ comment, reload }) => {
                   </Button>
                 </Menu.Target>
                 <Menu.Dropdown>
-                  {!comment.isMarkedAsAi && (
+                  {!comment.isMarkedAsAi ? (
                     <Menu.Item
                       leftSection={<IconRobot />}
                       onClick={() =>
@@ -149,6 +149,15 @@ const SingleCommentComponent: React.FC<Props> = ({ comment, reload }) => {
                       }
                     >
                       Mark as AI-generated
+                    </Menu.Item>
+                  ) : (
+                    <Menu.Item
+                      leftSection={<IconRobotOff />}
+                      onClick={() =>
+                        setExamCommentMarkedAsAi(comment.oid, false)
+                      }
+                    >
+                      Remove AI-generated mark
                     </Menu.Item>
                   )}
                   {comment.flaggedCount === 0 && (
