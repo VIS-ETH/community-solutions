@@ -274,7 +274,7 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
         ? loadList(selectedCategory)
         : Promise.resolve(undefined),
     {
-      cacheKey: `category-${selectedCategory}`,
+      cacheKey: `exam-list-${selectedCategory}`,
       refreshDeps: [selectedCategory],
     },
   );
