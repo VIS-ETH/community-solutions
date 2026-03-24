@@ -203,7 +203,7 @@ const PdfCutter: React.FC<PdfSelectorProps> = ({ selectedPdf, onCrop }) => {
                 disabled={!crop?.width || !crop.height}
                 onClick={handleInsert}
               >
-                Save
+                Insert
               </Button>
             </Center>
           </Grid.Col>
