@@ -178,6 +178,7 @@ const DocumentCommentComponent = ({
                 tooltip={showActions ? "Hide actions" : "Show actions"}
                 size="xs"
                 color="white"
+                variant="outline"
                 onClick={() => setShowActions(value => !value)}
               >
                 {showActions ? <IconX /> : <IconChevronDown />}
