@@ -1,4 +1,3 @@
-// import { pdfjs } from 'pdfjs-dist';
 import { PDFDocumentLoadingTask } from "pdfjs-dist";
 import { getDocument } from "../pdf/pdfjs";
 import React, { useMemo, useRef, useEffect, useState } from "react";
@@ -23,8 +22,8 @@ const DEFAULT_WIDTH = 500;
  * Uses useRequest with caching to prevent duplicate network requests on re-renders.
  */
 export function usePdfUrl(url: string): {
-  loading: boolean,
-  url: string | undefined,
+  loading: boolean;
+  url: string | undefined;
 } {
   const fetchPdfUrl = async () => {
     const parts = url.split("/");
@@ -59,7 +58,12 @@ const PdfRenderer: React.FC<PProps> = React.memo(
     const containerRef = useRef<HTMLDivElement>(null);
     const myCanvas = useRef<HTMLCanvasElement>(null);
     const [containerWidth, setContainerWidth] = useState<number>(DEFAULT_WIDTH);
-    const {url: pdfUrl} = usePdfUrl(url);
+    const { url: pdfUrl } = usePdfUrl(url);
+
+    const pdfDeepLink = pdfUrl ? new URL(pdfUrl) : undefined;
+    if (pdfDeepLink) {
+      pdfDeepLink.hash = `page=${refPage}`;
+    }
 
     // Measure container width using ResizeObserver
     useEffect(() => {
@@ -129,7 +133,9 @@ const PdfRenderer: React.FC<PProps> = React.memo(
 
     return (
       <div ref={containerRef} style={{ width: "100%" }}>
-        <canvas ref={myCanvas} />
+        <a href={pdfDeepLink?.href}>
+          <canvas ref={myCanvas} />
+        </a>
       </div>
     );
   },
