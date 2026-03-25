@@ -122,7 +122,6 @@ const AnswerComponent: React.FC<Props> = ({
 
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
   const canEdit = section && onSectionChanged && answer?.canEdit;
-  const markedAsAiLoading = setMarkedAsAiLoading || resetMarkedAsAiLoading;
   const canRemove = section && onSectionChanged && (isAdmin || answer?.canEdit);
   const { username } = useUser()!;
   return (
