@@ -1,7 +1,14 @@
 // import { pdfjs } from 'pdfjs-dist';
 import { PDFDocumentLoadingTask } from "pdfjs-dist";
 import { getDocument } from "../pdf/pdfjs";
-import React, { useMemo, useRef, useEffect, useState } from "react";
+import React, {
+  forwardRef,
+  memo,
+  useMemo,
+  useRef,
+  useEffect,
+  useState,
+} from "react";
 import { ComponentRenderer } from "./markdown-text";
 import { Tooltip } from "@mantine/core";
 import { fetchGet } from "../api/fetch-utils";
@@ -48,86 +55,96 @@ function usePdfUrl(url: string): string | undefined {
   return data?.value;
 }
 
-const PdfRenderer: React.FC<PProps> = React.memo(
-  ({ url, refPage, p1X, p1Y, p2X, p2Y }) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const myCanvas = useRef<HTMLCanvasElement>(null);
-    const [containerWidth, setContainerWidth] = useState<number>(DEFAULT_WIDTH);
-    const pdfUrl = usePdfUrl(url);
+const PdfRenderer: React.FC<PProps> = memo(
+  forwardRef<HTMLCanvasElement>(
+    ({ url, refPage, p1X, p1Y, p2X, p2Y }, tooltipRef) => {
+      const containerRef = useRef<HTMLCanvasElement>(null);
+      const myCanvas = useRef<HTMLCanvasElement>(null);
+      const [containerWidth, setContainerWidth] =
+        useState<number>(DEFAULT_WIDTH);
+      const pdfUrl = usePdfUrl(url);
 
-    // Measure container width using ResizeObserver
-    useEffect(() => {
-      const container = containerRef.current;
-      if (!container) return;
+      // Measure container width using ResizeObserver
+      useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
 
-      const resizeObserver = new ResizeObserver(entries => {
-        for (const entry of entries) {
-          const width = entry.contentRect.width;
-          if (width > 0) {
-            setContainerWidth(width);
+        const resizeObserver = new ResizeObserver(entries => {
+          for (const entry of entries) {
+            const width = entry.contentRect.width;
+            if (width > 0) {
+              setContainerWidth(width);
+            }
           }
-        }
-      });
-
-      resizeObserver.observe(container);
-      // Set initial width
-      if (container.offsetWidth > 0) {
-        setContainerWidth(container.offsetWidth);
-      }
-
-      return () => resizeObserver.disconnect();
-    }, []);
-
-    // Render PDF when we have the URL and container width
-    useEffect(() => {
-      if (!pdfUrl || !myCanvas.current) return;
-
-      let cancelled = false;
-
-      const renderPdf = async () => {
-        const loadingTask: PDFDocumentLoadingTask = getDocument(pdfUrl);
-        const pdf = await loadingTask.promise;
-        if (cancelled) return;
-
-        const page = await pdf.getPage(Math.min(refPage, pdf.numPages));
-        if (cancelled) return;
-
-        const unscaledViewport = page.getViewport({ scale: 1 });
-        const scale = Math.min(
-          2.5,
-          (0.8 * containerWidth) /
-            (unscaledViewport.width * Math.abs(p1X - p2X)),
-        );
-        const offsetX = -unscaledViewport.width * scale * p1X;
-        const offsetY = -unscaledViewport.height * scale * p1Y;
-        const viewport = page.getViewport({
-          scale,
-          offsetX,
-          offsetY,
         });
 
-        const canvas = myCanvas.current;
-        const context = canvas?.getContext("2d");
-        if (canvas && context) {
-          canvas.height = viewport.height * Math.abs(p1Y - p2Y);
-          canvas.width = viewport.width * Math.abs(p1X - p2X);
-          page.render({ canvasContext: context, canvas, viewport });
+        resizeObserver.observe(container);
+        // Set initial width
+        if (container.offsetWidth > 0) {
+          setContainerWidth(container.offsetWidth);
         }
-      };
 
-      renderPdf();
+        return () => resizeObserver.disconnect();
+      }, []);
 
-      return () => {
-        cancelled = true;
-      };
-    }, [pdfUrl, refPage, p1X, p1Y, p2X, p2Y, containerWidth]);
+      // Render PDF when we have the URL and container width
+      useEffect(() => {
+        if (!pdfUrl || !myCanvas.current) return;
 
-    return (
-      <div ref={containerRef} style={{ width: "100%" }}>
-        <canvas ref={myCanvas} />
-      </div>
-    );
-  },
+        let cancelled = false;
+
+        const renderPdf = async () => {
+          const loadingTask: PDFDocumentLoadingTask = getDocument(pdfUrl);
+          const pdf = await loadingTask.promise;
+          if (cancelled) return;
+
+          const page = await pdf.getPage(Math.min(refPage, pdf.numPages));
+          if (cancelled) return;
+
+          const unscaledViewport = page.getViewport({ scale: 1 });
+          const scale = Math.min(
+            2.5,
+            (0.8 * containerWidth) /
+              (unscaledViewport.width * Math.abs(p1X - p2X)),
+          );
+          const offsetX = -unscaledViewport.width * scale * p1X;
+          const offsetY = -unscaledViewport.height * scale * p1Y;
+          const viewport = page.getViewport({
+            scale,
+            offsetX,
+            offsetY,
+          });
+
+          const canvas = myCanvas.current;
+          const context = canvas?.getContext("2d");
+          if (canvas && context) {
+            canvas.height = viewport.height * Math.abs(p1Y - p2Y);
+            canvas.width = viewport.width * Math.abs(p1X - p2X);
+            page.render({ canvasContext: context, canvas, viewport });
+          }
+        };
+
+        renderPdf();
+
+        return () => {
+          cancelled = true;
+        };
+      }, [pdfUrl, refPage, p1X, p1Y, p2X, p2Y, containerWidth]);
+
+      return (
+        <div ref={containerRef} style={{ width: "100%" }}>
+          <canvas
+            ref={canvas => {
+              // Two refs are necessary, `tooltipRef` doesn't correctly set
+              // tooltipRef.current correctly, for some reason, which we need
+              myCanvas.current = canvas;
+              tooltipRef(canvas);
+            }}
+          />
+        </div>
+      );
+    },
+  ),
 );
 
 PdfRenderer.displayName = "PdfRenderer";
@@ -174,7 +191,7 @@ interface Props {
 const REGEX =
   /page: (\d+)\r?\nfrom-relative-coords: \((0.\d+|1), (0.\d+|1)\)\r?\nto-relative-coords: \((0.\d+|1), (0.\d+|1)\)\r?\nurl: (\S+)/;
 
-const OfficialSolution: React.FC<Props> = React.memo(({ value }) => {
+const OfficialSolution: React.FC<Props> = memo(({ value }) => {
   const renderedPDF = useMemo(() => {
     if (!value) {
       return <>Invalid Official Solution Syntax: Missing content</>;
