@@ -31,6 +31,7 @@ const DEFAULT_WIDTH = 500;
 export function usePdfUrl(url: string): {
   loading: boolean;
   url: string | undefined;
+  display_name: string | undefined;
 } {
   const fetchPdfUrl = async () => {
     const parts = url.split("/");
@@ -57,105 +58,112 @@ export function usePdfUrl(url: string): {
   return {
     loading,
     url: data?.value,
+    display_name: data?.display_name,
   };
 }
 
 const PdfRenderer: React.FC<PProps> = memo(
-  forwardRef<HTMLCanvasElement>(
-    ({ url, refPage, p1X, p1Y, p2X, p2Y }, tooltipRef) => {
-      const containerRef = useRef<HTMLDivElement>(null);
-      const myCanvas = useRef<HTMLCanvasElement>(null);
-      const [containerWidth, setContainerWidth] =
-        useState<number>(DEFAULT_WIDTH);
-      const { url: pdfUrl } = usePdfUrl(url);
+  ({ url, refPage, p1X, p1Y, p2X, p2Y }) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const myCanvas = useRef<HTMLCanvasElement>(null);
+    const [containerWidth, setContainerWidth] = useState<number>(DEFAULT_WIDTH);
+    const { url: pdfUrl, display_name: pdfDisplayName } = usePdfUrl(url);
 
-      const pdfDeepLink = pdfUrl ? new URL(pdfUrl) : undefined;
-      if (pdfDeepLink) {
-        pdfDeepLink.hash = `page=${refPage}`;
+    const pdfDeepLink = pdfUrl ? new URL(pdfUrl) : undefined;
+    if (pdfDeepLink) {
+      pdfDeepLink.hash = `page=${refPage}`;
+    }
+
+    // Measure container width using ResizeObserver
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const resizeObserver = new ResizeObserver(entries => {
+        for (const entry of entries) {
+          const width = entry.contentRect.width;
+          if (width > 0) {
+            setContainerWidth(width);
+          }
+        }
+      });
+
+      resizeObserver.observe(container);
+      // Set initial width
+      if (container.offsetWidth > 0) {
+        setContainerWidth(container.offsetWidth);
       }
 
-      // Measure container width using ResizeObserver
-      useEffect(() => {
-        const container = containerRef.current;
-        if (!container) return;
+      return () => resizeObserver.disconnect();
+    }, []);
 
-        const resizeObserver = new ResizeObserver(entries => {
-          for (const entry of entries) {
-            const width = entry.contentRect.width;
-            if (width > 0) {
-              setContainerWidth(width);
-            }
-          }
+    // Render PDF when we have the URL and container width
+    useEffect(() => {
+      if (!pdfUrl || !myCanvas.current) return;
+
+      let cancelled = false;
+
+      const renderPdf = async () => {
+        const loadingTask: PDFDocumentLoadingTask = getDocument(pdfUrl);
+        const pdf = await loadingTask.promise;
+        if (cancelled) return;
+
+        const page = await pdf.getPage(Math.min(refPage, pdf.numPages));
+        if (cancelled) return;
+
+        const unscaledViewport = page.getViewport({ scale: 1 });
+        const scale = Math.min(
+          2.5,
+          (0.8 * containerWidth) /
+            (unscaledViewport.width * Math.abs(p1X - p2X)),
+        );
+        const offsetX = -unscaledViewport.width * scale * p1X;
+        const offsetY = -unscaledViewport.height * scale * p1Y;
+        const viewport = page.getViewport({
+          scale,
+          offsetX,
+          offsetY,
         });
 
-        resizeObserver.observe(container);
-        // Set initial width
-        if (container.offsetWidth > 0) {
-          setContainerWidth(container.offsetWidth);
+        const canvas = myCanvas.current;
+        if (canvas) {
+          canvas.height = viewport.height * Math.abs(p1Y - p2Y);
+          canvas.width = viewport.width * Math.abs(p1X - p2X);
+          page.render({ canvas, viewport });
         }
+      };
 
-        return () => resizeObserver.disconnect();
-      }, []);
+      renderPdf();
 
-      // Render PDF when we have the URL and container width
-      useEffect(() => {
-        if (!pdfUrl || !myCanvas.current) return;
+      return () => {
+        cancelled = true;
+      };
+    }, [pdfUrl, refPage, p1X, p1Y, p2X, p2Y, containerWidth]);
 
-        let cancelled = false;
+    const tooltipLabel = (
+      <>
+        Click to view{" "}
+        <span
+          style={{
+            fontStyle: "italic",
+          }}
+        >
+          {pdfDisplayName}
+        </span>
+      </>
+    );
 
-        const renderPdf = async () => {
-          const loadingTask: PDFDocumentLoadingTask = getDocument(pdfUrl);
-          const pdf = await loadingTask.promise;
-          if (cancelled) return;
-
-          const page = await pdf.getPage(Math.min(refPage, pdf.numPages));
-          if (cancelled) return;
-
-          const unscaledViewport = page.getViewport({ scale: 1 });
-          const scale = Math.min(
-            2.5,
-            (0.8 * containerWidth) /
-              (unscaledViewport.width * Math.abs(p1X - p2X)),
-          );
-          const offsetX = -unscaledViewport.width * scale * p1X;
-          const offsetY = -unscaledViewport.height * scale * p1Y;
-          const viewport = page.getViewport({
-            scale,
-            offsetX,
-            offsetY,
-          });
-
-          const canvas = myCanvas.current;
-          if (canvas) {
-            canvas.height = viewport.height * Math.abs(p1Y - p2Y);
-            canvas.width = viewport.width * Math.abs(p1X - p2X);
-            page.render({ canvas, viewport });
-          }
-        };
-
-        renderPdf();
-
-        return () => {
-          cancelled = true;
-        };
-      }, [pdfUrl, refPage, p1X, p1Y, p2X, p2Y, containerWidth]);
-
-      return (
+    return (
+      <>
+        <Tooltip target={myCanvas} label={tooltipLabel} />
         <div ref={containerRef} style={{ width: "100%" }}>
           <a href={pdfDeepLink?.href}>
-            <canvas
-              ref={canvas => {
-                // Two refs are necessary, `tooltipRef` doesn't correctly set
-                // tooltipRef.current correctly, for some reason, which we need
-                myCanvas.current = canvas;
-                tooltipRef(canvas);
-              }}
-            />
+            <canvas ref={myCanvas} />
           </a>
         </div>
-      );
-    },
-  ),
+      </>
+    );
+  },
 );
 
 PdfRenderer.displayName = "PdfRenderer";
@@ -230,16 +238,14 @@ const OfficialSolution: React.FC<Props> = React.memo(({ value }) => {
     const url = match[6];
 
     return (
-      <Tooltip label="Official Solution">
-        <PdfRenderer
-          url={url}
-          refPage={page}
-          p1X={p1X}
-          p1Y={p1Y}
-          p2X={p2X}
-          p2Y={p2Y}
-        />
-      </Tooltip>
+      <PdfRenderer
+        url={url}
+        refPage={page}
+        p1X={p1X}
+        p1Y={p1Y}
+        p2X={p2X}
+        p2Y={p2Y}
+      />
     );
   }, [value]);
 
