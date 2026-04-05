@@ -177,7 +177,6 @@ const DocumentCommentComponent = ({
               <SmallButton
                 tooltip={showActions ? "Hide actions" : "Show actions"}
                 size="xs"
-                color="white"
                 variant="outline"
                 onClick={() => setShowActions(value => !value)}
               >
@@ -186,7 +185,11 @@ const DocumentCommentComponent = ({
               {showActions && (
                 <Button.Group>
                   <SmallButton
-                    tooltip={comment.isMarkedAsAi ? "Remove AI-generated mark" : "Mark as AI-generated"}
+                    tooltip={
+                      comment.isMarkedAsAi
+                        ? "Remove AI-generated mark"
+                        : "Mark as AI-generated"
+                    }
                     size="xs"
                     color="white"
                     onClick={() =>

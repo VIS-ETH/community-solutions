@@ -310,17 +310,17 @@ class Command(BaseCommand):
                 comment.flagged.add(reporter)
 
     def create_marked_as_ai_testcases(self):
-        self.stdout.write("Create marked as AI test cases (0, 2, 5, 6 marks)")
+        self.stdout.write("Create marked as AI test cases (2, 5, 6 marks)")
         all_users = list(MyUser.objects.all())
         answers = list(Answer.objects.all())
         comments = list(Comment.objects.all())
 
-        for answer, count in zip(answers, cycle([0, 2, 5, 6])):
+        for answer, count in zip(answers[::19], cycle([2, 5, 6])):
             non_authors = [u for u in all_users if u != answer.author]
             for user in non_authors[:count]:
                 answer.marked_as_ai.add(user)
 
-        for comment, count in zip(comments, cycle([0, 2, 5, 6])):
+        for comment, count in zip(comments[::19], cycle([2, 5, 6])):
             non_authors = [u for u in all_users if u != comment.author]
             for user in non_authors[:count]:
                 comment.marked_as_ai.add(user)
