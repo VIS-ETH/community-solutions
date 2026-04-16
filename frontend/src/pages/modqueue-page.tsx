@@ -10,11 +10,18 @@ import {
 } from "@mantine/core";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchGet } from "../api/fetch-utils";
+import { fetchGet, fetchPost } from "../api/fetch-utils";
 import ClaimButton from "../components/claim-button";
+import IconButton from "../components/icon-button";
 import LoadingOverlay from "../components/loading-overlay";
+import useRemoveConfirm from "../hooks/useRemoveConfirm";
 import { CategoryExam, CategoryPaymentExam } from "../interfaces";
 import useTitle from "../hooks/useTitle";
+import { IconTrash } from "@tabler/icons-react";
+
+const removeExam = async (filename: string) => {
+  await fetchPost(`/api/exam/remove/exam/${filename}/`, {});
+};
 
 const loadExams = async (includeHidden: boolean) => {
   return (
@@ -39,6 +46,17 @@ const ModQueue: React.FC = () => {
   } = useRequest(() => loadExams(includeHidden), {
     refreshDeps: [includeHidden],
   });
+  const [removeConfirm, modals] = useRemoveConfirm();
+  const { run: runRemoveExam } = useRequest(removeExam, {
+    manual: true,
+    onSuccess: reloadExams,
+  });
+  const handleRemoveClick = (exam: CategoryExam) => {
+    removeConfirm(
+      `Remove the exam named ${exam.displayname}? This will remove all answers and can not be undone!`,
+      () => runRemoveExam(exam.filename),
+    );
+  };
   const {
     error: payError,
     loading: payLoading,
@@ -49,6 +67,7 @@ const ModQueue: React.FC = () => {
 
   return (
     <Container size="xl">
+      {modals}
       {paymentExams && paymentExams.length > 0 && (
         <div>
           <Title my="sm" order={2}>
@@ -98,6 +117,7 @@ const ModQueue: React.FC = () => {
               <Table.Th>Name</Table.Th>
               <Table.Th>Import State</Table.Th>
               <Table.Th>Claim</Table.Th>
+              <Table.Th>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -127,6 +147,16 @@ const ModQueue: React.FC = () => {
                     {!exam.finished_cuts && (
                       <ClaimButton exam={exam} reloadExams={reloadExams} />
                     )}
+                  </Table.Td>
+                  <Table.Td>
+                    <IconButton
+                      size="md"
+                      color="red"
+                      tooltip="Delete exam"
+                      icon={<IconTrash />}
+                      variant="outline"
+                      onClick={() => handleRemoveClick(exam)}
+                    />
                   </Table.Td>
                 </Table.Tr>
               ))}
