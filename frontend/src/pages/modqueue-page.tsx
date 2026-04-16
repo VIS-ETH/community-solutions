@@ -10,7 +10,8 @@ import {
 } from "@mantine/core";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchGet, fetchPost } from "../api/fetch-utils";
+import { fetchGet } from "../api/fetch-utils";
+import { removeExam } from "../api/hooks";
 import ClaimButton from "../components/claim-button";
 import IconButton from "../components/icon-button";
 import LoadingOverlay from "../components/loading-overlay";
@@ -18,10 +19,6 @@ import useRemoveConfirm from "../hooks/useRemoveConfirm";
 import { CategoryExam, CategoryPaymentExam } from "../interfaces";
 import useTitle from "../hooks/useTitle";
 import { IconTrash } from "@tabler/icons-react";
-
-const removeExam = async (filename: string) => {
-  await fetchPost(`/api/exam/remove/exam/${filename}/`, {});
-};
 
 const loadExams = async (includeHidden: boolean) => {
   return (
