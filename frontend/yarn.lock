@@ -2539,10 +2539,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chroma-js@npm:^2.4.2":
-  version: 2.6.0
-  resolution: "chroma-js@npm:2.6.0"
-  checksum: 10c0/6e17f43246f9b3eba8a9db67f5ee9a2d0ef1360077211887da09ec1f0934bb98a358eefaf021003c0bd47cbab540f573a373f362d6b2ba04d0e80ab7677e1640
+"chroma-js@npm:^3.0.0":
+  version: 3.2.0
+  resolution: "chroma-js@npm:3.2.0"
+  checksum: 10c0/6ff6213d234e096ad3536291b1e1f11a506ea0fccfe163dd8eff69afa5f4f8a905b31a4a7ebc22b7eb722590887fed77073805ce89485f6d563edd1ea2d0a1db
   languageName: node
   linkType: hard
 
@@ -3857,7 +3857,7 @@ __metadata:
     "@types/react-transition-group": "npm:^4.4.1"
     "@vitejs/plugin-react": "npm:^6.0.1"
     ahooks: "npm:^2.10.14"
-    chroma-js: "npm:^2.4.2"
+    chroma-js: "npm:^3.0.0"
     clsx: "npm:^2.1.0"
     date-fns: "npm:^4.0.0"
     eslint: "npm:^9.38.0"
