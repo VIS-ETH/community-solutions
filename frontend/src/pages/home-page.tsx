@@ -246,69 +246,27 @@ export const CategoryList: React.FC<{}> = () => {
     }
   };
 
-  return (
-    <>
-      <Container size="xl">
-        <Flex
-          gap="md"
-          direction={{ base: "column", sm: "row" }}
-          justify="space-between"
-        >
-          <SegmentedControl
-            value={mode}
-            onChange={setMode}
-            data={[
-              { label: "Alphabetical", value: "alphabetical" },
-              { label: "By Semester", value: "bySemester" },
-            ]}
-          />
-          <TextInput
-            placeholder="Filter..."
-            value={filter}
-            autoFocus
-            onChange={e => setFilter(e.currentTarget.value)}
-            leftSection={
-              <IconSearch style={{ height: "15px", width: "15px" }} />
-            }
-          />
-        </Flex>
-      </Container>
-      <ContentContainer>
-        <Container size="xl" py="md" pos="relative">
-          {loading && !error && (
-            <Loader size="xs" color="gray" pos="absolute" top={0} right={0} />
-          )}
-          {error ? (
-            <Alert color="red">{error.toString()}</Alert>
-          ) : mode === "alphabetical" || filter.length > 0 ? (
-            <>
-              <Grid>
-                {searchResult.map(category => (
-                  <CategoryCard category={category} key={category.slug} />
-                ))}
-                {isAdmin && <AddCategory onAddCategory={onChange} />}
-              </Grid>
-            </>
-          ) : (
-            <>
-              {metaList?.map(([meta1display, meta2]) => (
-                <div key={meta1display} id={slugify(meta1display)}>
-                  <CollapseWrapper
-                    contentOutsideCollapse={<></>}
-                    title={
-                      <>
-                        <Title order={2} my="sm">
-                          {meta1display}
-                        </Title>
-                        {isAdmin && (
-                          <EditMeta1
-                            oldMeta1={meta1display}
-                            onChange={onChange}
-                          />
-                        )}
-                      </>
-                    }
-                    contentInsideCollapse={meta2.map(
+  // Add all meta1 categories to the default "Sort by" options (which are 'Alphabetical' and 'By Semester').
+  const sortByOptions = useMemo(
+    () =>
+      [
+        { label: "Alphabetical", value: "alphabetical" },
+        { label: "By Semester", value: "bySemester" },
+      ].concat(
+        (metaList ?? []).filter(([meta1display]) => meta1display !== "").map(([meta1display]) => ({
+          label: meta1display,
+          value: meta1display,
+        })),
+      ),
+    [metaList],
+  );
+
+
+  const Meta2ChildCategoriesDisplay: React.FC<{
+    meta1display: string;
+    meta2: [string, CategoryMetaData[]][];
+  }> = ({ meta1display, meta2 }) =>
+    meta2.map(
                       ([meta2display, categories]) =>
                         meta2display === "" ? (
                           <Grid key={meta2display}>
@@ -360,7 +318,68 @@ export const CategoryList: React.FC<{}> = () => {
                             />
                           </div>
                         ),
-                    )}
+                      );
+
+  return (
+    <>
+      <Container size="xl">
+        <Flex
+          gap="md"
+          direction={{ base: "column", sm: "row" }}
+          justify="space-between"
+        >
+          <SegmentedControl
+            value={mode}
+            onChange={setMode}
+            data={sortByOptions}
+          />
+          <TextInput
+            placeholder="Filter..."
+            value={filter}
+            autoFocus
+            onChange={e => setFilter(e.currentTarget.value)}
+            leftSection={
+              <IconSearch style={{ height: "15px", width: "15px" }} />
+            }
+          />
+        </Flex>
+      </Container>
+      <ContentContainer>
+        <Container size="xl" py="md" pos="relative">
+          {loading && !error && (
+            <Loader size="xs" color="gray" pos="absolute" top={0} right={0} />
+          )}
+          {error ? (
+            <Alert color="red">{error.toString()}</Alert>
+          ) : mode === "alphabetical" || filter.length > 0 ? (
+            <>
+              <Grid>
+                {searchResult.map(category => (
+                  <CategoryCard category={category} key={category.slug} />
+                ))}
+                {isAdmin && <AddCategory onAddCategory={onChange} />}
+              </Grid>
+            </>
+          ) : mode === "bySemester" ? (
+            <>
+              {metaList?.map(([meta1display, meta2]) => (
+                <div key={meta1display} id={slugify(meta1display)}>
+                  <CollapseWrapper
+                    contentOutsideCollapse={<></>}
+                    title={
+                      <>
+                        <Title order={2} my="sm">
+                          {meta1display}
+                        </Title>
+                        {isAdmin && (
+                          <EditMeta1
+                            oldMeta1={meta1display}
+                            onChange={onChange}
+                          />
+                        )}
+                      </>
+                    }
+                    contentInsideCollapse={<Meta2ChildCategoriesDisplay meta1display={meta1display} meta2={meta2} />}
                     is_collapsed={() => is_collapsed(meta1display)}
                     collapse_expand={() => collapse_expand(meta1display)}
                   />
@@ -389,7 +408,7 @@ export const CategoryList: React.FC<{}> = () => {
                 </>
               )}
             </>
-          )}
+          ) : <Meta2ChildCategoriesDisplay meta1display={mode} meta2={metaList?.find(([meta1display]) => meta1display === mode)?.[1] ?? []} /> }
         </Container>
       </ContentContainer>
       {!loading ? (
