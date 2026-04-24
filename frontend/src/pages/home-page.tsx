@@ -3,7 +3,6 @@ import {
   Button,
   Container,
   Flex,
-  Group,
   Loader,
   Modal,
   Paper,
@@ -17,7 +16,7 @@ import { useLocalStorageState, useRequest } from "ahooks";
 import React, { useCallback, useMemo, useState } from "react";
 import { fetchGet, fetchPost } from "../api/fetch-utils";
 import { loadMetaCategories } from "../api/hooks";
-import { User, useUser } from "../auth";
+import { useUser } from "../auth";
 import CategoryCard from "../components/category-card";
 import Grid from "../components/grid";
 import ContentContainer from "../components/secondary-container";
@@ -29,7 +28,7 @@ import { IconPlus, IconSearch } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { EditMeta1, EditMeta2 } from "../components/edit-meta-categories";
 import CollapseWrapper from "../components/collapse-wrapper";
-import clsx from "clsx";
+import { clsx } from "clsx";
 import classes from "../utils/focus-outline.module.css";
 
 const displayNameGetter = (data: CategoryMetaData) => data.displayname;
@@ -59,16 +58,14 @@ const mapToCategories = (
   const categoryMap = new Map<string, CategoryMetaData>();
   const assignedCategories = new WeakSet<CategoryMetaData>();
   for (const category of categories) categoryMap.set(category.slug, category);
-  const meta1Map: Map<string, Array<[string, CategoryMetaData[]]>> = new Map();
+  const meta1Map = new Map<string, [string, CategoryMetaData[]][]>();
   for (const { displayname: meta1display, meta2 } of meta1) {
-    const meta2Map: Map<string, CategoryMetaData[]> = new Map();
+    const meta2Map = new Map<string, CategoryMetaData[]>();
     for (const {
       displayname: meta2display,
       categories: categoryNames,
     } of meta2) {
-      const categories = categoryNames
-        .map(name => categoryMap.get(name)!)
-        .filter(a => a !== undefined);
+      const categories = categoryNames.map(name => categoryMap.get(name));
       for (const category of categories) assignedCategories.add(category);
       if (categories.length === 0) continue;
       meta2Map.set(meta2display, categories);
@@ -102,9 +99,7 @@ const AddCategory: React.FC<{ onAddCategory: () => void }> = ({
     },
   });
   const [categoryName, setCategoryName] = useState("");
-  const onSubmit = () => {
-    run(categoryName);
-  };
+  const onSubmit = () => void run(categoryName);
 
   return (
     <>
@@ -147,7 +142,7 @@ const AddCategory: React.FC<{ onAddCategory: () => void }> = ({
   );
 };
 
-const HomePage: React.FC<{}> = () => {
+const HomePage: React.FC = () => {
   useTitle("Home");
   return (
     <>
@@ -158,8 +153,72 @@ const HomePage: React.FC<{}> = () => {
     </>
   );
 };
-export const CategoryList: React.FC<{}> = () => {
-  const { isAdmin } = useUser() as User;
+
+const slugify = (str: string): string =>
+  str
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const Meta2ChildCategoriesDisplay: React.FC<{
+  meta1display: string;
+  meta2: [string, CategoryMetaData[]][];
+  isAdmin: boolean;
+  onChange: () => void;
+  is_collapsed: (category: string) => boolean;
+  collapse_expand: (category: string) => void;
+}> = ({
+  meta1display,
+  meta2,
+  isAdmin,
+  onChange,
+  is_collapsed,
+  collapse_expand,
+}) =>
+  meta2.map(([meta2display, categories]) =>
+    meta2display === "" ? (
+      <Grid key={meta2display}>
+        {categories.map(category => (
+          <CategoryCard category={category} key={category.slug} />
+        ))}
+      </Grid>
+    ) : (
+      <div key={meta2display} id={slugify(meta1display + meta2display)}>
+        <CollapseWrapper
+          contentOutsideCollapse={<></>}
+          title={
+            <>
+              <Title order={3} my="sm">
+                {meta2display}
+              </Title>
+
+              {isAdmin && (
+                <EditMeta2
+                  oldMeta2={meta2display}
+                  meta1={meta1display}
+                  onChange={onChange}
+                />
+              )}
+            </>
+          }
+          contentInsideCollapse={
+            <Grid>
+              {categories.map(category => (
+                <CategoryCard category={category} key={category.slug} />
+              ))}
+            </Grid>
+          }
+          is_collapsed={() => is_collapsed(meta1display + meta2display)}
+          collapse_expand={() => collapse_expand(meta1display + meta2display)}
+        />
+      </div>
+    ),
+  );
+
+export const CategoryList: React.FC = () => {
+  const { isAdmin } = useUser() ?? { isAdmin: false };
   const [mode, setMode] = useLocalStorageState("mode", "alphabetical");
   const [collapsedCategories, setCollapsedCategories] = useLocalStorageState<
     string[]
@@ -219,18 +278,8 @@ export const CategoryList: React.FC<{}> = () => {
     [categories, metaCategories],
   );
 
-  const onChange = useCallback(() => {
-    run();
-  }, [run]);
+  const onChange = useCallback(() => void run(), [run]);
   const [panelIsOpen, { toggle: togglePanel }] = useDisclosure();
-
-  const slugify = (str: string): string =>
-    str
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, "")
-      .replace(/[\s_-]+/g, "-")
-      .replace(/^-+|-+$/g, "");
 
   const is_collapsed = (category: string): boolean => {
     return collapsedCategories.includes(slugify(category));
@@ -253,72 +302,15 @@ export const CategoryList: React.FC<{}> = () => {
         { label: "Alphabetical", value: "alphabetical" },
         { label: "By Semester", value: "bySemester" },
       ].concat(
-        (metaList ?? []).filter(([meta1display]) => meta1display !== "").map(([meta1display]) => ({
-          label: meta1display,
-          value: meta1display,
-        })),
+        (metaList ?? [])
+          .filter(([meta1display]) => meta1display !== "")
+          .map(([meta1display]) => ({
+            label: meta1display,
+            value: meta1display,
+          })),
       ),
     [metaList],
   );
-
-
-  const Meta2ChildCategoriesDisplay: React.FC<{
-    meta1display: string;
-    meta2: [string, CategoryMetaData[]][];
-  }> = ({ meta1display, meta2 }) =>
-    meta2.map(
-                      ([meta2display, categories]) =>
-                        meta2display === "" ? (
-                          <Grid key={meta2display}>
-                            {categories.map(category => (
-                              <CategoryCard
-                                category={category}
-                                key={category.slug}
-                              />
-                            ))}
-                          </Grid>
-                        ) : (
-                          <div
-                            key={meta2display}
-                            id={slugify(meta1display + meta2display)}
-                          >
-                            <CollapseWrapper
-                              contentOutsideCollapse={<></>}
-                              title={
-                                <>
-                                  <Title order={3} my="sm">
-                                    {meta2display}
-                                  </Title>
-
-                                  {isAdmin && (
-                                    <EditMeta2
-                                      oldMeta2={meta2display}
-                                      meta1={meta1display}
-                                      onChange={onChange}
-                                    />
-                                  )}
-                                </>
-                              }
-                              contentInsideCollapse={
-                                <Grid>
-                                  {categories.map(category => (
-                                    <CategoryCard
-                                      category={category}
-                                      key={category.slug}
-                                    />
-                                  ))}
-                                </Grid>
-                              }
-                              is_collapsed={() =>
-                                is_collapsed(meta1display + meta2display)
-                              }
-                              collapse_expand={() =>
-                                collapse_expand(meta1display + meta2display)
-                              }
-                            />
-                          </div>
-                        ),
-                      );
 
   return (
     <>
@@ -379,7 +371,16 @@ export const CategoryList: React.FC<{}> = () => {
                         )}
                       </>
                     }
-                    contentInsideCollapse={<Meta2ChildCategoriesDisplay meta1display={meta1display} meta2={meta2} />}
+                    contentInsideCollapse={
+                      <Meta2ChildCategoriesDisplay
+                        meta1display={meta1display}
+                        meta2={meta2}
+                        isAdmin={isAdmin}
+                        onChange={onChange}
+                        is_collapsed={is_collapsed}
+                        collapse_expand={collapse_expand}
+                      />
+                    }
                     is_collapsed={() => is_collapsed(meta1display)}
                     collapse_expand={() => collapse_expand(meta1display)}
                   />
@@ -408,7 +409,20 @@ export const CategoryList: React.FC<{}> = () => {
                 </>
               )}
             </>
-          ) : <Meta2ChildCategoriesDisplay meta1display={mode} meta2={metaList?.find(([meta1display]) => meta1display === mode)?.[1] ?? []} /> }
+          ) : (
+            <Meta2ChildCategoriesDisplay
+              meta1display={mode}
+              meta2={
+                metaList?.find(
+                  ([meta1display]) => meta1display === mode,
+                )?.[1] ?? []
+              }
+              isAdmin={isAdmin}
+              onChange={onChange}
+              is_collapsed={is_collapsed}
+              collapse_expand={collapse_expand}
+            />
+          )}
         </Container>
       </ContentContainer>
       {!loading ? (
