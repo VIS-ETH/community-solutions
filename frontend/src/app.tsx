@@ -12,6 +12,7 @@ import {
   SegmentedControl,
 } from "@mantine/core";
 import "@mantine/core/styles.css";
+import "@mantine/charts/styles.css";
 import React, { useEffect, useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import {

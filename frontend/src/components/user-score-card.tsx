@@ -7,7 +7,9 @@ import {
   Paper,
   LoadingOverlay,
   Title,
+  Divider
 } from "@mantine/core";
+import { RadarChart } from '@mantine/charts';
 import React, { ReactNode } from "react";
 import { logout } from "../api/fetch-utils";
 import { useSetUser, useUser } from "../auth";
@@ -30,6 +32,10 @@ interface UserScoreCardProps {
   isMyself: boolean;
 }
 
+interface DemoProps {
+  userInfo: UserInfo | undefined;
+}
+
 function scoreCard(
   userInfo: UserInfo | undefined,
   title: string,
@@ -39,8 +45,7 @@ function scoreCard(
   >,
 ) {
   return (
-    <Paper shadow="md" withBorder px="md" py="lg" pos="relative">
-      <LoadingOverlay visible={!userInfo} />
+    <div style={{ flex: 1, padding: "var(--mantine-spacing-lg) var(--mantine-spacing-md)" }}>
       <Group justify="space-between" mb="xs">
         <Text inline size="xs" tt="uppercase" component="p" c="dimmed">
           {title}
@@ -53,10 +58,33 @@ function scoreCard(
           }}
         />
       </Group>
-      <Text lh={1} fz="xl" fw={600}>
+      <Text lh={1} fz="2rem" fw={600}>
         {userInfo ? userInfo[key] : "-"}
       </Text>
-    </Paper>
+    </div>
+  );
+}      
+
+function Demo(
+  {userInfo} : DemoProps
+) {
+  if(!userInfo) return null;
+  const data = [
+  { category: "Score",     Scores: userInfo.score },
+  { category: "Answers",   Scores: userInfo.score_answers },
+  { category: "Comments",  Scores: userInfo.score_comments },
+  { category: "Documents", Scores: userInfo.score_documents },
+  ...(userInfo.score_cuts > 0   ? [{ category: "Exam Import", Scores: userInfo.score_cuts }]   : []),
+  ...(userInfo.score_legacy > 0 ? [{ category: "Legacy",      Scores: userInfo.score_legacy }] : []),
+  ];
+  return (
+    <RadarChart
+      h={300}
+      data = {data}
+      dataKey = "category"
+      withPolarRadiusAxis
+      series={[{ name: 'Scores', color: 'blue.4', opacity: 0.2 }]}
+    />
   );
 }
 
@@ -97,18 +125,30 @@ const UserScoreCard: React.FC<UserScoreCardProps> = ({
         )}
       </Group>
 
-      <SimpleGrid cols={{ base: 1, xs: 2, sm: 3 }}>
-        {scoreCard(userInfo, "Score", "score", IconChevronUp)}
-        {scoreCard(userInfo, "Answers", "score_answers", IconPencil)}
-        {scoreCard(userInfo, "Comments", "score_comments", IconMessage)}
-        {scoreCard(userInfo, "Documents", "score_documents", IconFile)}
-        {userInfo &&
-          userInfo.score_cuts > 0 &&
-          scoreCard(userInfo, "Exam Import", "score_cuts", IconFileUpload)}
-        {userInfo &&
-          userInfo.score_legacy > 0 &&
-          scoreCard(userInfo, "Legacy Answers", "score_legacy", IconPencilCog)}
-      </SimpleGrid>
+        <Paper withBorder shadow="sm" pos="relative">
+          <LoadingOverlay visible={!userInfo} />
+          <Group align="stretch" gap={0} wrap="nowrap">
+            {scoreCard(userInfo, "Score", "score", IconChevronUp)}
+            <Divider orientation="vertical" />
+            {scoreCard(userInfo, "Answers", "score_answers", IconPencil)}
+            <Divider orientation="vertical" />
+            {scoreCard(userInfo, "Comments", "score_comments", IconMessage)}
+            <Divider orientation="vertical" />
+            {scoreCard(userInfo, "Documents", "score_documents", IconFile)}
+            {userInfo && userInfo.score_cuts > 0 && (
+              <>
+                <Divider orientation="vertical" />
+                {scoreCard(userInfo, "Exam Import", "score_cuts", IconFileUpload)}
+              </>
+            )}
+            {userInfo && userInfo.score_legacy > 0 && (
+              <>
+                <Divider orientation="vertical" />
+                {scoreCard(userInfo, "Legacy Answers", "score_legacy", IconPencilCog)}
+              </>
+            )}
+          </Group>
+        </Paper>
     </>
   );
 };
