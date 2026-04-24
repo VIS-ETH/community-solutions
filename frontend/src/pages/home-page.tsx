@@ -65,7 +65,10 @@ const mapToCategories = (
       displayname: meta2display,
       categories: categoryNames,
     } of meta2) {
-      const categories = categoryNames.map(name => categoryMap.get(name));
+      const categories = categoryNames.flatMap(name => {
+        const category = categoryMap.get(name); 
+        return category ? [category] : []; 
+      });
       for (const category of categories) assignedCategories.add(category);
       if (categories.length === 0) continue;
       meta2Map.set(meta2display, categories);
