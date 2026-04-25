@@ -159,6 +159,11 @@ const ExamTypeSection: React.FC<ExamTypeCardProps> = ({
                         Solution
                       </Badge>
                     )}
+                    {exam.user_solved && (
+                      <Badge title="Marked as already solved" color="grape">
+                        Solved
+                      </Badge>
+                    )}
                   </Flex>
                 </div>
                 {catAdmin && !exam.finished_cuts && (
