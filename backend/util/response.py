@@ -1,3 +1,4 @@
+from ninja import Schema
 from datetime import datetime
 from functools import wraps
 
