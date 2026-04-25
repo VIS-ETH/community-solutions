@@ -101,6 +101,19 @@ const PdfPanelBase: React.FC<PdfPanelBaseProps> = ({
     return inViewPages ? Math.min(...Array.from(inViewPages)) : undefined;
   }, [inViewPages]);
 
+  function handlePageInput(input: string) {
+    input = input.trim();
+
+    if (!/^\d+$/.test(input) || !renderer) {
+      return;
+    }
+
+    const parsed = Number.parseInt(input, 10);
+    if (parsed >= 1 && parsed <= renderer.document.numPages) {
+      location.hash = `#page-${parsed}`;
+    }
+  }
+
   return (
     <Panel isOpen={isOpen} toggle={toggle}>
       <Stack gap="xs">
@@ -115,7 +128,7 @@ const PdfPanelBase: React.FC<PdfPanelBaseProps> = ({
           </div>
         )}
         <Title order={6}>Pages</Title>
-        {!!renderer && (
+        {renderer && (
           <Pagination
             value={inViewPage}
             total={visiblePages?.size ?? renderer.document.numPages}
@@ -128,22 +141,28 @@ const PdfPanelBase: React.FC<PdfPanelBaseProps> = ({
             withControls={false}
           />
         )}
-        {!!renderer && (
-          <NumberInput
-            label="Navigate to page"
-            placeholder="20"
-            onKeyDown={event => {
-              const value = event.currentTarget.value;
-              if (event.key === "Enter") {
-                const newUrl = `${window.location.href.split("#")[0]}#page-${String(value)}`;
-                window.location.href = newUrl;
-              }
-            }}
-            clampBehavior="strict"
-            min={1}
-            max={renderer.document.numPages}
-            hideControls
-          />
+        {renderer && (
+          <>
+            <Title order={6}>Navigate to page</Title>
+            <NumberInput
+              placeholder="20"
+              onKeyDown={event => {
+                const value = event.currentTarget.value;
+                if (event.key === "Enter") {
+                  handlePageInput(value);
+                }
+              }}
+              onInput={event => {
+                const value = event.currentTarget.value;
+                handlePageInput(value);
+              }}
+              clampBehavior="strict"
+              min={1}
+              max={renderer.document.numPages}
+              value={inViewPage}
+              hideControls
+            />
+          </>
         )}
         <Title order={6}>Size</Title>
         <Slider
