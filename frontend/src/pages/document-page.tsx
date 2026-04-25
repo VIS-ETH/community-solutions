@@ -101,10 +101,6 @@ const DocumentPage: React.FC<Props> = () => {
   const Components = getComponents(activeFile);
   const [editing, { toggle: toggleEditing }] = useDisclosure();
   const [loadingDownload, startDownload] = useDocumentDownload(data);
-  const reloadComments = async () => {
-    await reload();
-    setTab("comments");
-  };
   const reloadSettings = async () => {
     await reload();
     setTab("settings");
@@ -118,6 +114,15 @@ const DocumentPage: React.FC<Props> = () => {
     }
   }, [searchParams, data]);
   useScrollToPermalink();
+
+  function formatDisplayName(file: DocumentFile): string {
+    const ext = file.filename.split(".").at(-1);
+    if (ext && file.display_name.endsWith(ext)) {
+      return file.display_name;
+    }
+
+    return `${file.display_name}.${ext}`;
+  }
 
   return (
     <>
@@ -200,7 +205,7 @@ const DocumentPage: React.FC<Props> = () => {
                     value={file.oid.toString()}
                     leftSection={<IconFile />}
                   >
-                    {file.display_name}
+                    {formatDisplayName(file)}
                   </Tabs.Tab>
                 ))}
             <Tabs.Tab value="comments" leftSection={<IconMessage />}>
@@ -259,9 +264,8 @@ const DocumentPage: React.FC<Props> = () => {
               </Alert>
               <Button
                 leftSection={<IconDownload />}
-                onClick={() => {
-                  download(`/api/document/file/${activeFile?.filename}`);
-                }
+                onClick={() =>
+                  download(`/api/document/file/${activeFile?.filename}`)
                 }
               >
                 Download

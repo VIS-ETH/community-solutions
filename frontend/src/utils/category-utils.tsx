@@ -118,24 +118,22 @@ export const dlSelectedExams = async (
       const responseUrl = await fetchGet(
         `/api/exam/pdf/exam/${exam.filename}/`,
       );
-      const responseFile = await fetch(responseUrl.value).then(r =>
-        r.arrayBuffer(),
-      );
+      const responseFile = fetch(responseUrl.value).then(r => r.arrayBuffer());
+      const ext = exam.filename.split(".").at(-1);
+      let displayName = exam.displayname;
+      if (ext && !displayName.endsWith(ext)) {
+        displayName += `.${ext}`;
+      }
+
       // @gkhromov: There could be collisions if several files have the same display name.
       // Add "(n)" to duplicates.
-      const ext = exam.filename.slice(exam.filename.lastIndexOf("."));
-      const displayExt = exam.displayname.slice(exam.displayname.lastIndexOf("."));
-      var displayName = exam.displayname
-      if (ext === displayExt) {
-        displayName = exam.displayname.slice(0, exam.displayname.lastIndexOf("."));
-      }
-      const repNum = fileNames.get(exam.displayname);
+      const repNum = fileNames.get(displayName);
       if (repNum !== undefined) {
-        fileNames.set(exam.displayname, repNum + 1);
-        zip.file(`${exam.displayname} (${repNum})${ext}`, responseFile);
+        fileNames.set(displayName, repNum + 1);
+        zip.file(`${displayName} (${repNum})${ext}`, responseFile);
       } else {
-        fileNames.set(exam.displayname, 1);
-        zip.file(exam.displayname + ext, responseFile);
+        fileNames.set(displayName, 1);
+        zip.file(displayName + ext, responseFile);
       }
     }),
   );
