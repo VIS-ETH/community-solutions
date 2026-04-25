@@ -12,7 +12,7 @@ import {
   Box,
   Tooltip,
 } from "@mantine/core";
-import React, { useEffect, useState } from "react";
+import React, { lazy, useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { download } from "../api/fetch-utils";
 import { useDocument } from "../api/hooks";
@@ -78,6 +78,27 @@ const getComponents = (
 
 const getFile = (document: Document | undefined, oid: number) =>
   document ? document.files.find(x => x.oid === oid) : undefined;
+
+const LazyIconFileTypePdf = lazy(
+  // @ts-expect-error Direct imports are untyped
+  () => import("@tabler/icons-react/dist/esm/icons/IconFileTypePdf.mjs"),
+);
+const LazyIconFileTypeZip = lazy(
+  // @ts-expect-error Direct imports are untyped
+  () => import("@tabler/icons-react/dist/esm/icons/IconFileTypeZip.mjs"),
+);
+
+const FileIcon: React.FC<{ filename: string }> = ({ filename }) => {
+  if (filename.endsWith(".pdf")) {
+    return <LazyIconFileTypePdf />;
+  }
+
+  if (filename.endsWith(".zip")) {
+    return <LazyIconFileTypeZip />;
+  }
+
+  return <IconFile />;
+};
 
 interface Props {}
 const DocumentPage: React.FC<Props> = () => {
@@ -202,7 +223,7 @@ const DocumentPage: React.FC<Props> = () => {
                 <Tabs.Tab
                   key={file.oid}
                   value={file.oid.toString()}
-                  leftSection={<IconFile />}
+                  leftSection={<FileIcon filename={file.filename} />}
                 >
                   {formatDisplayName(file)}
                 </Tabs.Tab>
