@@ -196,18 +196,17 @@ const DocumentPage: React.FC<Props> = () => {
       <Container size="xl" mt="sm">
         <Tabs value={tab} onChange={setTab}>
           <Tabs.List>
-            {data &&
-              data.files
-                .sort((a, b) => a.order - b.order)
-                .map(file => (
-                  <Tabs.Tab
-                    key={file.oid}
-                    value={file.oid.toString()}
-                    leftSection={<IconFile />}
-                  >
-                    {formatDisplayName(file)}
-                  </Tabs.Tab>
-                ))}
+            {data?.files
+              .sort((a, b) => a.order - b.order)
+              .map(file => (
+                <Tabs.Tab
+                  key={file.oid}
+                  value={file.oid.toString()}
+                  leftSection={<IconFile />}
+                >
+                  {formatDisplayName(file)}
+                </Tabs.Tab>
+              ))}
             <Tabs.Tab value="comments" leftSection={<IconMessage />}>
               Comments
             </Tabs.Tab>
