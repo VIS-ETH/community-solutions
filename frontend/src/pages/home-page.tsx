@@ -15,7 +15,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useLocalStorageState, useRequest } from "ahooks";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useContext, useMemo, useState } from "react";
 import { fetchGet, fetchPost } from "../api/fetch-utils";
 import { loadMetaCategories } from "../api/hooks";
 import { User, useUser } from "../auth";
@@ -27,7 +27,8 @@ import useSearch from "../hooks/useSearch";
 import useTitle from "../hooks/useTitle";
 import { CategoryMetaData, MetaCategory } from "../interfaces";
 import CourseCategoriesPanel from "../components/course-categories-panel";
-import { IconPlus, IconSearch } from "@tabler/icons-react";
+import { IconPlus } from "@tabler/icons-react";
+import { NavbarSearchContext } from "../components/Navbar/QuickSearch/NavbarSearchContext";
 import { useDisclosure } from "@mantine/hooks";
 import { EditMeta1, EditMeta2 } from "../components/edit-meta-categories";
 import CollapseWrapper from "../components/collapse-wrapper";
@@ -166,7 +167,7 @@ export const CategoryList: React.FC<{}> = () => {
   const [collapsedCategories, setCollapsedCategories] = useLocalStorageState<
     string[]
   >("collapsedCategories", []);
-  const [filter, setFilter] = useState("");
+  const { inlineQuery: filter } = useContext(NavbarSearchContext);
 
   // Check for local storage cache of category data and use that as a backup
   // while the actual request is loading
@@ -251,33 +252,14 @@ export const CategoryList: React.FC<{}> = () => {
   return (
     <>
       <Container size="xl">
-        <Flex
-          gap="md"
-          direction={{ base: "column", sm: "row" }}
-          justify="space-between"
-        >
-          <SegmentedControl
-            value={mode}
-            onChange={setMode}
-            data={[
-              { label: "Alphabetical", value: "alphabetical" },
-              { label: "By Semester", value: "bySemester" },
-            ]}
-          />
-          <TextInput
-            placeholder="Filter..."
-            value={filter}
-            autoFocus
-            onChange={e => setFilter(e.currentTarget.value)}
-            leftSection={
-              <IconSearch style={{ height: "15px", width: "15px" }} />
-            }
-            style={{
-              opacity: filter.length === 0 ? 0 : 1,
-              transition: "opacity 150ms",
-            }}
-          />
-        </Flex>
+        <SegmentedControl
+          value={mode}
+          onChange={setMode}
+          data={[
+            { label: "Alphabetical", value: "alphabetical" },
+            { label: "By Semester", value: "bySemester" },
+          ]}
+        />
       </Container>
       <RecentlyViewedExams />
       <ContentContainer mt="sm">

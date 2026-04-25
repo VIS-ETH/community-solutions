@@ -62,6 +62,7 @@ import {
   QuickSearchFilter,
   QuickSearchFilterContext,
 } from "./components/Navbar/QuickSearch/QuickSearchFilterContext";
+import { NavbarSearchContext } from "./components/Navbar/QuickSearch/NavbarSearchContext";
 import { useScrollToHash } from "./hooks/useScrollToHash";
 
 /**
@@ -201,6 +202,7 @@ const App: React.FC<{}> = () => {
   const [quickSearchFilter, setQuickSearchFilter] = useState<
     QuickSearchFilter | undefined
   >(undefined);
+  const [inlineQuery, setInlineQuery] = useState("");
 
   useScrollToHash();
 
@@ -337,6 +339,13 @@ const App: React.FC<{}> = () => {
       <DebugContext.Provider value={debugOptions}>
         <UserContext.Provider value={user}>
           <SetUserContext.Provider value={setUser}>
+            <NavbarSearchContext.Provider
+              value={{
+                inlineQuery,
+                setInlineQuery,
+                clearInlineQuery: () => setInlineQuery(""),
+              }}
+            >
             <QuickSearchFilterContext.Provider
               value={{
                 filter: quickSearchFilter,
@@ -418,6 +427,7 @@ const App: React.FC<{}> = () => {
                 }
               />
             </QuickSearchFilterContext.Provider>
+            </NavbarSearchContext.Provider>
           </SetUserContext.Provider>
         </UserContext.Provider>
       </DebugContext.Provider>

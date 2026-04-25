@@ -42,6 +42,7 @@ import classes from "./QuickSearchBox.module.css";
 import { QuickSearchResult } from "./QuickSearchResult";
 import { QuickSearchResults } from "./QuickSearchResults";
 import { QuickSearchFilterContext } from "./QuickSearchFilterContext";
+import { useNavbarSearch } from "./NavbarSearchContext";
 import { useNavigate } from "react-router-dom";
 import clsx from "clsx";
 
@@ -71,15 +72,22 @@ const displayOrder = [
 
 export const QuickSearchBox: React.FC = () => {
   const [opened, { open, close }] = useDisclosure(false);
+  const { inlineQuery, setInlineQuery, clearInlineQuery } = useNavbarSearch();
 
   // Reference to the input element so that we can select all text upon modal open
   const ref = useRef<HTMLInputElement>(null);
+
+  // Search query and its debounced version (to save network requests while typing)
+  const [searchQuery, setSearchQuery] = useState("");
+
   // Variant of `open` that also selects the existing text. Prefer this where
-  // possible, it's better UX.
+  // possible, it's better UX. Transfers any inline query into the popup input.
   const openWithHighlight = useCallback(() => {
+    if (inlineQuery) setSearchQuery(inlineQuery);
+    clearInlineQuery();
     open();
     ref.current?.select();
-  }, [ref, open]);
+  }, [ref, open, inlineQuery, setSearchQuery, clearInlineQuery]);
 
   const categories = useRequest(loadAllCategories, {
     cacheKey: "categories",
@@ -91,9 +99,6 @@ export const QuickSearchBox: React.FC = () => {
 
   // Use the OS to show OS-dependent shortcut icons
   const os = useOs();
-
-  // Search query and its debounced version (to save network requests while typing)
-  const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, { wait: 100 });
 
   // Category filter, set by pages like ExamPage or CategoryPage through the
@@ -241,6 +246,36 @@ export const QuickSearchBox: React.FC = () => {
       ?.scrollIntoView({ block: "center", behavior: "instant" });
   }, [currentSelection]);
 
+  // Global keydown listener for inline typing: routes printable keystrokes into
+  // the navbar pill's inline query when no editable element is focused and the
+  // popup is closed. This mirrors the old autoFocus home-page filter.
+  useEffect(() => {
+    const IGNORED_TAGS = new Set(["INPUT", "TEXTAREA", "SELECT"]);
+    const handler = (e: KeyboardEvent) => {
+      if (opened) return;
+      const isWordDelete = (e.ctrlKey || e.altKey) && e.key === "Backspace";
+      if (e.metaKey || ((e.ctrlKey || e.altKey) && !isWordDelete)) return;
+      const target = e.target as HTMLElement;
+      if (IGNORED_TAGS.has(target.tagName) || target.isContentEditable) return;
+
+      if (isWordDelete) {
+        e.preventDefault();
+        // Delete the last word (strip trailing spaces, then non-spaces)
+        setInlineQuery(q => q.replace(/\s+$/, "").replace(/\S+$/, ""));
+      } else if (e.key === "Backspace") {
+        e.preventDefault();
+        setInlineQuery(q => q.slice(0, -1));
+      } else if (e.key === "Escape") {
+        clearInlineQuery();
+      } else if (e.key.length === 1) {
+        e.preventDefault();
+        setInlineQuery(q => q + e.key);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [opened, setInlineQuery, clearInlineQuery]);
+
   // Slash to open wherever this component is mounted (i.e. every page if
   // QuickSearchBox is in nav bar). By default, ignores on INPUT, TEXTAREA,
   // SELECT elements, as we don't supply a second argument.
@@ -272,7 +307,7 @@ export const QuickSearchBox: React.FC = () => {
       <Button className={classes.navButton} px="md" onClick={openWithHighlight}>
         <Group wrap="nowrap">
           <IconSearch />
-          <span>Search</span>
+          <span>{inlineQuery || "Search"}</span>
           <Kbd>{os === "macos" ? "⌘" : "Ctrl +"} K</Kbd>
         </Group>
       </Button>
