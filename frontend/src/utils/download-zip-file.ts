@@ -26,7 +26,7 @@ export async function downloadZipFile(
       const ext = filename.split(".").at(-1);
 
       let displayName = displayName_;
-      if (ext && !displayName.endsWith(ext)) {
+      if (ext && !displayName.endsWith(`.${ext}`)) {
         displayName += `.${ext}`;
       }
 

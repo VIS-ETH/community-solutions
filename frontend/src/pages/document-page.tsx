@@ -138,7 +138,7 @@ const DocumentPage: React.FC<Props> = () => {
 
   function formatDisplayName(file: DocumentFile): string {
     const ext = file.filename.split(".").at(-1);
-    if (ext && file.display_name.endsWith(ext)) {
+    if (ext && file.display_name.endsWith(`.${ext}`)) {
       return file.display_name;
     }
 
