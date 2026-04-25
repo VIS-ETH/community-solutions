@@ -7,7 +7,7 @@ export interface RecentExam {
 }
 
 export const RECENT_EXAMS_KEY = "recently-viewed-exams";
-export const MAX_RECENT_EXAMS = 7;
+export const MAX_RECENT_EXAMS = 5;
 
 export function pushRecentExam(
   list: RecentExam[],
