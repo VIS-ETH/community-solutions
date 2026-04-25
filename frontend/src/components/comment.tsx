@@ -2,7 +2,7 @@ import { differenceInSeconds } from "date-fns";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { addNewComment, removeComment, updateComment } from "../api/comment";
-import { imageHandler } from "../api/fetch-utils";
+import { usePendingImages } from "./Editor/pending-images";
 import { useMutation, useResetExamCommentFlaggedVote, useResetExamCommentMarkedAsAi, useSetExamCommentFlagged, useSetExamCommentMarkedAsAi } from "../api/hooks";
 import { useUser } from "../auth";
 import useRemoveConfirm from "../hooks/useRemoveConfirm";
@@ -53,6 +53,7 @@ const CommentComponent: React.FC<Props> = ({
   const [editing, setEditing] = useState(false);
   const [draftText, setDraftText] = useState("");
   const [undoStack, setUndoStack] = useState<UndoStack>({ prev: [], next: [] });
+  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } = usePendingImages();
   const [addNewLoading, runAddNewComment] = useMutation(addNewComment, res => {
     if (onDelete) onDelete();
     onSectionChanged(res);
@@ -68,11 +69,12 @@ const CommentComponent: React.FC<Props> = ({
   const loading = addNewLoading || updateLoading || removeLoading;
   const languages = useOfficialSolutionLanguage();
 
-  const onSave = () => {
+  const onSave = async () => {
+    const finalText = await flushPendingImages(draftText);
     if (comment === undefined) {
-      runAddNewComment(answer.oid, draftText);
+      runAddNewComment(answer.oid, finalText);
     } else {
-      runUpdateComment(comment.oid, draftText);
+      runUpdateComment(comment.oid, finalText);
     }
   };
   const onCancel = () => {
@@ -232,9 +234,9 @@ const CommentComponent: React.FC<Props> = ({
           <Editor
             value={draftText}
             onChange={setDraftText}
-            imageHandler={imageHandler}
+            imageHandler={deferredImageHandler}
             preview={value => (
-              <MarkdownText value={value} languages={languages} />
+              <MarkdownText value={value} languages={languages} pendingImages={pendingObjectUrls} />
             )}
             undoStack={undoStack}
             setUndoStack={setUndoStack}

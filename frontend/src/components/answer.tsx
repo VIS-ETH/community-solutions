@@ -15,7 +15,7 @@ import { differenceInSeconds } from "date-fns";
 import React, { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
-import { imageHandler } from "../api/fetch-utils";
+import { usePendingImages } from "./Editor/pending-images";
 import {
   useRemoveAnswer,
   useResetAnswerFlaggedVote,
@@ -102,6 +102,7 @@ const AnswerComponent: React.FC<Props> = ({
 
   const [draftText, setDraftText] = useState("");
   const [undoStack, setUndoStack] = useState<UndoStack>({ prev: [], next: [] });
+  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } = usePendingImages();
   const startEdit = useCallback(() => {
     setDraftText(answer?.text ?? "");
     setEditing(true);
@@ -110,9 +111,11 @@ const AnswerComponent: React.FC<Props> = ({
     setEditing(false);
     if (answer === undefined && onDelete) onDelete();
   }, [onDelete, answer]);
-  const save = useCallback(() => {
-    if (section) update(section.oid, draftText, answerKind);
-  }, [section, draftText, update, answerKind]);
+  const save = useCallback(async () => {
+    if (!section) return;
+    const finalText = await flushPendingImages(draftText);
+    update(section.oid, finalText, answerKind);
+  }, [section, draftText, update, answerKind, flushPendingImages]);
   const remove = useCallback(() => {
     if (answer) removeConfirm("Remove answer?", () => removeAnswer(answer.oid));
   }, [removeConfirm, removeAnswer, answer]);
@@ -287,9 +290,9 @@ const AnswerComponent: React.FC<Props> = ({
               <Editor
                 value={draftText}
                 onChange={setDraftText}
-                imageHandler={imageHandler}
+                imageHandler={deferredImageHandler}
                 preview={value => (
-                  <MarkdownText value={value} languages={languages} />
+                  <MarkdownText value={value} languages={languages} pendingImages={pendingObjectUrls} />
                 )}
                 undoStack={undoStack}
                 setUndoStack={setUndoStack}

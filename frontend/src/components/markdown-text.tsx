@@ -18,12 +18,13 @@ import ErrorBoundary from "./error-boundary";
 import clsx from "clsx";
 import classes from "./markdown-text.module.css";
 
-const transformImageUri = (uri: string) => {
-  if (uri.includes("/")) {
-    return uri;
-  } else {
-    return `/api/image/get/${uri}/`;
-  }
+const transformImageUri = (
+  uri: string,
+  pendingImages?: Map<string, string>,
+) => {
+  if (uri.startsWith("pending:")) return pendingImages?.get(uri) ?? "";
+  if (uri.includes("/")) return uri;
+  return `/api/image/get/${uri}/`;
 };
 
 export type ComponentRenderer = (
@@ -166,6 +167,8 @@ interface Props {
   highlight_matches?: string[];
   languages?: Record<string, ComponentRenderer>;
   targetWidth?: number;
+  /** Map of pending image id → object URL for in-editor previews. */
+  pendingImages?: Map<string, string>;
 }
 
 // Example that triggers the error: $\begin{\pmatrix}$
@@ -190,6 +193,7 @@ const MarkdownText: React.FC<Props> = ({
   highlight_matches,
   languages,
   targetWidth,
+  pendingImages,
 }) => {
   // Make sure we don't generate a RegExp with empty text, as that will match
   // everything (including the empty string) and can cause mayhem with
@@ -217,7 +221,7 @@ const MarkdownText: React.FC<Props> = ({
           <MarkdownHooks
             urlTransform={(uri: string, key, node) => {
               if (node.tagName === "img") {
-                return transformImageUri(uri);
+                return transformImageUri(uri, pendingImages);
               }
               return defaultUrlTransform(uri);
             }}
@@ -230,7 +234,7 @@ const MarkdownText: React.FC<Props> = ({
         </ErrorBoundary>
       </div>
     );
-  }, [value, renderers]);
+  }, [value, renderers, pendingImages]);
 };
 
 export default MarkdownText;

@@ -18,6 +18,7 @@ from django.utils.text import slugify
 from myauth import auth_check
 from myauth.models import MyUser, get_my_user
 from util import s3_util, response
+from images.util import cleanup_removed_images
 
 from documents.models import (
     Comment,
@@ -268,6 +269,7 @@ class DocumentElementView(View):
 
         can_edit = document.current_user_can_edit(request)
         edited = False
+        old_description = document.description
         if "description" in request.DATA:
             if not can_edit:
                 return response.not_allowed()
@@ -302,6 +304,8 @@ class DocumentElementView(View):
         if edited:
             document.edittime = timezone.now()
             document.save()
+            if "description" in request.DATA:
+                cleanup_removed_images(old_description, document.description)
 
         return response.success(value=get_document_obj(document, request))
 
@@ -386,9 +390,11 @@ class DocumentCommentElementView(View):
         if not comment.current_user_can_edit(request):
             return response.not_allowed()
         comment.edittime = timezone.now()
+        old_text = comment.text
         if "text" in request.DATA:
             comment.text = request.DATA["text"]
         comment.save()
+        cleanup_removed_images(old_text, comment.text)
         comment = prep_comment_obj(comment, request)
         return response.success(value=get_comment_obj(comment, request))
 
@@ -403,7 +409,9 @@ class DocumentCommentElementView(View):
         )
         if not comment.current_user_can_delete(request):
             return response.not_allowed()
+        old_text = comment.text
         comment.delete()
+        cleanup_removed_images(old_text, "")
         return response.success()
 
 

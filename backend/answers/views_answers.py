@@ -3,6 +3,7 @@ from myauth import auth_check
 from answers.models import AnswerSection, Answer
 from answers import section_util
 from notifications import notification_util
+from images.util import cleanup_removed_images
 from django.shortcuts import get_object_or_404
 from django.http import Http404
 from django.utils import timezone
@@ -58,6 +59,8 @@ def set_answer(request, oid):
     if kind == Answer.Kind.PERSONAL:
         where["author"] = request.user
 
+    old_text = Answer.objects.filter(*where).values_list("text", flat=True).first() or ""
+
     answer, created = None, False
     if not text:
         Answer.objects.filter(*where).delete()
@@ -68,6 +71,8 @@ def set_answer(request, oid):
             "edittime": timezone.now(),
         }
         answer, created = Answer.objects.update_or_create(**where, defaults=defaults)
+
+    cleanup_removed_images(old_text, text)
     if created and kind == Answer.Kind.PERSONAL:
         answer.upvotes.add(request.user)
         notification_util.new_answer_to_answer(answer)
@@ -88,7 +93,9 @@ def remove_answer(request, oid):
     if not (answer.author == request.user or auth_check.has_admin_rights(request)):
         return response.not_allowed()
     section = answer.answer_section
+    old_text = answer.text
     answer.delete()
+    cleanup_removed_images(old_text, "")
     section_util.increase_section_version(section)
     return response.success(
         value=section_util.get_answersection_response(request, section)

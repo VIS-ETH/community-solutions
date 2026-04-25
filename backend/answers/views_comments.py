@@ -3,6 +3,7 @@ from myauth import auth_check
 from answers.models import Answer, Comment
 from answers import section_util
 from notifications import notification_util
+from images.util import cleanup_removed_images
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
@@ -25,9 +26,11 @@ def set_comment(request, oid):
     comment = get_object_or_404(Comment, pk=oid)
     if comment.author != request.user:
         return response.not_allowed()
+    old_text = comment.text
     comment.text = request.POST['text']
     comment.edittime = timezone.now()
     comment.save()
+    cleanup_removed_images(old_text, comment.text)
     section_util.increase_section_version(comment.answer.answer_section)
     return response.success(value=section_util.get_answersection_response(request, comment.answer.answer_section))
 
@@ -39,7 +42,9 @@ def remove_comment(request, oid):
     if not (comment.author == request.user or auth_check.has_admin_rights(request)):
         return response.not_allowed()
     section = comment.answer.answer_section
+    old_text = comment.text
     comment.delete()
+    cleanup_removed_images(old_text, "")
     section_util.increase_section_version(comment.answer.answer_section)
     return response.success(value=section_util.get_answersection_response(request, section))
 

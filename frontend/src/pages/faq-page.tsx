@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useState } from "react";
 import { useFAQ } from "../api/faq";
-import { imageHandler } from "../api/fetch-utils";
+import { usePendingImages } from "../components/Editor/pending-images";
 import { useUser } from "../auth";
 import Editor from "../components/Editor";
 import { UndoStack } from "../components/Editor/utils/undo-stack";
@@ -20,16 +20,18 @@ export const FAQPage: React.FC = () => {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [undoStack, setUndoStack] = useState<UndoStack>({ prev: [], next: [] });
+  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } = usePendingImages();
   const handleDeleteDraft = () => {
     setQuestion("");
     setAnswer("");
     setUndoStack({ prev: [], next: [] });
     setHasDraft(false);
   };
-  const handleNew = () => {
+  const handleNew = async () => {
+    const finalAnswer = await flushPendingImages(answer);
     add(
       question,
-      answer,
+      finalAnswer,
       (faqs ?? []).reduce((old, value) => Math.max(old, value.order + 1), 0),
     );
     handleDeleteDraft();
@@ -69,12 +71,12 @@ export const FAQPage: React.FC = () => {
             mb="sm"
           />
           <Editor
-            imageHandler={imageHandler}
+            imageHandler={deferredImageHandler}
             value={answer}
             onChange={setAnswer}
             undoStack={undoStack}
             setUndoStack={setUndoStack}
-            preview={value => <MarkdownText value={value} />}
+            preview={value => <MarkdownText value={value} pendingImages={pendingObjectUrls} />}
           />
           <Flex mt="sm" justify="space-between">
             <Button
