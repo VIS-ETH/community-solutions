@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "dependencies": {
-    "@grafana/faro-react": "^1.19.0",
+    "@grafana/faro-react": "^2.0.0",
     "@mantine/colors-generator": "^9.1.0",
     "@mantine/core": "^9.1.0",
     "@mantine/hooks": "^9.1.0",
