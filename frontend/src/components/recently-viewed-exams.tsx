@@ -13,7 +13,7 @@ const RecentlyViewedExams: React.FC = () => {
   if (!recentExams || recentExams.length === 0) return null;
 
   return (
-    <Box py="sm">
+    <Box pt="sm">
       <Container size="xl">
         <Text size="sm">
           <Text component="span" c="dimmed">Recently viewed: </Text>

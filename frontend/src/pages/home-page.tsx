@@ -280,7 +280,7 @@ export const CategoryList: React.FC<{}> = () => {
         </Flex>
       </Container>
       <RecentlyViewedExams />
-      <ContentContainer mt={0}>
+      <ContentContainer mt="sm">
         <Container size="xl" py="md" pos="relative">
           {loading && !error && (
             <Loader size="xs" color="gray" pos="absolute" top={0} right={0} />
