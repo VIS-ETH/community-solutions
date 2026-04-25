@@ -13,7 +13,7 @@ import { RadarChart } from '@mantine/charts';
 import React, { ReactNode } from "react";
 import { logout } from "../api/fetch-utils";
 import { useSetUser, useUser } from "../auth";
-import { UserInfo } from "../interfaces";
+import { UserInfo, UserCategoryScore } from "../interfaces";
 import {
   Icon,
   IconChevronUp,
@@ -25,6 +25,8 @@ import {
   IconPencilCog,
   IconProps,
 } from "@tabler/icons-react";
+import { useRequest } from "ahooks";
+import { fetchGet } from "../api/fetch-utils";
 
 interface UserScoreCardProps {
   username?: string;
@@ -33,8 +35,13 @@ interface UserScoreCardProps {
 }
 
 interface DemoProps {
-  userInfo: UserInfo | undefined;
+  data: { category: string; Scores: number }[] | undefined;
 }
+
+const loadUserCategories = async (username: string) => {
+  return (await fetchGet(`/api/scoreboard/usercategories/${username}/`))
+    .value as UserCategoryScore[];
+};
 
 function scoreCard(
   userInfo: UserInfo | undefined,
@@ -45,8 +52,9 @@ function scoreCard(
   >,
 ) {
   return (
-    <div style={{ flex: 1, padding: "var(--mantine-spacing-lg) var(--mantine-spacing-md)" }}>
-      <Group justify="space-between" mb="xs">
+    <Paper shadow="md" withBorder px="md" py="lg" pos="relative">
+      <LoadingOverlay visible={!userInfo} />
+        <Group justify="space-between" mb="xs">
         <Text inline size="xs" tt="uppercase" component="p" c="dimmed">
           {title}
         </Text>
@@ -61,32 +69,27 @@ function scoreCard(
       <Text lh={1} fz="2rem" fw={600}>
         {userInfo ? userInfo[key] : "-"}
       </Text>
-    </div>
+    </Paper>
   );
 }      
 
 function Demo(
-  {userInfo} : DemoProps
+  {data}: DemoProps
 ) {
-  if(!userInfo) return null;
-  const data = [
-  { category: "Score",     Scores: userInfo.score },
-  { category: "Answers",   Scores: userInfo.score_answers },
-  { category: "Comments",  Scores: userInfo.score_comments },
-  { category: "Documents", Scores: userInfo.score_documents },
-  ...(userInfo.score_cuts > 0   ? [{ category: "Exam Import", Scores: userInfo.score_cuts }]   : []),
-  ...(userInfo.score_legacy > 0 ? [{ category: "Legacy",      Scores: userInfo.score_legacy }] : []),
-  ];
+  console.log("radarData", data);
+  if(!data) return null;
   return (
     <RadarChart
       h={300}
       data = {data}
       dataKey = "category"
       withPolarRadiusAxis
-      series={[{ name: 'Scores', color: 'blue.4', opacity: 0.2 }]}
+      series={[{ name: 'Scores', color: 'yellow.4', opacity: 0.2 }]}
     />
   );
 }
+
+
 
 const UserScoreCard: React.FC<UserScoreCardProps> = ({
   username,
@@ -95,6 +98,13 @@ const UserScoreCard: React.FC<UserScoreCardProps> = ({
 }) => {
   const setUser = useSetUser();
   const user = useUser()!;
+  const { data: categoryData } = useRequest(() => loadUserCategories(username ?? ""), {
+        refreshDeps: [username],
+      });
+  const radarData = categoryData?.map(item => ({
+      category: item.answer_section__exam__category__meta_categories__displayname,
+      Scores: item.count,
+  }));
   return (
     <>
       <Group justify="space-between" my="lg">
@@ -124,31 +134,21 @@ const UserScoreCard: React.FC<UserScoreCardProps> = ({
           </Group>
         )}
       </Group>
-
-        <Paper withBorder shadow="sm" pos="relative">
-          <LoadingOverlay visible={!userInfo} />
-          <Group align="stretch" gap={0} wrap="nowrap">
-            {scoreCard(userInfo, "Score", "score", IconChevronUp)}
-            <Divider orientation="vertical" />
-            {scoreCard(userInfo, "Answers", "score_answers", IconPencil)}
-            <Divider orientation="vertical" />
-            {scoreCard(userInfo, "Comments", "score_comments", IconMessage)}
-            <Divider orientation="vertical" />
-            {scoreCard(userInfo, "Documents", "score_documents", IconFile)}
-            {userInfo && userInfo.score_cuts > 0 && (
-              <>
-                <Divider orientation="vertical" />
-                {scoreCard(userInfo, "Exam Import", "score_cuts", IconFileUpload)}
-              </>
-            )}
-            {userInfo && userInfo.score_legacy > 0 && (
-              <>
-                <Divider orientation="vertical" />
-                {scoreCard(userInfo, "Legacy Answers", "score_legacy", IconPencilCog)}
-              </>
-            )}
-          </Group>
-        </Paper>
+      <SimpleGrid cols={{ base: 1, xs: 2 }}>
+        <SimpleGrid cols={{ base: 1, xs: 2, sm: 3 }}>
+          {scoreCard(userInfo, "Score", "score", IconChevronUp)}
+          {scoreCard(userInfo, "Answers", "score_answers", IconPencil)}
+          {scoreCard(userInfo, "Comments", "score_comments", IconMessage)}
+          {scoreCard(userInfo, "Documents", "score_documents", IconFile)}
+          {userInfo &&
+            userInfo.score_cuts > 0 &&
+            scoreCard(userInfo, "Exam Import", "score_cuts", IconFileUpload)}
+          {userInfo &&
+            userInfo.score_legacy > 0 &&
+            scoreCard(userInfo, "Legacy Answers", "score_legacy", IconPencilCog)}
+        </SimpleGrid>
+        <Demo data={radarData} />
+      </SimpleGrid>
     </>
   );
 };

@@ -266,6 +266,11 @@ export interface UserInfo {
   score_documents: number;
 }
 
+export interface UserCategoryScore {
+  answer_section__exam__category__meta_categories__displayname: string;
+  count: number;
+}
+
 export interface PaymentInfo {
   oid: string;
   active: boolean;

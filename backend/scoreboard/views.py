@@ -22,6 +22,20 @@ def get_user_scores(user, res):
     )
     return res
 
+@auth_check.require_login
+@response.request_get()
+def get_user_categories(request, username):
+    user = get_object_or_404(MyUser, username=username)
+    data = list(
+        Answer.objects.filter(
+            author=user,
+            answer_section__exam__category__meta_categories__parent__isnull=True,
+            answer_section__exam__category__meta_categories__isnull = False,
+        )
+        .values("answer_section__exam__category__meta_categories__displayname")
+        .annotate(count=Count("id"))
+    )
+    return response.success(value=data)
 
 @func_cache.cache(600)
 def get_scoreboard_top(scoretype, limit):
@@ -95,3 +109,4 @@ def scoreboard_top(request, scoretype):
     if limit > 10 and not auth_check.has_admin_rights(request):
         return response.not_allowed()
     return response.success(value=get_scoreboard_top(scoretype, limit))
+
