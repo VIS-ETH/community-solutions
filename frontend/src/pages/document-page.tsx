@@ -9,10 +9,11 @@ import {
   Group,
   Title,
   Text,
+  Tabs,
   Box,
   Tooltip,
 } from "@mantine/core";
-import React, { lazy, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { download } from "../api/fetch-utils";
 import { useDocument } from "../api/hooks";
@@ -30,12 +31,13 @@ import { useDocumentDownload } from "../hooks/useDocumentDownload";
 import { Document, DocumentFile } from "../interfaces";
 import MarkdownText from "../components/markdown-text";
 import { differenceInSeconds, formatDistanceToNow } from "date-fns";
-import { Tabs } from "@mantine/core";
 import {
   IconChevronRight,
   IconDownload,
   IconEdit,
   IconFile,
+  IconFileTypePdf,
+  IconFileTypeZip,
   IconMessage,
   IconSettings,
 } from "@tabler/icons-react";
@@ -79,22 +81,13 @@ const getComponents = (
 const getFile = (document: Document | undefined, oid: number) =>
   document ? document.files.find(x => x.oid === oid) : undefined;
 
-const LazyIconFileTypePdf = lazy(
-  // @ts-expect-error Direct imports are untyped
-  () => import("@tabler/icons-react/dist/esm/icons/IconFileTypePdf.mjs"),
-);
-const LazyIconFileTypeZip = lazy(
-  // @ts-expect-error Direct imports are untyped
-  () => import("@tabler/icons-react/dist/esm/icons/IconFileTypeZip.mjs"),
-);
-
 const FileIcon: React.FC<{ filename: string }> = ({ filename }) => {
   if (filename.endsWith(".pdf")) {
-    return <LazyIconFileTypePdf />;
+    return <IconFileTypePdf />;
   }
 
   if (filename.endsWith(".zip")) {
-    return <LazyIconFileTypeZip />;
+    return <IconFileTypeZip />;
   }
 
   return <IconFile />;
