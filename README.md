@@ -133,7 +133,7 @@ This method is less flexible than running it fully locally, so prefer the above 
 If you want to run the _backend_ in docker-compose, remove the targets for the docker compose command for `Terminal 1` and simply run:
 
 ```sh
-docker compose up
+docker compose up --build --watch
 ```
 
 If you want to additionally run the _frontend_ in docker-compose, add the `--profile frontend` flag to the docker-compose command from `Terminal 1` (the flag **HAS** to come before the `up`).
