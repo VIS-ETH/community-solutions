@@ -87,7 +87,7 @@ COPY --from=frontend-build /usr/src/app/build/static ./static
 
 # Bundle Django/app package static assets (e.g. Django Ninja docs UI files)
 # into STATIC_ROOT for production serving.
-RUN uv run manage.py collectstatic --noinput
+RUN uv run --locked manage.py collectstatic --noinput
 
 EXPOSE 80
 
@@ -98,8 +98,8 @@ EXPOSE 80
 FROM backend AS backend-hotreload
 
 ENV IS_DEBUG true
-CMD uv run manage.py migrate \
-    && uv run manage.py runserver 0:8081
+CMD uv run --frozen manage.py migrate \
+    && uv run --frozen manage.py runserver 0:8081
 
 # Frontend
 FROM frontend-base AS frontend-dev
