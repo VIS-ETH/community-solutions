@@ -1,7 +1,8 @@
 import { Button, Loader } from "@mantine/core";
 import { useRequest } from "ahooks";
 import React, { lazy, Suspense, useState } from "react";
-import { imageHandler, NamedBlob } from "../api/fetch-utils";
+import { NamedBlob } from "../api/fetch-utils";
+import { usePendingImages } from "./Editor/pending-images";
 import { useUpdateDocumentFile } from "../api/hooks";
 import { Document, DocumentFile } from "../interfaces";
 import { UndoStack } from "./Editor/utils/undo-stack";
@@ -29,22 +30,22 @@ const DocumentMarkdownEditor: React.FC<Props> = ({ document, file, url }) => {
     prev: [],
     next: [],
   });
+  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } = usePendingImages();
   return (
     <Suspense fallback={<Loader />}>
       <Editor
         value={draftText}
         onChange={setDraftText}
-        imageHandler={imageHandler}
-        preview={value => <MarkdownText value={value} />}
+        imageHandler={deferredImageHandler}
+        preview={value => <MarkdownText value={value} pendingImages={pendingObjectUrls} />}
         undoStack={undoStack}
         setUndoStack={setUndoStack}
       />
       <Button
-        onClick={() =>
-          updateDocument({
-            file: new NamedBlob(new Blob([draftText]), "file.md"),
-          })
-        }
+        onClick={async () => {
+          const finalText = await flushPendingImages(draftText);
+          updateDocument({ file: new NamedBlob(new Blob([finalText]), "file.md") });
+        }}
         loading={loading}
         leftSection={<IconDeviceFloppy />}
       >

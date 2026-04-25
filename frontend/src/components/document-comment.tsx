@@ -11,7 +11,7 @@ import {
 import { differenceInSeconds } from "date-fns";
 import { lazy, Suspense, useState } from "react";
 import { Link } from "react-router-dom";
-import { imageHandler } from "../api/fetch-utils";
+import { usePendingImages } from "./Editor/pending-images";
 import {
   Mutate,
   useDeleteDocumentComment,
@@ -87,6 +87,7 @@ const DocumentCommentComponent = ({
     prev: [],
     next: [],
   });
+  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } = usePendingImages();
   const toggle = () => setHasDraft(e => !e);
 
   const mutateComment = (res: DocumentComment) =>
@@ -114,8 +115,8 @@ const DocumentCommentComponent = ({
             <Editor
               value={draftText}
               onChange={setDraftText}
-              imageHandler={imageHandler}
-              preview={value => <MarkdownText value={value} />}
+              imageHandler={deferredImageHandler}
+              preview={value => <MarkdownText value={value} pendingImages={pendingObjectUrls} />}
               undoStack={undoStack}
               setUndoStack={setUndoStack}
             />
@@ -123,7 +124,7 @@ const DocumentCommentComponent = ({
               mt="sm"
               tooltip="Save comment"
               disabled={editLoading || draftText.length === 0}
-              onClick={() => updateComment(draftText)}
+              onClick={async () => updateComment(await flushPendingImages(draftText))}
             >
               Save
             </TooltipButton>
