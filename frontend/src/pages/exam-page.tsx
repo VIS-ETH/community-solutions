@@ -11,6 +11,7 @@ import {
   Group,
   Button,
   useComputedColorScheme,
+  Center,
 } from "@mantine/core";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -167,7 +168,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
     },
     [runAddCut, metaData, runUpdate],
   );
-  const toggleExamUserSolved = async () => {
+  const toggleExamUserSolved: () => void = async () => {
     let res: { user_solved: boolean };
     if (metaData.user_solved) {
       res = await runUnmarkExamUserSolved();
@@ -441,6 +442,16 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
               onExpandSections={expandSections}
             />
           )}
+
+          <Center>
+            <Button
+              leftSection={metaData.user_solved && <IconCheck />}
+              onClick={toggleExamUserSolved}
+              color={metaData.user_solved ? "grape" : "gray"}
+            >
+              Mark exam as solved
+            </Button>
+          </Center>
         </Container>
       </ContentContainer>
       <ExamPanel
