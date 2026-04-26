@@ -17,7 +17,7 @@
     "katex": "^0.16.9",
     "lodash-es": "^4.17.21",
     "pdfjs-dist": "^5.5.207",
-    "query-string": "^7.1.0",
+    "query-string": "^9.0.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-image-crop": "^11.0.10",
