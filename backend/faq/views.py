@@ -1,7 +1,6 @@
 from faq.models import FAQuestion
 from util import response
 from myauth import auth_check
-from images.util import cleanup_removed_images
 from django.views import View
 from django.shortcuts import get_object_or_404
 
@@ -49,19 +48,15 @@ class FaqElementView(View):
     @auth_check.require_admin
     def put(self, request, id):
         faq = get_object_or_404(FAQuestion, pk=id)
-        old_answer = faq.answer
         faq.question = request.DATA.get('question', faq.question)
         faq.answer = request.DATA.get('answer', faq.answer)
         faq.order = request.DATA.get('order', faq.order)
         faq.save()
-        cleanup_removed_images(old_answer, faq.answer)
         return response.success(value=get_faq_obj(faq))
 
     @auth_check.require_admin
     def delete(self, request, id):
         faq = get_object_or_404(FAQuestion, pk=id)
-        old_answer = faq.answer
         faq.delete()
-        cleanup_removed_images(old_answer, "")
         return response.success()
 
