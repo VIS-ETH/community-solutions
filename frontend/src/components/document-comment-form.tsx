@@ -1,12 +1,13 @@
 import { Flex } from "@mantine/core";
-import React, { useState } from "react";
+import React, { lazy, useState } from "react";
 import { imageHandler } from "../api/fetch-utils";
 import { Mutate, useCreateDocumentComment } from "../api/hooks";
 import { Document } from "../interfaces";
-import Editor from "./Editor";
 import { UndoStack } from "./Editor/utils/undo-stack";
 import MarkdownText from "./markdown-text";
 import TooltipButton from "./TooltipButton";
+
+const Editor = lazy(() => import("./Editor"));
 
 interface Props {
   documentAuthor: string;

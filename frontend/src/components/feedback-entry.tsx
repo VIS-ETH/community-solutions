@@ -11,7 +11,7 @@ import {
   Title,
 } from "@mantine/core";
 import * as React from "react";
-import { useState } from "react";
+import { lazy, useState } from "react";
 import { fetchPost, imageHandler } from "../api/fetch-utils";
 import { setFeedbackReply } from "../api/hooks";
 import GlobalConsts from "../globalconsts";
@@ -30,11 +30,12 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { lightFormat, parseISO } from "date-fns";
-import Editor from "./Editor";
 import { UndoStack } from "./Editor/utils/undo-stack";
 import MarkdownText from "./markdown-text";
 import { useOfficialSolutionLanguage } from "./official-solution";
 import TimeText from "./time-text";
+
+const Editor = lazy(() => import("./Editor"));
 
 const setFlag = async (oid: string, flag: "done" | "read", value: boolean) => {
   await fetchPost(`/api/feedback/flags/${oid}/`, {

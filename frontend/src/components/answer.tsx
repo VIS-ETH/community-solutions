@@ -12,7 +12,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { differenceInSeconds } from "date-fns";
-import React, { useCallback, useState } from "react";
+import React, { lazy, useCallback, useState } from "react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
 import { imageHandler } from "../api/fetch-utils";
@@ -31,7 +31,6 @@ import { Answer, AnswerKind, AnswerSection } from "../interfaces";
 import { copy } from "../utils/clipboard";
 import CodeBlock from "./code-block";
 import CommentSectionComponent from "./comment-section";
-import Editor from "./Editor";
 import { UndoStack } from "./Editor/utils/undo-stack";
 import MarkdownText from "./markdown-text";
 import Score from "./score";
@@ -60,6 +59,8 @@ import MarkedAsAiBadge from "./MarkedAsAiBadge";
 import classes from "./answer.module.css";
 import { useDisclosure } from "@mantine/hooks";
 import TimeText from "./time-text";
+
+const Editor = lazy(() => import("./Editor"));
 
 const AnswerToolbar = (props: GroupProps) => (
   <Group className={classes.answerToolbarStyle} {...props} />

@@ -1,13 +1,14 @@
 import { Button } from "@mantine/core";
 import { useRequest } from "ahooks";
-import React, { useState } from "react";
+import React, { lazy, useState } from "react";
 import { imageHandler, NamedBlob } from "../api/fetch-utils";
 import { useUpdateDocumentFile } from "../api/hooks";
 import { Document, DocumentFile } from "../interfaces";
-import Editor from "./Editor";
 import { UndoStack } from "./Editor/utils/undo-stack";
 import MarkdownText from "./markdown-text";
 import { IconDeviceFloppy } from "@tabler/icons-react";
+
+const Editor = lazy(() => import("./Editor"));
 
 interface Props {
   document: Document;

@@ -8,7 +8,7 @@ import {
   Text,
 } from "@mantine/core";
 import { differenceInSeconds } from "date-fns";
-import { useState } from "react";
+import { lazy, useState } from "react";
 import { Link } from "react-router-dom";
 import { imageHandler } from "../api/fetch-utils";
 import {
@@ -22,7 +22,6 @@ import {
 } from "../api/hooks";
 import { useUser } from "../auth";
 import { Document, DocumentComment } from "../interfaces";
-import Editor from "./Editor";
 import { UndoStack } from "./Editor/utils/undo-stack";
 import MarkdownText from "./markdown-text";
 import SmallButton from "./small-button";
@@ -42,6 +41,8 @@ import FlaggedBadge from "./FlaggedBadge";
 import MarkedAsAiBadge from "./MarkedAsAiBadge";
 import TimeText from "./time-text";
 import { copy } from "../utils/clipboard";
+
+const Editor = lazy(() => import("./Editor"));
 
 interface Props {
   documentAuthor: string;

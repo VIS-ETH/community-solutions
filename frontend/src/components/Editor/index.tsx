@@ -38,7 +38,7 @@ const Editor: React.FC<Props> = ({
     useState(false);
   const textareaElRef = useRef<HTMLTextAreaElement>(
     null,
-  ) as React.MutableRefObject<HTMLTextAreaElement>;
+  ) as React.RefObject<HTMLTextAreaElement>;
   const setCurrent = useCallback(
     (newValue: string, newSelection?: Range) => {
       if (newSelection) setSelectionRangeRef.current(newSelection);

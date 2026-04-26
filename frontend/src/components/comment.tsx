@@ -1,5 +1,5 @@
 import { differenceInSeconds } from "date-fns";
-import React, { useState } from "react";
+import React, { lazy, useState } from "react";
 import { Link } from "react-router-dom";
 import { addNewComment, removeComment, updateComment } from "../api/comment";
 import { imageHandler } from "../api/fetch-utils";
@@ -7,7 +7,6 @@ import { useMutation, useResetExamCommentFlaggedVote, useResetExamCommentMarkedA
 import { useUser } from "../auth";
 import useRemoveConfirm from "../hooks/useRemoveConfirm";
 import { Answer, AnswerSection, Comment } from "../interfaces";
-import Editor from "./Editor";
 import { UndoStack } from "./Editor/utils/undo-stack";
 import CodeBlock from "./code-block";
 import MarkdownText from "./markdown-text";
@@ -30,6 +29,8 @@ import MarkedAsAiBadge from "./MarkedAsAiBadge";
 import { useDisclosure } from "@mantine/hooks";
 import TimeText from "./time-text";
 import { copy } from "../utils/clipboard";
+
+const Editor = lazy(() => import("./Editor"));
 
 interface Props {
   answer: Answer;

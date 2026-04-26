@@ -1,10 +1,9 @@
 import { Button, Card, Flex, Group, TextInput, Title } from "@mantine/core";
-import React, { useCallback, useState } from "react";
+import React, { lazy, useCallback, useState } from "react";
 import { imageHandler } from "../api/fetch-utils";
 import { useUser } from "../auth";
 import useRemoveConfirm from "../hooks/useRemoveConfirm";
 import { FAQEntry } from "../interfaces";
-import Editor from "./Editor";
 import { UndoStack } from "./Editor/utils/undo-stack";
 import IconButton from "./icon-button";
 import MarkdownText from "./markdown-text";
@@ -16,6 +15,9 @@ import {
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
+
+const Editor = lazy(() => import("./Editor"));
+
 interface Props {
   isAdmin?: boolean;
   entry: FAQEntry;
