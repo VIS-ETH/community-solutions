@@ -10,9 +10,11 @@ import {
   Group,
   CSSVariablesResolver,
   SegmentedControl,
+  Center,
+  Loader,
 } from "@mantine/core";
 import "@mantine/core/styles.css";
-import React, { lazy, useEffect, useState } from "react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import {
   getAuthenticationExpiry,
@@ -377,36 +379,47 @@ const App: React.FC = () => {
                 <AnnouncementHeader />
                 <ChangelogNotifier />
                 <Box component="main" mt="2em">
-                  <TelemetryRoutes>
-                    <Route path="*" element={<NotFoundPage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route element={<AuthenticatedRoutes />}>
-                      <Route path="/" element={<HomePage />} />
-                      <Route path="/uploadpdf" element={<UploadPdfPage />} />
-                      <Route
-                        path="/submittranscript"
-                        element={<UploadTranscriptPage />}
-                      />
-                      <Route path="/faq" element={<FAQ />} />
-                      <Route path="/changelog" element={<ChangelogPage />} />
-                      <Route path="/feedback" element={<FeedbackPage />} />
-                      <Route
-                        path="/category/:slug/*"
-                        element={<CategoryPage />}
-                      />
-                      <Route
-                        path="/user/:author/document/:slug"
-                        element={<DocumentPage />}
-                      />
-                      <Route path="/exams/:filename/*" element={<ExamPage />} />
-                      <Route path="/user/:username" element={<UserPage />} />
-                      <Route path="/user/" element={<UserPage />} />
-                      <Route path="/search/" element={<SearchPage />} />
-                      <Route path="/scoreboard" element={<Scoreboard />} />
-                      <Route path="/modqueue" element={<ModQueue />} />
-                      <Route path="/flagged" element={<FlaggedContent />} />
-                    </Route>
-                  </TelemetryRoutes>
+                  <Suspense
+                    fallback={
+                      <Center>
+                        <Loader />
+                      </Center>
+                    }
+                  >
+                    <TelemetryRoutes>
+                      <Route path="*" element={<NotFoundPage />} />
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route element={<AuthenticatedRoutes />}>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/uploadpdf" element={<UploadPdfPage />} />
+                        <Route
+                          path="/submittranscript"
+                          element={<UploadTranscriptPage />}
+                        />
+                        <Route path="/faq" element={<FAQ />} />
+                        <Route path="/changelog" element={<ChangelogPage />} />
+                        <Route path="/feedback" element={<FeedbackPage />} />
+                        <Route
+                          path="/category/:slug/*"
+                          element={<CategoryPage />}
+                        />
+                        <Route
+                          path="/user/:author/document/:slug"
+                          element={<DocumentPage />}
+                        />
+                        <Route
+                          path="/exams/:filename/*"
+                          element={<ExamPage />}
+                        />
+                        <Route path="/user/:username" element={<UserPage />} />
+                        <Route path="/user/" element={<UserPage />} />
+                        <Route path="/search/" element={<SearchPage />} />
+                        <Route path="/scoreboard" element={<Scoreboard />} />
+                        <Route path="/modqueue" element={<ModQueue />} />
+                        <Route path="/flagged" element={<FlaggedContent />} />
+                      </Route>
+                    </TelemetryRoutes>
+                  </Suspense>
                 </Box>
               </div>
               <Footer

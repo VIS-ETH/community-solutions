@@ -1,5 +1,13 @@
-import { Button, Card, Flex, Group, TextInput, Title } from "@mantine/core";
-import React, { lazy, useCallback, useState } from "react";
+import {
+  Button,
+  Card,
+  Flex,
+  Group,
+  Loader,
+  TextInput,
+  Title,
+} from "@mantine/core";
+import React, { lazy, Suspense, useCallback, useState } from "react";
 import { imageHandler } from "../api/fetch-utils";
 import { useUser } from "../auth";
 import useRemoveConfirm from "../hooks/useRemoveConfirm";
@@ -68,7 +76,7 @@ const FAQEntryComponent: React.FC<Props> = ({
         </Group>
       )}
       {editing ? (
-        <>
+        <Suspense fallback={<Loader />}>
           <TextInput
             placeholder="Question"
             mb="sm"
@@ -83,7 +91,7 @@ const FAQEntryComponent: React.FC<Props> = ({
             setUndoStack={setUndoStack}
             preview={value => <MarkdownText value={value} />}
           />
-        </>
+        </Suspense>
       ) : (
         <MarkdownText value={entry.answer} />
       )}

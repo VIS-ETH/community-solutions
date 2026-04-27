@@ -1,5 +1,5 @@
-import { Flex } from "@mantine/core";
-import React, { lazy, useState } from "react";
+import { Flex, Loader } from "@mantine/core";
+import React, { lazy, Suspense, useState } from "react";
 import { imageHandler } from "../api/fetch-utils";
 import { Mutate, useCreateDocumentComment } from "../api/hooks";
 import { Document } from "../interfaces";
@@ -38,7 +38,7 @@ const DocumentCommentForm: React.FC<Props> = ({
   );
 
   return (
-    <div>
+    <Suspense fallback={<Loader />}>
       <Editor
         value={draftText}
         onChange={setDraftText}
@@ -57,7 +57,7 @@ const DocumentCommentForm: React.FC<Props> = ({
           Submit
         </TooltipButton>
       </Flex>
-    </div>
+    </Suspense>
   );
 };
 

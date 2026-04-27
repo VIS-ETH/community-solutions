@@ -10,9 +10,10 @@ import {
   Group,
   Select,
   Grid,
+  Loader,
 } from "@mantine/core";
 import { useRequest } from "ahooks";
-import React, { lazy, useEffect, useState } from "react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { imageHandler } from "../api/fetch-utils";
 import {
@@ -166,14 +167,16 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate, reload }) => {
           </Grid>
           <div>
             <Text size="sm">Description</Text>
-            <Editor
-              value={descriptionDraftText ?? data.description}
-              onChange={setDescriptionDraftText}
-              imageHandler={imageHandler}
-              preview={value => <MarkdownText value={value} />}
-              undoStack={descriptionUndoStack}
-              setUndoStack={setDescriptionUndoStack}
-            />
+            <Suspense fallback={<Loader />}>
+              <Editor
+                value={descriptionDraftText ?? data.description}
+                onChange={setDescriptionDraftText}
+                imageHandler={imageHandler}
+                preview={value => <MarkdownText value={value} />}
+                undoStack={descriptionUndoStack}
+                setUndoStack={setDescriptionUndoStack}
+              />
+            </Suspense>
           </div>
           <Flex justify="end">
             <Button

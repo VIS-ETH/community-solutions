@@ -1,6 +1,6 @@
-import { Button } from "@mantine/core";
+import { Button, Loader } from "@mantine/core";
 import { useRequest } from "ahooks";
-import React, { lazy, useState } from "react";
+import React, { lazy, Suspense, useState } from "react";
 import { imageHandler, NamedBlob } from "../api/fetch-utils";
 import { useUpdateDocumentFile } from "../api/hooks";
 import { Document, DocumentFile } from "../interfaces";
@@ -30,31 +30,27 @@ const DocumentMarkdownEditor: React.FC<Props> = ({ document, file, url }) => {
     next: [],
   });
   return (
-    <div>
-      <div>
-        <Editor
-          value={draftText}
-          onChange={setDraftText}
-          imageHandler={imageHandler}
-          preview={value => <MarkdownText value={value} />}
-          undoStack={undoStack}
-          setUndoStack={setUndoStack}
-        />
-      </div>
-      <div>
-        <Button
-          onClick={() =>
-            updateDocument({
-              file: new NamedBlob(new Blob([draftText]), "file.md"),
-            })
-          }
-          loading={loading}
-          leftSection={<IconDeviceFloppy />}
-        >
-          Save
-        </Button>
-      </div>
-    </div>
+    <Suspense fallback={<Loader />}>
+      <Editor
+        value={draftText}
+        onChange={setDraftText}
+        imageHandler={imageHandler}
+        preview={value => <MarkdownText value={value} />}
+        undoStack={undoStack}
+        setUndoStack={setUndoStack}
+      />
+      <Button
+        onClick={() =>
+          updateDocument({
+            file: new NamedBlob(new Blob([draftText]), "file.md"),
+          })
+        }
+        loading={loading}
+        leftSection={<IconDeviceFloppy />}
+      >
+        Save
+      </Button>
+    </Suspense>
   );
 };
 

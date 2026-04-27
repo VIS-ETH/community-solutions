@@ -6,13 +6,14 @@ import {
   Flex,
   Group,
   GroupProps,
+  Loader,
   Menu,
   Paper,
   Text,
   Tooltip,
 } from "@mantine/core";
 import { differenceInSeconds } from "date-fns";
-import React, { lazy, useCallback, useState } from "react";
+import React, { lazy, Suspense, useCallback, useState } from "react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
 import { imageHandler } from "../api/fetch-utils";
@@ -285,27 +286,29 @@ const AnswerComponent: React.FC<Props> = ({
         {editing || answer === undefined ? (
           <Card.Section>
             <Box p="md">
-              <Editor
-                value={draftText}
-                onChange={setDraftText}
-                imageHandler={imageHandler}
-                preview={value => (
-                  <MarkdownText value={value} languages={languages} />
-                )}
-                undoStack={undoStack}
-                setUndoStack={setUndoStack}
-              />
-              <Text mt="xs" c="dimmed">
-                Your answer will be licensed as{" "}
-                <Anchor
-                  c="blue"
-                  href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
-                  target="_blank"
-                >
-                  CC BY-NC-SA 4.0
-                </Anchor>
-                .
-              </Text>
+              <Suspense fallback={<Loader />}>
+                <Editor
+                  value={draftText}
+                  onChange={setDraftText}
+                  imageHandler={imageHandler}
+                  preview={value => (
+                    <MarkdownText value={value} languages={languages} />
+                  )}
+                  undoStack={undoStack}
+                  setUndoStack={setUndoStack}
+                />
+                <Text mt="xs" c="dimmed">
+                  Your answer will be licensed as{" "}
+                  <Anchor
+                    c="blue"
+                    href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
+                    target="_blank"
+                  >
+                    CC BY-NC-SA 4.0
+                  </Anchor>
+                  .
+                </Text>
+              </Suspense>
             </Box>
           </Card.Section>
         ) : (

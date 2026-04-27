@@ -4,11 +4,12 @@ import {
   Card,
   Divider,
   Flex,
+  Loader,
   Modal,
   Text,
 } from "@mantine/core";
 import { differenceInSeconds } from "date-fns";
-import { lazy, useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Link } from "react-router-dom";
 import { imageHandler } from "../api/fetch-utils";
 import {
@@ -109,22 +110,24 @@ const DocumentCommentComponent = ({
     <div id={String(comment.oid)}>
       <Modal title="Edit comment" onClose={toggle} opened={hasDraft} size="lg">
         <Modal.Body>
-          <Editor
-            value={draftText}
-            onChange={setDraftText}
-            imageHandler={imageHandler}
-            preview={value => <MarkdownText value={value} />}
-            undoStack={undoStack}
-            setUndoStack={setUndoStack}
-          />
-          <TooltipButton
-            mt="sm"
-            tooltip="Save comment"
-            disabled={editLoading || draftText.length === 0}
-            onClick={() => updateComment(draftText)}
-          >
-            Save
-          </TooltipButton>
+          <Suspense fallback={<Loader />}>
+            <Editor
+              value={draftText}
+              onChange={setDraftText}
+              imageHandler={imageHandler}
+              preview={value => <MarkdownText value={value} />}
+              undoStack={undoStack}
+              setUndoStack={setUndoStack}
+            />
+            <TooltipButton
+              mt="sm"
+              tooltip="Save comment"
+              disabled={editLoading || draftText.length === 0}
+              onClick={() => updateComment(draftText)}
+            >
+              Save
+            </TooltipButton>
+          </Suspense>
         </Modal.Body>
       </Modal>
       <Card withBorder shadow="md" my="sm">

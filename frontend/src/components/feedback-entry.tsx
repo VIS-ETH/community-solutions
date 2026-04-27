@@ -5,13 +5,14 @@ import {
   Card,
   Flex,
   Group,
+  Loader,
   Menu,
   Paper,
   Text,
   Title,
 } from "@mantine/core";
 import * as React from "react";
-import { lazy, useState } from "react";
+import { lazy, useState, Suspense } from "react";
 import { fetchPost, imageHandler } from "../api/fetch-utils";
 import { setFeedbackReply } from "../api/hooks";
 import GlobalConsts from "../globalconsts";
@@ -113,36 +114,38 @@ const FeedbackEntryComponent: React.FC<Props> = ({ entry, entryChanged }) => {
       </Box>
       {editing ? (
         <Paper radius="sm" withBorder shadow="none" p="sm" mt="sm">
-          <Editor
-            value={draftText}
-            onChange={setDraftText}
-            imageHandler={imageHandler}
-            preview={value => (
-              <MarkdownText value={value} languages={languages} />
-            )}
-            undoStack={undoStack}
-            setUndoStack={setUndoStack}
-          />
-          <Group justify="flex-end" mt="sm">
-            <Button
-              size="sm"
-              color="red"
-              variant="subtle"
-              onClick={cancelEditing}
-              leftSection={<IconPencilCancel />}
-            >
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              loading={replyLoading}
-              disabled={draftText.trim().length === 0}
-              onClick={() => runSetReply(draftText.trim())}
-              leftSection={<IconDeviceFloppy />}
-            >
-              Save
-            </Button>
-          </Group>
+          <Suspense fallback={<Loader />}>
+            <Editor
+              value={draftText}
+              onChange={setDraftText}
+              imageHandler={imageHandler}
+              preview={value => (
+                <MarkdownText value={value} languages={languages} />
+              )}
+              undoStack={undoStack}
+              setUndoStack={setUndoStack}
+            />
+            <Group justify="flex-end" mt="sm">
+              <Button
+                size="sm"
+                color="red"
+                variant="subtle"
+                onClick={cancelEditing}
+                leftSection={<IconPencilCancel />}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                loading={replyLoading}
+                disabled={draftText.trim().length === 0}
+                onClick={() => runSetReply(draftText.trim())}
+                leftSection={<IconDeviceFloppy />}
+              >
+                Save
+              </Button>
+            </Group>
+          </Suspense>
         </Paper>
       ) : entry.reply ? (
         <Paper radius="sm" withBorder shadow="none" p="sm" mt="sm">
