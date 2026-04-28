@@ -1,6 +1,6 @@
-import { Divider, Modal, Paper } from "@mantine/core";
+import { Divider, Loader, Modal, Paper } from "@mantine/core";
 import * as React from "react";
-import { useCallback, useRef, useState } from "react";
+import { lazy, useCallback, useRef, useState, Suspense } from "react";
 import ImageOverlay from "../image-overlay";
 import BasicEditor from "./BasicEditor";
 import DropZone from "./Dropzone";
@@ -10,7 +10,8 @@ import { ImageHandle, Range } from "./utils/types";
 import { push, redo, undo, UndoStack } from "./utils/undo-stack";
 import classes from "./Editor.module.css";
 import clsx from "clsx";
-import OfficialAnswerOverlay from "../official-answer-overlay.js";
+
+const OfficialAnswerOverlay = lazy(() => import("../official-answer-overlay"));
 
 interface Props {
   value: string;
@@ -343,11 +344,15 @@ const Editor: React.FC<Props> = ({
         onClose={() => onImageDialogClose("")}
         closeWithImage={onImageDialogClose}
       />
-      <OfficialAnswerOverlay
-        isOpen={officialAnswerOverlayOpen}
-        onClose={() => onOfficialAnswerDialogClose(undefined)}
-        closeWithOfficialAnswer={onOfficialAnswerDialogClose}
-      />
+      <Suspense fallback={<Loader />}>
+        {officialAnswerOverlayOpen && (
+          <OfficialAnswerOverlay
+            isOpen={officialAnswerOverlayOpen}
+            onClose={() => onOfficialAnswerDialogClose(undefined)}
+            closeWithOfficialAnswer={onOfficialAnswerDialogClose}
+          />
+        )}
+      </Suspense>
     </>
   );
 
