@@ -62,21 +62,21 @@ class TestJWT(ComsolTest):
     def test_empty_auth_header(self):
         token = ""
         response = self.client.get(
-            "/api/notification/unreadcount/", HTTP_AUTHORIZATION=token
+            "/api/notification/unreadcount/", headers={"authorization": token}
         )
         self.assertEqual(response.status_code, 401)
 
     def test_non_bearer_token(self):
         token = "Basic QWxhZGRpbjpPcGVuU2VzYW1l"
         response = self.client.get(
-            "/api/notification/unreadcount/", HTTP_AUTHORIZATION=token
+            "/api/notification/unreadcount/", headers={"authorization": token}
         )
         self.assertEqual(response.status_code, 401)
 
     def test_incorrectly_formatted_token(self):
         token = "Bearer 42 42 12"
         response = self.client.get(
-            "/api/notification/unreadcount/", HTTP_AUTHORIZATION=token
+            "/api/notification/unreadcount/", headers={"authorization": token}
         )
         self.assertEqual(response.status_code, 401)
 
@@ -105,7 +105,7 @@ class TestJWT(ComsolTest):
         token.make_signed_token(invalid_key)
         token_str = "Bearer " + token.serialize()
         response = self.client.get(
-            "/api/notification/unreadcount/", HTTP_AUTHORIZATION=token_str
+            "/api/notification/unreadcount/", headers={"authorization": token_str}
         )
         self.assertEqual(response.status_code, 401)
 
@@ -134,7 +134,7 @@ class TestJWT(ComsolTest):
         token.make_signed_token(key)
         token_str = "Bearer " + token.serialize()
         response = self.client.get(
-            "/api/notification/unreadcount/", HTTP_AUTHORIZATION=token_str
+            "/api/notification/unreadcount/", headers={"authorization": token_str}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -163,7 +163,7 @@ class TestJWT(ComsolTest):
         token.make_signed_token(key)
         token_str = "Bearer " + token.serialize()
         response = self.client.get(
-            "/api/notification/unreadcount/", HTTP_AUTHORIZATION=token_str
+            "/api/notification/unreadcount/", headers={"authorization": token_str}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -182,7 +182,7 @@ class TestAuth(ComsolTest):
         )
         logging.disable(logging.CRITICAL)
         response = self.client.get(
-            "/api/notification/unreadcount/", HTTP_AUTHORIZATION=token
+            "/api/notification/unreadcount/", headers={"authorization": token}
         )
         logging.disable(logging.NOTSET)
         self.assertEqual(response.status_code, 403)
@@ -204,7 +204,7 @@ class TestAuth(ComsolTest):
         token_str = "Bearer " + token.serialize()
         logging.disable(logging.CRITICAL)
         response = self.client.get(
-            "/api/notification/unreadcount/", HTTP_AUTHORIZATION=token_str
+            "/api/notification/unreadcount/", headers={"authorization": token_str}
         )
         logging.disable(logging.NOTSET)
         self.assertEqual(response.status_code, 403)

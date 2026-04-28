@@ -76,13 +76,13 @@ class ComsolTest(TestCase):
     def get(self, path, status_code=200, test_post=True, as_json=True):
         if test_post and self.test_http_methods:
             response = (
-                self.client.post(path, HTTP_AUTHORIZATION=get_token(self.user))
+                self.client.post(path, headers={"authorization": get_token(self.user)})
                 if self.user
                 else self.client.post(path)
             )
             self.assertEqual(response.status_code, 405)
         response = (
-            self.client.get(path, HTTP_AUTHORIZATION=get_token(self.user))
+            self.client.get(path, headers={"authorization": get_token(self.user)})
             if self.user
             else self.client.get(path)
         )
@@ -99,7 +99,7 @@ class ComsolTest(TestCase):
             if isinstance(args[arg], bool):
                 args[arg] = "true" if args[arg] else "false"
         response = (
-            self.client.post(path, args, HTTP_AUTHORIZATION=get_token(self.user))
+            self.client.post(path, args, headers={"authorization": get_token(self.user)})
             if self.user
             else self.client.post(path, args)
         )
@@ -117,7 +117,7 @@ class ComsolTest(TestCase):
                 path,
                 encode_multipart(BOUNDARY, args),
                 content_type=MULTIPART_CONTENT,
-                HTTP_AUTHORIZATION=get_token(self.user),
+                headers={"authorization": get_token(self.user)}
             )
             if self.user
             else self.client.put(
@@ -131,7 +131,7 @@ class ComsolTest(TestCase):
 
     def delete(self, path, status_code=200, as_json=True):
         response = (
-            self.client.delete(path, HTTP_AUTHORIZATION=get_token(self.user))
+            self.client.delete(path, headers={"authorization": get_token(self.user)})
             if self.user
             else self.client.delete(path)
         )

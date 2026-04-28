@@ -193,7 +193,6 @@ else:
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-CSP_DEFAULT_SRC = "'self'"
 allowed_script_sources = []
 if DEBUG:
     allowed_script_sources = [
@@ -201,35 +200,41 @@ if DEBUG:
     ]
 else:
     allowed_script_sources = [f"https://{host}/static/" for host in REAL_ALLOWED_HOSTS]
-CSP_SCRIPT_SRC = (
-    "'self'",
-    "'unsafe-eval'",
-    "https://static.vseth.ethz.ch",
-    *allowed_script_sources,
-)
-CSP_STYLE_SRC = (
-    "'self'",
-    "'unsafe-inline'",
-    "https://fonts.googleapis.com",
-    "https://static.vseth.ethz.ch",
-)
-CSP_FONT_SRC = ("'self'", "data:", "https://fonts.gstatic.com")
 
 s3_host = os.environ.get("SIP_S3_FILES_HOST", "s3")
 s3_port = os.environ.get("SIP_S3_FILES_PORT", "9000")
-CSP_CONNECT_SRC = (
-    "'self'",
-    "https://static.vseth.ethz.ch",
-    "https://auth.vseth.ethz.ch",
-    "https://" + s3_host + ":" + s3_port,
-    "http://" + s3_host + ":" + s3_port,
-)
-CSP_IMG_SRC = (
-    "'self'",
-    "data:",
-    "https://static.vseth.ethz.ch",
-    "https://fe.vseth.ethz.ch",
-)
+
+CONTENT_SECURITY_POLICY = {
+    "DIRECTIVES": {
+        "default-src": ["'self'"],
+        "script-src": [
+            "'self'",
+            "'unsafe-eval'",
+            "https://static.vseth.ethz.ch",
+            *allowed_script_sources,
+        ],
+        "style-src": [
+            "'self'",
+            "'unsafe-inline'",
+            "https://fonts.googleapis.com",
+            "https://static.vseth.ethz.ch",
+        ],
+        "font-src": ["'self'", "data:", "https://fonts.gstatic.com"],
+        "connect-src": [
+            "'self'",
+            "https://static.vseth.ethz.ch",
+            "https://auth.vseth.ethz.ch",
+            "https://" + s3_host + ":" + s3_port,
+            "http://" + s3_host + ":" + s3_port,
+        ],
+        "img-src": [
+            "'self'",
+            "data:",
+            "https://static.vseth.ethz.ch",
+            "https://fe.vseth.ethz.ch",
+        ],
+    }
+}
 
 
 # Application definition
@@ -258,6 +263,7 @@ INSTALLED_APPS = [
     "testing.apps.TestingConfig",
     "django_probes",
     "ninja",
+    "csp",
 ]
 
 MIDDLEWARE = [
@@ -357,8 +363,6 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 
 USE_I18N = False
-
-USE_L10N = False
 
 USE_TZ = True
 
