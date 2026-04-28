@@ -6,13 +6,14 @@ import {
   Flex,
   Group,
   GroupProps,
+  Loader,
   Menu,
   Paper,
   Text,
   Tooltip,
 } from "@mantine/core";
 import { differenceInSeconds } from "date-fns";
-import React, { useCallback, useState } from "react";
+import React, { lazy, Suspense, useCallback, useState } from "react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
 import { imageHandler } from "../api/fetch-utils";
@@ -31,7 +32,6 @@ import { Answer, AnswerKind, AnswerSection } from "../interfaces";
 import { copy } from "../utils/clipboard";
 import CodeBlock from "./code-block";
 import CommentSectionComponent from "./comment-section";
-import Editor from "./Editor";
 import { UndoStack } from "./Editor/utils/undo-stack";
 import MarkdownText from "./markdown-text";
 import Score from "./score";
@@ -60,6 +60,8 @@ import MarkedAsAiBadge from "./MarkedAsAiBadge";
 import classes from "./answer.module.css";
 import { useDisclosure } from "@mantine/hooks";
 import TimeText from "./time-text";
+
+const Editor = lazy(() => import("./Editor"));
 
 const AnswerToolbar = (props: GroupProps) => (
   <Group className={classes.answerToolbarStyle} {...props} />
@@ -284,27 +286,29 @@ const AnswerComponent: React.FC<Props> = ({
         {editing || answer === undefined ? (
           <Card.Section>
             <Box p="md">
-              <Editor
-                value={draftText}
-                onChange={setDraftText}
-                imageHandler={imageHandler}
-                preview={value => (
-                  <MarkdownText value={value} languages={languages} />
-                )}
-                undoStack={undoStack}
-                setUndoStack={setUndoStack}
-              />
-              <Text mt="xs" c="dimmed">
-                Your answer will be licensed as{" "}
-                <Anchor
-                  c="blue"
-                  href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
-                  target="_blank"
-                >
-                  CC BY-NC-SA 4.0
-                </Anchor>
-                .
-              </Text>
+              <Suspense fallback={<Loader />}>
+                <Editor
+                  value={draftText}
+                  onChange={setDraftText}
+                  imageHandler={imageHandler}
+                  preview={value => (
+                    <MarkdownText value={value} languages={languages} />
+                  )}
+                  undoStack={undoStack}
+                  setUndoStack={setUndoStack}
+                />
+                <Text mt="xs" c="dimmed">
+                  Your answer will be licensed as{" "}
+                  <Anchor
+                    c="blue"
+                    href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
+                    target="_blank"
+                  >
+                    CC BY-NC-SA 4.0
+                  </Anchor>
+                  .
+                </Text>
+              </Suspense>
             </Box>
           </Card.Section>
         ) : (

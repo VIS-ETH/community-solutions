@@ -10,9 +10,10 @@ import {
   Group,
   Select,
   Grid,
+  Loader,
 } from "@mantine/core";
 import { useRequest } from "ahooks";
-import React, { useEffect, useState } from "react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { imageHandler } from "../api/fetch-utils";
 import {
@@ -27,7 +28,6 @@ import { Document } from "../interfaces";
 import { createOptions, options } from "../utils/ts-utils";
 import CreateDocumentFileModal from "./create-document-file-modal";
 import DocumentFileItem from "./document-file-item";
-import Editor from "./Editor";
 import { UndoStack } from "./Editor/utils/undo-stack";
 import IconButton from "./icon-button";
 import MarkdownText from "./markdown-text";
@@ -39,6 +39,8 @@ import {
 } from "@tabler/icons-react";
 import Creatable from "./creatable";
 import { useDisclosure } from "@mantine/hooks";
+
+const Editor = lazy(() => import("./Editor"));
 
 interface Props {
   data: Document;
@@ -165,14 +167,16 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate, reload }) => {
           </Grid>
           <div>
             <Text size="sm">Description</Text>
-            <Editor
-              value={descriptionDraftText ?? data.description}
-              onChange={setDescriptionDraftText}
-              imageHandler={imageHandler}
-              preview={value => <MarkdownText value={value} />}
-              undoStack={descriptionUndoStack}
-              setUndoStack={setDescriptionUndoStack}
-            />
+            <Suspense fallback={<Loader />}>
+              <Editor
+                value={descriptionDraftText ?? data.description}
+                onChange={setDescriptionDraftText}
+                imageHandler={imageHandler}
+                preview={value => <MarkdownText value={value} />}
+                undoStack={descriptionUndoStack}
+                setUndoStack={setDescriptionUndoStack}
+              />
+            </Suspense>
           </div>
           <Flex justify="end">
             <Button

@@ -1,16 +1,24 @@
 import * as React from "react";
-import { useState } from "react";
+import { lazy, useState, Suspense } from "react";
 import { useFAQ } from "../api/faq";
 import { imageHandler } from "../api/fetch-utils";
 import { useUser } from "../auth";
-import Editor from "../components/Editor";
 import { UndoStack } from "../components/Editor/utils/undo-stack";
 import FAQEntryComponent from "../components/faq-entry";
 import MarkdownText from "../components/markdown-text";
 import useTitle from "../hooks/useTitle";
 import serverData from "../utils/server-data";
-import { Button, Card, Container, Flex, TextInput } from "@mantine/core";
+import {
+  Button,
+  Card,
+  Container,
+  Flex,
+  Loader,
+  TextInput,
+} from "@mantine/core";
 import { IconDeviceFloppy, IconPlus, IconX } from "@tabler/icons-react";
+
+const Editor = lazy(() => import("../components/Editor"));
 
 export const FAQPage: React.FC = () => {
   useTitle("FAQ");
@@ -60,38 +68,40 @@ export const FAQPage: React.FC = () => {
         />
       ))}
       {hasDraft ? (
-        <Card withBorder shadow="md" my="xs">
-          <TextInput
-            placeholder="Question"
-            value={question}
-            onChange={e => setQuestion(e.target.value)}
-            mb="sm"
-          />
-          <Editor
-            imageHandler={imageHandler}
-            value={answer}
-            onChange={setAnswer}
-            undoStack={undoStack}
-            setUndoStack={setUndoStack}
-            preview={value => <MarkdownText value={value} />}
-          />
-          <Flex mt="sm" justify="space-between">
-            <Button
-              size="sm"
-              leftSection={<IconDeviceFloppy />}
-              onClick={handleNew}
-            >
-              Save
-            </Button>
-            <Button
-              size="sm"
-              leftSection={<IconX />}
-              onClick={handleDeleteDraft}
-            >
-              Delete Draft
-            </Button>
-          </Flex>
-        </Card>
+        <Suspense fallback={<Loader />}>
+          <Card withBorder shadow="md" my="xs">
+            <TextInput
+              placeholder="Question"
+              value={question}
+              onChange={e => setQuestion(e.target.value)}
+              mb="sm"
+            />
+            <Editor
+              imageHandler={imageHandler}
+              value={answer}
+              onChange={setAnswer}
+              undoStack={undoStack}
+              setUndoStack={setUndoStack}
+              preview={value => <MarkdownText value={value} />}
+            />
+            <Flex mt="sm" justify="space-between">
+              <Button
+                size="sm"
+                leftSection={<IconDeviceFloppy />}
+                onClick={handleNew}
+              >
+                Save
+              </Button>
+              <Button
+                size="sm"
+                leftSection={<IconX />}
+                onClick={handleDeleteDraft}
+              >
+                Delete Draft
+              </Button>
+            </Flex>
+          </Card>
+        </Suspense>
       ) : (
         isAdmin && (
           <Button
