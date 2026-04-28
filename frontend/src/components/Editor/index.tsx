@@ -37,6 +37,11 @@ const Editor: React.FC<Props> = ({
   const [imageOverlayOpen, setImageOverlayOpen] = useState(false);
   const [officialAnswerOverlayOpen, setOfficialAnswerOverlayOpen] =
     useState(false);
+  // OfficialAnswerOverlay is loaded async
+  // We want to load it when we need it (i.e. only add it to the DOM when needed)
+  // but then not remove it from the DOM, to let mantine complete its animations
+  const [shouldLoadOfficialAnswerOverlay, setShouldLoadOfficialAnswerOverlay] =
+    useState(false);
   const textareaElRef = useRef<HTMLTextAreaElement>(
     null,
   ) as React.RefObject<HTMLTextAreaElement>;
@@ -279,6 +284,7 @@ const Editor: React.FC<Props> = ({
     setImageOverlayOpen(true);
   }, []);
   const onOpenOfficialAnswerOverlay = useCallback(() => {
+    setShouldLoadOfficialAnswerOverlay(true);
     setOfficialAnswerOverlayOpen(true);
   }, []);
 
@@ -345,7 +351,7 @@ const Editor: React.FC<Props> = ({
         closeWithImage={onImageDialogClose}
       />
       <Suspense fallback={<Loader />}>
-        {officialAnswerOverlayOpen && (
+        {shouldLoadOfficialAnswerOverlay && (
           <OfficialAnswerOverlay
             isOpen={officialAnswerOverlayOpen}
             onClose={() => onOfficialAnswerDialogClose(undefined)}
