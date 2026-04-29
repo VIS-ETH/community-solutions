@@ -28,6 +28,13 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "black==24.8.0",
+    "ruff>=0.9.0",
     "tblib>=3.2.2",
 ]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["E501"]
