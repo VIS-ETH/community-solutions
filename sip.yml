@@ -20,6 +20,7 @@ auth:
         - profile
         - home-organization
         - roles
+        - basic
     roles:
       - name: admin
         description: Admin of the application
