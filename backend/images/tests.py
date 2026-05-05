@@ -20,7 +20,7 @@ class TestUploadRemove(ComsolTest):
 
     def test_wrong_file_extension(self):
         with open(f"{settings.COMSOL_ASSETS_FOLDER}/exam10.pdf", 'rb') as f:
-            res = self.post('/api/image/upload/', {
+            self.post('/api/image/upload/', {
                 'file': f,
             }, status_code=400)
 

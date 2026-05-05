@@ -1,4 +1,4 @@
-from django.test import TestCase, Client, override_settings
+from django.test import TestCase, Client
 from django.test.client import encode_multipart, BOUNDARY, MULTIPART_CONTENT
 from answers.models import Exam, ExamType, AnswerSection, Answer, Comment
 from categories.models import Category
