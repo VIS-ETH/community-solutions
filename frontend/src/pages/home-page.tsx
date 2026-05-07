@@ -38,6 +38,7 @@ import { EditMeta1, EditMeta2 } from "../components/edit-meta-categories";
 import CollapseWrapper from "../components/collapse-wrapper";
 import { clsx } from "clsx";
 import classes from "../utils/focus-outline.module.css";
+import homePageClasses from "./home-page.module.css";
 
 const displayNameGetter = (data: CategoryMetaData) => data.displayname;
 
@@ -355,26 +356,33 @@ export const CategoryList: React.FC = () => {
           direction={{ base: "column", sm: "row" }}
           justify="space-between"
         >
-          <Flex gap="sm" align="center">
-            <SegmentedControl
-              value={mode}
-              onChange={setMode}
-              data={sortByOptions}
-            />
-            {extraSortOptions.length > 0 && (
-              <Button
-                size="xs"
-                variant="subtle"
-                onClick={onExpandSortOptionsClick}
-                aria-label="toggle more sort options"
-              >
-                {showMoreSortOptions ? (
-                  <IconChevronLeft />
-                ) : (
-                  <IconChevronRight />
-                )}
-              </Button>
-            )}
+          <Flex className={homePageClasses.segmentedSelectionScrollContainer}>
+            <Flex
+              gap="sm"
+              align="center"
+              className={homePageClasses.segmentSelectContainer}
+            >
+              <SegmentedControl
+                value={mode}
+                onChange={setMode}
+                data={sortByOptions}
+                fullWidth={true}
+              />
+              {extraSortOptions.length > 0 && (
+                <Button
+                  size="xs"
+                  variant="subtle"
+                  onClick={onExpandSortOptionsClick}
+                  aria-label="toggle more sort options"
+                >
+                  {showMoreSortOptions ? (
+                    <IconChevronLeft />
+                  ) : (
+                    <IconChevronRight />
+                  )}
+                </Button>
+              )}
+            </Flex>
           </Flex>
           <TextInput
             placeholder="Filter..."

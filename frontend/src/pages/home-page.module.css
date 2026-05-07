@@ -1,0 +1,7 @@
+.segment-select-container {
+  width: fit-content;
+}
+
+.segmented-selection-scroll-container {
+  overflow-x: auto;
+}
