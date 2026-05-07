@@ -11,10 +11,14 @@ import {
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchGet } from "../api/fetch-utils";
+import { removeExam } from "../api/hooks";
 import ClaimButton from "../components/claim-button";
+import IconButton from "../components/icon-button";
 import LoadingOverlay from "../components/loading-overlay";
+import useRemoveConfirm from "../hooks/useRemoveConfirm";
 import { CategoryExam, CategoryPaymentExam } from "../interfaces";
 import useTitle from "../hooks/useTitle";
+import { IconTrash } from "@tabler/icons-react";
 
 const loadExams = async (includeHidden: boolean) => {
   return (
@@ -39,6 +43,17 @@ const ModQueue: React.FC = () => {
   } = useRequest(() => loadExams(includeHidden), {
     refreshDeps: [includeHidden],
   });
+  const [removeConfirm, modals] = useRemoveConfirm();
+  const { run: runRemoveExam } = useRequest(removeExam, {
+    manual: true,
+    onSuccess: reloadExams,
+  });
+  const handleRemoveClick = (exam: CategoryExam) => {
+    removeConfirm(
+      `Remove the exam named ${exam.displayname}? This will remove all answers and can not be undone!`,
+      () => runRemoveExam(exam.filename),
+    );
+  };
   const {
     error: payError,
     loading: payLoading,
@@ -49,6 +64,7 @@ const ModQueue: React.FC = () => {
 
   return (
     <Container size="xl">
+      {modals}
       {paymentExams && paymentExams.length > 0 && (
         <div>
           <Title my="sm" order={2}>
@@ -98,38 +114,48 @@ const ModQueue: React.FC = () => {
               <Table.Th>Name</Table.Th>
               <Table.Th>Import State</Table.Th>
               <Table.Th>Claim</Table.Th>
+              <Table.Th>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {exams &&
-              exams.map((exam: CategoryExam) => (
-                <Table.Tr key={exam.filename}>
-                  <Table.Td>{exam.category_displayname}</Table.Td>
-                  <Table.Td>
-                    <Group>
-                      <Anchor
-                        c="blue"
-                        component={Link}
-                        to={`/exams/${exam.filename}`}
-                        target="_blank"
-                      >
-                        {exam.displayname}
-                      </Anchor>
-                      {exam.public && <Badge color="green">public</Badge>}
-                      {!exam.public && <Badge color="orange">hidden</Badge>}
-                      <p>{exam.remark}</p>
-                    </Group>
-                  </Table.Td>
-                  <Table.Td>
-                    {exam.finished_cuts ? "All done" : "Needs Cuts"}
-                  </Table.Td>
-                  <Table.Td>
-                    {!exam.finished_cuts && (
-                      <ClaimButton exam={exam} reloadExams={reloadExams} />
-                    )}
-                  </Table.Td>
-                </Table.Tr>
-              ))}
+            {exams?.map((exam: CategoryExam) => (
+              <Table.Tr key={exam.filename}>
+                <Table.Td>{exam.category_displayname}</Table.Td>
+                <Table.Td>
+                  <Group>
+                    <Anchor
+                      c="blue"
+                      component={Link}
+                      to={`/exams/${exam.filename}`}
+                      target="_blank"
+                    >
+                      {exam.displayname}
+                    </Anchor>
+                    {exam.public && <Badge color="green">public</Badge>}
+                    {!exam.public && <Badge color="orange">hidden</Badge>}
+                    <p>{exam.remark}</p>
+                  </Group>
+                </Table.Td>
+                <Table.Td>
+                  {exam.finished_cuts ? "All done" : "Needs Cuts"}
+                </Table.Td>
+                <Table.Td>
+                  {!exam.finished_cuts && (
+                    <ClaimButton exam={exam} reloadExams={reloadExams} />
+                  )}
+                </Table.Td>
+                <Table.Td>
+                  <IconButton
+                    size="md"
+                    color="red"
+                    tooltip="Delete exam"
+                    icon={<IconTrash />}
+                    variant="outline"
+                    onClick={() => handleRemoveClick(exam)}
+                  />
+                </Table.Td>
+              </Table.Tr>
+            ))}
           </Table.Tbody>
         </Table>
       </div>

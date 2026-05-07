@@ -10,9 +10,11 @@ import {
   Group,
   CSSVariablesResolver,
   SegmentedControl,
+  Center,
+  Loader,
 } from "@mantine/core";
 import "@mantine/core/styles.css";
-import React, { useEffect, useState } from "react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import {
   getAuthenticationExpiry,
@@ -27,20 +29,6 @@ import { notLoggedIn, SetUserContext, User, UserContext } from "./auth";
 import { AuthenticatedRoutes } from "./auth/AuthenticatedRoutes";
 import { DebugContext, defaultDebugOptions } from "./components/Debug";
 import DebugModal from "./components/Debug/DebugModal";
-import CategoryPage from "./pages/category-page";
-import DocumentPage from "./pages/document-page";
-import ExamPage from "./pages/exam-page";
-import FAQ from "./pages/faq-page";
-import FeedbackPage from "./pages/feedback-page";
-import HomePage from "./pages/home-page";
-import LoginPage from "./pages/login-page";
-import ModQueue from "./pages/modqueue-page";
-import NotFoundPage from "./pages/not-found-page";
-import Scoreboard from "./pages/scoreboard-page";
-import SearchPage from "./pages/search-page";
-import UploadTranscriptPage from "./pages/submittranscript-page";
-import UploadPdfPage from "./pages/uploadpdf-page";
-import UserPage from "./pages/userinfo-page";
 import { useRequest } from "ahooks";
 import TopHeader from "./components/Navbar/TopHeader";
 import BottomHeader from "./components/Navbar/BottomHeader";
@@ -53,14 +41,33 @@ import {
 import makeVsethTheme from "./makeVsethTheme";
 import { useDisclosure } from "@mantine/hooks";
 import AnnouncementHeader from "./components/Navbar/AnnouncementHeader";
-import FlaggedContent from "./pages/flagged-content";
-import { FaroRoute, FaroRoutes } from "@grafana/faro-react";
+import ChangelogNotifier from "./components/ChangelogNotifier";
+import { FaroRoutes } from "@grafana/faro-react";
 import serverData from "./utils/server-data";
 import {
   QuickSearchFilter,
   QuickSearchFilterContext,
 } from "./components/Navbar/QuickSearch/QuickSearchFilterContext";
 import { useScrollToHash } from "./hooks/useScrollToHash";
+
+const UploadTranscriptPage = lazy(
+  () => import("./pages/submittranscript-page"),
+);
+const UploadPdfPage = lazy(() => import("./pages/uploadpdf-page"));
+const ModQueue = lazy(() => import("./pages/modqueue-page"));
+const FeedbackPage = lazy(() => import("./pages/feedback-page"));
+const DocumentPage = lazy(() => import("./pages/document-page"));
+const FlaggedContent = lazy(() => import("./pages/flagged-content"));
+const SearchPage = lazy(() => import("./pages/search-page"));
+const Scoreboard = lazy(() => import("./pages/scoreboard-page"));
+const FAQ = lazy(() => import("./pages/faq-page"));
+const UserPage = lazy(() => import("./pages/userinfo-page"));
+const ExamPage = lazy(() => import("./pages/exam-page"));
+const HomePage = lazy(() => import("./pages/home-page"));
+const ChangelogPage = lazy(() => import("./pages/changelog-page"));
+const CategoryPage = lazy(() => import("./pages/category-page"));
+const LoginPage = lazy(() => import("./pages/login-page"));
+const NotFoundPage = lazy(() => import("./pages/not-found-page"));
 
 /**
  * To be used as a wrapper for <Route>s at the top level, and adds Faro
@@ -86,7 +93,7 @@ const TelemetryRoutes =
     ? Routes
     : FaroRoutes;
 
-const App: React.FC<{}> = () => {
+const App: React.FC = () => {
   const [loggedOut, setLoggedOut] = useState(false);
   useEffect(() => {
     let cancel = false;
@@ -234,6 +241,11 @@ const App: React.FC<{}> = () => {
         variant: "light",
       },
     },
+    Checkbox: {
+      defaultProps: {
+        radius: "sm",
+      },
+    },
     // By default, SegmentedControl on dark mode has a "light indicator on dark
     // background" look, with the background color of the root component being
     // identical to the page's background color. This makes the component hard
@@ -251,6 +263,13 @@ const App: React.FC<{}> = () => {
         },
       },
     }),
+    Modal: {
+      defaultProps: {
+        removeScrollProps: {
+          allowPinchZoom: true,
+        },
+      },
+    },
   };
 
   const adminItems = [
@@ -266,6 +285,7 @@ const App: React.FC<{}> = () => {
       title: "More",
       childItems: [
         { title: "FAQ", href: "/faq" },
+        { title: "What's New", href: "/changelog" },
         { title: "Feedback", href: "/feedback" },
         { title: "Submit Transcript", href: "/submittranscript" },
         ...(typeof user === "object" && user.isCategoryAdmin ? adminItems : []),
@@ -357,36 +377,49 @@ const App: React.FC<{}> = () => {
                   title={"Community Solutions"}
                 />
                 <AnnouncementHeader />
+                <ChangelogNotifier />
                 <Box component="main" mt="2em">
-                  <TelemetryRoutes>
-                    <Route path="*" element={<NotFoundPage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route element={<AuthenticatedRoutes />}>
-                      <Route path="/" element={<HomePage />} />
-                      <Route path="/uploadpdf" element={<UploadPdfPage />} />
-                      <Route
-                        path="/submittranscript"
-                        element={<UploadTranscriptPage />}
-                      />
-                      <Route path="/faq" element={<FAQ />} />
-                      <Route path="/feedback" element={<FeedbackPage />} />
-                      <Route
-                        path="/category/:slug/*"
-                        element={<CategoryPage />}
-                      />
-                      <Route
-                        path="/user/:author/document/:slug"
-                        element={<DocumentPage />}
-                      />
-                      <Route path="/exams/:filename/*" element={<ExamPage />} />
-                      <Route path="/user/:username" element={<UserPage />} />
-                      <Route path="/user/" element={<UserPage />} />
-                      <Route path="/search/" element={<SearchPage />} />
-                      <Route path="/scoreboard" element={<Scoreboard />} />
-                      <Route path="/modqueue" element={<ModQueue />} />
-                      <Route path="/flagged" element={<FlaggedContent />} />
-                    </Route>
-                  </TelemetryRoutes>
+                  <Suspense
+                    fallback={
+                      <Center>
+                        <Loader />
+                      </Center>
+                    }
+                  >
+                    <TelemetryRoutes>
+                      <Route path="*" element={<NotFoundPage />} />
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route element={<AuthenticatedRoutes />}>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/uploadpdf" element={<UploadPdfPage />} />
+                        <Route
+                          path="/submittranscript"
+                          element={<UploadTranscriptPage />}
+                        />
+                        <Route path="/faq" element={<FAQ />} />
+                        <Route path="/changelog" element={<ChangelogPage />} />
+                        <Route path="/feedback" element={<FeedbackPage />} />
+                        <Route
+                          path="/category/:slug/*"
+                          element={<CategoryPage />}
+                        />
+                        <Route
+                          path="/user/:author/document/:slug"
+                          element={<DocumentPage />}
+                        />
+                        <Route
+                          path="/exams/:filename/*"
+                          element={<ExamPage />}
+                        />
+                        <Route path="/user/:username" element={<UserPage />} />
+                        <Route path="/user/" element={<UserPage />} />
+                        <Route path="/search/" element={<SearchPage />} />
+                        <Route path="/scoreboard" element={<Scoreboard />} />
+                        <Route path="/modqueue" element={<ModQueue />} />
+                        <Route path="/flagged" element={<FlaggedContent />} />
+                      </Route>
+                    </TelemetryRoutes>
+                  </Suspense>
                 </Box>
               </div>
               <Footer
@@ -406,7 +439,7 @@ const App: React.FC<{}> = () => {
       </DebugContext.Provider>
       {process.env.NODE_ENV === "development" && (
         <>
-          <Affix position={{ bottom: rem(10), left: rem(10) }}>
+          <Affix position={{ bottom: rem(80), left: rem(0) }}>
             <Button onClick={toggleDebugPanel}>DEBUG</Button>
           </Affix>
           <DebugModal

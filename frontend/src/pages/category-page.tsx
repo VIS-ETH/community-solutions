@@ -12,6 +12,7 @@ import {
   Button,
   Box,
   Title,
+  Loader,
 } from "@mantine/core";
 import React, { useCallback, useMemo } from "react";
 import {
@@ -21,7 +22,6 @@ import {
   Routes,
   useNavigate,
   useParams,
-  useMatch,
 } from "react-router-dom";
 import {
   loadCategoryMetaData,
@@ -38,7 +38,6 @@ import useTitle from "../hooks/useTitle";
 import { CategoryMetaData } from "../interfaces";
 import { getMetaCategoriesForCategory } from "../utils/category-utils";
 import serverData from "../utils/server-data";
-import { Loader } from "@mantine/core";
 import {
   IconChevronRight,
   IconEdit,
@@ -101,12 +100,12 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
           path="edit"
           element={
             !user.isCategoryAdmin ? (
-              <Navigate to="." replace />
+              <Navigate to="./.." replace />
             ) : (
               offeredIn && (
                 <CategoryMetaDataEditor
                   onMetaDataChange={editorOnMetaDataChange}
-                  close={() => navigate(".")}
+                  close={() => {navigate("./..")}}
                   currentMetaData={metaData}
                   offeredIn={offeredIn.flatMap(b =>
                     b.meta2.map(d => [b.displayname, d.displayname] as const),
@@ -133,7 +132,7 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                     <Button
                       leftSection={<IconEdit />}
                       component={Link}
-                      to="edit"
+                      to="./edit"
                     >
                       Edit
                     </Button>
@@ -268,13 +267,13 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
             </>
           }
         />
-        <Route path="*" element={<Navigate to="." replace />} />
+        <Route path="*" element={<Navigate to="./.." replace />} />
       </Routes>
     </>
   );
 };
 
-const CategoryPage: React.FC<{}> = () => {
+const CategoryPage: React.FC = () => {
   const { slug } = useParams() as { slug: string };
   const { data, loading, error, mutate } = useRequest(
     () => loadCategoryMetaData(slug),

@@ -71,6 +71,7 @@ COPY ./frontend/tsconfig.json \
     ./frontend/.prettierrc.json ./
 COPY ./frontend/public ./public
 COPY ./frontend/src ./src
+COPY ./CHANGELOG.md ./CHANGELOG.md
 ENV VITE_GIT_BRANCH=${git_branch}
 ENV VITE_GIT_COMMIT=${git_commit}
 RUN yarn run build
@@ -104,6 +105,7 @@ CMD uv run manage.py migrate \
 FROM frontend-base AS frontend-dev
 
 COPY frontend ./
+COPY ./CHANGELOG.md ./CHANGELOG.md
 
 RUN yarn install
 

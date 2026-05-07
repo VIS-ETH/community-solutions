@@ -1,4 +1,4 @@
-import { Alert, Button, List, Loader } from "@mantine/core";
+import { Alert, Button, List } from "@mantine/core";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useUser } from "../auth";
@@ -114,11 +114,9 @@ const UserPayments: React.FC<UserPaymentsProps> = ({ username }) => {
           </Grid>
         </>
       )}
-      {isAdmin &&
-        payments &&
-        payments.filter(payment => payment.active).length === 0 && (
-          <Button onClick={() => add(username)}>Add Payment</Button>
-        )}
+      {isAdmin && !payments?.find(payment => payment.active) && (
+        <Button onClick={() => add(username)}>Add Payment</Button>
+      )}
     </div>
   );
 };

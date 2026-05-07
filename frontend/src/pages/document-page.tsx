@@ -9,6 +9,7 @@ import {
   Group,
   Title,
   Text,
+  Tabs,
   Box,
   Tooltip,
 } from "@mantine/core";
@@ -30,12 +31,13 @@ import { useDocumentDownload } from "../hooks/useDocumentDownload";
 import { Document, DocumentFile } from "../interfaces";
 import MarkdownText from "../components/markdown-text";
 import { differenceInSeconds, formatDistanceToNow } from "date-fns";
-import { Tabs } from "@mantine/core";
 import {
   IconChevronRight,
   IconDownload,
   IconEdit,
   IconFile,
+  IconFileTypePdf,
+  IconFileTypeZip,
   IconMessage,
   IconSettings,
 } from "@tabler/icons-react";
@@ -79,6 +81,18 @@ const getComponents = (
 const getFile = (document: Document | undefined, oid: number) =>
   document ? document.files.find(x => x.oid === oid) : undefined;
 
+const FileIcon: React.FC<{ filename: string }> = ({ filename }) => {
+  if (filename.endsWith(".pdf")) {
+    return <IconFileTypePdf />;
+  }
+
+  if (filename.endsWith(".zip")) {
+    return <IconFileTypeZip />;
+  }
+
+  return <IconFile />;
+};
+
 interface Props {}
 const DocumentPage: React.FC<Props> = () => {
   const { author, slug } = useParams() as { slug: string; author: string };
@@ -101,10 +115,6 @@ const DocumentPage: React.FC<Props> = () => {
   const Components = getComponents(activeFile);
   const [editing, { toggle: toggleEditing }] = useDisclosure();
   const [loadingDownload, startDownload] = useDocumentDownload(data);
-  const reloadComments = async () => {
-    await reload();
-    setTab("comments");
-  };
   const reloadSettings = async () => {
     await reload();
     setTab("settings");
@@ -119,6 +129,15 @@ const DocumentPage: React.FC<Props> = () => {
   }, [searchParams, data]);
   useScrollToPermalink();
 
+  function formatDisplayName(file: DocumentFile): string {
+    const ext = file.filename.split(".").at(-1);
+    if (ext && file.display_name.endsWith(`.${ext}`)) {
+      return file.display_name;
+    }
+
+    return `${file.display_name}.${ext}`;
+  }
+
   return (
     <>
       <Container size="xl">
@@ -132,10 +151,10 @@ const DocumentPage: React.FC<Props> = () => {
             component={Link}
             to={`/category/${data ? data.category : ""}`}
           >
-            {data && data.category_display_name}
+            {data?.category_display_name}
           </Anchor>
           <Anchor size="xs" tt="uppercase">
-            {data && data.display_name}
+            {data?.display_name}
           </Anchor>
         </Breadcrumbs>
         {data && (
@@ -182,7 +201,7 @@ const DocumentPage: React.FC<Props> = () => {
           </Box>
         )}
         {error && <Alert color="red">{error.toString()}</Alert>}
-        {data && data.description && (
+        {data?.description && (
           <div>
             <MarkdownText value={data.description} />
           </div>
@@ -191,18 +210,17 @@ const DocumentPage: React.FC<Props> = () => {
       <Container size="xl" mt="sm">
         <Tabs value={tab} onChange={setTab}>
           <Tabs.List>
-            {data &&
-              data.files
-                .sort((a, b) => a.order - b.order)
-                .map(file => (
-                  <Tabs.Tab
-                    key={file.oid}
-                    value={file.oid.toString()}
-                    leftSection={<IconFile />}
-                  >
-                    {file.display_name}
-                  </Tabs.Tab>
-                ))}
+            {data?.files
+              .sort((a, b) => a.order - b.order)
+              .map(file => (
+                <Tabs.Tab
+                  key={file.oid}
+                  value={file.oid.toString()}
+                  leftSection={<FileIcon filename={file.filename} />}
+                >
+                  {formatDisplayName(file)}
+                </Tabs.Tab>
+              ))}
             <Tabs.Tab value="comments" leftSection={<IconMessage />}>
               Comments
             </Tabs.Tab>

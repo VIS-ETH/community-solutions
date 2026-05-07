@@ -4,11 +4,12 @@ import {
   Card,
   Divider,
   Flex,
+  Loader,
   Modal,
   Text,
 } from "@mantine/core";
-import { differenceInSeconds, formatDistanceToNow } from "date-fns";
-import { useState } from "react";
+import { differenceInSeconds } from "date-fns";
+import { lazy, Suspense, useState } from "react";
 import { Link } from "react-router-dom";
 import { imageHandler } from "../api/fetch-utils";
 import {
@@ -22,7 +23,6 @@ import {
 } from "../api/hooks";
 import { useUser } from "../auth";
 import { Document, DocumentComment } from "../interfaces";
-import Editor from "./Editor";
 import { UndoStack } from "./Editor/utils/undo-stack";
 import MarkdownText from "./markdown-text";
 import SmallButton from "./small-button";
@@ -42,6 +42,8 @@ import FlaggedBadge from "./FlaggedBadge";
 import MarkedAsAiBadge from "./MarkedAsAiBadge";
 import TimeText from "./time-text";
 import { copy } from "../utils/clipboard";
+
+const Editor = lazy(() => import("./Editor"));
 
 interface Props {
   documentAuthor: string;
@@ -108,22 +110,24 @@ const DocumentCommentComponent = ({
     <div id={String(comment.oid)}>
       <Modal title="Edit comment" onClose={toggle} opened={hasDraft} size="lg">
         <Modal.Body>
-          <Editor
-            value={draftText}
-            onChange={setDraftText}
-            imageHandler={imageHandler}
-            preview={value => <MarkdownText value={value} />}
-            undoStack={undoStack}
-            setUndoStack={setUndoStack}
-          />
-          <TooltipButton
-            mt="sm"
-            tooltip="Save comment"
-            disabled={editLoading || draftText.length === 0}
-            onClick={() => updateComment(draftText)}
-          >
-            Save
-          </TooltipButton>
+          <Suspense fallback={<Loader />}>
+            <Editor
+              value={draftText}
+              onChange={setDraftText}
+              imageHandler={imageHandler}
+              preview={value => <MarkdownText value={value} />}
+              undoStack={undoStack}
+              setUndoStack={setUndoStack}
+            />
+            <TooltipButton
+              mt="sm"
+              tooltip="Save comment"
+              disabled={editLoading || draftText.length === 0}
+              onClick={() => updateComment(draftText)}
+            >
+              Save
+            </TooltipButton>
+          </Suspense>
         </Modal.Body>
       </Modal>
       <Card withBorder shadow="md" my="sm">
@@ -135,11 +139,11 @@ const DocumentCommentComponent = ({
                   <Text fw={700} component="span">
                     {comment.authorDisplayName}
                   </Text>
-                  <Text ml="0.25em" color="dimmed" component="span">
+                  <Text ml="0.25em" c="dimmed" component="span">
                     @{comment.authorId}
                   </Text>
                 </Anchor>
-                <Text component="span" mx={6} color="dimmed">
+                <Text component="span" mx={6} c="dimmed">
                   ·
                 </Text>
                 {comment && <TimeText time={comment.time} suffix="ago" />}
@@ -149,7 +153,7 @@ const DocumentCommentComponent = ({
                     new Date(comment.time),
                   ) > 1 && (
                     <>
-                      <Text component="span" color="dimmed" mx={6}>
+                      <Text component="span" c="dimmed" mx={6}>
                         ·
                       </Text>
                       <TimeText

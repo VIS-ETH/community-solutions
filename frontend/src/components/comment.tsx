@@ -1,5 +1,5 @@
-import { differenceInSeconds, formatDistanceToNow } from "date-fns";
-import React, { useState } from "react";
+import { differenceInSeconds } from "date-fns";
+import React, { lazy, Suspense, useState } from "react";
 import { Link } from "react-router-dom";
 import { addNewComment, removeComment, updateComment } from "../api/comment";
 import { imageHandler } from "../api/fetch-utils";
@@ -7,13 +7,20 @@ import { useMutation, useResetExamCommentFlaggedVote, useResetExamCommentMarkedA
 import { useUser } from "../auth";
 import useRemoveConfirm from "../hooks/useRemoveConfirm";
 import { Answer, AnswerSection, Comment } from "../interfaces";
-import Editor from "./Editor";
 import { UndoStack } from "./Editor/utils/undo-stack";
 import CodeBlock from "./code-block";
 import MarkdownText from "./markdown-text";
-import SmallButton from "./small-button";
 import { useOfficialSolutionLanguage } from "./official-solution";
-import { Anchor, Button, Flex, Group, Menu, Paper, Text } from "@mantine/core";
+import {
+  Anchor,
+  Button,
+  Flex,
+  Group,
+  Loader,
+  Menu,
+  Paper,
+  Text,
+} from "@mantine/core";
 import {
   IconCode,
   IconDeviceFloppy,
@@ -31,6 +38,8 @@ import MarkedAsAiBadge from "./MarkedAsAiBadge";
 import { useDisclosure } from "@mantine/hooks";
 import TimeText from "./time-text";
 import { copy } from "../utils/clipboard";
+
+const Editor = lazy(() => import("./Editor"));
 
 interface Props {
   answer: Answer;
@@ -229,7 +238,7 @@ const CommentComponent: React.FC<Props> = ({
           </Flex>
         </Flex>
       {comment === undefined || editing ? (
-        <>
+        <Suspense fallback={<Loader />}>
           <Editor
             value={draftText}
             onChange={setDraftText}
@@ -260,7 +269,7 @@ const CommentComponent: React.FC<Props> = ({
               Save
             </Button>
           </Group>
-        </>
+        </Suspense>
       ) : (
         <div>
           {viewSource ? (

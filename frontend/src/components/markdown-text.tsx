@@ -1,5 +1,5 @@
 import { MarkdownHooks, Components, defaultUrlTransform } from "react-markdown";
-import type { PluggableList } from 'unified';
+import type { PluggableList } from "unified";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
@@ -31,7 +31,7 @@ export type ComponentRenderer = (
     React.HTMLAttributes<HTMLElement>,
     HTMLElement
   >,
-) => React.ReactElement<unknown>;
+) => React.ReactElement;
 
 const addMarks = (
   obj: any,
@@ -142,7 +142,7 @@ const createComponents = (
     }
     return language ? (
       <CodeBlock
-        language={language[1]}
+        language={language}
         value={String(children).replace(/\n$/, "")}
         {...props}
       />

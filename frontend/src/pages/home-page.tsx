@@ -1,5 +1,6 @@
 import {
   Alert,
+  Box,
   Button,
   Container,
   Flex,
@@ -18,6 +19,7 @@ import { fetchGet, fetchPost } from "../api/fetch-utils";
 import { loadMetaCategories } from "../api/hooks";
 import { useUser } from "../auth";
 import CategoryCard from "../components/category-card";
+import RecentlyViewedExams from "../components/recently-viewed-exams";
 import Grid from "../components/grid";
 import ContentContainer from "../components/secondary-container";
 import useSearch from "../hooks/useSearch";
@@ -27,6 +29,7 @@ import CourseCategoriesPanel from "../components/course-categories-panel";
 import {
   IconPlus,
   IconSearch,
+  IconFilter,
   IconChevronLeft,
   IconChevronRight,
 } from "@tabler/icons-react";
@@ -177,6 +180,7 @@ const Meta2ChildCategoriesDisplay: React.FC<{
   onChange: () => void;
   is_collapsed: (category: string) => boolean;
   collapse_expand: (category: string) => void;
+  metaCategories?: MetaCategory[];
 }> = ({
   meta1display,
   meta2,
@@ -184,6 +188,7 @@ const Meta2ChildCategoriesDisplay: React.FC<{
   onChange,
   is_collapsed,
   collapse_expand,
+  metaCategories,
 }) =>
   meta2.map(([meta2display, categories]) =>
     meta2display === "" ? (
@@ -204,6 +209,7 @@ const Meta2ChildCategoriesDisplay: React.FC<{
 
               {isAdmin && (
                 <EditMeta2
+                  data={metaCategories}
                   oldMeta2={meta2display}
                   meta1={meta1display}
                   onChange={onChange}
@@ -376,12 +382,13 @@ export const CategoryList: React.FC = () => {
             autoFocus
             onChange={e => setFilter(e.currentTarget.value)}
             leftSection={
-              <IconSearch style={{ height: "15px", width: "15px" }} />
+              <IconFilter style={{ height: "15px", width: "15px" }} />
             }
           />
         </Flex>
       </Container>
-      <ContentContainer>
+      <RecentlyViewedExams />
+      <ContentContainer mt="sm">
         <Container size="xl" py="md" pos="relative">
           {loading && !error && (
             <Loader size="xs" color="gray" pos="absolute" top={0} right={0} />
@@ -410,6 +417,7 @@ export const CategoryList: React.FC = () => {
                         </Title>
                         {isAdmin && (
                           <EditMeta1
+                            data={metaCategories}
                             oldMeta1={meta1display}
                             onChange={onChange}
                           />
@@ -424,6 +432,7 @@ export const CategoryList: React.FC = () => {
                         onChange={onChange}
                         is_collapsed={is_collapsed}
                         collapse_expand={collapse_expand}
+                        metaCategories={metaCategories}
                       />
                     }
                     is_collapsed={() => is_collapsed(meta1display)}

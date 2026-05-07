@@ -1,10 +1,17 @@
-import { Button, Card, Flex, Group, TextInput, Title } from "@mantine/core";
-import React, { useCallback, useState } from "react";
+import {
+  Button,
+  Card,
+  Flex,
+  Group,
+  Loader,
+  TextInput,
+  Title,
+} from "@mantine/core";
+import React, { lazy, Suspense, useCallback, useState } from "react";
 import { imageHandler } from "../api/fetch-utils";
 import { useUser } from "../auth";
 import useRemoveConfirm from "../hooks/useRemoveConfirm";
 import { FAQEntry } from "../interfaces";
-import Editor from "./Editor";
 import { UndoStack } from "./Editor/utils/undo-stack";
 import IconButton from "./icon-button";
 import MarkdownText from "./markdown-text";
@@ -16,6 +23,9 @@ import {
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
+
+const Editor = lazy(() => import("./Editor"));
+
 interface Props {
   isAdmin?: boolean;
   entry: FAQEntry;
@@ -66,7 +76,7 @@ const FAQEntryComponent: React.FC<Props> = ({
         </Group>
       )}
       {editing ? (
-        <>
+        <Suspense fallback={<Loader />}>
           <TextInput
             placeholder="Question"
             mb="sm"
@@ -81,7 +91,7 @@ const FAQEntryComponent: React.FC<Props> = ({
             setUndoStack={setUndoStack}
             preview={value => <MarkdownText value={value} />}
           />
-        </>
+        </Suspense>
       ) : (
         <MarkdownText value={entry.answer} />
       )}

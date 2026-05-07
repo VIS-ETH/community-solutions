@@ -32,7 +32,7 @@ import {
 } from "./fetch-utils";
 
 // Interval to consider "close succession" to de-dupe requests
-const RAPID_SUCCESSIVE_REQUESTS_DEDUPE_INTERVAL = 300; // milliseconds
+const RAPID_SUCCESSIVE_REQUESTS_DEDUPE_INTERVAL = 500; // milliseconds
 
 export declare type Mutate<R> = (x: R | undefined | ((data: R) => R)) => void;
 
@@ -582,6 +582,10 @@ export const useMutation = <B, T extends any[]>(
   return [loading, run] as const;
 };
 
+export const removeExam = async (filename: string) => {
+  await fetchPost(`/api/exam/remove/exam/${filename}/`, {});
+};
+
 export const removeCategory = async (slug: string) => {
   await fetchPost("/api/category/remove/", { slug });
 };
@@ -907,3 +911,35 @@ export const useMoveDocumentFile = (
   );
   return [error, loading, run] as const;
 };
+
+export const setFeedbackReply = async (oid: string, reply: string) =>
+  fetchPost(`/api/feedback/reply/${oid}/`, { reply });
+
+export const loadExamUserSolved = async (exam: string) => {
+  return fetchGet<{ user_solved: boolean }>(`/api/exam/${exam}/usersolved`);
+};
+
+export const useLoadExamUserSolved = (exam: string) => {
+  const {
+    error,
+    loading,
+    data,
+    mutate,
+    run: reload,
+  } = useRequest(() => loadExamUserSolved(exam), {
+    cacheKey: `exam-${exam}-usersolved`,
+  });
+  return [error, loading, data, mutate, reload] as const;
+};
+
+export const markExamUserSolved = async (exam: string) => {
+  return fetchPut<{ user_solved: boolean }>(`/api/exam/${exam}/usersolved`, {});
+};
+export const useMarkExamUserSolved = (exam: string) =>
+  useMutation(() => markExamUserSolved(exam));
+
+export const unmarkExamUserSolved = async (exam: string) => {
+  return fetchDelete<{ user_solved: boolean }>(`/api/exam/${exam}/usersolved`);
+};
+export const useUnmarkExamUserSolved = (exam: string) =>
+  useMutation(() => unmarkExamUserSolved(exam));
