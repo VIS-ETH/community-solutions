@@ -24,7 +24,12 @@ import useSearch from "../hooks/useSearch";
 import useTitle from "../hooks/useTitle";
 import { CategoryMetaData, MetaCategory } from "../interfaces";
 import CourseCategoriesPanel from "../components/course-categories-panel";
-import { IconPlus, IconSearch } from "@tabler/icons-react";
+import {
+  IconPlus,
+  IconSearch,
+  IconChevronLeft,
+  IconChevronRight,
+} from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { EditMeta1, EditMeta2 } from "../components/edit-meta-categories";
 import CollapseWrapper from "../components/collapse-wrapper";
@@ -66,8 +71,8 @@ const mapToCategories = (
       categories: categoryNames,
     } of meta2) {
       const categories = categoryNames.flatMap(name => {
-        const category = categoryMap.get(name); 
-        return category ? [category] : []; 
+        const category = categoryMap.get(name);
+        return category ? [category] : [];
       });
       for (const category of categories) assignedCategories.add(category);
       if (categories.length === 0) continue;
@@ -299,21 +304,42 @@ export const CategoryList: React.FC = () => {
   };
 
   // Add all meta1 categories to the default "Sort by" options (which are 'Alphabetical' and 'By Semester').
-  const sortByOptions = useMemo(
+  const [showMoreSortOptions, { toggle: toggleShowMoreSortOptions }] =
+    useDisclosure(false);
+
+  const defaultSortOptions = useMemo(
+    () => [
+      { label: "Alphabetical", value: "alphabetical" },
+      { label: "By Semester", value: "bySemester" },
+    ],
+    [],
+  );
+
+  const extraSortOptions = useMemo(
     () =>
-      [
-        { label: "Alphabetical", value: "alphabetical" },
-        { label: "By Semester", value: "bySemester" },
-      ].concat(
-        (metaList ?? [])
-          .filter(([meta1display]) => meta1display !== "")
-          .map(([meta1display]) => ({
-            label: meta1display,
-            value: meta1display,
-          })),
-      ),
+      (metaList ?? [])
+        .filter(([meta1display]) => meta1display !== "")
+        .map(([meta1display]) => ({
+          label: meta1display,
+          value: meta1display,
+        })),
     [metaList],
   );
+
+  const sortByOptions = useMemo(
+    () =>
+      showMoreSortOptions
+        ? defaultSortOptions.concat(extraSortOptions)
+        : defaultSortOptions,
+    [defaultSortOptions, extraSortOptions, showMoreSortOptions],
+  );
+
+  const onExpandSortOptionsClick = () => {
+    if (showMoreSortOptions) {
+      setMode("alphabetical");
+    }
+    toggleShowMoreSortOptions();
+  };
 
   return (
     <>
@@ -323,11 +349,27 @@ export const CategoryList: React.FC = () => {
           direction={{ base: "column", sm: "row" }}
           justify="space-between"
         >
-          <SegmentedControl
-            value={mode}
-            onChange={setMode}
-            data={sortByOptions}
-          />
+          <Flex gap="sm" align="center">
+            <SegmentedControl
+              value={mode}
+              onChange={setMode}
+              data={sortByOptions}
+            />
+            {extraSortOptions.length > 0 && (
+              <Button
+                size="xs"
+                variant="subtle"
+                onClick={onExpandSortOptionsClick}
+                aria-label="toggle more sort options"
+              >
+                {showMoreSortOptions ? (
+                  <IconChevronLeft />
+                ) : (
+                  <IconChevronRight />
+                )}
+              </Button>
+            )}
+          </Flex>
           <TextInput
             placeholder="Filter..."
             value={filter}
