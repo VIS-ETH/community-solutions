@@ -1,4 +1,3 @@
-from util.schemas import ValueWrapped
 from typing import Optional
 
 from django.shortcuts import get_object_or_404
@@ -8,15 +7,16 @@ from ninja import Field, Form, ModelSchema, Router, Schema
 from feedback.models import Feedback
 from myauth import auth_check
 from myauth.models import get_my_user
+from util.schemas import ValueWrapped
 
-router = Router()
+router = Router(tags=["Feedback"])
 
 
 class FeedbackSchema(Schema):
     text: str
 
 
-@router.post("/submit/")
+@router.post("/submit/", operation_id="submitFeedback")
 @auth_check.require_login
 def submit(request, data: Form[FeedbackSchema]):
     feedback = Feedback(author=request.user, text=data.text)
@@ -51,7 +51,7 @@ class FeedbackList(ValueWrapped[list[FeedbackOut]]):
     pass
 
 
-@router.get("/list/", response=FeedbackList)
+@router.get("/list/", response=FeedbackList, operation_id="listFeedback")
 @auth_check.require_admin
 def list_all(request):
     return {"value": Feedback.objects.select_related("author").all()}
@@ -66,7 +66,7 @@ class FeedbackReplySchema(Schema):
     reply: str
 
 
-@router.post("/reply/{feedbackid}/")
+@router.post("/reply/{feedbackid}/", operation_id="createFeedbackReply")
 @auth_check.require_admin
 def replies(request, feedbackid: int, data: Form[FeedbackReplySchema]):
     feedback = get_object_or_404(Feedback, pk=feedbackid)
@@ -82,7 +82,7 @@ def replies(request, feedbackid: int, data: Form[FeedbackReplySchema]):
     return None
 
 
-@router.post("/flags/{feedbackid}/")
+@router.post("/flags/{feedbackid}/", operation_id="setFeedbackFlags")
 @auth_check.require_admin
 def flags(request, feedbackid: int, data: Form[FeedbackFlagsSchema]):
     feedback = get_object_or_404(Feedback, pk=feedbackid)

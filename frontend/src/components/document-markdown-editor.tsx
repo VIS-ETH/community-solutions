@@ -1,7 +1,7 @@
 import { Button, Loader } from "@mantine/core";
 import { useRequest } from "ahooks";
 import React, { lazy, Suspense, useState } from "react";
-import { imageHandler, NamedBlob } from "../api/fetch-utils";
+import { NamedBlob } from "../api/fetch-utils";
 import { useUpdateDocumentFile } from "../api/hooks";
 import { Document, DocumentFile } from "../interfaces";
 import { UndoStack } from "./Editor/utils/undo-stack";
@@ -34,7 +34,6 @@ const DocumentMarkdownEditor: React.FC<Props> = ({ document, file, url }) => {
       <Editor
         value={draftText}
         onChange={setDraftText}
-        imageHandler={imageHandler}
         preview={value => <MarkdownText value={value} />}
         undoStack={undoStack}
         setUndoStack={setUndoStack}

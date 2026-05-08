@@ -8,7 +8,6 @@ import {
   Title,
 } from "@mantine/core";
 import React, { lazy, Suspense, useCallback, useState } from "react";
-import { imageHandler } from "../api/fetch-utils";
 import { useUser } from "../auth";
 import useRemoveConfirm from "../hooks/useRemoveConfirm";
 import { FAQEntry } from "../interfaces";
@@ -84,7 +83,6 @@ const FAQEntryComponent: React.FC<Props> = ({
             onChange={e => setQuestion(e.target.value)}
           />
           <Editor
-            imageHandler={imageHandler}
             value={answer}
             onChange={setAnswer}
             undoStack={undoStack}

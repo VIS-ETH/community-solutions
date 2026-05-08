@@ -1,6 +1,5 @@
 import { Flex, Loader } from "@mantine/core";
 import React, { lazy, Suspense, useState } from "react";
-import { imageHandler } from "../api/fetch-utils";
 import { Mutate, useCreateDocumentComment } from "../api/hooks";
 import { Document } from "../interfaces";
 import { UndoStack } from "./Editor/utils/undo-stack";
@@ -42,7 +41,6 @@ const DocumentCommentForm: React.FC<Props> = ({
       <Editor
         value={draftText}
         onChange={setDraftText}
-        imageHandler={imageHandler}
         preview={value => <MarkdownText value={value} />}
         undoStack={undoStack}
         setUndoStack={setUndoStack}

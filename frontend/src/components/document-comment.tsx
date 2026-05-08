@@ -11,7 +11,6 @@ import {
 import { differenceInSeconds } from "date-fns";
 import { lazy, Suspense, useState } from "react";
 import { Link } from "react-router-dom";
-import { imageHandler } from "../api/fetch-utils";
 import {
   Mutate,
   useDeleteDocumentComment,
@@ -114,7 +113,6 @@ const DocumentCommentComponent = ({
             <Editor
               value={draftText}
               onChange={setDraftText}
-              imageHandler={imageHandler}
               preview={value => <MarkdownText value={value} />}
               undoStack={undoStack}
               setUndoStack={setUndoStack}

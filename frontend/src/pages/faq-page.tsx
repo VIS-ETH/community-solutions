@@ -1,7 +1,6 @@
 import * as React from "react";
 import { lazy, useState, Suspense } from "react";
 import { useFAQ } from "../api/faq";
-import { imageHandler } from "../api/fetch-utils";
 import { useUser } from "../auth";
 import { UndoStack } from "../components/Editor/utils/undo-stack";
 import FAQEntryComponent from "../components/faq-entry";
@@ -77,7 +76,6 @@ export const FAQPage: React.FC = () => {
               mb="sm"
             />
             <Editor
-              imageHandler={imageHandler}
               value={answer}
               onChange={setAnswer}
               undoStack={undoStack}

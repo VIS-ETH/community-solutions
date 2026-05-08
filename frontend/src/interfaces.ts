@@ -286,18 +286,6 @@ export interface PaymentInfo {
   valid_until: string;
 }
 
-export interface FeedbackEntry {
-  oid: string;
-  text: string;
-  authorId: string;
-  authorDisplayName: string;
-  time: string;
-  read: boolean;
-  done: boolean;
-  reply: string;
-  reply_time: string | null;
-}
-
 export interface FAQEntry {
   oid: string;
   question: string;

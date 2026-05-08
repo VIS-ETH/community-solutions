@@ -16,7 +16,6 @@ import { differenceInSeconds } from "date-fns";
 import React, { lazy, Suspense, useCallback, useState } from "react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
-import { imageHandler } from "../api/fetch-utils";
 import {
   useRemoveAnswer,
   useResetAnswerFlaggedVote,
@@ -290,7 +289,6 @@ const AnswerComponent: React.FC<Props> = ({
                 <Editor
                   value={draftText}
                   onChange={setDraftText}
-                  imageHandler={imageHandler}
                   preview={value => (
                     <MarkdownText value={value} languages={languages} />
                   )}

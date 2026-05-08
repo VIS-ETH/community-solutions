@@ -29,12 +29,20 @@ export default defineConfig({
       target: "src/api/hooks/petstore.ts",
       schemas: "src/api/model",
       client: "react-query",
+      httpClient: "fetch",
+      mock: false,
+      override: {
+        fetch: {
+          includeHttpResponseReturnType: false,
+        },
+        mutator: {
+          path: "src/api/mutator.ts",
+          name: "customFetch",
+        },
+      },
     },
     input: {
       target: fileURLToPath(inputPath),
-    },
-    hooks: {
-      afterAllFilesWrite: "prettier --write",
     },
   },
 });

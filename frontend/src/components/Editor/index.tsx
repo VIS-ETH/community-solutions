@@ -6,19 +6,18 @@ import BasicEditor from "./BasicEditor";
 import DropZone from "./Dropzone";
 import EditorFooter from "./EditorFooter";
 import EditorHeader from "./EditorHeader";
-import { ImageHandle, Range } from "./utils/types";
+import { Range } from "./utils/types";
 import { push, redo, undo, UndoStack } from "./utils/undo-stack";
 import classes from "./Editor.module.css";
 import clsx from "clsx";
+import { uploadImage } from "../../api/hooks/images/images";
 
 const OfficialAnswerOverlay = lazy(() => import("../official-answer-overlay"));
 
 interface Props {
   value: string;
   onChange: (newValue: string) => void;
-  imageHandler: (file: File) => Promise<ImageHandle>;
   preview: (str: string) => React.ReactNode;
-
   undoStack: UndoStack;
   setUndoStack: (newStack: UndoStack) => void;
   allowOfficialAnswer?: boolean;
@@ -27,7 +26,6 @@ interface Props {
 const Editor: React.FC<Props> = ({
   value,
   onChange,
-  imageHandler,
   preview,
   undoStack,
   setUndoStack,
@@ -66,13 +64,13 @@ const Editor: React.FC<Props> = ({
   }));
 
   const insertImage = useCallback(
-    (handle: ImageHandle) => {
+    (imageSource: string) => {
       const selection = getSelectionRangeRef.current();
       if (selection === undefined) return;
       const before = value.substring(0, selection.start);
       const content = value.substring(selection.start, selection.end);
       const after = value.substring(selection.end);
-      const newContent = `![${content}](${handle.src})`;
+      const newContent = `![${content}](${imageSource})`;
       const newSelection = {
         start: selection.start + 2,
         end: selection.start + content.length + 2,
@@ -101,18 +99,16 @@ const Editor: React.FC<Props> = ({
   );
 
   const insertImages = useCallback(
-    (handles: ImageHandle[]) => {
+    (imageSources: readonly string[]) => {
       const selection = getSelectionRangeRef.current();
       if (selection === undefined) return;
       const before = value.substring(0, selection.start);
       const content = value.substring(selection.start, selection.end);
       const after = value.substring(selection.end);
-      let newContent = ``;
-      for (let i = 0; i < handles.length; i++) {
+      let newContent = "";
+      for (const [index, imageSource] of imageSources.entries()) {
         newContent +=
-          i === 0
-            ? `![${content}](${handles[i].src})`
-            : `![](${handles[i].src})`;
+          index === 0 ? `![${content}](${imageSource})` : `![](${imageSource})`;
       }
       const newSelection = {
         start: selection.start + 2,
@@ -235,24 +231,18 @@ const Editor: React.FC<Props> = ({
 
   const onFile = useCallback(
     async (file: File) => {
-      const handle = await imageHandler(file);
-      insertImage(handle);
+      const handle = await uploadImage({
+        file,
+      });
+      insertImage(handle.filename);
     },
-    [imageHandler, insertImage],
-  );
-
-  const getHandle = useCallback(
-    async (file: File) => {
-      const handle = await imageHandler(file);
-      return handle;
-    },
-    [imageHandler],
+    [insertImage],
   );
 
   const onFiles = useCallback(
-    (files: File[]) => {
+    async (files: File[]) => {
       for (const file of files) {
-        onFile(file);
+        await onFile(file);
       }
     },
     [onFile],
@@ -262,11 +252,7 @@ const Editor: React.FC<Props> = ({
     (image: string) => {
       setImageOverlayOpen(false);
       if (image.length === 0) return;
-      insertImage({
-        name: image,
-        src: image,
-        remove: () => Promise.resolve(),
-      });
+      insertImage(image);
     },
     [insertImage],
   );
@@ -325,15 +311,7 @@ const Editor: React.FC<Props> = ({
       resize={isFullscreen ? "fill" : "vertical"}
       onPaste={e => {
         const fileList = e.clipboardData.files;
-        const filesArray: File[] = [];
-        if (fileList.length === 0) return;
-        for (let i = 0; i < fileList.length; i++) {
-          const file = fileList.item(i);
-          if (file) {
-            filesArray.push(file);
-          }
-        }
-        Promise.all(filesArray.map(getHandle)).then(insertImages);
+        onFiles([...fileList]);
       }}
     />
   );

@@ -15,7 +15,6 @@ import {
 import { useRequest } from "ahooks";
 import React, { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { imageHandler } from "../api/fetch-utils";
 import {
   loadAllCategories,
   loadDocumentTypes,
@@ -171,7 +170,6 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate, reload }) => {
               <Editor
                 value={descriptionDraftText ?? data.description}
                 onChange={setDescriptionDraftText}
-                imageHandler={imageHandler}
                 preview={value => <MarkdownText value={value} />}
                 undoStack={descriptionUndoStack}
                 setUndoStack={setDescriptionUndoStack}
