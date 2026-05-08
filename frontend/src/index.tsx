@@ -10,9 +10,12 @@ import { parse, stringify } from "query-string";
 import { MantineProvider } from "@mantine/core";
 import { FaroErrorBoundary } from "@grafana/faro-react";
 import serverData from "./utils/server-data";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const container = document.getElementById("root")!;
 const root = createRoot(container);
+
+const queryClient = new QueryClient();
 
 const content = (
   <BrowserRouter>
@@ -20,9 +23,11 @@ const content = (
       adapter={ReactRouter6Adapter}
       options={{ searchStringToObject: parse, objectToSearchString: stringify }}
     >
-      <MantineProvider defaultColorScheme="auto">
-        <App />
-      </MantineProvider>
+      <QueryClientProvider client={queryClient}>
+        <MantineProvider defaultColorScheme="auto">
+          <App />
+        </MantineProvider>
+      </QueryClientProvider>
     </QueryParamProvider>
   </BrowserRouter>
 );

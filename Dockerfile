@@ -24,7 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN	rm -rf /var/lib/apt/lists/*
 
 # install python dependencies
-COPY --from=astral/uv:0.10 /uv /bin/
+COPY --from=astral/uv:0.11 /uv /bin/
 COPY ./backend/pyproject.toml ./backend/uv.lock ./backend/.python-version ./
 
 # Temporarily switch to non-root user to install deps and temp write dirs, since
@@ -34,6 +34,8 @@ USER app-user
 RUN uv sync --locked --no-dev
 RUN mkdir intermediate_pdf_storage
 USER root
+
+RUN uv run manage.py export_openapi
 
 COPY ./backend/ ./
 COPY ./frontend/public/exam10.pdf ./exam10.pdf
@@ -72,6 +74,7 @@ COPY ./frontend/tsconfig.json \
 COPY ./frontend/public ./public
 COPY ./frontend/src ./src
 COPY ./CHANGELOG.md ./CHANGELOG.md
+COPY --from=backend ./static/openapi.json ./public/openapi.json
 ENV VITE_GIT_BRANCH=${git_branch}
 ENV VITE_GIT_COMMIT=${git_commit}
 RUN yarn run build
@@ -99,6 +102,7 @@ FROM backend AS backend-hotreload
 
 ENV IS_DEBUG true
 CMD uv run manage.py migrate \
+    && uv run manage.py generate_openapi
     && uv run manage.py runserver 0:8081
 
 # Frontend

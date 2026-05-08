@@ -36,4 +36,4 @@ yarn-error.log*
 # orval
 
 src/api/model/
-src/api/hooks/default/
+src/api/hooks/
