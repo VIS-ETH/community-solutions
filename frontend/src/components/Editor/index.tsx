@@ -101,27 +101,6 @@ const Editor: React.FC<Props> = ({
     [setCurrent, value],
   );
 
-  const insertImages = useCallback(
-    (handles: readonly ImageHandle[]) => {
-      const selection = getSelectionRangeRef.current();
-      if (selection === undefined) return;
-      const before = value.substring(0, selection.start);
-      const content = value.substring(selection.start, selection.end);
-      const after = value.substring(selection.end);
-      let newContent = "";
-      for (const [index, handle] of handles.entries()) {
-        newContent +=
-          index === 0 ? `![${content}](${handle.src})` : `![](${handle.src})`;
-      }
-      const newSelection = {
-        start: selection.start + 2,
-        end: selection.start + content.length + 2,
-      };
-      setCurrent(before + newContent + after, newSelection);
-    },
-    [setCurrent, value],
-  );
-
   const insertLink = useCallback(() => {
     const selection = getSelectionRangeRef.current();
     if (selection === undefined) return;
