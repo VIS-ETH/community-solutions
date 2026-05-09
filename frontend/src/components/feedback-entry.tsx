@@ -55,6 +55,7 @@ const FeedbackEntryComponent: React.FC<Props> = ({ entry, entryChanged }) => {
       mutation: {
         onSuccess() {
           setEditing(false);
+          entryChanged();
         },
       },
     });
