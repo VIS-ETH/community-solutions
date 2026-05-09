@@ -28,11 +28,14 @@ class FeedbackOut(ModelSchema):
     oid: int = Field(..., alias="id")
     author: str = Field(..., alias="author.username")
     authorDisplayName: str
-    reply_time: Optional[str]
+    reply_time: Optional[str] = None
+    time: str
+    read: bool
+    done: bool
 
     class Meta:
         model = Feedback
-        fields = ["text", "time", "read", "done", "reply"]
+        fields = ["text", "reply"]
 
     @staticmethod
     def resolve_authorDisplayName(obj):
@@ -45,6 +48,22 @@ class FeedbackOut(ModelSchema):
     @staticmethod
     def resolve_reply_time(obj):
         return obj.reply_time.isoformat() if obj.reply_time else None
+
+    # We cannot use `fields` above
+    # If we do, time is not marked required as it uses a default generator
+    @staticmethod
+    def resolve_time(obj):
+        return obj.time.isoformat()
+
+    # same here ^
+    @staticmethod
+    def resolve_done(obj):
+        return obj.done
+
+    # and here ^
+    @staticmethod
+    def resolve_read(obj):
+        return obj.read
 
 
 class FeedbackList(ValueWrapped[list[FeedbackOut]]):

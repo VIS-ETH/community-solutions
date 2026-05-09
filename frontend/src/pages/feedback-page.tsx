@@ -25,7 +25,7 @@ import {
   submitFeedback,
   useListFeedback,
 } from "../api/hooks/feedback/feedback";
-import type { FeedbackOut } from "../api/model/feedbackOut";
+import type { FeedbackOut } from "../api/model";
 
 const FeedbackForm: React.FC = () => {
   const [success, setSuccess] = useState(false);
@@ -115,7 +115,7 @@ const FeedbackReader: React.FC = () => {
 
   feedbacks.data?.value
     .map(fb => {
-      const date = parseISO(fb.time!);
+      const date = parseISO(fb.time);
       return {
         ...fb,
         date: isValid(date) ? date : new Date(0),
