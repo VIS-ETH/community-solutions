@@ -14,7 +14,7 @@ import {
   removeImage,
   useListImages,
   useUploadImage,
-} from "../api/hooks/images/images";
+} from "../api/hooks/images";
 
 interface ModalProps {
   isOpen: boolean;

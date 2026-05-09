@@ -25,7 +25,7 @@ const inputPath = await resolveOpenApiPath();
 export default defineConfig({
   petstore: {
     output: {
-      mode: "tags-split",
+      mode: "tags",
       target: "src/api/hooks/petstore.ts",
       schemas: "src/api/model",
       client: "react-query",
