@@ -10,7 +10,7 @@ import { Range } from "./utils/types";
 import { push, redo, undo, UndoStack } from "./utils/undo-stack";
 import classes from "./Editor.module.css";
 import clsx from "clsx";
-import { uploadImage } from "../../api/hooks/images/images";
+import { uploadImage } from "../../api/hooks/images";
 
 const OfficialAnswerOverlay = lazy(() => import("../official-answer-overlay"));
 

@@ -34,7 +34,7 @@ import TimeText from "./time-text";
 import {
   useCreateFeedbackReply,
   useSetFeedbackFlags,
-} from "../api/hooks/feedback/feedback";
+} from "../api/hooks/feedback";
 import type { FeedbackOut } from "../api/model";
 
 const Editor = lazy(() => import("./Editor"));

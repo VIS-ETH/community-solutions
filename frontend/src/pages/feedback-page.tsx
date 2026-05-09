@@ -21,10 +21,7 @@ import serverData from "../utils/server-data";
 import { useDisclosure } from "@mantine/hooks";
 import CollapseWrapper from "../components/collapse-wrapper";
 import { parseISO, isValid } from "date-fns";
-import {
-  submitFeedback,
-  useListFeedback,
-} from "../api/hooks/feedback/feedback";
+import { submitFeedback, useListFeedback } from "../api/hooks/feedback";
 import type { FeedbackOut } from "../api/model";
 
 const FeedbackForm: React.FC = () => {
