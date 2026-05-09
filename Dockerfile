@@ -35,11 +35,11 @@ RUN uv sync --locked --no-dev
 RUN mkdir intermediate_pdf_storage
 USER root
 
-RUN uv run manage.py export_openapi
-
 COPY ./backend/ ./
 COPY ./frontend/public/exam10.pdf ./exam10.pdf
 COPY ./frontend/public/static ./static
+
+RUN uv run manage.py export_openapi
 
 # prevent guincorn from buffering prints from python workers
 ENV PYTHONUNBUFFERED True
@@ -102,7 +102,7 @@ FROM backend AS backend-hotreload
 
 ENV IS_DEBUG true
 CMD uv run manage.py migrate \
-    && uv run manage.py generate_openapi
+    && uv run manage.py generate_openapi \
     && uv run manage.py runserver 0:8081
 
 # Frontend
