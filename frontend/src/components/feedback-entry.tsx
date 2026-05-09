@@ -35,7 +35,7 @@ import {
   useCreateFeedbackReply,
   useSetFeedbackFlags,
 } from "../api/hooks/feedback/feedback";
-import type { FeedbackOut } from "../api/model/feedbackOut";
+import type { FeedbackOut } from "../api/model";
 
 const Editor = lazy(() => import("./Editor"));
 
@@ -101,7 +101,7 @@ const FeedbackEntryComponent: React.FC<Props> = ({ entry, entryChanged }) => {
           <Title order={4}>
             {entry.authorDisplayName} •{" "}
             {lightFormat(
-              parseISO(entry.time!),
+              parseISO(entry.time),
               GlobalConsts.dateFNSFormatString,
             )}
           </Title>
