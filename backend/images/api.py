@@ -11,7 +11,6 @@ from util.schemas import ValueWrapped
 router = Router(tags=["Images"])
 
 
-# For backward compat it is a list of one-length lists
 class ImageList(ValueWrapped[list[str]]):
     pass
 
