@@ -13,7 +13,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { differenceInSeconds } from "date-fns";
-import React, { lazy, Suspense, useCallback, useState } from "react";
+import React, { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
 import { imageHandler } from "../api/fetch-utils";
@@ -67,6 +67,55 @@ const AnswerToolbar = (props: GroupProps) => (
   <Group className={classes.answerToolbarStyle} {...props} />
 );
 
+const draftAnswerKey = "draft-answer-json";
+type StorageDraft = Record<
+  string,
+  {
+    draftTime: number;
+    draft: string;
+  }
+>;
+
+function saveDraftToStorage(answerId: string | undefined, newValue: string) {
+  if (answerId === undefined) {
+    return;
+  }
+  const answerFromLocalStorage = localStorage.getItem(draftAnswerKey) ?? "{}";
+  const draftAnswerJSON = JSON.parse(answerFromLocalStorage) as StorageDraft;
+  const now = new Date();
+  const currentTimeStamp = now.getTime();
+  if (newValue.length === 0) {
+    delete draftAnswerJSON[answerId];
+  } else {
+    draftAnswerJSON[answerId] = {
+      draft: newValue,
+      draftTime: currentTimeStamp,
+    };
+  }
+  localStorage.setItem(draftAnswerKey, JSON.stringify(draftAnswerJSON));
+}
+function readDraftFromStorage(answerId: string | undefined): string {
+  if (answerId === undefined) {
+    return "";
+  }
+  const answerFromLocalStorage = localStorage.getItem(draftAnswerKey) ?? "{}";
+  const draftAnswerJSON = JSON.parse(answerFromLocalStorage) as StorageDraft;
+  const text = draftAnswerJSON[answerId]?.draft ?? "";
+  return text;
+}
+function clearExpiredDrafts() {
+  const answerFromLocalStorage = localStorage.getItem(draftAnswerKey) ?? "{}";
+  const draftAnswerJSON = JSON.parse(answerFromLocalStorage) as StorageDraft;
+  const now = new Date();
+  const currentTimeStamp = now.getTime();
+  const lifeSpan = 1000 * 60 * 60 * 24 * 3; // 3 Days
+  Object.entries(draftAnswerJSON).forEach(([answerId, element]) => {
+    if (element.draftTime + lifeSpan < currentTimeStamp) {
+      saveDraftToStorage(answerId, "");
+    }
+  });
+}
+
 interface Props {
   section?: AnswerSection;
   answer?: Answer;
@@ -93,10 +142,12 @@ const AnswerComponent: React.FC<Props> = ({
   const [setExpertVoteLoading, setExpertVote] =
     useSetExpertVote(onSectionChanged);
   const removeAnswer = useRemoveAnswer(onSectionChanged);
+  const answerId = section?.oid;
   const [updating, update] = useUpdateAnswer(res => {
     setEditing(false);
     if (onSectionChanged) onSectionChanged(res);
     if (answer === undefined && onDelete) onDelete();
+    saveDraftToStorage(answerId, "");
   });
   const { isAdmin, isExpert } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
@@ -105,12 +156,19 @@ const AnswerComponent: React.FC<Props> = ({
   const [draftText, setDraftText] = useState("");
   const [undoStack, setUndoStack] = useState<UndoStack>({ prev: [], next: [] });
   const startEdit = useCallback(() => {
-    setDraftText(answer?.text ?? "");
+    const possibleAnswer = readDraftFromStorage(answerId);
+    if (possibleAnswer) {
+      setDraftText(possibleAnswer);
+    } else {
+      setDraftText(answer?.text ?? "");
+    }
+
     setEditing(true);
   }, [answer]);
   const onCancel = useCallback(() => {
     setEditing(false);
     if (answer === undefined && onDelete) onDelete();
+    saveDraftToStorage(answerId, "");
   }, [onDelete, answer]);
   const save = useCallback(() => {
     if (section) update(section.oid, draftText, answerKind);
@@ -122,6 +180,11 @@ const AnswerComponent: React.FC<Props> = ({
   const languages = useOfficialSolutionLanguage();
 
   const isDraft = !answer;
+
+  useEffect(() => {
+    clearExpiredDrafts();
+    setDraftText(readDraftFromStorage(answerId));
+  }, []);
 
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
   const canEdit = section && onSectionChanged && answer?.canEdit;
@@ -289,7 +352,10 @@ const AnswerComponent: React.FC<Props> = ({
               <Suspense fallback={<Loader />}>
                 <Editor
                   value={draftText}
-                  onChange={setDraftText}
+                  onChange={newValue => {
+                    setDraftText(newValue);
+                    saveDraftToStorage(answerId, newValue);
+                  }}
                   imageHandler={imageHandler}
                   preview={value => (
                     <MarkdownText value={value} languages={languages} />
