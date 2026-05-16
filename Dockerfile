@@ -24,7 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN	rm -rf /var/lib/apt/lists/*
 
 # install python dependencies
-COPY --from=astral/uv:0.10 /uv /bin/
+COPY --from=astral/uv:0.11 /uv /bin/
 COPY ./backend/pyproject.toml ./backend/uv.lock ./backend/.python-version ./
 
 # Temporarily switch to non-root user to install deps and temp write dirs, since
