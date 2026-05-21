@@ -1,18 +1,14 @@
 import re
 import random
-from unicodedata import category
 from django.db.models.functions import Concat
 from django.db.models import Q, F, When, Case, Value as V, Func, TextField
 from myauth import auth_check
-from myauth.models import get_my_user
 from util import response
-from answers.models import Answer, Comment, Exam, ExamPage, ExamType
+from answers.models import Answer, Comment, Exam, ExamPage
 from myauth.auth_check import has_admin_rights
 from django.contrib.postgres.search import (
     SearchQuery,
     SearchRank,
-    SearchVector,
-    TrigramSimilarity,
 )
 import logging
 import time
@@ -43,10 +39,14 @@ find in this case because only very few documents will be left)
 """
 
 logger = logging.getLogger(__name__)
-flatten = lambda l: [item for sublist in l for item in sublist]
-flatten_and_filter = lambda l: (
-    [item for sublist in l for item in sublist if isinstance(sublist, list)]
-)
+
+
+def flatten(items):
+    return [item for sublist in items for item in sublist]
+
+
+def flatten_and_filter(items):
+    return [item for sublist in items for item in sublist if isinstance(sublist, list)]
 
 
 def parse_recursive(text, start_re, end_re, i, start_len, end_len):
@@ -272,7 +272,6 @@ def search_exams(
         .only("page_number", "exam_id")
     )
 
-    examDict = dict()
     examScore = dict()
     examPages = dict()
     for exam in exams:

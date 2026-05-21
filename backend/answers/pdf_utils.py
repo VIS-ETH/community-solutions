@@ -1,8 +1,3 @@
-import subprocess
-import os
-import tempfile
-from bs4 import BeautifulSoup
-from backend import settings
 from answers.models import (
     ExamPage as ExamPageModel,
 )
@@ -58,5 +53,5 @@ def analyze_pdf(
                 exam_page.save()
 
         return True
-    except (FileNotFoundError, pdfium.PdfiumError) as e:
+    except (FileNotFoundError, pdfium.PdfiumError):
         return False
