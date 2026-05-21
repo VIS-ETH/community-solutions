@@ -1,6 +1,6 @@
 import { Flex, Loader } from "@mantine/core";
 import React, { lazy, Suspense, useState } from "react";
-import { imageHandler } from "../api/fetch-utils";
+import { usePendingImages } from "./Editor/pending-images";
 import { Mutate, useCreateDocumentComment } from "../api/hooks";
 import { Document } from "../interfaces";
 import { UndoStack } from "./Editor/utils/undo-stack";
@@ -24,6 +24,7 @@ const DocumentCommentForm: React.FC<Props> = ({
     prev: [],
     next: [],
   });
+  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } = usePendingImages();
   const [loading, createDocumentComment] = useCreateDocumentComment(
     documentAuthor,
     documentSlug,
@@ -42,8 +43,8 @@ const DocumentCommentForm: React.FC<Props> = ({
       <Editor
         value={draftText}
         onChange={setDraftText}
-        imageHandler={imageHandler}
-        preview={value => <MarkdownText value={value} />}
+        imageHandler={deferredImageHandler}
+        preview={value => <MarkdownText value={value} pendingImages={pendingObjectUrls} />}
         undoStack={undoStack}
         setUndoStack={setUndoStack}
       />
@@ -52,7 +53,7 @@ const DocumentCommentForm: React.FC<Props> = ({
           size="md"
           tooltip="Submit comment"
           disabled={loading || draftText.length === 0}
-          onClick={() => createDocumentComment(draftText)}
+          onClick={async () => createDocumentComment(await flushPendingImages(draftText))}
         >
           Submit
         </TooltipButton>

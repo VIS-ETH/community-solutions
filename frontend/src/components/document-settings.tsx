@@ -15,7 +15,7 @@ import {
 import { useRequest } from "ahooks";
 import React, { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { imageHandler } from "../api/fetch-utils";
+import { usePendingImages } from "./Editor/pending-images";
 import {
   loadAllCategories,
   loadDocumentTypes,
@@ -108,6 +108,7 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate, reload }) => {
     prev: [],
     next: [],
   });
+  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } = usePendingImages();
 
   const [
     addModalIsOpen,
@@ -171,8 +172,8 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate, reload }) => {
               <Editor
                 value={descriptionDraftText ?? data.description}
                 onChange={setDescriptionDraftText}
-                imageHandler={imageHandler}
-                preview={value => <MarkdownText value={value} />}
+                imageHandler={deferredImageHandler}
+                preview={value => <MarkdownText value={value} pendingImages={pendingObjectUrls} />}
                 undoStack={descriptionUndoStack}
                 setUndoStack={setDescriptionUndoStack}
               />
@@ -182,14 +183,17 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate, reload }) => {
             <Button
               loading={loading}
               leftSection={<IconDeviceFloppy />}
-              onClick={() =>
+              onClick={async () => {
+                const finalDescription = descriptionDraftText !== undefined
+                  ? await flushPendingImages(descriptionDraftText)
+                  : undefined;
                 updateDocument({
                   display_name: displayName,
                   category,
                   document_type: documentType,
-                  description: descriptionDraftText,
-                })
-              }
+                  description: finalDescription,
+                });
+              }}
               disabled={displayName?.trim() === ""}
             >
               Save
