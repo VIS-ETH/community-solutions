@@ -11,7 +11,7 @@ def check_api_key(request):
 
 
 def user_authenticated(request):
-    if request.user != None:
+    if request.user is not None:
         return True
     if check_api_key(request):
         return True
@@ -104,7 +104,7 @@ def require_exam_admin(f):
         exam = get_object_or_404(Exam, filename=kwargs["filename"])
         if not has_admin_rights_for_exam(request, exam):
             return response.not_allowed()
-        return f(request, exam=exam, *args, **kwargs)
+        return f(request, *args, exam=exam, **kwargs)
 
     return wrapper
 

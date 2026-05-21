@@ -46,6 +46,7 @@ class TestFiles(ComsolTest):
             },
         )["filename"]
         response = self.get("/api/exam/pdf/exam/{}/".format(filename), as_json=False)
+        self.assertEqual(response.status_code, 200)
         exam = Exam.objects.get(filename=filename)
         self.assertTrue(exam.is_oral_transcript)
         self.assertEqual(exam.exam_type.displayname, "Transcripts")
@@ -70,6 +71,7 @@ class TestFiles(ComsolTest):
         response = self.get(
             "/api/exam/pdf/printonly/{}/".format(filename), as_json=False
         )
+        self.assertEqual(response.status_code, 200)
         self.post("/api/exam/remove/printonly/{}/".format(filename), {})
         self.post("/api/exam/remove/exam/{}/".format(filename), {})
 
@@ -92,6 +94,7 @@ class TestFiles(ComsolTest):
         response = self.get(
             "/api/exam/pdf/solution/{}/".format(filename), as_json=False
         )
+        self.assertEqual(response.status_code, 200)
         self.post("/api/exam/remove/solution/{}/".format(filename), {})
         self.post("/api/exam/remove/exam/{}/".format(filename), {})
 

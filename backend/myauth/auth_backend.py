@@ -103,7 +103,7 @@ def add_auth(request: HttpRequest):
 
         sub = claims["sub"]
         if (
-            not ("preferred_username" in claims)
+            "preferred_username" not in claims
             or len(claims["preferred_username"]) == 0
         ):
             raise NoUsernameException(claims["given_name"], claims["family_name"], sub)
@@ -124,7 +124,7 @@ def add_auth(request: HttpRequest):
 
         with transaction.atomic():
             existing_user = MyUser.objects.filter(profile__sub=sub).first()
-            if existing_user != None:
+            if existing_user is not None:
                 request.user = existing_user
                 changed = False
 
@@ -142,7 +142,7 @@ def add_auth(request: HttpRequest):
                 old_existing_user = MyUser.objects.filter(
                     username=preferred_username
                 ).first()
-                if old_existing_user != None:
+                if old_existing_user is not None:
                     Profile.objects.create(user=old_existing_user, sub=sub)
                     request.user = old_existing_user
 
@@ -193,7 +193,7 @@ def AuthenticationMiddleware(get_response):
                 err.familyName,
                 err.sub,
             )
-            raise PermissionDenied("no username set")
+            raise PermissionDenied("no username set") from err
         except PermissionDenied as err:
             logger.warning("permission denied: %s", err)
         except Exception:

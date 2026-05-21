@@ -1,6 +1,4 @@
 from testing.tests import ComsolTestExamsData, ComsolTestExamData
-from answers.models import Exam, ExamType
-from categories.models import Category
 
 
 class TestListings(ComsolTestExamsData):

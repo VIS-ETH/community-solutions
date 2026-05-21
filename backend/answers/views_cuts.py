@@ -1,6 +1,6 @@
 from util import response
 from myauth import auth_check
-from answers.models import Exam, Answer, AnswerSection
+from answers.models import Exam, AnswerSection
 from django.shortcuts import get_object_or_404
 from answers import section_util
 

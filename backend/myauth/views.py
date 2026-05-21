@@ -26,7 +26,7 @@ user_id_token = False
 
 @response.request_get()
 def me_view(request):
-    if request.user != None:
+    if request.user is not None:
         return response.success(
             loggedin=True,
             adminrights=auth_check.has_admin_rights(request),

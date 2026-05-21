@@ -1,8 +1,8 @@
 from util import response
 from answers.models import Exam
 from django.conf import settings
-from django.shortcuts import get_object_or_404, redirect, render
-from django.http import HttpResponse, Http404
+from django.shortcuts import redirect, render
+from django.http import Http404
 from django.views.decorators.csrf import ensure_csrf_cookie
 import json
 

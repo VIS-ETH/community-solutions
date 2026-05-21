@@ -13,10 +13,10 @@ def get_answer(request, long_id):
     try:
         answer = section_util.prepare_answer_objects(Answer.objects, request).get(long_id=long_id)
         return response.success(value=section_util.get_answer_response(request, answer))
-    except Answer.DoesNotExist as e:
-        raise Http404()
-    except Answer.MultipleObjectsReturned as e:
-        raise Http404()
+    except Answer.DoesNotExist as err:
+        raise Http404() from err
+    except Answer.MultipleObjectsReturned as err:
+        raise Http404() from err
 
 
 @response.request_post("text", "kind")

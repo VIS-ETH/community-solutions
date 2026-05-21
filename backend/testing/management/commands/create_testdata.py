@@ -14,7 +14,7 @@ from categories.models import Category, MetaCategory
 from feedback.models import Feedback
 from filestore.models import Attachment
 from images.models import Image
-from notifications.models import Notification, NotificationSetting, NotificationType
+from notifications.models import Notification, NotificationType
 from payments.models import Payment
 import os
 from answers import pdf_utils
@@ -84,7 +84,7 @@ class Command(BaseCommand):
     def create_images(self):
         self.stdout.write("Create images")
         for user in MyUser.objects.all():
-            for i in range(user.id % 10 + 5):
+            for _i in range(user.id % 10 + 5):
                 filename = s3_util.generate_filename(
                     16, settings.COMSOL_IMAGE_DIR, ".svg"
                 )

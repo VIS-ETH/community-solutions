@@ -84,8 +84,8 @@ def get_answer_response(request, answer: Answer, ignore_exam_admin=False):
             'sectionId': answer.answer_section.id,
             'kind': answer.kind,
         }
-    except AttributeError:
-        raise ValueError("The given answer has not been prepared with 'prepare_answer_objects'")
+    except AttributeError as err:
+        raise ValueError("The given answer has not been prepared with 'prepare_answer_objects'") from err
 
 
 def get_comment_response(request, comment: Comment):
@@ -113,8 +113,8 @@ def get_comment_response(request, comment: Comment):
             'isMarkedAsAi': comment.is_marked_as_ai,
             'markedAsAiCount': comment.marked_as_ai_count,
         }
-    except AttributeError:
-        raise ValueError("The object is missing the required annotations.")
+    except AttributeError as err:
+        raise ValueError("The object is missing the required annotations.") from err
 
 def get_answersection_response(request, section):
     prepared_query = prepare_answer_objects(section.answer_set, request)

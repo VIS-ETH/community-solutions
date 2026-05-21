@@ -1,4 +1,3 @@
-from answers.models import Exam
 from myauth.models import MyUser
 from testing.tests import ComsolTest, ComsolTestExamsData
 from categories.models import Category, MetaCategory
