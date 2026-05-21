@@ -1,37 +1,62 @@
-from myauth.models import get_my_user
+from django.db.models import Count, Exists, F, Manager, OuterRef, Prefetch
+
+from answers.models import Answer, Comment
 from myauth import auth_check
-from answers.models import Comment, Answer
-from django.db.models import Count, F, Exists, OuterRef, Manager, Prefetch
+from myauth.models import get_my_user
+
 
 def prepare_answer_objects(objects: Manager[Answer], request) -> Manager[Answer]:
     # Important optimization. Prevents amount of queries from
     # increasing quadratically ((N+1 problem)^2) and instead
     # results in a constant amount of queries.
-    comments_query = Comment.objects.select_related("author").annotate(
-        flagged_count=Count("flagged", distinct=True),
-        is_flagged=Exists(Comment.objects.filter(id=OuterRef("id"), flagged=request.user)),
-        marked_as_ai_count=Count("marked_as_ai", distinct=True),
-        is_marked_as_ai=Exists(Comment.objects.filter(id=OuterRef("id"), marked_as_ai=request.user)),
-        ).order_by("time", "id")
-    return objects.annotate(
-        expert_count=Count("expertvotes", distinct=True),
-        downvotes_count=Count("downvotes", distinct=True),
-        upvotes_count=Count("upvotes", distinct=True),
-        flagged_count=Count("flagged", distinct=True),
-        marked_as_ai_count=Count("marked_as_ai", distinct=True),
-        is_upvoted=Exists(Answer.objects.filter(id=OuterRef("id"), upvotes=request.user)),
-        is_downvoted=Exists(Answer.objects.filter(id=OuterRef("id"), downvotes=request.user)),
-        is_expertvoted=Exists(Answer.objects.filter(id=OuterRef("id"), expertvotes=request.user)),
-        is_flagged=Exists(Answer.objects.filter(id=OuterRef("id"), flagged=request.user)),
-        is_marked_as_ai=Exists(Answer.objects.filter(id=OuterRef("id"), marked_as_ai=request.user)),
-        delta_votes=F("upvotes_count") - F("downvotes_count"),
-    ).prefetch_related(
-        Prefetch(
-            "comments",
-            queryset=comments_query,
-            to_attr="all_comments",
+    comments_query = (
+        Comment.objects.select_related("author")
+        .annotate(
+            flagged_count=Count("flagged", distinct=True),
+            is_flagged=Exists(
+                Comment.objects.filter(id=OuterRef("id"), flagged=request.user)
+            ),
+            marked_as_ai_count=Count("marked_as_ai", distinct=True),
+            is_marked_as_ai=Exists(
+                Comment.objects.filter(id=OuterRef("id"), marked_as_ai=request.user)
+            ),
         )
-    ).select_related("author")
+        .order_by("time", "id")
+    )
+    return (
+        objects.annotate(
+            expert_count=Count("expertvotes", distinct=True),
+            downvotes_count=Count("downvotes", distinct=True),
+            upvotes_count=Count("upvotes", distinct=True),
+            flagged_count=Count("flagged", distinct=True),
+            marked_as_ai_count=Count("marked_as_ai", distinct=True),
+            is_upvoted=Exists(
+                Answer.objects.filter(id=OuterRef("id"), upvotes=request.user)
+            ),
+            is_downvoted=Exists(
+                Answer.objects.filter(id=OuterRef("id"), downvotes=request.user)
+            ),
+            is_expertvoted=Exists(
+                Answer.objects.filter(id=OuterRef("id"), expertvotes=request.user)
+            ),
+            is_flagged=Exists(
+                Answer.objects.filter(id=OuterRef("id"), flagged=request.user)
+            ),
+            is_marked_as_ai=Exists(
+                Answer.objects.filter(id=OuterRef("id"), marked_as_ai=request.user)
+            ),
+            delta_votes=F("upvotes_count") - F("downvotes_count"),
+        )
+        .prefetch_related(
+            Prefetch(
+                "comments",
+                queryset=comments_query,
+                to_attr="all_comments",
+            )
+        )
+        .select_related("author")
+    )
+
 
 def get_answer_response(request, answer: Answer, ignore_exam_admin=False):
     """
@@ -41,51 +66,61 @@ def get_answer_response(request, answer: Answer, ignore_exam_admin=False):
     if ignore_exam_admin:
         exam_admin = False
     else:
-        exam_admin = auth_check.has_admin_rights_for_exam(request, answer.answer_section.exam)
+        exam_admin = auth_check.has_admin_rights_for_exam(
+            request, answer.answer_section.exam
+        )
 
     try:
         comments = [
             {
-                'oid': comment.id,
-                'longId': comment.long_id,
-                'text': comment.text,
-                'authorId': comment.author.username,
-                'authorDisplayName': get_my_user(comment.author).displayname(),
-                'canEdit': comment.author == request.user,
-                'time': comment.time,
-                'edittime': comment.edittime,
-                'isFlagged': comment.is_flagged,
-                'flaggedCount': comment.flagged_count,
-                'isMarkedAsAi': comment.is_marked_as_ai,
-                'markedAsAiCount': comment.marked_as_ai_count,
-            } for comment in answer.all_comments
+                "oid": comment.id,
+                "longId": comment.long_id,
+                "text": comment.text,
+                "authorId": comment.author.username,
+                "authorDisplayName": get_my_user(comment.author).displayname(),
+                "canEdit": comment.author == request.user,
+                "time": comment.time,
+                "edittime": comment.edittime,
+                "isFlagged": comment.is_flagged,
+                "flaggedCount": comment.flagged_count,
+                "isMarkedAsAi": comment.is_marked_as_ai,
+                "markedAsAiCount": comment.marked_as_ai_count,
+            }
+            for comment in answer.all_comments
         ]
 
         return {
-            'oid': answer.id,
-            'longId': answer.long_id,
-            'upvotes': answer.delta_votes,
-            'expertvotes': answer.expert_count,
-            'authorId': answer.author.username if answer.kind == Answer.Kind.PERSONAL else '',
-            'authorDisplayName': get_my_user(answer.author).displayname() if answer.kind == Answer.Kind.PERSONAL else '',
-            'canEdit': answer.author == request.user or (answer.kind != Answer.Kind.PERSONAL and exam_admin),
-            'isUpvoted': answer.is_upvoted,
-            'isDownvoted': answer.is_downvoted,
-            'isExpertVoted': answer.is_expertvoted,
-            'isFlagged': answer.is_flagged,
-            'flaggedCount': answer.flagged_count,
-            'isMarkedAsAi': answer.is_marked_as_ai,
-            'markedAsAiCount': answer.marked_as_ai_count,
-            'comments': comments,
-            'text': answer.text,
-            'time': answer.time,
-            'edittime': answer.edittime,
-            'filename': answer.answer_section.exam.filename,
-            'sectionId': answer.answer_section.id,
-            'kind': answer.kind,
+            "oid": answer.id,
+            "longId": answer.long_id,
+            "upvotes": answer.delta_votes,
+            "expertvotes": answer.expert_count,
+            "authorId": answer.author.username
+            if answer.kind == Answer.Kind.PERSONAL
+            else "",
+            "authorDisplayName": get_my_user(answer.author).displayname()
+            if answer.kind == Answer.Kind.PERSONAL
+            else "",
+            "canEdit": answer.author == request.user
+            or (answer.kind != Answer.Kind.PERSONAL and exam_admin),
+            "isUpvoted": answer.is_upvoted,
+            "isDownvoted": answer.is_downvoted,
+            "isExpertVoted": answer.is_expertvoted,
+            "isFlagged": answer.is_flagged,
+            "flaggedCount": answer.flagged_count,
+            "isMarkedAsAi": answer.is_marked_as_ai,
+            "markedAsAiCount": answer.marked_as_ai_count,
+            "comments": comments,
+            "text": answer.text,
+            "time": answer.time,
+            "edittime": answer.edittime,
+            "filename": answer.answer_section.exam.filename,
+            "sectionId": answer.answer_section.id,
+            "kind": answer.kind,
         }
     except AttributeError as err:
-        raise ValueError("The given answer has not been prepared with 'prepare_answer_objects'") from err
+        raise ValueError(
+            "The given answer has not been prepared with 'prepare_answer_objects'"
+        ) from err
 
 
 def get_comment_response(request, comment: Comment):
@@ -96,25 +131,26 @@ def get_comment_response(request, comment: Comment):
     """
     try:
         return {
-            'oid': comment.id,
-            'longId': comment.long_id,
-            'answerId': comment.answer.long_id,
-            'text': comment.text,
-            'authorId': comment.author.username,
-            'authorDisplayName': get_my_user(comment.author).displayname(),
-            'time': comment.time,
-            'edittime': comment.edittime,
-            'exam_displayname': comment.answer.answer_section.exam.displayname,
-            'filename': comment.answer.answer_section.exam.filename,
-            'category_displayname': comment.answer.answer_section.exam.category.displayname,
-            'category_slug': comment.answer.answer_section.exam.category.slug,
-            'isFlagged': comment.is_flagged,
-            'flaggedCount': comment.flagged_count,
-            'isMarkedAsAi': comment.is_marked_as_ai,
-            'markedAsAiCount': comment.marked_as_ai_count,
+            "oid": comment.id,
+            "longId": comment.long_id,
+            "answerId": comment.answer.long_id,
+            "text": comment.text,
+            "authorId": comment.author.username,
+            "authorDisplayName": get_my_user(comment.author).displayname(),
+            "time": comment.time,
+            "edittime": comment.edittime,
+            "exam_displayname": comment.answer.answer_section.exam.displayname,
+            "filename": comment.answer.answer_section.exam.filename,
+            "category_displayname": comment.answer.answer_section.exam.category.displayname,
+            "category_slug": comment.answer.answer_section.exam.category.slug,
+            "isFlagged": comment.is_flagged,
+            "flaggedCount": comment.flagged_count,
+            "isMarkedAsAi": comment.is_marked_as_ai,
+            "markedAsAiCount": comment.marked_as_ai_count,
         }
     except AttributeError as err:
         raise ValueError("The object is missing the required annotations.") from err
+
 
 def get_answersection_response(request, section):
     prepared_query = prepare_answer_objects(section.answer_set, request)
@@ -122,8 +158,7 @@ def get_answersection_response(request, section):
     answers = [
         get_answer_response(request, answer)
         for answer in sorted(
-            prepared_query,
-            key=lambda x: (-x.expert_count, -x.delta_votes, x.time)
+            prepared_query, key=lambda x: (-x.expert_count, -x.delta_votes, x.time)
         )
     ]
 
@@ -149,22 +184,22 @@ def get_answersection_response(request, section):
 
 def get_answer_fields_to_preselect():
     return [
-        'author',
-        'answer_section',
-        'answer_section__exam',
-        'answer_section__exam__category',
+        "author",
+        "answer_section",
+        "answer_section__exam",
+        "answer_section__exam__category",
     ]
 
 
 def get_answer_fields_to_prefetch():
     return [
-        'upvotes',
-        'downvotes',
-        'expertvotes',
-        'flagged',
-        'marked_as_ai',
-        'comments',
-        'comments__author',
+        "upvotes",
+        "downvotes",
+        "expertvotes",
+        "flagged",
+        "marked_as_ai",
+        "comments",
+        "comments__author",
     ]
 
 

@@ -1,8 +1,10 @@
+import logging
+from os.path import dirname, join
+
+from django.contrib.postgres.search import SearchVector
+
 from answers.models import ExamPage
 from testing.tests import ComsolTestExamData
-import logging
-from django.contrib.postgres.search import SearchVector
-from os.path import dirname, join
 
 logger = logging.getLogger(__name__)
 

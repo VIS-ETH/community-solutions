@@ -1,23 +1,23 @@
+import os
+from datetime import timedelta
 from itertools import cycle
 
-from django.core.management.base import BaseCommand
-from django.core.management import call_command
 from django.conf import settings
-from util import s3_util
+from django.core.management import call_command
+from django.core.management.base import BaseCommand
 from django.utils import timezone
-from datetime import timedelta
 
-from myauth.models import MyUser
+from answers import pdf_utils
 from answers.models import Answer, AnswerSection, Comment, Exam, ExamType
-from documents.models import Document, DocumentType, DocumentFile
 from categories.models import Category, MetaCategory
+from documents.models import Document, DocumentFile, DocumentType
 from feedback.models import Feedback
 from filestore.models import Attachment
 from images.models import Image
+from myauth.models import MyUser
 from notifications.models import Notification, NotificationType
 from payments.models import Payment
-import os
-from answers import pdf_utils
+from util import s3_util
 
 # Pool of words to choose category names from. Prefixes are chosen infrequently to
 # prefix a guaranteed combination of Adjective + Noun.
@@ -102,7 +102,7 @@ class Command(BaseCommand):
             meta.save()
             for i in range(5):
                 MetaCategory(
-                    displayname="Subcategory {} of {}".format(i + 1, meta.displayname),
+                    displayname=f"Subcategory {i + 1} of {meta.displayname}",
                     parent=meta,
                 ).save()
 
@@ -286,7 +286,7 @@ class Command(BaseCommand):
                     answer=answer,
                     author=author,
                     text=[
-                        "This is a comment ({}).".format(i + 1),
+                        f"This is a comment ({i + 1}).",
                         (
                             f"This is a test image: ![Testimage]({owned_image.filename})"
                             if owned_image
@@ -409,7 +409,7 @@ class Command(BaseCommand):
                     exam_type = ExamType.objects.get(displayname="Transcripts")
                     exam = Exam(
                         filename=filename,
-                        displayname="Transcript by {}".format(user.displayname()),
+                        displayname=f"Transcript by {user.displayname()}",
                         exam_type=exam_type,
                         category=categories[user.id % len(categories)],
                         resolve_alias="resolve_" + filename,

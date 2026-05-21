@@ -1,11 +1,13 @@
-from answers.models import Answer
+from django.db.models import F, Q
+from django.db.models import Value as V
 from django.db.models.expressions import Case, When
-from util import response, func_cache
+from django.db.models.functions import Concat
+from django.shortcuts import get_object_or_404
+
+from answers.models import Answer
 from myauth import auth_check
 from myauth.models import MyUser
-from django.shortcuts import get_object_or_404
-from django.db.models import F, Q, Value as V
-from django.db.models.functions import Concat
+from util import func_cache, response
 
 
 def get_user_scores(user, res):
@@ -19,7 +21,9 @@ def get_user_scores(user, res):
         {
             "rank": rank,
             "total_users": total_users,
-            "score": user.scores.document_likes + user.scores.upvotes - user.scores.downvotes,
+            "score": user.scores.document_likes
+            + user.scores.upvotes
+            - user.scores.downvotes,
             "score_answers": user.answer_set.filter(kind=Answer.Kind.PERSONAL).count(),
             "score_comments": user.answers_comments.count(),
             "score_cuts": user.answersection_set.count(),
@@ -30,13 +34,19 @@ def get_user_scores(user, res):
     )
     return res
 
+
 @func_cache.cache(600)
 def get_ranking_list():
-    return list(MyUser.objects.annotate(
-        score=F("scores__document_likes")
-        + F("scores__upvotes")
-        - F("scores__downvotes"),
-    ).order_by("-score").values_list("username", flat=True))
+    return list(
+        MyUser.objects.annotate(
+            score=F("scores__document_likes")
+            + F("scores__upvotes")
+            - F("scores__downvotes"),
+        )
+        .order_by("-score")
+        .values_list("username", flat=True)
+    )
+
 
 @func_cache.cache(600)
 def get_scoreboard_top(scoretype, limit):

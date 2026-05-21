@@ -1,7 +1,9 @@
 import logging
-from testing.tests import ComsolTest, get_token
-from jwcrypto.jwt import JWT
+
 from jwcrypto.jwk import JWK
+from jwcrypto.jwt import JWT
+
+from testing.tests import ComsolTest, get_token
 
 with open("testing/jwtRS256.key", "rb") as f:
     private_key_data = f.read()
@@ -16,7 +18,6 @@ invalid_key.import_from_pem(invalid_private_key_data)
 
 
 class TestMyAuthAdmin(ComsolTest):
-
     loginUser = 0
 
     def test_me(self):
@@ -29,7 +30,6 @@ class TestMyAuthAdmin(ComsolTest):
 
 
 class TestMyAuthNonadmin(ComsolTest):
-
     loginUser = 2
 
     def test_me(self):
@@ -42,7 +42,6 @@ class TestMyAuthNonadmin(ComsolTest):
 
 
 class TestMyAuthUnauthorized(ComsolTest):
-
     loginUser = -1
 
     def test_me(self):

@@ -1,8 +1,10 @@
+import logging
+
+import pypdfium2 as pdfium
+
 from answers.models import (
     ExamPage as ExamPageModel,
 )
-import logging
-import pypdfium2 as pdfium
 
 logger = logging.getLogger(__name__)
 
@@ -11,9 +13,7 @@ def get_page_text(path_to_pdf, page):
     with pdfium.PdfDocument(path_to_pdf) as pdf:
         if page > len(pdf):
             logger.warning(
-                "Page number out of range when reading PDF text: {path_to_pdf} page {page}".format(
-                    path_to_pdf=path_to_pdf, page=page
-                )
+                f"Page number out of range when reading PDF text: {path_to_pdf} page {page}"
             )
             return ""
 

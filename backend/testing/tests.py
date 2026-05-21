@@ -1,12 +1,13 @@
-from django.test import TestCase, Client
-from django.test.client import encode_multipart, BOUNDARY, MULTIPART_CONTENT
-from answers.models import Exam, ExamType, AnswerSection, Answer, Comment
-from categories.models import Category
-from myauth.models import MyUser
 import logging
+
+from django.test import Client, TestCase
+from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
 from jwcrypto.jwk import JWK
 from jwcrypto.jwt import JWT
 
+from answers.models import Answer, AnswerSection, Comment, Exam, ExamType
+from categories.models import Category
+from myauth.models import MyUser
 
 with open("testing/jwtRS256.key", "rb") as f:
     private_key_data = f.read()
@@ -42,7 +43,6 @@ def get_token(user):
 
 
 class ComsolTest(TestCase):
-
     loginUsers = [
         {
             "sub": "42",
@@ -99,7 +99,9 @@ class ComsolTest(TestCase):
             if isinstance(args[arg], bool):
                 args[arg] = "true" if args[arg] else "false"
         response = (
-            self.client.post(path, args, headers={"authorization": get_token(self.user)})
+            self.client.post(
+                path, args, headers={"authorization": get_token(self.user)}
+            )
             if self.user
             else self.client.post(path, args)
         )
@@ -117,7 +119,7 @@ class ComsolTest(TestCase):
                 path,
                 encode_multipart(BOUNDARY, args),
                 content_type=MULTIPART_CONTENT,
-                headers={"authorization": get_token(self.user)}
+                headers={"authorization": get_token(self.user)},
             )
             if self.user
             else self.client.put(
@@ -165,13 +167,12 @@ class ComsolTest(TestCase):
 
 
 class ComsolTestExamData(ComsolTest):
-
     add_sections = True
     add_answers = True
     add_comments = True
 
     def setUp(self, call_my_setup=True):
-        super(ComsolTestExamData, self).setUp(call_my_setup=False)
+        super().setUp(call_my_setup=False)
         saved = self.user
         for user in self.loginUsers:
             self.user = user
@@ -222,14 +223,14 @@ class ComsolTestExamData(ComsolTest):
                         author=MyUser.objects.get(
                             username=self.loginUsers[i]["username"]
                         ),
-                        text="Test Answer {}/{}".format(section.id, i),
+                        text=f"Test Answer {section.id}/{i}",
                     )
                 )
             self.answers.append(
                 Answer(
                     answer_section=section,
                     author=MyUser.objects.get(username=self.loginUsers[0]["username"]),
-                    text="Legacy Answer {}".format(section.id),
+                    text=f"Legacy Answer {section.id}",
                     kind=Answer.Kind.LEGACY,
                 )
             )
@@ -244,7 +245,7 @@ class ComsolTestExamData(ComsolTest):
                         author=MyUser.objects.get(
                             username=self.loginUsers[i]["username"]
                         ),
-                        text="Comment {}/{}".format(answer.id, i),
+                        text=f"Comment {answer.id}/{i}",
                     )
                 )
         for comment in self.comments:
@@ -256,7 +257,7 @@ class ComsolTestExamData(ComsolTest):
 
 class ComsolTestExamsData(ComsolTest):
     def setUp(self, call_my_setup=True):
-        super(ComsolTestExamsData, self).setUp(call_my_setup=False)
+        super().setUp(call_my_setup=False)
         self.category = Category(
             displayname="Test Category",
             slug="TestCategory",
@@ -266,7 +267,7 @@ class ComsolTestExamsData(ComsolTest):
         for i in range(3):
             self.exams.append(
                 Exam(
-                    filename="test{}.pdf".format(i),
+                    filename=f"test{i}.pdf",
                     category=self.category,
                     displayname="test",
                     exam_type=ExamType.objects.get(displayname="Exams"),

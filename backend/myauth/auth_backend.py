@@ -1,20 +1,19 @@
-import logging
-from typing import Union
-import urllib.request
 import json
+import logging
+import urllib.request
+from datetime import UTC, datetime
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.http.request import HttpRequest
 from jwcrypto.jwk import JWKSet
+from jwcrypto.jws import InvalidJWSObject, InvalidJWSOperation, InvalidJWSSignature
 from jwcrypto.jwt import JWT, JWTMissingKey
-from notifications.models import NotificationSetting, NotificationType
-from util.func_cache import cache
 
 from myauth.models import MyUser, Profile
-from jwcrypto.jws import InvalidJWSObject, InvalidJWSOperation, InvalidJWSSignature
-from datetime import datetime, timezone
-from django.db import transaction
+from notifications.models import NotificationSetting, NotificationType
+from util.func_cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +62,7 @@ def add_auth(request: HttpRequest):
     headers = request.headers
     request.simulate_nonadmin = "SimulateNonAdmin" in headers
 
-    encoded: Union[str, None] = None
+    encoded: str | None = None
 
     if "Authorization" in headers:
         auth = headers["Authorization"]
@@ -78,7 +77,6 @@ def add_auth(request: HttpRequest):
         encoded = request.COOKIES["access_token"]
 
     if encoded is not None:
-
         token = JWT()
         key_set = get_key_set()
         # deserialize will raise an error if the encoded token is not valid / isn't signed correctly
@@ -93,7 +91,7 @@ def add_auth(request: HttpRequest):
 
         # Keycloak hands us the exp timestamp in UTC. So we should also get our
         # local time in UTC here.
-        now = datetime.now(timezone.utc).timestamp()
+        now = datetime.now(UTC).timestamp()
         # Validate "nbf" (Not Before) Claim if present
         if "exp" in claims and claims["exp"] < now:
             raise PermissionDenied("Expired")
@@ -102,16 +100,16 @@ def add_auth(request: HttpRequest):
             raise PermissionDenied("Not before invalid")
 
         sub = claims["sub"]
-        if (
-            "preferred_username" not in claims
-            or len(claims["preferred_username"]) == 0
-        ):
+        if "preferred_username" not in claims or len(claims["preferred_username"]) == 0:
             raise NoUsernameException(claims["given_name"], claims["family_name"], sub)
         preferred_username = claims["preferred_username"]
         if preferred_username in settings.BANNED_USERS:
             raise PermissionDenied("User is banned")
         home_organization = claims["home_organization"]
-        if settings.ALLOWED_HOMEORGS and home_organization not in settings.ALLOWED_HOMEORGS:
+        if (
+            settings.ALLOWED_HOMEORGS
+            and home_organization not in settings.ALLOWED_HOMEORGS
+        ):
             raise InvalidHomeOrganizationException()
         roles = (
             claims["resource_access"][settings.JWT_RESOURCE_GROUP]["roles"]
@@ -147,7 +145,6 @@ def add_auth(request: HttpRequest):
                     request.user = old_existing_user
 
                 else:
-
                     user = MyUser()
                     user.first_name = claims["given_name"]
                     user.last_name = claims["family_name"]

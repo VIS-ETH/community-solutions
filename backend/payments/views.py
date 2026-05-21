@@ -1,16 +1,17 @@
-from util import response
-from myauth import auth_check
-from myauth.models import MyUser
-from payments.models import Payment
-from answers.models import Exam
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
+from answers.models import Exam
+from myauth import auth_check
+from myauth.models import MyUser
+from payments.models import Payment
+from util import response
 
-@response.request_post('username')
+
+@response.request_post("username")
 @auth_check.require_admin
 def pay(request):
-    user = get_object_or_404(MyUser, username=request.POST['username'])
+    user = get_object_or_404(MyUser, username=request.POST["username"])
     payment = Payment(user=user)
     payment.save()
     return response.success()
@@ -29,7 +30,7 @@ def remove(request, oid):
 def refund(request, oid):
     payment = get_object_or_404(Payment, pk=oid)
     if payment.refund_time:
-        return response.not_possible('Already refundend')
+        return response.not_possible("Already refundend")
     payment.refund_time = timezone.now()
     payment.save()
     return response.success()
@@ -38,16 +39,19 @@ def refund(request, oid):
 def get_user_payments(user):
     res = [
         {
-            'oid': payment.id,
-            'active': payment.valid(),
-            'payment_time': payment.payment_time,
-            'check_time': payment.check_time,
-            'refund_time': payment.refund_time,
-            'valid_until': payment.valid_until(),
-            'uploaded_filename': payment.uploaded_transcript.filename if payment.uploaded_transcript else None
-        } for payment in sorted(
+            "oid": payment.id,
+            "active": payment.valid(),
+            "payment_time": payment.payment_time,
+            "check_time": payment.check_time,
+            "refund_time": payment.refund_time,
+            "valid_until": payment.valid_until(),
+            "uploaded_filename": payment.uploaded_transcript.filename
+            if payment.uploaded_transcript
+            else None,
+        }
+        for payment in sorted(
             Payment.objects.filter(user=user),
-            key=lambda x: (not x.valid(), x.payment_time)
+            key=lambda x: (not x.valid(), x.payment_time),
         )
     ]
     return res
@@ -71,13 +75,17 @@ def get_me(request):
 def mark_exam_checked(request, filename):
     exam = get_object_or_404(Exam, filename=filename)
     if not exam.is_oral_transcript:
-        return response.not_possible('Exam is not an oral transcript')
+        return response.not_possible("Exam is not an oral transcript")
     if exam.oral_transcript_checked:
-        return response.not_possible('Exam was already checked')
+        return response.not_possible("Exam was already checked")
     exam.oral_transcript_checked = True
     exam.public = True
     exam.save()
-    payment = [x for x in Payment.objects.filter(user=exam.oral_transcript_uploader) if x.valid() and not x.check_time]
+    payment = [
+        x
+        for x in Payment.objects.filter(user=exam.oral_transcript_uploader)
+        if x.valid() and not x.check_time
+    ]
     if payment:
         payment[0].check_time = timezone.now()
         payment[0].uploaded_transcript = exam
