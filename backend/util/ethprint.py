@@ -1,6 +1,6 @@
 import os
 import subprocess
-from threading import Timer, Thread
+from threading import Thread, Timer
 
 """
 Important Information
@@ -43,7 +43,7 @@ def _prepare_username(nethz):
     e.g. hansli -> d\hansli
     """
 
-    return "d\\{nethz}".format(nethz=nethz)
+    return f"d\\{nethz}"
 
 
 def _check_smb_connection(username, password):
@@ -55,10 +55,10 @@ def _check_smb_connection(username, password):
     return subprocess.call(
         [
             "smbclient",
-            "{smb_server}".format(smb_server=SMB_SERVER),
+            f"{SMB_SERVER}",
             "-c",
             "exit",
-            "--user={username}%{password}".format(username=username, password=password),
+            f"--user={username}%{password}",
         ],
         stderr=subprocess.STDOUT,
         close_fds=True,
@@ -81,12 +81,10 @@ def _print_pdf(username, password, exam, pdf_path):
         proc = subprocess.Popen(
             [
                 "smbclient",
-                "{smb_server}".format(smb_server=SMB_SERVER),
+                f"{SMB_SERVER}",
                 "-c",
-                'print "{ps_path}"'.format(ps_path=ps_path),
-                "--user={username}%{password}".format(
-                    username=username, password=password
-                ),
+                f'print "{ps_path}"',
+                f"--user={username}%{password}",
             ],
             stdout=DEVNULL,
             stderr=subprocess.STDOUT,
@@ -104,9 +102,7 @@ def _print_pdf(username, password, exam, pdf_path):
 
     # Process killed by timer
     raise Exception(
-        "Print Job with process #{proc_id} killed after {max_time} seconds: Timeout reached.".format(
-            proc_id=proc.pid, max_time=MAX_JOB_TIME
-        )
+        f"Print Job with process #{proc.pid} killed after {MAX_JOB_TIME} seconds: Timeout reached."
     )
 
 
@@ -133,8 +129,8 @@ def _generate_ps(exam, pdf_path):
                 "-paper",
                 "A4",
                 "-duplex",
-                "{pdf_path}".format(pdf_path=pdf_path),
-                "{ps_path}".format(ps_path=ps_path),
+                f"{pdf_path}",
+                f"{ps_path}",
             ],
             stdout=DEVNULL,
             stderr=subprocess.STDOUT,

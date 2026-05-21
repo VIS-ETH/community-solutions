@@ -1,5 +1,6 @@
-from testing.tests import ComsolTest
 from django.conf import settings
+
+from testing.tests import ComsolTest
 
 
 class TestUploadRemove(ComsolTest):

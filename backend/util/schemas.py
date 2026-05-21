@@ -1,5 +1,6 @@
+from typing import Generic, TypeVar
+
 from ninja import Schema
-from typing import TypeVar, Generic
 
 T = TypeVar("T")
 

@@ -1,31 +1,30 @@
 import logging
 import os.path
-
 from urllib import parse
 
-from categories.models import Category
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Count, Q, Exists, OuterRef, Prefetch, Max
+from django.db.models import Count, Exists, Max, OuterRef, Prefetch, Q
 from django.http import HttpRequest
 from django.http.response import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.text import slugify
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
-from django.utils.text import slugify
-from myauth import auth_check
-from myauth.models import get_my_user
-from util import s3_util, response
 
+from categories.models import Category
 from documents.models import (
     Comment,
     Document,
-    DocumentType,
     DocumentFile,
+    DocumentType,
     generate_api_key,
 )
+from myauth import auth_check
+from myauth.models import get_my_user
 from notifications import notification_util
+from util import response, s3_util
 
 logger = logging.getLogger(__name__)
 

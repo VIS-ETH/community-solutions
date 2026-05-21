@@ -1,10 +1,11 @@
-from util import response
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+
+from answers.models import Exam
 from myauth import auth_check
 from myauth.models import MyUser
 from payments.models import Payment
-from answers.models import Exam
-from django.shortcuts import get_object_or_404
-from django.utils import timezone
+from util import response
 
 
 @response.request_post("username")

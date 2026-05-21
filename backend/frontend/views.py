@@ -1,10 +1,12 @@
-from util import response
-from answers.models import Exam
-from django.conf import settings
-from django.shortcuts import redirect, render
-from django.http import Http404
-from django.views.decorators.csrf import ensure_csrf_cookie
 import json
+
+from django.conf import settings
+from django.http import Http404
+from django.shortcuts import redirect, render
+from django.views.decorators.csrf import ensure_csrf_cookie
+
+from answers.models import Exam
+from util import response
 
 
 @ensure_csrf_cookie

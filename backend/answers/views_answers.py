@@ -1,11 +1,12 @@
-from util import response
-from myauth import auth_check
-from answers.models import AnswerSection, Answer
-from answers import section_util
-from notifications import notification_util
-from django.shortcuts import get_object_or_404
 from django.http import Http404
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
+
+from answers import section_util
+from answers.models import Answer, AnswerSection
+from myauth import auth_check
+from notifications import notification_util
+from util import response
 
 
 @auth_check.require_login

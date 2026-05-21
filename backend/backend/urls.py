@@ -14,15 +14,15 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-from django.http import Http404
-
-from django.urls import path, re_path, include
 from functools import wraps
-from util import response
-from django_prometheus import exports
-from backend.settings import DEBUG, STATIC_ROOT
 
+from django.http import Http404
+from django.urls import include, path, re_path
+from django_prometheus import exports
 from ninja import NinjaAPI
+
+from backend.settings import DEBUG, STATIC_ROOT
+from util import response
 
 from . import views
 

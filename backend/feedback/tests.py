@@ -1,5 +1,5 @@
-from testing.tests import ComsolTest
 from feedback.models import Feedback
+from testing.tests import ComsolTest
 
 
 class TestSubmit(ComsolTest):
@@ -28,12 +28,12 @@ class TestSubmit(ComsolTest):
         feedback = Feedback(author=self.get_my_user(), text="Test")
         feedback.save()
         self.check_flags(False, False)
-        self.post("/api/feedback/flags/{}/".format(feedback.id), {"read": True})
+        self.post(f"/api/feedback/flags/{feedback.id}/", {"read": True})
         self.check_flags(True, False)
-        self.post("/api/feedback/flags/{}/".format(feedback.id), {"done": True})
+        self.post(f"/api/feedback/flags/{feedback.id}/", {"done": True})
         self.check_flags(True, True)
         self.post(
-            "/api/feedback/flags/{}/".format(feedback.id),
+            f"/api/feedback/flags/{feedback.id}/",
             {
                 "read": False,
                 "done": False,

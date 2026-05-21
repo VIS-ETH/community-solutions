@@ -1,7 +1,9 @@
-from util import response
-from django.db import connection
 import logging
+
+from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
+
+from util import response
 
 
 @response.request_get()

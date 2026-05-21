@@ -60,9 +60,7 @@ class TestNotifications(ComsolTest):
         res = self.get("/api/notification/unreadcount/")["value"]
         self.assertEqual(res, 1)
 
-        self.post(
-            "/api/notification/setread/{}/".format(notification.id), {"read": "true"}
-        )
+        self.post(f"/api/notification/setread/{notification.id}/", {"read": "true"})
 
         res = self.get("/api/notification/unread/")["value"]
         self.assertEqual(len(res), 0)

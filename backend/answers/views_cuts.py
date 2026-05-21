@@ -1,8 +1,9 @@
-from util import response
-from myauth import auth_check
-from answers.models import Exam, AnswerSection
 from django.shortcuts import get_object_or_404
+
 from answers import section_util
+from answers.models import AnswerSection, Exam
+from myauth import auth_check
+from util import response
 
 
 @response.request_get()

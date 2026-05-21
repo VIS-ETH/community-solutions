@@ -1,12 +1,12 @@
-from testing.tests import ComsolTestExamData
 from answers.models import AnswerSection
+from testing.tests import ComsolTestExamData
 
 
 class TestCuts(ComsolTestExamData):
     add_answers = False
 
     def test_get_cuts(self):
-        res = self.get("/api/exam/cuts/{}/".format(self.exam.filename))["value"]["1"]
+        res = self.get(f"/api/exam/cuts/{self.exam.filename}/")["value"]["1"]
         self.assertEqual(len(res), 4)
         for i in range(1, 5):
             self.assertEqual(res[i - 1]["relHeight"], i * 0.25)
@@ -14,7 +14,7 @@ class TestCuts(ComsolTestExamData):
     def test_adding_cut(self):
         self.assertEqual(AnswerSection.objects.count(), 4)
         self.post(
-            "/api/exam/addcut/{}/".format(self.exam.filename),
+            f"/api/exam/addcut/{self.exam.filename}/",
             {"pageNum": 1, "relHeight": 0.4, "name": "Test"},
         )
         self.assertEqual(AnswerSection.objects.count(), 5)
@@ -22,7 +22,7 @@ class TestCuts(ComsolTestExamData):
     def test_removing_cut(self):
         self.assertEqual(AnswerSection.objects.count(), 4)
         cut = self.sections[0]
-        self.post("/api/exam/removecut/{}/".format(cut.id), {})
+        self.post(f"/api/exam/removecut/{cut.id}/", {})
         self.assertEqual(AnswerSection.objects.count(), 3)
 
     def test_edit_cut(self):
@@ -31,7 +31,7 @@ class TestCuts(ComsolTestExamData):
         relHeight = cut.rel_height
         name = cut.name
         self.post(
-            "/api/exam/editcut/{}/".format(cut.id),
+            f"/api/exam/editcut/{cut.id}/",
             {
                 "name": "Test Name > 42",
                 "pageNum": 42,
@@ -43,7 +43,7 @@ class TestCuts(ComsolTestExamData):
         self.assertEqual(cut.page_num, 42)
         self.assertEqual(cut.rel_height, 0.42)
         self.post(
-            "/api/exam/editcut/{}/".format(cut.id),
+            f"/api/exam/editcut/{cut.id}/",
             {
                 "name": name,
                 "pageNum": pageNum,
@@ -58,7 +58,7 @@ class TestCuts(ComsolTestExamData):
 
 class TestCutVersion(ComsolTestExamData):
     def check_versions(self):
-        res = self.get("/api/exam/cutversions/{}/".format(self.exam.filename))["value"]
+        res = self.get(f"/api/exam/cutversions/{self.exam.filename}/")["value"]
         for section in self.sections:
             section.refresh_from_db()
             self.assertEqual(res[str(section.id)], section.cut_version)
@@ -70,7 +70,7 @@ class TestCutVersion(ComsolTestExamData):
         section = self.sections[0]
         oldversion = section.cut_version
         self.post(
-            "/api/exam/setanswer/{}/".format(section.id),
+            f"/api/exam/setanswer/{section.id}/",
             {
                 "text": "New Test Answer",
                 "kind": "personal",
@@ -84,7 +84,7 @@ class TestCutVersion(ComsolTestExamData):
         answer = self.answers[0]
         section = answer.answer_section
         oldversion = section.cut_version
-        self.post("/api/exam/removeanswer/{}/".format(answer.id), {})
+        self.post(f"/api/exam/removeanswer/{answer.id}/", {})
         section.refresh_from_db()
         self.assertGreater(section.cut_version, oldversion)
         self.check_versions()
@@ -94,7 +94,7 @@ class TestCutVersion(ComsolTestExamData):
         section = answer.answer_section
         oldversion = section.cut_version
         self.post(
-            "/api/exam/addcomment/{}/".format(answer.id),
+            f"/api/exam/addcomment/{answer.id}/",
             {
                 "text": "New Test Comment",
             },
@@ -107,7 +107,7 @@ class TestCutVersion(ComsolTestExamData):
         comment = self.comments[0]
         section = comment.answer.answer_section
         oldversion = section.cut_version
-        self.post("/api/exam/removecomment/{}/".format(comment.id), {})
+        self.post(f"/api/exam/removecomment/{comment.id}/", {})
         section.refresh_from_db()
         self.assertGreater(section.cut_version, oldversion)
         self.check_versions()
@@ -117,7 +117,7 @@ class TestCutVersion(ComsolTestExamData):
         section = answer.answer_section
         oldversion = section.cut_version
         self.post(
-            "/api/exam/setlike/{}/".format(answer.id),
+            f"/api/exam/setlike/{answer.id}/",
             {
                 "like": 1,
             },
@@ -130,7 +130,7 @@ class TestCutVersion(ComsolTestExamData):
 class TestAnswerSection(ComsolTestExamData):
     def test_get_section(self):
         for section in self.sections:
-            res = self.get("/api/exam/answersection/{}/".format(section.id))["value"]
+            res = self.get(f"/api/exam/answersection/{section.id}/")["value"]
             self.assertEqual(len(res["answers"]), 4)
             self.assertEqual(len(res["answers"][0]["comments"]), 3)
 

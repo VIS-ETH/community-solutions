@@ -1,8 +1,9 @@
-from faq.models import FAQuestion
-from util import response
-from myauth import auth_check
-from django.views import View
 from django.shortcuts import get_object_or_404
+from django.views import View
+
+from faq.models import FAQuestion
+from myauth import auth_check
+from util import response
 
 
 def get_faq_obj(faq):

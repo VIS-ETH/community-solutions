@@ -1,6 +1,3 @@
-from util.schemas import ValueWrapped
-from typing import Optional
-
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from ninja import Field, Form, ModelSchema, Router, Schema
@@ -8,6 +5,7 @@ from ninja import Field, Form, ModelSchema, Router, Schema
 from feedback.models import Feedback
 from myauth import auth_check
 from myauth.models import get_my_user
+from util.schemas import ValueWrapped
 
 router = Router()
 
@@ -28,7 +26,7 @@ class FeedbackOut(ModelSchema):
     oid: int = Field(..., alias="id")
     author: str = Field(..., alias="author.username")
     authorDisplayName: str
-    reply_time: Optional[str]
+    reply_time: str | None
 
     class Meta:
         model = Feedback
@@ -58,8 +56,8 @@ def list_all(request):
 
 
 class FeedbackFlagsSchema(Schema):
-    read: Optional[bool] = None
-    done: Optional[bool] = None
+    read: bool | None = None
+    done: bool | None = None
 
 
 class FeedbackReplySchema(Schema):

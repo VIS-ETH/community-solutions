@@ -1,20 +1,19 @@
-import logging
-from typing import Union
-import urllib.request
 import json
+import logging
+import urllib.request
+from datetime import UTC, datetime
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.http.request import HttpRequest
 from jwcrypto.jwk import JWKSet
+from jwcrypto.jws import InvalidJWSObject, InvalidJWSOperation, InvalidJWSSignature
 from jwcrypto.jwt import JWT, JWTMissingKey
-from notifications.models import NotificationSetting, NotificationType
-from util.func_cache import cache
 
 from myauth.models import MyUser, Profile
-from jwcrypto.jws import InvalidJWSObject, InvalidJWSOperation, InvalidJWSSignature
-from datetime import datetime, timezone
-from django.db import transaction
+from notifications.models import NotificationSetting, NotificationType
+from util.func_cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +62,7 @@ def add_auth(request: HttpRequest):
     headers = request.headers
     request.simulate_nonadmin = "SimulateNonAdmin" in headers
 
-    encoded: Union[str, None] = None
+    encoded: str | None = None
 
     if "Authorization" in headers:
         auth = headers["Authorization"]
@@ -92,7 +91,7 @@ def add_auth(request: HttpRequest):
 
         # Keycloak hands us the exp timestamp in UTC. So we should also get our
         # local time in UTC here.
-        now = datetime.now(timezone.utc).timestamp()
+        now = datetime.now(UTC).timestamp()
         # Validate "nbf" (Not Before) Claim if present
         if "exp" in claims and claims["exp"] < now:
             raise PermissionDenied("Expired")

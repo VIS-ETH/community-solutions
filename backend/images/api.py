@@ -1,4 +1,3 @@
-from util.schemas import ValueWrapped
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from ninja import File, Router, Schema, UploadedFile
@@ -6,7 +5,8 @@ from ninja import File, Router, Schema, UploadedFile
 from images.models import Image
 from myauth import auth_check
 from util import s3_util
-from util.response import ErrorSchema, not_possible, not_allowed
+from util.response import ErrorSchema, not_allowed, not_possible
+from util.schemas import ValueWrapped
 
 router = Router()
 

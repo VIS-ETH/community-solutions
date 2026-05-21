@@ -1,9 +1,9 @@
 import datetime
+import logging
 from base64 import b64decode, b64encode, urlsafe_b64encode
+from hashlib import sha256
 from secrets import token_bytes
 from urllib.parse import urlencode
-from hashlib import sha256
-import logging
 
 import requests
 from django.conf import settings
@@ -14,9 +14,10 @@ from django.http.response import (
     HttpResponseNotAllowed,
     HttpResponseServerError,
 )
-from util import response
-from myauth import auth_check
 from django.utils.http import url_has_allowed_host_and_scheme
+
+from myauth import auth_check
+from util import response
 
 logger = logging.getLogger(__name__)
 

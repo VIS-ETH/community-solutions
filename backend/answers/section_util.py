@@ -1,7 +1,8 @@
-from myauth.models import get_my_user
+from django.db.models import Count, Exists, F, Manager, OuterRef, Prefetch
+
+from answers.models import Answer, Comment
 from myauth import auth_check
-from answers.models import Comment, Answer
-from django.db.models import Count, F, Exists, OuterRef, Manager, Prefetch
+from myauth.models import get_my_user
 
 
 def prepare_answer_objects(objects: Manager[Answer], request) -> Manager[Answer]:

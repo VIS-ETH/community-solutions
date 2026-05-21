@@ -1,4 +1,4 @@
-from testing.tests import ComsolTestExamsData, ComsolTestExamData
+from testing.tests import ComsolTestExamData, ComsolTestExamsData
 
 
 class TestListings(ComsolTestExamsData):

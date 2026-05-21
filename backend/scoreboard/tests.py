@@ -17,7 +17,7 @@ class TestScoreboard(ComsolTestExamData):
             "score_cuts",
             "score_legacy",
         ]:
-            res = self.get("/api/scoreboard/top/{}/".format(ty))["value"]
+            res = self.get(f"/api/scoreboard/top/{ty}/")["value"]
             self.assertEqual(len(res), min(10, len(self.loginUsers)))
 
 

@@ -24,21 +24,19 @@ class TestPayment(ComsolTest):
         self.assertEqual(len(res), 1)
 
     def test_remove(self):
-        self.post("/api/payment/remove/{}/".format(self.payment.id), {})
+        self.post(f"/api/payment/remove/{self.payment.id}/", {})
         res = self.get("/api/payment/query/test/")["value"]
         self.assertEqual(len(res), 0)
 
     def test_refund(self):
-        self.post("/api/payment/refund/{}/".format(self.payment.id), {})
+        self.post(f"/api/payment/refund/{self.payment.id}/", {})
         res = self.get("/api/payment/query/test/")["value"]
         self.assertEqual(len(res), 1)
         self.assertTrue(res[0]["refund_time"])
 
     def test_refund_twice(self):
-        self.post("/api/payment/refund/{}/".format(self.payment.id), {})
-        self.post(
-            "/api/payment/refund/{}/".format(self.payment.id), {}, status_code=400
-        )
+        self.post(f"/api/payment/refund/{self.payment.id}/", {})
+        self.post(f"/api/payment/refund/{self.payment.id}/", {}, status_code=400)
 
     def test_payment_active(self):
         res = self.get("/api/payment/query/test/")["value"]
@@ -63,6 +61,6 @@ class TestMarkChecked(ComsolTestExamsData):
         exam.save()
         res = self.get("/api/payment/query/test/")["value"]
         self.assertFalse(res[0]["check_time"])
-        self.post("/api/payment/markexamchecked/{}/".format(exam.filename), {})
+        self.post(f"/api/payment/markexamchecked/{exam.filename}/", {})
         res = self.get("/api/payment/query/test/")["value"]
         self.assertTrue(res[0]["check_time"])

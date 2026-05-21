@@ -1,10 +1,11 @@
-from util import response
-from myauth import auth_check
-from answers.models import Answer, Comment
-from answers import section_util
-from notifications import notification_util
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+
+from answers import section_util
+from answers.models import Answer, Comment
+from myauth import auth_check
+from notifications import notification_util
+from util import response
 
 
 @response.request_post("text")

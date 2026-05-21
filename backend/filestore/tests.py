@@ -1,6 +1,7 @@
+from django.conf import settings
+
 from categories.models import Category
 from testing.tests import ComsolTest
-from django.conf import settings
 
 
 class TestUploadDownload(ComsolTest):

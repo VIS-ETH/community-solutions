@@ -1,9 +1,9 @@
 from django.shortcuts import get_object_or_404
+
 from myauth import auth_check
 from myauth.models import get_my_user
-from util import response
-
 from notifications.models import Notification, NotificationSetting, NotificationType
+from util import response
 
 
 @response.request_get()

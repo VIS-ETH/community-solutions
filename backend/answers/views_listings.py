@@ -1,11 +1,11 @@
-from django.db.models import Q, Count
+from django.db.models import Count, Exists, OuterRef, Q
+
 from answers import section_util
 from answers.models import Answer, Comment, Exam, ExamType
 from documents.models import Comment as DocumentComment
 from myauth import auth_check
 from myauth.models import get_my_user
 from util import response
-from django.db.models import Exists, OuterRef
 
 
 @response.request_get()

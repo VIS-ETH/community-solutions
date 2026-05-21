@@ -1,6 +1,6 @@
+from categories.models import Category, MetaCategory
 from myauth.models import MyUser
 from testing.tests import ComsolTest, ComsolTestExamsData
-from categories.models import Category, MetaCategory
 
 
 class TestAddRemove(ComsolTest):

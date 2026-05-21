@@ -1,11 +1,13 @@
 import secrets
+from urllib import parse
+
 from django.db import models
-from django.utils.text import slugify
 from django.utils import timezone
+from django.utils.text import slugify
 from django_prometheus.models import ExportModelOperationsMixin
+
 from myauth import auth_check
 from util.models import CommentMixin
-from urllib import parse
 
 
 def generate_api_key():
@@ -54,7 +56,7 @@ class Document(ExportModelOperationsMixin("document"), models.Model):
 
         self.slug = slug
 
-        super(Document, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
 
 class DocumentType(models.Model):

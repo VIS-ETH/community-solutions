@@ -23,7 +23,7 @@ class TestFAQ(ComsolTest):
         self.assertEqual(1, len(res))
         self.assertEqual(faq["question"], res[0]["question"])
         self.assertEqual(faq["answer"], res[0]["answer"])
-        self.delete("/api/faq/{}/".format(new_id))
+        self.delete(f"/api/faq/{new_id}/")
         res = self.get("/api/faq/")["value"]
         self.assertEqual(0, len(res))
 
@@ -35,7 +35,7 @@ class TestFAQ(ComsolTest):
             "answer": "Test Answer",
             "order": 42,
         }
-        self.put("/api/faq/{}/".format(faq.pk), new_faq)
+        self.put(f"/api/faq/{faq.pk}/", new_faq)
         faq.refresh_from_db()
         self.assertEqual(faq.question, new_faq["question"])
         self.assertEqual(faq.answer, new_faq["answer"])
