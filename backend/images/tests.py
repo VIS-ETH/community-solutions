@@ -1,5 +1,6 @@
 from testing.tests import ComsolTest
 from django.conf import settings
+import copy
 
 
 class TestUploadRemove(ComsolTest):
@@ -45,7 +46,7 @@ class TestRemoveImage(ComsolTest):
 
     def test_cannot_remove_non_owned_image(self):
         # If different non-admin user, shouldn't be able to remove image
-        self.user = self.loginUsers[1]
+        self.user = copy.deepcopy(self.loginUsers[1])
         self.user["admin"] = False
 
         self.post(f"/api/image/remove/{self.filename}/", {}, status_code=403)
@@ -53,7 +54,7 @@ class TestRemoveImage(ComsolTest):
 
     def test_can_delete_owned_image(self):
         # If same user, should be able to remove image
-        self.user = self.loginUsers[0]
+        self.user = copy.deepcopy(self.loginUsers[0])
         self.user["admin"] = False
 
         self.post(f"/api/image/remove/{self.filename}/", {}, status_code=200)
@@ -61,7 +62,7 @@ class TestRemoveImage(ComsolTest):
 
     def test_admin_can_delete_non_owned_image(self):
         # If admin, should be able to delete other people's images too
-        self.user = self.loginUsers[1]
+        self.user = copy.deepcopy(self.loginUsers[1])
         self.user["admin"] = True
 
         self.post(f"/api/image/remove/{self.filename}/", {}, status_code=200)
