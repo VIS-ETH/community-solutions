@@ -54,6 +54,6 @@ class TestFAQ(ComsolTest):
             )
         res = self.get("/api/faq/")["value"]
         self.assertEqual(len(perm), len(res))
-        for re, x in zip(res, sorted(perm)):
+        for re, x in zip(res, sorted(perm), strict=True):
             self.assertEqual(re["question"], str(x))
             self.assertEqual(re["answer"], str(x))
