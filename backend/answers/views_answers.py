@@ -11,7 +11,9 @@ from django.utils import timezone
 @auth_check.require_login
 def get_answer(request, long_id):
     try:
-        answer = section_util.prepare_answer_objects(Answer.objects, request).get(long_id=long_id)
+        answer = section_util.prepare_answer_objects(Answer.objects, request).get(
+            long_id=long_id
+        )
         return response.success(value=section_util.get_answer_response(request, answer))
     except Answer.DoesNotExist as err:
         raise Http404() from err
@@ -82,8 +84,7 @@ def set_answer(request, oid):
 @auth_check.require_login
 def remove_answer(request, oid):
     answer = get_object_or_404(
-        Answer.objects.select_related("answer_section").all(),
-        pk=oid
+        Answer.objects.select_related("answer_section").all(), pk=oid
     )
     if not (answer.author == request.user or auth_check.has_admin_rights(request)):
         return response.not_allowed()
@@ -99,8 +100,7 @@ def remove_answer(request, oid):
 @auth_check.require_login
 def set_like(request, oid):
     answer = get_object_or_404(
-        Answer.objects.select_related("answer_section").all(),
-        pk=oid
+        Answer.objects.select_related("answer_section").all(), pk=oid
     )
     like = int(request.POST["like"])
     old_like = 0
@@ -128,8 +128,7 @@ def set_like(request, oid):
 @auth_check.require_login
 def set_expertvote(request, oid):
     answer = get_object_or_404(
-        Answer.objects.select_related("answer_section").all(),
-        pk=oid
+        Answer.objects.select_related("answer_section").all(), pk=oid
     )
     if not auth_check.is_expert_for_exam(request, answer.answer_section.exam):
         return response.not_allowed()
@@ -151,8 +150,7 @@ def set_expertvote(request, oid):
 @auth_check.require_login
 def set_flagged(request, oid):
     answer = get_object_or_404(
-        Answer.objects.select_related("answer_section").all(),
-        pk=oid
+        Answer.objects.select_related("answer_section").all(), pk=oid
     )
     flagged = request.POST["flagged"] != "false"
     old_flagged = answer.flagged.filter(pk=request.user.pk).exists()
@@ -166,13 +164,13 @@ def set_flagged(request, oid):
     return response.success(
         value=section_util.get_answersection_response(request, answer.answer_section)
     )
-    
+
+
 @response.request_post("marked_as_ai")
 @auth_check.require_login
 def set_marked_as_ai(request, oid):
     answer = get_object_or_404(
-        Answer.objects.select_related("answer_section").all(),
-        pk=oid
+        Answer.objects.select_related("answer_section").all(), pk=oid
     )
     marked_as_ai = request.POST["marked_as_ai"] != "false"
     old_marked_as_ai = answer.marked_as_ai.filter(pk=request.user.pk).exists()
@@ -192,8 +190,7 @@ def set_marked_as_ai(request, oid):
 @auth_check.require_admin
 def reset_flagged(request, oid):
     answer = get_object_or_404(
-        Answer.objects.select_related("answer_section").all(),
-        pk=oid
+        Answer.objects.select_related("answer_section").all(), pk=oid
     )
     answer.flagged.clear()
     answer.save()
@@ -201,13 +198,13 @@ def reset_flagged(request, oid):
     return response.success(
         value=section_util.get_answersection_response(request, answer.answer_section)
     )
-    
+
+
 @response.request_post()
 @auth_check.require_admin
 def reset_marked_as_ai(request, oid):
     answer = get_object_or_404(
-        Answer.objects.select_related("answer_section").all(),
-        pk=oid
+        Answer.objects.select_related("answer_section").all(), pk=oid
     )
     answer.marked_as_ai.clear()
     answer.save()

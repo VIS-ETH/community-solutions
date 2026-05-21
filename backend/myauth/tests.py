@@ -16,7 +16,6 @@ invalid_key.import_from_pem(invalid_private_key_data)
 
 
 class TestMyAuthAdmin(ComsolTest):
-
     loginUser = 0
 
     def test_me(self):
@@ -29,7 +28,6 @@ class TestMyAuthAdmin(ComsolTest):
 
 
 class TestMyAuthNonadmin(ComsolTest):
-
     loginUser = 2
 
     def test_me(self):
@@ -42,7 +40,6 @@ class TestMyAuthNonadmin(ComsolTest):
 
 
 class TestMyAuthUnauthorized(ComsolTest):
-
     loginUser = -1
 
     def test_me(self):

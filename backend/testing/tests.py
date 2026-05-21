@@ -42,7 +42,6 @@ def get_token(user):
 
 
 class ComsolTest(TestCase):
-
     loginUsers = [
         {
             "sub": "42",
@@ -99,7 +98,9 @@ class ComsolTest(TestCase):
             if isinstance(args[arg], bool):
                 args[arg] = "true" if args[arg] else "false"
         response = (
-            self.client.post(path, args, headers={"authorization": get_token(self.user)})
+            self.client.post(
+                path, args, headers={"authorization": get_token(self.user)}
+            )
             if self.user
             else self.client.post(path, args)
         )
@@ -117,7 +118,7 @@ class ComsolTest(TestCase):
                 path,
                 encode_multipart(BOUNDARY, args),
                 content_type=MULTIPART_CONTENT,
-                headers={"authorization": get_token(self.user)}
+                headers={"authorization": get_token(self.user)},
             )
             if self.user
             else self.client.put(
@@ -165,7 +166,6 @@ class ComsolTest(TestCase):
 
 
 class ComsolTestExamData(ComsolTest):
-
     add_sections = True
     add_answers = True
     add_comments = True

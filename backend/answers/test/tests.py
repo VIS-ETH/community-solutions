@@ -3,7 +3,6 @@ from datetime import timedelta
 
 
 class TestMetadata(ComsolTestExamData):
-
     add_sections = False
 
     def test_metadata(self):
@@ -47,7 +46,6 @@ class TestMetadata(ComsolTestExamData):
 
 
 class TestClaim(ComsolTestExamData):
-
     add_sections = False
 
     def test_claim(self):

@@ -19,7 +19,9 @@ def get_user_scores(user, res):
         {
             "rank": rank,
             "total_users": total_users,
-            "score": user.scores.document_likes + user.scores.upvotes - user.scores.downvotes,
+            "score": user.scores.document_likes
+            + user.scores.upvotes
+            - user.scores.downvotes,
             "score_answers": user.answer_set.filter(kind=Answer.Kind.PERSONAL).count(),
             "score_comments": user.answers_comments.count(),
             "score_cuts": user.answersection_set.count(),
@@ -30,13 +32,19 @@ def get_user_scores(user, res):
     )
     return res
 
+
 @func_cache.cache(600)
 def get_ranking_list():
-    return list(MyUser.objects.annotate(
-        score=F("scores__document_likes")
-        + F("scores__upvotes")
-        - F("scores__downvotes"),
-    ).order_by("-score").values_list("username", flat=True))
+    return list(
+        MyUser.objects.annotate(
+            score=F("scores__document_likes")
+            + F("scores__upvotes")
+            - F("scores__downvotes"),
+        )
+        .order_by("-score")
+        .values_list("username", flat=True)
+    )
+
 
 @func_cache.cache(600)
 def get_scoreboard_top(scoretype, limit):

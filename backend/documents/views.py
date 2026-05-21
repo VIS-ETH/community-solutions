@@ -178,7 +178,7 @@ class DocumentRootView(View):
                 marked_as_ai_count=Count("marked_as_ai", distinct=True),
                 is_marked_as_ai=Exists(
                     Comment.objects.filter(id=OuterRef("id"), marked_as_ai=request.user)
-                )
+                ),
             )
             objects = objects.prefetch_related(
                 Prefetch(
@@ -237,7 +237,7 @@ class DocumentElementView(View):
                 marked_as_ai_count=Count("marked_as_ai", distinct=True),
                 is_marked_as_ai=Exists(
                     Comment.objects.filter(id=OuterRef("id"), marked_as_ai=request.user)
-                )
+                ),
             )
             objects = objects.prefetch_related(
                 Prefetch(
@@ -562,7 +562,10 @@ def set_flagged(request, oid):
         else:
             comment.flagged.add(request.user)
         comment.save()
-    return response.success(value=get_comment_obj(prep_comment_obj(comment, request), request))
+    return response.success(
+        value=get_comment_obj(prep_comment_obj(comment, request), request)
+    )
+
 
 @response.request_post("marked_as_ai")
 @auth_check.require_login
@@ -576,7 +579,9 @@ def set_marked_as_ai(request, oid):
         else:
             comment.marked_as_ai.add(request.user)
         comment.save()
-    return response.success(value=get_comment_obj(prep_comment_obj(comment, request), request))
+    return response.success(
+        value=get_comment_obj(prep_comment_obj(comment, request), request)
+    )
 
 
 @response.request_post()
@@ -585,7 +590,10 @@ def reset_flagged(request, oid):
     comment = get_object_or_404(Comment, pk=oid)
     comment.flagged.clear()
     comment.save()
-    return response.success(value=get_comment_obj(prep_comment_obj(comment, request), request))
+    return response.success(
+        value=get_comment_obj(prep_comment_obj(comment, request), request)
+    )
+
 
 @response.request_post()
 @auth_check.require_admin
@@ -593,7 +601,9 @@ def reset_marked_as_ai(request, oid):
     comment = get_object_or_404(Comment, pk=oid)
     comment.marked_as_ai.clear()
     comment.save()
-    return response.success(value=get_comment_obj(prep_comment_obj(comment, request), request))
+    return response.success(
+        value=get_comment_obj(prep_comment_obj(comment, request), request)
+    )
 
 
 @response.request_post()

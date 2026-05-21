@@ -3,7 +3,6 @@ from answers.models import Answer, AnswerSection
 
 
 class TestExistingAnswer(ComsolTestExamData):
-
     add_comments = False
 
     def test_set_answer(self):
@@ -69,11 +68,20 @@ class TestExistingAnswer(ComsolTestExamData):
     def test_mark_as_ai(self):
         answer = self.answers[1]
         self.assertEqual(answer.marked_as_ai.count(), 0)
-        self.post("/api/exam/setanswermarkedasai/{}/".format(answer.id), {"marked_as_ai": False})
-        self.post("/api/exam/setanswermarkedasai/{}/".format(answer.id), {"marked_as_ai": True})
+        self.post(
+            "/api/exam/setanswermarkedasai/{}/".format(answer.id),
+            {"marked_as_ai": False},
+        )
+        self.post(
+            "/api/exam/setanswermarkedasai/{}/".format(answer.id),
+            {"marked_as_ai": True},
+        )
         answer.refresh_from_db()
         self.assertEqual(answer.marked_as_ai.count(), 1)
-        self.post("/api/exam/setanswermarkedasai/{}/".format(answer.id), {"marked_as_ai": False})
+        self.post(
+            "/api/exam/setanswermarkedasai/{}/".format(answer.id),
+            {"marked_as_ai": False},
+        )
         answer.refresh_from_db()
         self.assertEqual(answer.marked_as_ai.count(), 0)
 
@@ -100,7 +108,6 @@ class TestExistingAnswer(ComsolTestExamData):
 
 
 class TestDeleteNonadmin(ComsolTestExamData):
-
     loginUser = 2
     add_comments = False
 
@@ -127,7 +134,6 @@ class TestDeleteNonadmin(ComsolTestExamData):
 
 
 class TestNonexisting(ComsolTestExamData):
-
     add_comments = False
 
     def mySetUp(self):

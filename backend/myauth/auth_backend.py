@@ -78,7 +78,6 @@ def add_auth(request: HttpRequest):
         encoded = request.COOKIES["access_token"]
 
     if encoded is not None:
-
         token = JWT()
         key_set = get_key_set()
         # deserialize will raise an error if the encoded token is not valid / isn't signed correctly
@@ -102,16 +101,16 @@ def add_auth(request: HttpRequest):
             raise PermissionDenied("Not before invalid")
 
         sub = claims["sub"]
-        if (
-            "preferred_username" not in claims
-            or len(claims["preferred_username"]) == 0
-        ):
+        if "preferred_username" not in claims or len(claims["preferred_username"]) == 0:
             raise NoUsernameException(claims["given_name"], claims["family_name"], sub)
         preferred_username = claims["preferred_username"]
         if preferred_username in settings.BANNED_USERS:
             raise PermissionDenied("User is banned")
         home_organization = claims["home_organization"]
-        if settings.ALLOWED_HOMEORGS and home_organization not in settings.ALLOWED_HOMEORGS:
+        if (
+            settings.ALLOWED_HOMEORGS
+            and home_organization not in settings.ALLOWED_HOMEORGS
+        ):
             raise InvalidHomeOrganizationException()
         roles = (
             claims["resource_access"][settings.JWT_RESOURCE_GROUP]["roles"]
@@ -147,7 +146,6 @@ def add_auth(request: HttpRequest):
                     request.user = old_existing_user
 
                 else:
-
                     user = MyUser()
                     user.first_name = claims["given_name"]
                     user.last_name = claims["family_name"]

@@ -3,7 +3,6 @@ from answers.models import AnswerSection
 
 
 class TestCuts(ComsolTestExamData):
-
     add_answers = False
 
     def test_get_cuts(self):
@@ -58,7 +57,6 @@ class TestCuts(ComsolTestExamData):
 
 
 class TestCutVersion(ComsolTestExamData):
-
     def check_versions(self):
         res = self.get("/api/exam/cutversions/{}/".format(self.exam.filename))["value"]
         for section in self.sections:
@@ -130,7 +128,6 @@ class TestCutVersion(ComsolTestExamData):
 
 
 class TestAnswerSection(ComsolTestExamData):
-
     def test_get_section(self):
         for section in self.sections:
             res = self.get("/api/exam/answersection/{}/".format(section.id))["value"]
