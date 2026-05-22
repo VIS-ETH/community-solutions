@@ -164,8 +164,7 @@ class ComsolTest(TestCase):
                 "displayname": "Alex Meyer",
             },
         ]
-        
-        
+
         self.users = self.adminUsers + self.nonAdminUsers
 
         self.client = Client()
@@ -240,9 +239,7 @@ class ComsolTestExamData(ComsolTest):
                 self.answers.append(
                     Answer(
                         answer_section=section,
-                        author=MyUser.objects.get(
-                            username=self.users[i]["username"]
-                        ),
+                        author=MyUser.objects.get(username=self.users[i]["username"]),
                         text=f"Test Answer {section.id}/{i}",
                     )
                 )
@@ -262,9 +259,7 @@ class ComsolTestExamData(ComsolTest):
                 self.comments.append(
                     Comment(
                         answer=answer,
-                        author=MyUser.objects.get(
-                            username=self.users[i]["username"]
-                        ),
+                        author=MyUser.objects.get(username=self.users[i]["username"]),
                         text=f"Comment {answer.id}/{i}",
                     )
                 )
