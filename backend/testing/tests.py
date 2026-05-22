@@ -128,24 +128,6 @@ class ComsolTest(TestCase):
         logger = logging.getLogger("django.request")
         logger.setLevel(logging.ERROR)
 
-        self.nonAdminUsers = [
-            {
-                "sub": "42-2",
-                "username": "morica",
-                "given_name": "Carla",
-                "family_name": "Morin",
-                "admin": False,
-                "displayname": "Carla Morin",
-            },
-            {
-                "sub": "42-3",
-                "username": "meyeral",
-                "given_name": "Alex",
-                "family_name": "Meyer",
-                "admin": False,
-                "displayname": "Alex Meyer",
-            },
-        ]
         self.adminUsers = [
             {
                 "sub": "42",
@@ -164,6 +146,27 @@ class ComsolTest(TestCase):
                 "displayname": "Zoe Fletcher",
             },
         ]
+        self.nonAdminUsers = [
+            {
+                "sub": "42-2",
+                "username": "morica",
+                "given_name": "Carla",
+                "family_name": "Morin",
+                "admin": False,
+                "displayname": "Carla Morin",
+            },
+            {
+                "sub": "42-3",
+                "username": "meyeral",
+                "given_name": "Alex",
+                "family_name": "Meyer",
+                "admin": False,
+                "displayname": "Alex Meyer",
+            },
+        ]
+        
+        
+        self.users = self.adminUsers + self.nonAdminUsers
 
         self.client = Client()
         self.setUpLogin()
@@ -191,7 +194,7 @@ class ComsolTestExamData(ComsolTest):
     def setUp(self, call_my_setup=True):
         super().setUp(call_my_setup=False)
         saved = self.user
-        for user in self.loginUsers:
+        for user in self.users:
             self.user = user
             self.get("/api/notification/unreadcount/")
         self.user = saved
@@ -238,7 +241,7 @@ class ComsolTestExamData(ComsolTest):
                     Answer(
                         answer_section=section,
                         author=MyUser.objects.get(
-                            username=self.loginUsers[i]["username"]
+                            username=self.users[i]["username"]
                         ),
                         text=f"Test Answer {section.id}/{i}",
                     )
@@ -246,7 +249,7 @@ class ComsolTestExamData(ComsolTest):
             self.answers.append(
                 Answer(
                     answer_section=section,
-                    author=MyUser.objects.get(username=self.loginUsers[0]["username"]),
+                    author=MyUser.objects.get(username=self.users[0]["username"]),
                     text=f"Legacy Answer {section.id}",
                     kind=Answer.Kind.LEGACY,
                 )
@@ -260,7 +263,7 @@ class ComsolTestExamData(ComsolTest):
                     Comment(
                         answer=answer,
                         author=MyUser.objects.get(
-                            username=self.loginUsers[i]["username"]
+                            username=self.users[i]["username"]
                         ),
                         text=f"Comment {answer.id}/{i}",
                     )
