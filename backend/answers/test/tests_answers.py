@@ -104,8 +104,10 @@ class TestExistingAnswer(ComsolTestExamData):
 
 
 class TestDeleteNonadmin(ComsolTestExamData):
-    loginUser = 2
     add_comments = False
+
+    def setUpLogin(self):
+        self.login_as(self.nonAdminUsers[0])
 
     def test_remove_answer(self):
         answer = self.answers[2]

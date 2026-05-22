@@ -43,34 +43,6 @@ def get_token(user):
 
 
 class ComsolTest(TestCase):
-    loginUsers = [
-        {
-            "sub": "42",
-            "username": "schneij",
-            "given_name": "Jonas",
-            "family_name": "Schneider",
-            "admin": True,
-            "displayname": "Jonas Schneider",
-        },
-        {
-            "sub": "42-1",
-            "username": "fletchz",
-            "given_name": "Zoe",
-            "family_name": "Fletcher",
-            "admin": True,
-            "displayname": "Zoe Fletcher",
-        },
-        {
-            "sub": "42-2",
-            "username": "morica",
-            "given_name": "Carla",
-            "family_name": "Morin",
-            "admin": False,
-            "displayname": "Carla Morin",
-        },
-    ]
-    loginUser = 0
-    user = {}
     test_http_methods = True
 
     def get(self, path, status_code=200, test_post=True, as_json=True):
@@ -142,6 +114,13 @@ class ComsolTest(TestCase):
             return response.json()
         return response
 
+    def login_as(self, user):
+        if user is None:
+            self.user = None
+            return
+        self.user = user
+        self.get("/api/auth/me/")
+
     def get_my_user(self):
         return MyUser.objects.get(username=self.user["username"])
 
@@ -149,12 +128,50 @@ class ComsolTest(TestCase):
         logger = logging.getLogger("django.request")
         logger.setLevel(logging.ERROR)
 
+        self.nonAdminUsers = [
+            {
+                "sub": "42-2",
+                "username": "morica",
+                "given_name": "Carla",
+                "family_name": "Morin",
+                "admin": False,
+                "displayname": "Carla Morin",
+            },
+            {
+                "sub": "42-3",
+                "username": "meyeral",
+                "given_name": "Alex",
+                "family_name": "Meyer",
+                "admin": False,
+                "displayname": "Alex Meyer",
+            },
+        ]
+        self.adminUsers = [
+            {
+                "sub": "42",
+                "username": "schneij",
+                "given_name": "Jonas",
+                "family_name": "Schneider",
+                "admin": True,
+                "displayname": "Jonas Schneider",
+            },
+            {
+                "sub": "42-1",
+                "username": "fletchz",
+                "given_name": "Zoe",
+                "family_name": "Fletcher",
+                "admin": True,
+                "displayname": "Zoe Fletcher",
+            },
+        ]
+
         self.client = Client()
-        if self.loginUser >= 0:
-            self.user = self.loginUsers[self.loginUser]
-            self.get("/api/auth/me/")
+        self.setUpLogin()
         if call_my_setup:
             self.mySetUp()
+
+    def setUpLogin(self):
+        self.login_as(self.adminUsers[0])
 
     def mySetUp(self):
         pass

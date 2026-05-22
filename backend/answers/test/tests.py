@@ -62,7 +62,7 @@ class TestClaim(ComsolTestExamData):
         self.post(f"/api/exam/claimexam/{self.exam.filename}/", {"claim": True})
         self.exam.refresh_from_db()
 
-        self.user = self.loginUsers[1]
+        self.user = self.adminUsers[1]
 
         self.post(
             f"/api/exam/claimexam/{self.exam.filename}/",
@@ -76,7 +76,7 @@ class TestClaim(ComsolTestExamData):
 
         self.exam.refresh_from_db()
         self.assertEqual(
-            self.exam.import_claim.username, self.loginUsers[1]["username"]
+            self.exam.import_claim.username, self.adminUsers[1]["username"]
         )
 
-        self.user = self.loginUsers[1]
+        self.user = self.adminUsers[1]

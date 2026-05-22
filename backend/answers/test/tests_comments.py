@@ -68,7 +68,8 @@ class TestComment(ComsolTestExamData):
 
 
 class TestCommentNonadmin(ComsolTestExamData):
-    loginUser = 2
+    def setUpLogin(self):
+        self.login_as(self.nonAdminUsers[0])
 
     def test_remove_all_comments(self):
         self.assertEqual(Comment.objects.count(), 48)
