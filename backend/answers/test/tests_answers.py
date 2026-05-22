@@ -24,7 +24,7 @@ class TestExistingAnswer(ComsolTestExamData):
         self.assertFalse(Answer.objects.filter(id=id).exists())
 
     def test_remove_all_answers(self):
-        self.assertEqual(Answer.objects.count(), 16)
+        self.assertEqual(Answer.objects.count(), 20)
         for answer in self.answers:
             self.post(f"/api/exam/removeanswer/{answer.id}/", {})
         self.assertEqual(Answer.objects.count(), 0)
@@ -116,7 +116,7 @@ class TestDeleteNonadmin(ComsolTestExamData):
         self.assertFalse(Answer.objects.filter(id=id).exists())
 
     def test_remove_all_answers(self):
-        self.assertEqual(Answer.objects.count(), 16)
+        self.assertEqual(Answer.objects.count(), 20)
         removed = 0
         for answer in self.answers:
             can_remove = answer.author.username == self.user["username"]
@@ -128,7 +128,7 @@ class TestDeleteNonadmin(ComsolTestExamData):
                 status_code=200 if can_remove else 403,
             )
         self.assertEqual(removed, 4)
-        self.assertEqual(Answer.objects.count(), 16 - removed)
+        self.assertEqual(Answer.objects.count(), 20 - removed)
 
 
 class TestNonexisting(ComsolTestExamData):

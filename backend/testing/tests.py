@@ -233,7 +233,7 @@ class ComsolTestExamData(ComsolTest):
             section.save()
             if not self.add_answers:
                 continue
-            for i in range(3):
+            for i in range(4):
                 self.answers.append(
                     Answer(
                         answer_section=section,
@@ -255,7 +255,7 @@ class ComsolTestExamData(ComsolTest):
             answer.save()
             if not self.add_comments:
                 continue
-            for i in range(3):
+            for i in range(4):
                 self.comments.append(
                     Comment(
                         answer=answer,
