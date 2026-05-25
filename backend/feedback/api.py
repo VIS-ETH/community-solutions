@@ -1,5 +1,3 @@
-from typing import Optional
-
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from ninja import Field, Form, ModelSchema, Router, Schema
@@ -25,42 +23,40 @@ def submit(request, data: Form[FeedbackSchema]):
 
 
 class FeedbackOut(ModelSchema):
+    class Meta:
+        model = Feedback
+        # Fields that can be automatically resolved from SQL columns.
+        fields = ["reply", "text"]
+
+    # Other fields need custom resolutions.
     oid: int = Field(..., alias="id")
     author: str = Field(..., alias="author.username")
     authorDisplayName: str
-    reply_time: Optional[str] = None
+    reply_time: str | None = None
+
+    # These fields have default values in SQL. If we list them in fields[] or use `Field`
+    # Pydantic generates them as nullable. But in practice they will always be
+    # set, so by explicitly listing them here we can get what we want.
     time: str
     read: bool
     done: bool
-
-    class Meta:
-        model = Feedback
-        fields = ["text", "reply"]
 
     @staticmethod
     def resolve_authorDisplayName(obj):
         return get_my_user(obj.author).displayname()
 
     @staticmethod
-    def resolve_time(obj):
-        return obj.time.isoformat()
-
-    @staticmethod
     def resolve_reply_time(obj):
         return obj.reply_time.isoformat() if obj.reply_time else None
 
-    # We cannot use `fields` above
-    # If we do, time is not marked required as it uses a default generator
     @staticmethod
     def resolve_time(obj):
         return obj.time.isoformat()
 
-    # same here ^
     @staticmethod
     def resolve_done(obj):
         return obj.done
 
-    # and here ^
     @staticmethod
     def resolve_read(obj):
         return obj.read
