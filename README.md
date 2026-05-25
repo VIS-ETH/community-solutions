@@ -84,6 +84,7 @@ will restart the server automatically without you having to rerun the command.
 cd backend
 mkdir -p intermediate_pdf_storage
 uv run manage.py migrate # only on first run, or if DB schema changed
+uv run manage.py export_openapi # only run on first run, or if any api-related code has changed in the backend
 uv run manage.py runserver 127.0.0.1:8081
 ```
 
