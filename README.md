@@ -54,12 +54,15 @@ docker compose up postgres rclone rclone-create-bucket
 Key things to look for:
 
 - Is postgres running successfully? Look for the following lines:
+
   ```sh
   postgres  | 2026-02-18 11:03:51.926 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
   ...
   postgres  | 2026-02-18 11:03:51.936 UTC [1] LOG:  database system is ready to accept connections
   ```
+
 - Is rclone running successfully?
+
   ```sh
   rclone-1  | 2026/04/25 21:45:55 NOTICE: Warning: Allow origin set to *. This can cause serious security problems.
   rclone-1  | 2026/04/25 21:45:55 NOTICE: Local file system at /data: Starting s3 server on [http://[::]:9000/]
@@ -164,6 +167,27 @@ There is an autoformatter for the frontend code
 Some aspects of code quality and coding style are checked automatically using
 [eslint](https://eslint.org). You can run eslint using `yarn run lint`. There are plugins
 for most editors so that you can see warnings and errors as you type.
+
+### Codegen
+
+We use [Orval](https://orval.dev/) to automatically generate API hooks from the backend's OpenAPI schema.
+This ensures the frontend stays in sync with any API changes.
+
+Whenever you modify the API, ensure you update the generated frontend code:
+
+1. Export the OpenAPI schema from the backend:
+
+   ```bash
+   uv run manage.py export_openapi
+   ```
+
+2. Generate the new hooks and types in the frontend:
+
+   ```bash
+   yarn codegen
+   ```
+
+   (Running `yarn start` or `yarn build` in the frontend will also run the codegen.)
 
 ---
 
