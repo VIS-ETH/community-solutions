@@ -19,4 +19,4 @@ class Command(BaseCommand):
         with out_path.open("w") as f:
             json.dump(schema, f, indent=2)
 
-        self.stdout.write(self.style.SUCCESS("Successfully exported openapi.json"))
+        self.stdout.write(self.style.SUCCESS(f"Successfully exported {out_path}"))
