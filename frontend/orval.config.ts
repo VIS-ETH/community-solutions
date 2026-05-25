@@ -23,10 +23,10 @@ async function resolveOpenApiPath() {
 const inputPath = await resolveOpenApiPath();
 
 export default defineConfig({
-  petstore: {
+  api: {
     output: {
       mode: "tags",
-      target: "src/api/hooks/petstore.ts",
+      target: "src/api/hooks/api.ts",
       schemas: "src/api/model",
       client: "react-query",
       httpClient: "fetch",
