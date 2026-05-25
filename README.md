@@ -103,7 +103,7 @@ yarn # only if any Node dependencies changed
 yarn start --host
 ```
 
-Website is now accessible at http://localhost:3000
+Website is now accessible at <http://localhost:3000>
 
 ---
 
@@ -154,7 +154,7 @@ committing code.
 The frontend is built using
 [Vite](https://vitejs.dev/). This is like a
 compiler toolchain, which combines Javascript files and provides a server with
-special development features. Start the dev server with.
+special development features. Start the dev server with `yarn run start`.
 
 ### Editing frontend code
 
