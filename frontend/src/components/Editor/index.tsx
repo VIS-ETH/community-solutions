@@ -10,7 +10,6 @@ import { ImageHandle, Range } from "./utils/types";
 import { push, redo, undo, UndoStack } from "./utils/undo-stack";
 import classes from "./Editor.module.css";
 import clsx from "clsx";
-import { uploadImage } from "../../api/hooks/images";
 
 const OfficialAnswerOverlay = lazy(() => import("../official-answer-overlay"));
 
@@ -213,12 +212,10 @@ const Editor: React.FC<Props> = ({
 
   const onFile = useCallback(
     async (file: File) => {
-      const handle = await uploadImage({
-        file,
-      });
-      insertImage(handle.filename);
+      const handle = await imageHandler(file);
+      insertImage(handle);
     },
-    [insertImage],
+    [insertImage, imageHandler],
   );
 
   const onFiles = useCallback(

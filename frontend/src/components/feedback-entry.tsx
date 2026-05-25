@@ -36,6 +36,7 @@ import {
   useSetFeedbackFlags,
 } from "../api/hooks/feedback";
 import type { FeedbackOut } from "../api/model";
+import { imageHandler } from "../api/image-utils";
 
 const Editor = lazy(() => import("./Editor"));
 
@@ -134,6 +135,7 @@ const FeedbackEntryComponent: React.FC<Props> = ({ entry, entryChanged }) => {
             <Editor
               value={draftText}
               onChange={setDraftText}
+              imageHandler={imageHandler}
               preview={value => (
                 <MarkdownText value={value} languages={languages} />
               )}
