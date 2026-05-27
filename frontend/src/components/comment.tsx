@@ -3,7 +3,13 @@ import React, { lazy, Suspense, useState } from "react";
 import { Link } from "react-router-dom";
 import { addNewComment, removeComment, updateComment } from "../api/comment";
 import { usePendingImages } from "./Editor/pending-images";
-import { useMutation, useResetExamCommentFlaggedVote, useResetExamCommentMarkedAsAi, useSetExamCommentFlagged, useSetExamCommentMarkedAsAi } from "../api/hooks";
+import {
+  useMutation,
+  useResetExamCommentFlaggedVote,
+  useResetExamCommentMarkedAsAi,
+  useSetExamCommentFlagged,
+  useSetExamCommentMarkedAsAi,
+} from "../api/hooks";
 import { useUser } from "../auth";
 import useRemoveConfirm from "../hooks/useRemoveConfirm";
 import { Answer, AnswerSection, Comment } from "../interfaces";
@@ -67,7 +73,8 @@ const CommentComponent: React.FC<Props> = ({
   const [editing, setEditing] = useState(false);
   const [draftText, setDraftText] = useState("");
   const [undoStack, setUndoStack] = useState<UndoStack>({ prev: [], next: [] });
-  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } = usePendingImages();
+  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
+    usePendingImages();
   const [addNewLoading, runAddNewComment] = useMutation(addNewComment, res => {
     if (onDelete) onDelete();
     onSectionChanged(res);
@@ -108,6 +115,7 @@ const CommentComponent: React.FC<Props> = ({
       removeConfirm("Remove comment?", () => runRemoveComment(comment.oid));
   };
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
+  const isOwnComment = comment?.authorId === username;
 
   return (
     <Paper
@@ -161,8 +169,10 @@ const CommentComponent: React.FC<Props> = ({
               isFlagged={comment.isFlagged}
               loading={flaggedLoading}
               size="xs"
-              onToggle={() =>
-                setExamCommentFlagged(comment.oid, !comment.isFlagged)
+              onToggle={
+                isOwnComment
+                ? undefined
+                  : () => setExamCommentFlagged(comment.oid, !comment.isFlagged)
               }
             />
           )}
@@ -174,28 +184,36 @@ const CommentComponent: React.FC<Props> = ({
                 </Button>
               </Menu.Target>
               <Menu.Dropdown>
-                {!comment.isMarkedAsAi ? (
-                  <Menu.Item
-                    leftSection={<IconRobot />}
-                    onClick={() => setExamCommentMarkedAsAi(comment.oid, true)}
-                  >
-                    Mark as AI-generated
-                  </Menu.Item>
-                ) : (
-                  <Menu.Item
-                    leftSection={<IconRobotOff />}
-                    onClick={() => setExamCommentMarkedAsAi(comment.oid, false)}
-                  >
-                    Remove AI-generated mark
-                  </Menu.Item>
-                )}
-                {comment.flaggedCount === 0 && (
-                  <Menu.Item
-                    leftSection={<IconFlag />}
-                    onClick={() => setExamCommentFlagged(comment.oid, true)}
-                  >
-                    Flag as Inappropriate
-                  </Menu.Item>
+                {!isOwnComment && (
+                  <>
+                    {!comment.isMarkedAsAi ? (
+                      <Menu.Item
+                        leftSection={<IconRobot />}
+                        onClick={() =>
+                          setExamCommentMarkedAsAi(comment.oid, true)
+                        }
+                      >
+                        Mark as AI-generated
+                      </Menu.Item>
+                    ) : (
+                      <Menu.Item
+                        leftSection={<IconRobotOff />}
+                        onClick={() =>
+                          setExamCommentMarkedAsAi(comment.oid, false)
+                        }
+                      >
+                        Remove AI-generated mark
+                      </Menu.Item>
+                    )}
+                    {comment.flaggedCount === 0 && (
+                      <Menu.Item
+                        leftSection={<IconFlag />}
+                        onClick={() => setExamCommentFlagged(comment.oid, true)}
+                      >
+                        Flag as Inappropriate
+                      </Menu.Item>
+                    )}
+                  </>
                 )}
                 <Menu.Item
                   leftSection={<IconLink />}
@@ -253,7 +271,11 @@ const CommentComponent: React.FC<Props> = ({
             onChange={setDraftText}
             imageHandler={deferredImageHandler}
             preview={value => (
-              <MarkdownText value={value} languages={languages} pendingImages={pendingObjectUrls} />
+              <MarkdownText
+                value={value}
+                languages={languages}
+                pendingImages={pendingObjectUrls}
+              />
             )}
             undoStack={undoStack}
             setUndoStack={setUndoStack}

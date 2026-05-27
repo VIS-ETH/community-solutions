@@ -98,13 +98,14 @@ const AnswerComponent: React.FC<Props> = ({
     if (onSectionChanged) onSectionChanged(res);
     if (answer === undefined && onDelete) onDelete();
   });
-  const { isAdmin, isExpert } = useUser()!;
+  const { isAdmin, isExpert, username } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
   const [editing, setEditing] = useState(false);
 
   const [draftText, setDraftText] = useState("");
   const [undoStack, setUndoStack] = useState<UndoStack>({ prev: [], next: [] });
-  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } = usePendingImages();
+  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
+    usePendingImages();
   const startEdit = useCallback(() => {
     setDraftText(answer?.text ?? "");
     setEditing(true);
@@ -129,7 +130,7 @@ const AnswerComponent: React.FC<Props> = ({
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
   const canEdit = section && onSectionChanged && answer?.canEdit;
   const canRemove = section && onSectionChanged && (isAdmin || answer?.canEdit);
-  const { username } = useUser()!;
+  const isOwnAnswer = answer?.authorId === username;
   return (
     <>
       {modals}
@@ -266,8 +267,10 @@ const AnswerComponent: React.FC<Props> = ({
                     count={answer.flaggedCount}
                     isFlagged={answer.isFlagged}
                     loading={flaggedLoading}
-                    onToggle={() =>
-                      setAnswerFlagged(answer.oid, !answer.isFlagged)
+                    onToggle={
+                      isOwnAnswer
+                        ? undefined
+                        : () => setAnswerFlagged(answer.oid, !answer.isFlagged)
                     }
                   />
                 )}
@@ -295,7 +298,11 @@ const AnswerComponent: React.FC<Props> = ({
                   onChange={setDraftText}
                   imageHandler={deferredImageHandler}
                   preview={value => (
-                    <MarkdownText value={value} languages={languages} pendingImages={pendingObjectUrls} />
+                    <MarkdownText
+                      value={value}
+                      languages={languages}
+                      pendingImages={pendingObjectUrls}
+                    />
                   )}
                   undoStack={undoStack}
                   setUndoStack={setUndoStack}
@@ -366,28 +373,32 @@ const AnswerComponent: React.FC<Props> = ({
                   <Button leftSection={<IconDots />}>More</Button>
                 </Menu.Target>
                 <Menu.Dropdown>
-                  {!answer.isMarkedAsAi ? (
-                    <Menu.Item
-                      leftSection={<IconRobot />}
-                      onClick={() => setAnswerMarkedAsAi(answer.oid, true)}
-                    >
-                      Mark as AI-generated
-                    </Menu.Item>
-                  ) : (
-                    <Menu.Item
-                      leftSection={<IconRobotOff />}
-                      onClick={() => setAnswerMarkedAsAi(answer.oid, false)}
-                    >
-                      Remove AI-generated mark
-                    </Menu.Item>
-                  )}
-                  {answer.flaggedCount === 0 && (
-                    <Menu.Item
-                      leftSection={<IconFlag />}
-                      onClick={() => setAnswerFlagged(answer.oid, true)}
-                    >
-                      Flag as Inappropriate
-                    </Menu.Item>
+                  {!isOwnAnswer && (
+                    <>
+                      {!answer.isMarkedAsAi ? (
+                        <Menu.Item
+                          leftSection={<IconRobot />}
+                          onClick={() => setAnswerMarkedAsAi(answer.oid, true)}
+                        >
+                          Mark as AI-generated
+                        </Menu.Item>
+                      ) : (
+                        <Menu.Item
+                          leftSection={<IconRobotOff />}
+                          onClick={() => setAnswerMarkedAsAi(answer.oid, false)}
+                        >
+                          Remove AI-generated mark
+                        </Menu.Item>
+                      )}
+                      {answer.flaggedCount === 0 && (
+                        <Menu.Item
+                          leftSection={<IconFlag />}
+                          onClick={() => setAnswerFlagged(answer.oid, true)}
+                        >
+                          Flag as Inappropriate
+                        </Menu.Item>
+                      )}
+                    </>
                   )}
                   <Menu.Item
                     leftSection={<IconLink />}
