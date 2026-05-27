@@ -2,7 +2,8 @@ from testing.tests import ComsolTest
 
 
 class TestHealth(ComsolTest):
-    loginUser = -1
+    def setUpLogin(self):
+        self.login_as(None)
 
     def test_health(self):
         res = self.client.get("/health/")

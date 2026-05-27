@@ -43,34 +43,6 @@ def get_token(user):
 
 
 class ComsolTest(TestCase):
-    loginUsers = [
-        {
-            "sub": "42",
-            "username": "schneij",
-            "given_name": "Jonas",
-            "family_name": "Schneider",
-            "admin": True,
-            "displayname": "Jonas Schneider",
-        },
-        {
-            "sub": "42-1",
-            "username": "fletchz",
-            "given_name": "Zoe",
-            "family_name": "Fletcher",
-            "admin": True,
-            "displayname": "Zoe Fletcher",
-        },
-        {
-            "sub": "42-2",
-            "username": "morica",
-            "given_name": "Carla",
-            "family_name": "Morin",
-            "admin": False,
-            "displayname": "Carla Morin",
-        },
-    ]
-    loginUser = 0
-    user = {}
     test_http_methods = True
 
     def get(self, path, status_code=200, test_post=True, as_json=True):
@@ -142,6 +114,13 @@ class ComsolTest(TestCase):
             return response.json()
         return response
 
+    def login_as(self, user):
+        if user is None:
+            self.user = None
+            return
+        self.user = user
+        self.get("/api/auth/me/")
+
     def get_my_user(self):
         return MyUser.objects.get(username=self.user["username"])
 
@@ -149,12 +128,52 @@ class ComsolTest(TestCase):
         logger = logging.getLogger("django.request")
         logger.setLevel(logging.ERROR)
 
+        self.adminUsers = [
+            {
+                "sub": "42",
+                "username": "schneij",
+                "given_name": "Jonas",
+                "family_name": "Schneider",
+                "admin": True,
+                "displayname": "Jonas Schneider",
+            },
+            {
+                "sub": "42-1",
+                "username": "fletchz",
+                "given_name": "Zoe",
+                "family_name": "Fletcher",
+                "admin": True,
+                "displayname": "Zoe Fletcher",
+            },
+        ]
+        self.nonAdminUsers = [
+            {
+                "sub": "42-2",
+                "username": "morica",
+                "given_name": "Carla",
+                "family_name": "Morin",
+                "admin": False,
+                "displayname": "Carla Morin",
+            },
+            {
+                "sub": "42-3",
+                "username": "meyeral",
+                "given_name": "Alex",
+                "family_name": "Meyer",
+                "admin": False,
+                "displayname": "Alex Meyer",
+            },
+        ]
+
+        self.users = self.adminUsers + self.nonAdminUsers
+
         self.client = Client()
-        if self.loginUser >= 0:
-            self.user = self.loginUsers[self.loginUser]
-            self.get("/api/auth/me/")
+        self.setUpLogin()
         if call_my_setup:
             self.mySetUp()
+
+    def setUpLogin(self):
+        self.login_as(self.adminUsers[0])
 
     def mySetUp(self):
         pass
@@ -174,7 +193,7 @@ class ComsolTestExamData(ComsolTest):
     def setUp(self, call_my_setup=True):
         super().setUp(call_my_setup=False)
         saved = self.user
-        for user in self.loginUsers:
+        for user in self.users:
             self.user = user
             self.get("/api/notification/unreadcount/")
         self.user = saved
@@ -216,20 +235,18 @@ class ComsolTestExamData(ComsolTest):
             section.save()
             if not self.add_answers:
                 continue
-            for i in range(3):
+            for i in range(4):
                 self.answers.append(
                     Answer(
                         answer_section=section,
-                        author=MyUser.objects.get(
-                            username=self.loginUsers[i]["username"]
-                        ),
+                        author=MyUser.objects.get(username=self.users[i]["username"]),
                         text=f"Test Answer {section.id}/{i}",
                     )
                 )
             self.answers.append(
                 Answer(
                     answer_section=section,
-                    author=MyUser.objects.get(username=self.loginUsers[0]["username"]),
+                    author=MyUser.objects.get(username=self.users[0]["username"]),
                     text=f"Legacy Answer {section.id}",
                     kind=Answer.Kind.LEGACY,
                 )
@@ -238,13 +255,11 @@ class ComsolTestExamData(ComsolTest):
             answer.save()
             if not self.add_comments:
                 continue
-            for i in range(3):
+            for i in range(4):
                 self.comments.append(
                     Comment(
                         answer=answer,
-                        author=MyUser.objects.get(
-                            username=self.loginUsers[i]["username"]
-                        ),
+                        author=MyUser.objects.get(username=self.users[i]["username"]),
                         text=f"Comment {answer.id}/{i}",
                     )
                 )
