@@ -131,8 +131,8 @@ class TestAnswerSection(ComsolTestExamData):
     def test_get_section(self):
         for section in self.sections:
             res = self.get(f"/api/exam/answersection/{section.id}/")["value"]
-            self.assertEqual(len(res["answers"]), 4)
-            self.assertEqual(len(res["answers"][0]["comments"]), 3)
+            self.assertEqual(len(res["answers"]), 5)
+            self.assertEqual(len(res["answers"][0]["comments"]), 4)
 
             # TODO test whether the content makes any sense
             # TODO test whether upvoting adjusts the score correctly

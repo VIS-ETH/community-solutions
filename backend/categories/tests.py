@@ -31,7 +31,8 @@ class TestAddRemove(ComsolTest):
 
 
 class TestList(ComsolTest):
-    loginUser = 2
+    def setUpLogin(self):
+        self.login_as(self.nonAdminUsers[0])
 
     def mySetUp(self):
         self.cat1 = Category(displayname="Test 1", slug="test1", has_payments=True)

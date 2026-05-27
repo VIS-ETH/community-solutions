@@ -18,8 +18,6 @@ invalid_key.import_from_pem(invalid_private_key_data)
 
 
 class TestMyAuthAdmin(ComsolTest):
-    loginUser = 0
-
     def test_me(self):
         res = self.get("/api/auth/me/")
         self.assertTrue(res["loggedin"])
@@ -30,7 +28,8 @@ class TestMyAuthAdmin(ComsolTest):
 
 
 class TestMyAuthNonadmin(ComsolTest):
-    loginUser = 2
+    def setUpLogin(self):
+        self.login_as(self.nonAdminUsers[0])
 
     def test_me(self):
         res = self.get("/api/auth/me/")
@@ -42,7 +41,8 @@ class TestMyAuthNonadmin(ComsolTest):
 
 
 class TestMyAuthUnauthorized(ComsolTest):
-    loginUser = -1
+    def setUpLogin(self):
+        self.login_as(None)
 
     def test_me(self):
         res = self.get("/api/auth/me/")
@@ -52,7 +52,8 @@ class TestMyAuthUnauthorized(ComsolTest):
 
 
 class TestJWT(ComsolTest):
-    loginUser = -1
+    def setUpLogin(self):
+        self.login_as(None)
 
     def test_no_token(self):
         response = self.client.get("/api/notification/unreadcount/")
@@ -80,7 +81,7 @@ class TestJWT(ComsolTest):
         self.assertEqual(response.status_code, 401)
 
     def test_token_with_wrong_key(self):
-        user = self.loginUsers[0]
+        user = self.adminUsers[0]
         sub = user["sub"] + "42"
         username = user["username"] + "42"
         given_name = user["given_name"]
@@ -109,7 +110,7 @@ class TestJWT(ComsolTest):
         self.assertEqual(response.status_code, 401)
 
     def test_token_with_wrong_algorithm(self):
-        user = self.loginUsers[0]
+        user = self.adminUsers[0]
         sub = user["sub"] + "42"
         username = user["username"] + "42"
         given_name = user["given_name"]
@@ -138,7 +139,7 @@ class TestJWT(ComsolTest):
         self.assertEqual(response.status_code, 200)
 
     def test_correct_token(self):
-        user = self.loginUsers[0]
+        user = self.adminUsers[0]
         sub = user["sub"] + "42"
         username = user["username"] + "42"
         given_name = user["given_name"]
