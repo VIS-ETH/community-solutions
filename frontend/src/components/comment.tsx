@@ -126,6 +126,7 @@ const CommentComponent: React.FC<Props> = ({
       });
   };
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
+  const isOwnComment = comment?.authorId === username;
 
   return (
     <Paper
@@ -179,8 +180,10 @@ const CommentComponent: React.FC<Props> = ({
               isFlagged={comment.isFlagged}
               loading={flaggedLoading}
               size="xs"
-              onToggle={() =>
-                setExamCommentFlagged(comment.oid, !comment.isFlagged)
+              onToggle={
+                isOwnComment
+                ? undefined
+                  : () => setExamCommentFlagged(comment.oid, !comment.isFlagged)
               }
             />
           )}
@@ -192,28 +195,36 @@ const CommentComponent: React.FC<Props> = ({
                 </Button>
               </Menu.Target>
               <Menu.Dropdown>
-                {!comment.isMarkedAsAi ? (
-                  <Menu.Item
-                    leftSection={<IconRobot />}
-                    onClick={() => setExamCommentMarkedAsAi(comment.oid, true)}
-                  >
-                    Mark as AI-generated
-                  </Menu.Item>
-                ) : (
-                  <Menu.Item
-                    leftSection={<IconRobotOff />}
-                    onClick={() => setExamCommentMarkedAsAi(comment.oid, false)}
-                  >
-                    Remove AI-generated mark
-                  </Menu.Item>
-                )}
-                {comment.flaggedCount === 0 && (
-                  <Menu.Item
-                    leftSection={<IconFlag />}
-                    onClick={() => setExamCommentFlagged(comment.oid, true)}
-                  >
-                    Flag as Inappropriate
-                  </Menu.Item>
+                {!isOwnComment && (
+                  <>
+                    {!comment.isMarkedAsAi ? (
+                      <Menu.Item
+                        leftSection={<IconRobot />}
+                        onClick={() =>
+                          setExamCommentMarkedAsAi(comment.oid, true)
+                        }
+                      >
+                        Mark as AI-generated
+                      </Menu.Item>
+                    ) : (
+                      <Menu.Item
+                        leftSection={<IconRobotOff />}
+                        onClick={() =>
+                          setExamCommentMarkedAsAi(comment.oid, false)
+                        }
+                      >
+                        Remove AI-generated mark
+                      </Menu.Item>
+                    )}
+                    {comment.flaggedCount === 0 && (
+                      <Menu.Item
+                        leftSection={<IconFlag />}
+                        onClick={() => setExamCommentFlagged(comment.oid, true)}
+                      >
+                        Flag as Inappropriate
+                      </Menu.Item>
+                    )}
+                  </>
                 )}
                 <Menu.Item
                   leftSection={<IconLink />}
