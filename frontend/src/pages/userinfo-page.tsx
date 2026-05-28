@@ -49,7 +49,7 @@ const UserPage: React.FC = () => {
           <Tabs.Panel value="overview" pt="sm">
             <SimpleGrid cols={{ base: 1, md: 2 }}>
               {!isMyself && !user.isAdmin && (
-                <Alert color="gray">There&apos;s nothing here</Alert>
+                <Alert color="gray">There's nothing here</Alert>
               )}
               {isMyself && <UserNotifications username={username} />}
               {(isMyself || user.isAdmin) && (

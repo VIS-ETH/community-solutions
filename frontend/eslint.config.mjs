@@ -71,7 +71,7 @@ export default defineConfig(
             "@typescript-eslint/consistent-generic-constructors": "warn",
             "@typescript-eslint/consistent-indexed-object-style": "warn",
             "@typescript-eslint/consistent-type-definitions": "warn",
-            "@typescript-eslint/dot-notation": "warn",
+            "@typescript-eslint/dot-notation": "off",
             "@typescript-eslint/no-base-to-string": "warn",
             "@typescript-eslint/no-deprecated": "warn",
             "@typescript-eslint/no-duplicate-type-constituents": "warn",
@@ -156,8 +156,8 @@ export default defineConfig(
             "no-prototype-builtins": "warn",
             "react/display-name": "warn",
             "react/no-children-prop": "warn",
-            "react/prop-types": "warn",
-            "react/no-unescaped-entities": "warn",
+            "react/prop-types": "off",
+            "react/no-unescaped-entities": "off",
             "react-hooks/immutability": "warn",
             "react-hooks/preserve-manual-memoization": "warn",
             "react-hooks/refs": "warn",
@@ -166,13 +166,6 @@ export default defineConfig(
     },
     {
         ignores: ["src/api/hooks", "src/api/model"],
-    },
-    {
-        // TypeScript already validates component props.
-        files: ["**/*.{ts,tsx}"],
-        rules: {
-            "react/prop-types": "off",
-        },
     },
     {
         // Root config files run in Node/CommonJS, not the browser.

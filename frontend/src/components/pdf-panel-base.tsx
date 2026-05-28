@@ -95,7 +95,7 @@ const PdfPanelBase: React.FC<PdfPanelBaseProps> = ({
         toggle();
         return;
       }
-      window.scrollTo(0, scrollTop - scrollTop / 10 - 1);
+      scrollTo(0, scrollTop - scrollTop / 10 - 1);
       requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
