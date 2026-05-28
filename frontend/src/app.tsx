@@ -119,7 +119,7 @@ const App: React.FC = () => {
         // Only refresh if refresh token isn't expired. We resolve a void promise
         // if the refresh token is expired, so we can use the same handling code
         // to increment counter & show the modal.
-        (isTokenExpired(refresh_exp) ? Promise.resolve() : refreshToken()).then(
+        void (isTokenExpired(refresh_exp) ? Promise.resolve() : refreshToken()).then(
           r => {
             if (cancel) return;
 
@@ -173,7 +173,7 @@ const App: React.FC = () => {
     // Technically the application won't work until the promise resolves, but we just
     // hope that the user doesn't do anything in that time.
     if (getCookie("csrftoken") === null) {
-      fetchGet("/api/can_i_haz_csrf_cookie/");
+      void fetchGet("/api/can_i_haz_csrf_cookie/");
     }
   }, []);
   const [user, setUser] = useState<User | undefined>(undefined);

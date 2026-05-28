@@ -46,7 +46,7 @@ const UploadPdfCard: React.FC = () => {
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (file && category) {
-      upload(file, displayname, category);
+      void upload(file, displayname, category);
     } else if (file === undefined) {
       setValidationError("No file selected");
     } else {

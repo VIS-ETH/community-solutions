@@ -37,7 +37,7 @@ export const FAQPage: React.FC = () => {
   };
   const handleNew = async () => {
     const finalAnswer = await flushPendingImages(answer);
-    add(
+    void add(
       question,
       finalAnswer,
       (faqs ?? []).reduce((old, value) => Math.max(old, value.order + 1), 0),

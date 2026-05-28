@@ -20,7 +20,7 @@ const CreateDocumentForm: React.FC<Props> = ({
   const [displayName, setDisplayName] = useState("");
   const navigate = useNavigate();
   const {error, loading, run} = useCreateDocument(({ slug }) => {
-    navigate(`/user/${username}/document/${slug}/`);
+    void navigate(`/user/${username}/document/${slug}/`);
   });
   return (
     <Modal opened={isOpen} title="Add Document Bundle" onClose={onClose}>

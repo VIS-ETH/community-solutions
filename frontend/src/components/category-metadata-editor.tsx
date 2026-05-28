@@ -233,7 +233,7 @@ const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
     setFormValue,
     onSubmit,
   } = useForm(currentMetaData as CategoryMetaDataDraft, data => {
-    runApplyChanges(
+    void runApplyChanges(
       currentMetaData.slug,
       currentMetaData,
       data,

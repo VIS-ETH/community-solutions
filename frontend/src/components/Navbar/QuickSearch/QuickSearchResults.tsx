@@ -10,7 +10,6 @@ import { QuickSearchResult } from "./QuickSearchResult";
 import { highlight, itemToPath } from "../../../utils/search-utils";
 import { HighlightedContent } from "../../HighlightSearchHeadline";
 import MarkdownText from "../../markdown-text";
-import { escapeRegExp } from "lodash-es";
 import { useMemo } from "react";
 
 type QuickSeachResultsProps = {

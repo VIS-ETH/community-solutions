@@ -13,7 +13,7 @@ import { PdfCanvasReference } from "./reference-counting";
 import { CutUpdate } from "../interfaces";
 import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import classes from "./pdf-section-canvas.module.css";
-import clsx from "clsx";
+import { clsx } from "clsx";
 
 const usePdf = (
   shouldRender: boolean,
@@ -43,7 +43,7 @@ const usePdf = (
       let currentPromise:
         | Promise<[HTMLCanvasElement, boolean, PdfCanvasReference]>
         | undefined;
-      (async () => {
+      void (async () => {
         const page = await renderer.getPage(pageNumber);
         if (cancel) return;
         setView(page.view);
@@ -71,7 +71,7 @@ const usePdf = (
 
         if (canvasRef) canvasRef.release();
         else if (currentPromise) {
-          currentPromise.then(([, , newRef]) => newRef.release());
+          void currentPromise.then(([, , newRef]) => newRef.release());
         }
       };
     }
@@ -262,7 +262,6 @@ const PdfSectionCanvas: React.FC<Props> = React.memo(
         </div>
       </Card>
     );
-  },
+  }
 );
-
 export default PdfSectionCanvas;

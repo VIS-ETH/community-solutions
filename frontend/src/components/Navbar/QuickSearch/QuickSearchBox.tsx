@@ -43,7 +43,7 @@ import { QuickSearchResult } from "./QuickSearchResult";
 import { QuickSearchResults } from "./QuickSearchResults";
 import { QuickSearchFilterContext } from "./QuickSearchFilterContext";
 import { useNavigate } from "react-router-dom";
-import clsx from "clsx";
+import { clsx } from "clsx";
 
 /**
  * Return the max depth of an array.
@@ -221,7 +221,7 @@ export const QuickSearchBox: React.FC = () => {
   const confirmSelection = useCallback(() => {
     if (!currentSelection.type) return; // Make sure we don't navivate to invalid selections
 
-    navigate(
+    void navigate(
       // TODO: fix duplicate logic here to get the path for an item; we already
       // do that in QuickSearchResults to create the link href prop of results
       itemToPath(results[currentSelection.type][currentSelection.index]),

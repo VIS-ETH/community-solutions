@@ -47,7 +47,7 @@ const UploadTranscriptCard: React.FC = () => {
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (file && category) {
-      upload(file, category);
+      void upload(file, category);
     } else if (file === undefined) {
       setValidationError("No file selected");
     } else {

@@ -8,7 +8,7 @@ import { Document } from "../interfaces";
 import { IconPlus } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import classes from "../utils/focus-outline.module.css";
-import clsx from "clsx";
+import { clsx } from "clsx";
 
 interface Props {
   slug: string;
@@ -22,7 +22,7 @@ const DocumentList: React.FC<Props> = ({ slug }) => {
     { type: string; docs: Document[] }[]
   >([]);
   useEffect(() => {
-    (async () => {
+    void (async () => {
       setDocTypes(await loadDocumentTypes());
     })();
   }, []);

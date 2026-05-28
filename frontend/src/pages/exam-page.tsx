@@ -66,7 +66,6 @@ import {
   IconEdit,
   IconFileCheck,
   IconLink,
-  IconX,
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";

@@ -44,7 +44,7 @@ const DocumentMarkdownEditor: React.FC<Props> = ({ document, file, url }) => {
       <Button
         onClick={async () => {
           const finalText = await flushPendingImages(draftText);
-          updateDocument({ file: new NamedBlob(new Blob([finalText]), "file.md") });
+          void updateDocument({ file: new NamedBlob(new Blob([finalText]), "file.md") });
         }}
         loading={loading}
         leftSection={<IconDeviceFloppy />}

@@ -86,9 +86,9 @@ const CommentComponent: React.FC<Props> = ({
   const onSave = async () => {
     const finalText = await flushPendingImages(draftText);
     if (comment === undefined) {
-      runAddNewComment(answer.oid, finalText);
+      void runAddNewComment(answer.oid, finalText);
     } else {
-      runUpdateComment(comment.oid, finalText);
+      void runUpdateComment(comment.oid, finalText);
     }
   };
   const onCancel = () => {

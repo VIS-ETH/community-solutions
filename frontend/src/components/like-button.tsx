@@ -21,7 +21,7 @@ const LikeButton: React.FC<Props> = ({ document, mutate }) => {
     <Button
       variant="subtle"
       onClick={() => {
-        updateDocument({ liked: !document.liked });
+        void updateDocument({ liked: !document.liked });
         if (!document.liked) {
           mutate(s => ({ ...s, liked: true, like_count: likeCount }));
         } else {

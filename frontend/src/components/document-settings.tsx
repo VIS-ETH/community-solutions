@@ -77,7 +77,7 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate, reload }) => {
       setCategory(undefined);
       setDocumentType(undefined);
       if (result.slug !== data.slug) {
-        navigate(`/user/${result.author}/document/${result.slug}`, {
+        void navigate(`/user/${result.author}/document/${result.slug}`, {
           replace: true,
         });
       }
@@ -187,7 +187,7 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate, reload }) => {
                 const finalDescription = descriptionDraftText !== undefined
                   ? await flushPendingImages(descriptionDraftText)
                   : undefined;
-                updateDocument({
+                void updateDocument({
                   display_name: displayName,
                   category,
                   document_type: documentType,

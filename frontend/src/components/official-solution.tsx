@@ -1,7 +1,6 @@
 import { PDFDocumentLoadingTask } from "pdfjs-dist";
 import { getDocument } from "../pdf/pdfjs";
 import React, {
-  forwardRef,
   memo,
   useMemo,
   useRef,
@@ -133,7 +132,7 @@ const PdfRenderer: React.FC<PProps> = memo(
         }
       };
 
-      renderPdf();
+      void renderPdf();
 
       return () => {
         cancelled = true;

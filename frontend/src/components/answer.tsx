@@ -15,7 +15,7 @@ import {
 import { differenceInSeconds } from "date-fns";
 import React, { lazy, Suspense, useCallback, useState } from "react";
 import { Link } from "react-router-dom";
-import clsx from "clsx";
+import { clsx } from "clsx";
 import { usePendingImages } from "./Editor/pending-images";
 import {
   useRemoveAnswer,
@@ -116,7 +116,7 @@ const AnswerComponent: React.FC<Props> = ({
   const save = useCallback(async () => {
     if (!section) return;
     const finalText = await flushPendingImages(draftText);
-    update(section.oid, finalText, answerKind);
+    void update(section.oid, finalText, answerKind);
   }, [section, draftText, update, answerKind, flushPendingImages]);
   const remove = useCallback(() => {
     if (answer) removeConfirm("Remove answer?", () => removeAnswer(answer.oid));

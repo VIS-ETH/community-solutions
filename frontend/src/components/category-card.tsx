@@ -1,11 +1,11 @@
-import { Card, Text, Progress, Anchor, Stack, Tooltip, useComputedColorScheme, useMantineTheme } from "@mantine/core";
+import { Card, Text, Progress, Anchor, Stack, Tooltip } from "@mantine/core";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authenticated, login } from "../api/fetch-utils";
 import { SearchResult } from "../hooks/useSearch";
 import { CategoryMetaData } from "../interfaces";
 import { highlight } from "../utils/search-utils";
-import clsx from "clsx";
+import { clsx } from "clsx";
 import classes from "../utils/focus-outline.module.css";
 
 interface Props {
@@ -16,7 +16,7 @@ const CategoryCard: React.FC<Props> = ({ category }) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
     if (e.code === "Enter") {
       if (!authenticated()) login(`/category/${category.slug}`);
-      else navigate(`/category/${category.slug}`);
+      else void navigate(`/category/${category.slug}`);
     }
   };
   return (

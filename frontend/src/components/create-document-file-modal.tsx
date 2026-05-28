@@ -57,7 +57,7 @@ const CreateDocumentFileModal: React.FC<Props> = ({
           leftSection={<IconPlus />}
           disabled={loading || displayName.trim() === ""}
           onClick={() => {
-            createDocumentFile(
+            void createDocumentFile(
               displayName.trim(),
               file ??
                 new NamedBlob(
