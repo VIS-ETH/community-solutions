@@ -36,8 +36,8 @@ async function resolveOpenApiPath(): Promise<string> {
   } catch {}
 
   throw new Error(
-    "Could not find OpenAPI schema. Try this of the following\n" +
-      "  - Start the backend server one localhost:8081\n" +
+    "Could not find OpenAPI schema. Try one of the following:\n" +
+      "  - Start the backend server on localhost:8081.\n" +
       "  - Run `uv run manage.py export_openapi`.\n" +
       "  - Become a carrot farmer in Uzbekistan and avoid all of this hassle.",
   );
