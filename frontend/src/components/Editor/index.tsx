@@ -100,29 +100,6 @@ const Editor: React.FC<Props> = ({
     [setCurrent, value],
   );
 
-  const insertImages = useCallback(
-    (handles: ImageHandle[]) => {
-      const selection = getSelectionRangeRef.current();
-      if (selection === undefined) return;
-      const before = value.substring(0, selection.start);
-      const content = value.substring(selection.start, selection.end);
-      const after = value.substring(selection.end);
-      let newContent = ``;
-      for (let i = 0; i < handles.length; i++) {
-        newContent +=
-          i === 0
-            ? `![${content}](${handles[i].src})`
-            : `![](${handles[i].src})`;
-      }
-      const newSelection = {
-        start: selection.start + 2,
-        end: selection.start + content.length + 2,
-      };
-      setCurrent(before + newContent + after, newSelection);
-    },
-    [setCurrent, value],
-  );
-
   const insertLink = useCallback(() => {
     const selection = getSelectionRangeRef.current();
     if (selection === undefined) return;
@@ -238,21 +215,13 @@ const Editor: React.FC<Props> = ({
       const handle = await imageHandler(file);
       insertImage(handle);
     },
-    [imageHandler, insertImage],
-  );
-
-  const getHandle = useCallback(
-    async (file: File) => {
-      const handle = await imageHandler(file);
-      return handle;
-    },
-    [imageHandler],
+    [insertImage, imageHandler],
   );
 
   const onFiles = useCallback(
-    (files: File[]) => {
+    async (files: File[]) => {
       for (const file of files) {
-        onFile(file);
+        await onFile(file);
       }
     },
     [onFile],
@@ -325,15 +294,7 @@ const Editor: React.FC<Props> = ({
       resize={isFullscreen ? "fill" : "vertical"}
       onPaste={e => {
         const fileList = e.clipboardData.files;
-        const filesArray: File[] = [];
-        if (fileList.length === 0) return;
-        for (let i = 0; i < fileList.length; i++) {
-          const file = fileList.item(i);
-          if (file) {
-            filesArray.push(file);
-          }
-        }
-        Promise.all(filesArray.map(getHandle)).then(insertImages);
+        onFiles([...fileList]);
       }}
     />
   );

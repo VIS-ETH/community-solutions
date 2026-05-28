@@ -53,11 +53,15 @@ const CommentComponent: React.FC<Props> = ({
   onSectionChanged,
   onDelete,
 }) => {
-  const [setFlaggedLoading, setExamCommentFlagged] = useSetExamCommentFlagged(onSectionChanged);
-  const [resetFlaggedLoading, resetExamCommentFlagged] = useResetExamCommentFlaggedVote(onSectionChanged);
-  const [, setExamCommentMarkedAsAi] = useSetExamCommentMarkedAsAi(onSectionChanged);
-  const [, resetExamCommentMarkedAsAi] = useResetExamCommentMarkedAsAi(onSectionChanged);
-  const [viewSource, {toggle: toggleViewSource}] = useDisclosure();
+  const [setFlaggedLoading, setExamCommentFlagged] =
+    useSetExamCommentFlagged(onSectionChanged);
+  const [resetFlaggedLoading, resetExamCommentFlagged] =
+    useResetExamCommentFlaggedVote(onSectionChanged);
+  const [, setExamCommentMarkedAsAi] =
+    useSetExamCommentMarkedAsAi(onSectionChanged);
+  const [, resetExamCommentMarkedAsAi] =
+    useResetExamCommentMarkedAsAi(onSectionChanged);
+  const [viewSource, { toggle: toggleViewSource }] = useDisclosure();
   const { isAdmin, username } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
   const [editing, setEditing] = useState(false);
@@ -131,9 +135,7 @@ const CommentComponent: React.FC<Props> = ({
           <Text component="span" mx={6} c="dimmed">
             ·
           </Text>
-          {comment && (
-            <TimeText time={comment.time} suffix="ago" />
-          )}
+          {comment && <TimeText time={comment.time} suffix="ago" />}
           {comment &&
             differenceInSeconds(
               new Date(comment.edittime),
@@ -143,7 +145,11 @@ const CommentComponent: React.FC<Props> = ({
                 <Text component="span" mx={6} c="dimmed">
                   ·
                 </Text>
-                <TimeText time={comment.edittime} prefix="edited" suffix="ago" />
+                <TimeText
+                  time={comment.edittime}
+                  prefix="edited"
+                  suffix="ago"
+                />
               </>
             )}
           {comment && <MarkedAsAiBadge count={comment.markedAsAiCount} />}
@@ -155,13 +161,17 @@ const CommentComponent: React.FC<Props> = ({
               isFlagged={comment.isFlagged}
               loading={flaggedLoading}
               size="xs"
-              onToggle={() => setExamCommentFlagged(comment.oid, !comment.isFlagged)}
+              onToggle={() =>
+                setExamCommentFlagged(comment.oid, !comment.isFlagged)
+              }
             />
           )}
           {comment && (
             <Menu withinPortal>
               <Menu.Target>
-                <Button size="xs" variant="light" color="gray" mr="md"><IconDots/></Button>
+                <Button size="xs" variant="light" color="gray" mr="md">
+                  <IconDots />
+                </Button>
               </Menu.Target>
               <Menu.Dropdown>
                 {!comment.isMarkedAsAi ? (
@@ -188,14 +198,14 @@ const CommentComponent: React.FC<Props> = ({
                   </Menu.Item>
                 )}
                 <Menu.Item
-                        leftSection={<IconLink />}
-                        onClick={() =>
-                          copy(
-                            `${document.location.origin}/exams/${answer.filename}?comment=${comment.longId}&answer=${answer.longId}`,
-                          )
-                        }
-                      >
-                        Copy Permalink
+                  leftSection={<IconLink />}
+                  onClick={() =>
+                    copy(
+                      `${document.location.origin}/exams/${answer.filename}?comment=${comment.longId}&answer=${answer.longId}`,
+                    )
+                  }
+                >
+                  Copy Permalink
                 </Menu.Item>
                 {isAdmin && comment.markedAsAiCount > 0 && (
                   <Menu.Item
@@ -214,10 +224,7 @@ const CommentComponent: React.FC<Props> = ({
                   </Menu.Item>
                 )}
                 {!editing && comment.canEdit && (
-                  <Menu.Item
-                    leftSection={<IconEdit />}
-                    onClick={startEditing}
-                  >
+                  <Menu.Item leftSection={<IconEdit />} onClick={startEditing}>
                     Edit
                   </Menu.Item>
                 )}
@@ -227,18 +234,18 @@ const CommentComponent: React.FC<Props> = ({
                   </Menu.Item>
                 )}
                 {!editing && !comment.canEdit && (
-                <Menu.Item
-                  leftSection={<IconCode />}
-                  onClick={toggleViewSource}
-                >
-                  Toggle Source Code Mode
-                </Menu.Item>
+                  <Menu.Item
+                    leftSection={<IconCode />}
+                    onClick={toggleViewSource}
+                  >
+                    Toggle Source Code Mode
+                  </Menu.Item>
                 )}
               </Menu.Dropdown>
             </Menu>
           )}
-          </Flex>
         </Flex>
+      </Flex>
       {comment === undefined || editing ? (
         <Suspense fallback={<Loader />}>
           <Editor

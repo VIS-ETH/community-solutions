@@ -8,7 +8,6 @@ import {
   CategoryMetaDataMinimal,
   CutVersions,
   ExamMetaData,
-  FeedbackEntry,
   MetaCategory,
   NotificationInfo,
   PaymentInfo,
@@ -278,15 +277,6 @@ export const loadCutVersions = async (filename: string) => {
 export const loadCuts = async (filename: string) => {
   return (await fetchGet(`/api/exam/cuts/${filename}/`))
     .value as ServerCutResponse;
-};
-export const submitFeedback = async (text: string) => {
-  return await fetchPost("/api/feedback/submit/", { text });
-};
-export const loadFeedback = async () => {
-  const fb = (await fetchGet("/api/feedback/list/")).value as FeedbackEntry[];
-  const getScore = (a: FeedbackEntry) => (a.read ? 10 : 0) + (a.done ? 1 : 0);
-  fb.sort((a: FeedbackEntry, b: FeedbackEntry) => getScore(a) - getScore(b));
-  return fb;
 };
 export const loadPaymentCategories = async () => {
   return (await fetchGet("/api/category/listonlypayment/"))
@@ -911,9 +901,6 @@ export const useMoveDocumentFile = (
   );
   return [error, loading, run] as const;
 };
-
-export const setFeedbackReply = async (oid: string, reply: string) =>
-  fetchPost(`/api/feedback/reply/${oid}/`, { reply });
 
 export const loadExamUserSolved = async (exam: string) => {
   return fetchGet<{ user_solved: boolean }>(`/api/exam/${exam}/usersolved`);

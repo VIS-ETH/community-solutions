@@ -161,5 +161,8 @@ export default defineConfig(
             "react-hooks/refs": "warn",
             "react-hooks/set-state-in-effect": "warn",
         },
+    },
+    {
+        ignores: ["src/api/hooks", "src/api/model"],
     }
 );
