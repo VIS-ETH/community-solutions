@@ -29,7 +29,9 @@ export default defineConfig(
         // TypeScript file that it needs to compile and get types for.
         languageOptions: {
             parserOptions: {
-                projectService: true,
+                projectService: {
+                    allowDefaultProject: ["vite.config.ts", "vite-env.d.ts"],
+                },
             },
         },
 
@@ -164,5 +166,21 @@ export default defineConfig(
     },
     {
         ignores: ["src/api/hooks", "src/api/model"],
-    }
+    },
+    {
+        // TypeScript already validates component props.
+        files: ["**/*.{ts,tsx}"],
+        rules: {
+            "react/prop-types": "off",
+        },
+    },
+    {
+        // Root config files run in Node/CommonJS, not the browser.
+        files: ["**/*.cjs"],
+        languageOptions: {
+            globals: {
+                ...globals.node,
+            },
+        },
+    },
 );
