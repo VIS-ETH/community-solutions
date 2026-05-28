@@ -4,6 +4,8 @@ import {
   type HttpResponse,
 } from "./fetch-utils";
 
+// We need a custom fetch wrapper to make it work with performRequest and performDataRequest
+// Orval works with exactly one function, so we need a "router" function anyway.
 export const customFetch = async <T>(
   url: string | URL,
   options: {
