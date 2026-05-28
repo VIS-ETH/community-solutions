@@ -67,7 +67,7 @@ const AnswerToolbar = (props: GroupProps) => (
   <Group className={classes.answerToolbarStyle} {...props} />
 );
 
-const draftAnswerKey = "draft-answer-json";
+const draftPartKey = "draft-ans/com-json";
 type StorageDraft = Record<
   string,
   {
@@ -76,42 +76,68 @@ type StorageDraft = Record<
   }
 >;
 
-function saveDraftToStorage(answerId: string | undefined, newValue: string) {
+export function saveDraftToStorage(
+  answerId: string | undefined,
+  newValue: string,
+  isAnswer: boolean,
+) {
   if (answerId === undefined) {
     return;
   }
-  const answerFromLocalStorage = localStorage.getItem(draftAnswerKey) ?? "{}";
-  const draftAnswerJSON = JSON.parse(answerFromLocalStorage) as StorageDraft;
+  const part = isAnswer ? "answers" : "comments";
+  const partFromLocalStorage =
+    localStorage.getItem(draftPartKey) ?? '{"answers": {},"comments": {}}';
+  const draftJSON = JSON.parse(partFromLocalStorage);
+  const draftPartJSON = draftJSON[part] as StorageDraft;
   const now = new Date();
   const currentTimeStamp = now.getTime();
   if (newValue.length === 0) {
-    delete draftAnswerJSON[answerId];
+    delete draftPartJSON[answerId];
   } else {
-    draftAnswerJSON[answerId] = {
+    draftPartJSON[answerId] = {
       draft: newValue,
       draftTime: currentTimeStamp,
     };
   }
-  localStorage.setItem(draftAnswerKey, JSON.stringify(draftAnswerJSON));
+  draftJSON[part] = draftPartJSON;
+  localStorage.setItem(draftPartKey, JSON.stringify(draftJSON));
 }
-function readDraftFromStorage(answerId: string | undefined): string {
+export function readDraftFromStorage(
+  answerId: string | undefined,
+  isAnswer: boolean,
+): string {
   if (answerId === undefined) {
     return "";
   }
-  const answerFromLocalStorage = localStorage.getItem(draftAnswerKey) ?? "{}";
-  const draftAnswerJSON = JSON.parse(answerFromLocalStorage) as StorageDraft;
-  const text = draftAnswerJSON[answerId]?.draft ?? "";
+  const part = isAnswer ? "answers" : "comments";
+  const partFromLocalStorage =
+    localStorage.getItem(draftPartKey) ?? '{"answers": {},"comments": {}}';
+  const draftJSON = JSON.parse(partFromLocalStorage)[part] as StorageDraft;
+  const text = draftJSON[answerId]?.draft ?? "";
   return text;
 }
 function clearExpiredDrafts() {
-  const answerFromLocalStorage = localStorage.getItem(draftAnswerKey) ?? "{}";
-  const draftAnswerJSON = JSON.parse(answerFromLocalStorage) as StorageDraft;
+  const partFromLocalStorage =
+    localStorage.getItem(draftPartKey) ?? '{"answers": {},"comments": {}}';
+  const draftAnswersJSON = JSON.parse(partFromLocalStorage)[
+    "answers"
+  ] as StorageDraft;
+  const draftCommentsJSON = JSON.parse(partFromLocalStorage)[
+    "comments"
+  ] as StorageDraft;
   const now = new Date();
   const currentTimeStamp = now.getTime();
   const lifeSpan = 1000 * 60 * 60 * 24 * 3; // 3 Days
-  Object.entries(draftAnswerJSON).forEach(([answerId, element]) => {
+  // Answers
+  Object.entries(draftAnswersJSON).forEach(([answerId, element]) => {
     if (element.draftTime + lifeSpan < currentTimeStamp) {
-      saveDraftToStorage(answerId, "");
+      saveDraftToStorage(answerId, "", true);
+    }
+  });
+  // Comments
+  Object.entries(draftCommentsJSON).forEach(([answerId, element]) => {
+    if (element.draftTime + lifeSpan < currentTimeStamp) {
+      saveDraftToStorage(answerId, "", false);
     }
   });
 }
@@ -147,7 +173,7 @@ const AnswerComponent: React.FC<Props> = ({
     setEditing(false);
     if (onSectionChanged) onSectionChanged(res);
     if (answer === undefined && onDelete) onDelete();
-    saveDraftToStorage(answerId, "");
+    saveDraftToStorage(answerId, "", true);
   });
   const { isAdmin, isExpert } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
@@ -158,7 +184,7 @@ const AnswerComponent: React.FC<Props> = ({
   const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
     usePendingImages();
   const startEdit = useCallback(() => {
-    const possibleAnswer = readDraftFromStorage(answerId);
+    const possibleAnswer = readDraftFromStorage(answerId, true);
     if (possibleAnswer) {
       setDraftText(possibleAnswer);
     } else {
@@ -170,7 +196,7 @@ const AnswerComponent: React.FC<Props> = ({
   const onCancel = useCallback(() => {
     setEditing(false);
     if (answer === undefined && onDelete) onDelete();
-    saveDraftToStorage(answerId, "");
+    saveDraftToStorage(answerId, "", true);
   }, [onDelete, answer]);
   const save = useCallback(async () => {
     if (!section) return;
@@ -187,7 +213,7 @@ const AnswerComponent: React.FC<Props> = ({
 
   useEffect(() => {
     clearExpiredDrafts();
-    setDraftText(readDraftFromStorage(answerId));
+    setDraftText(readDraftFromStorage(answerId, true));
   }, []);
 
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
@@ -357,7 +383,7 @@ const AnswerComponent: React.FC<Props> = ({
                   value={draftText}
                   onChange={newValue => {
                     setDraftText(newValue);
-                    saveDraftToStorage(answerId, newValue);
+                    saveDraftToStorage(answerId, newValue, true);
                   }}
                   imageHandler={deferredImageHandler}
                   preview={value => (

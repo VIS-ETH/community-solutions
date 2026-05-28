@@ -1,9 +1,15 @@
 import { differenceInSeconds } from "date-fns";
-import React, { lazy, Suspense, useState } from "react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { addNewComment, removeComment, updateComment } from "../api/comment";
+import {
+  useMutation,
+  useResetExamCommentFlaggedVote,
+  useResetExamCommentMarkedAsAi,
+  useSetExamCommentFlagged,
+  useSetExamCommentMarkedAsAi,
+} from "../api/hooks";
 import { usePendingImages } from "./Editor/pending-images";
-import { useMutation, useResetExamCommentFlaggedVote, useResetExamCommentMarkedAsAi, useSetExamCommentFlagged, useSetExamCommentMarkedAsAi } from "../api/hooks";
 import { useUser } from "../auth";
 import useRemoveConfirm from "../hooks/useRemoveConfirm";
 import { Answer, AnswerSection, Comment } from "../interfaces";
@@ -38,6 +44,7 @@ import MarkedAsAiBadge from "./MarkedAsAiBadge";
 import { useDisclosure } from "@mantine/hooks";
 import TimeText from "./time-text";
 import { copy } from "../utils/clipboard";
+import { saveDraftToStorage, readDraftFromStorage } from "./answer";
 
 const Editor = lazy(() => import("./Editor"));
 
@@ -53,6 +60,15 @@ const CommentComponent: React.FC<Props> = ({
   onSectionChanged,
   onDelete,
 }) => {
+  const [setFlaggedLoading, setExamCommentFlagged] =
+    useSetExamCommentFlagged(onSectionChanged);
+  const [resetFlaggedLoading, resetExamCommentFlagged] =
+    useResetExamCommentFlaggedVote(onSectionChanged);
+  const [, setExamCommentMarkedAsAi] =
+    useSetExamCommentMarkedAsAi(onSectionChanged);
+  const [, resetExamCommentMarkedAsAi] =
+    useResetExamCommentMarkedAsAi(onSectionChanged);
+  const [viewSource, { toggle: toggleViewSource }] = useDisclosure();
   const [setFlaggedLoading, setExamCommentFlagged] =
     useSetExamCommentFlagged(onSectionChanged);
   const [resetFlaggedLoading, resetExamCommentFlagged] =
@@ -83,6 +99,14 @@ const CommentComponent: React.FC<Props> = ({
   const loading = addNewLoading || updateLoading || removeLoading;
   const languages = useOfficialSolutionLanguage();
 
+  const commentId = answer?.oid;
+
+  useEffect(() => {
+    setDraftText(readDraftFromStorage(commentId, false));
+  }, []);
+
+  const onSave = () => {
+    saveDraftToStorage(commentId, "", false);
   const onSave = async () => {
     const finalText = await flushPendingImages(draftText);
     if (comment === undefined) {
@@ -92,6 +116,7 @@ const CommentComponent: React.FC<Props> = ({
     }
   };
   const onCancel = () => {
+    saveDraftToStorage(commentId, "", false);
     if (comment === undefined) {
       if (onDelete) onDelete();
     } else {
@@ -105,7 +130,10 @@ const CommentComponent: React.FC<Props> = ({
   };
   const remove = () => {
     if (comment)
-      removeConfirm("Remove comment?", () => runRemoveComment(comment.oid));
+      removeConfirm("Remove comment?", () => {
+        runRemoveComment(comment.oid);
+        saveDraftToStorage(comment.oid, "", false);
+      });
   };
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
 
@@ -136,6 +164,7 @@ const CommentComponent: React.FC<Props> = ({
             ·
           </Text>
           {comment && <TimeText time={comment.time} suffix="ago" />}
+          {comment && <TimeText time={comment.time} suffix="ago" />}
           {comment &&
             differenceInSeconds(
               new Date(comment.edittime),
@@ -145,6 +174,11 @@ const CommentComponent: React.FC<Props> = ({
                 <Text component="span" mx={6} c="dimmed">
                   ·
                 </Text>
+                <TimeText
+                  time={comment.edittime}
+                  prefix="edited"
+                  suffix="ago"
+                />
                 <TimeText
                   time={comment.edittime}
                   prefix="edited"
@@ -164,11 +198,17 @@ const CommentComponent: React.FC<Props> = ({
               onToggle={() =>
                 setExamCommentFlagged(comment.oid, !comment.isFlagged)
               }
+              onToggle={() =>
+                setExamCommentFlagged(comment.oid, !comment.isFlagged)
+              }
             />
           )}
           {comment && (
             <Menu withinPortal>
               <Menu.Target>
+                <Button size="xs" variant="light" color="gray" mr="md">
+                  <IconDots />
+                </Button>
                 <Button size="xs" variant="light" color="gray" mr="md">
                   <IconDots />
                 </Button>
@@ -206,6 +246,14 @@ const CommentComponent: React.FC<Props> = ({
                   }
                 >
                   Copy Permalink
+                  leftSection={<IconLink />}
+                  onClick={() =>
+                    copy(
+                      `${document.location.origin}/exams/${answer.filename}?comment=${comment.longId}&answer=${answer.longId}`,
+                    )
+                  }
+                >
+                  Copy Permalink
                 </Menu.Item>
                 {isAdmin && comment.markedAsAiCount > 0 && (
                   <Menu.Item
@@ -225,6 +273,7 @@ const CommentComponent: React.FC<Props> = ({
                 )}
                 {!editing && comment.canEdit && (
                   <Menu.Item leftSection={<IconEdit />} onClick={startEditing}>
+                  <Menu.Item leftSection={<IconEdit />} onClick={startEditing}>
                     Edit
                   </Menu.Item>
                 )}
@@ -240,16 +289,29 @@ const CommentComponent: React.FC<Props> = ({
                   >
                     Toggle Source Code Mode
                   </Menu.Item>
+                  <Menu.Item
+                    leftSection={<IconCode />}
+                    onClick={toggleViewSource}
+                  >
+                    Toggle Source Code Mode
+                  </Menu.Item>
                 )}
               </Menu.Dropdown>
             </Menu>
           )}
         </Flex>
       </Flex>
+        </Flex>
+      </Flex>
       {comment === undefined || editing ? (
         <Suspense fallback={<Loader />}>
           <Editor
             value={draftText}
+            onChange={newValue => {
+              setDraftText(newValue);
+              saveDraftToStorage(commentId, newValue, false);
+            }}
+            imageHandler={imageHandler}
             onChange={setDraftText}
             imageHandler={deferredImageHandler}
             preview={value => (
