@@ -19,11 +19,8 @@ class ImageList(ValueWrapped[list[str]]):
 @auth_check.require_login
 def list_images(request):
     return {
-        "value": list(
-            image[0]
-            for image in Image.objects.filter(owner=request.user).values_list(
-                "filename"
-            )
+        "value": Image.objects.filter(owner=request.user).values_list(
+            "filename", flat=True
         )
     }
 
