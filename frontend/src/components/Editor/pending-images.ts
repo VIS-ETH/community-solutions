@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { imageHandler } from "../../api/image-utils";
 import { ImageHandle } from "./utils/types";
 
-type PendingEntry = { file: File; objectUrl: string };
+interface PendingEntry { file: File; objectUrl: string }
 
 /**
  * Defers image uploads until the user submits, so spammed/cancelled pastes
@@ -40,11 +40,12 @@ export function usePendingImages() {
       return Promise.resolve({
         name: file.name,
         src: id,
-        remove: async () => {
+        remove: () => {
           const entry = registryRef.current.get(id);
           if (entry) URL.revokeObjectURL(entry.objectUrl);
           registryRef.current.delete(id);
           syncObjectUrls();
+          return Promise.resolve();
         },
       });
     },

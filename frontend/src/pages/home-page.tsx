@@ -1,10 +1,8 @@
 import {
   Alert,
-  Box,
   Button,
   Container,
   Flex,
-  Group,
   Loader,
   Modal,
   Paper,
@@ -18,7 +16,7 @@ import { useLocalStorageState, useRequest } from "ahooks";
 import React, { useCallback, useMemo, useState } from "react";
 import { fetchGet, fetchPost } from "../api/fetch-utils";
 import { loadMetaCategories } from "../api/hooks";
-import { User, useUser } from "../auth";
+import { useUser } from "../auth";
 import CategoryCard from "../components/category-card";
 import RecentlyViewedExams from "../components/recently-viewed-exams";
 import Grid from "../components/grid";
@@ -27,11 +25,11 @@ import useSearch from "../hooks/useSearch";
 import useTitle from "../hooks/useTitle";
 import { CategoryMetaData, MetaCategory } from "../interfaces";
 import CourseCategoriesPanel from "../components/course-categories-panel";
-import { IconFilter, IconPlus, IconSearch } from "@tabler/icons-react";
+import { IconFilter, IconPlus } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { EditMeta1, EditMeta2 } from "../components/edit-meta-categories";
 import CollapseWrapper from "../components/collapse-wrapper";
-import clsx from "clsx";
+import { clsx } from "clsx";
 import classes from "../utils/focus-outline.module.css";
 
 const displayNameGetter = (data: CategoryMetaData) => data.displayname;
@@ -69,7 +67,7 @@ const mapToCategories = (
       categories: categoryNames,
     } of meta2) {
       const categories = categoryNames
-        .map(name => categoryMap.get(name)!)
+        .map(name => categoryMap.get(name))
         .filter(a => a !== undefined);
       for (const category of categories) assignedCategories.add(category);
       if (categories.length === 0) continue;
@@ -105,7 +103,7 @@ const AddCategory: React.FC<{ onAddCategory: () => void }> = ({
   });
   const [categoryName, setCategoryName] = useState("");
   const onSubmit = () => {
-    run(categoryName);
+    void run(categoryName);
   };
 
   return (
@@ -222,7 +220,7 @@ export const CategoryList: React.FC = () => {
   );
 
   const onChange = useCallback(() => {
-    run();
+    void run();
   }, [run]);
   const [panelIsOpen, { toggle: togglePanel }] = useDisclosure();
 

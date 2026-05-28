@@ -93,9 +93,10 @@ const FileIcon: React.FC<{ filename: string }> = ({ filename }) => {
   return <IconFile />;
 };
 
-interface Props {}
-const DocumentPage: React.FC<Props> = () => {
+const DocumentPage: React.FC = () => {
   const { author, slug } = useParams() as { slug: string; author: string };
+  const [tab, setTab] = useState<string | null>("none");
+
   const [error, _, data, mutate, reload] = useDocument(
     author,
     slug,
@@ -108,7 +109,6 @@ const DocumentPage: React.FC<Props> = () => {
     data && { slug: data.category, displayname: data.category_display_name },
   );
 
-  const [tab, setTab] = useState<string | null>("none");
   const activeFile = !Number.isNaN(Number(tab))
     ? getFile(data, Number(tab))
     : undefined;
@@ -160,7 +160,7 @@ const DocumentPage: React.FC<Props> = () => {
         {data && (
           <Box my="sm">
             <Flex justify="space-between" align="center">
-              <Title>{data.display_name ?? slug}</Title>
+              <Title>{data.display_name}</Title>
               <Group>
                 <IconButton
                   icon={<IconDownload />}
@@ -190,7 +190,6 @@ const DocumentPage: React.FC<Props> = () => {
                   withArrow
                   withinPortal
                   label={`Created ${formatDistanceToNow(new Date(data.time))} ago`}
-                  disabled={data.time === null}
                 >
                   <Text c="dimmed" component="span">
                     updated {formatDistanceToNow(new Date(data.edittime))} ago

@@ -5,7 +5,7 @@ const VERSION_HEADING = /^## (v\S+).*[\s]*$/gm;
 const parseVersions = (): { version: string; index: number }[] => {
   const matches: { version: string; index: number }[] = [];
   for (const m of changelogSource.matchAll(VERSION_HEADING)) {
-    matches.push({ version: m[1], index: m.index ?? 0 });
+    matches.push({ version: m[1], index: m.index });
   }
   return matches;
 };
