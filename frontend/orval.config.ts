@@ -1,9 +1,22 @@
 import { readFile } from "node:fs/promises";
+import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 import { defineConfig } from "orval";
 
-async function resolveOpenApiPath() {
+async function resolveOpenApiPath(): Promise<string> {
+  // Prioritise getting schema over http
+  // If it exists, it is most up-to-date
+  const backendHost = process.env.BACKEND_HOST ?? "localhost";
+  const backendUrl = `http://${backendHost}:8081/api/openapi.json`;
+
+  try {
+    const res = await fetch(backendUrl);
+    if (res.ok) {
+      return backendUrl;
+    }
+  } catch {}
+
   const frontendRoot = import.meta.url;
   const comsolRoot = new URL("../", frontendRoot);
 
@@ -14,13 +27,23 @@ async function resolveOpenApiPath() {
 
   try {
     await readFile(dockerPath);
-    return dockerPath;
-  } catch {
-    return hostPath;
-  }
+    return fileURLToPath(dockerPath);
+  } catch {}
+
+  try {
+    await readFile(hostPath);
+    return fileURLToPath(hostPath);
+  } catch {}
+
+  throw new Error(
+    "Could not find OpenAPI schema. Try this of the following\n" +
+      "  - Start the backend server one localhost:8081\n" +
+      "  - Run `uv run manage.py export_openapi`.\n" +
+      "  - Become a carrot farmer in Uzbekistan and avoid all of this hassle.",
+  );
 }
 
-const inputPath = await resolveOpenApiPath();
+const inputTarget = await resolveOpenApiPath();
 
 export default defineConfig({
   api: {
@@ -42,7 +65,7 @@ export default defineConfig({
       },
     },
     input: {
-      target: fileURLToPath(inputPath),
+      target: inputTarget,
     },
   },
 });
