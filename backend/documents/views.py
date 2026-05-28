@@ -144,7 +144,7 @@ class DocumentRootView(View):
         objects = Document.objects.annotate(
             like_count=like_count,
             liked=user_liked(request),
-        ).prefetch_related("category", "author")
+        ).select_related("category", "author", "document_type")
 
         liked_by = request.GET.get("liked_by")
         username = request.GET.get("username")
