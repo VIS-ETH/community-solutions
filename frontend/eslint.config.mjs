@@ -30,7 +30,7 @@ export default defineConfig(
         languageOptions: {
             parserOptions: {
                 projectService: {
-                    allowDefaultProject: ["vite.config.ts", "vite-env.d.ts"],
+                    allowDefaultProject: ["vite.config.ts", "vite-env.d.ts", "orval.config.ts"],
                 },
             },
         },
