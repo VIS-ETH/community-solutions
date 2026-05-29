@@ -71,7 +71,7 @@ export function getHeaders(requestInit?: RequestInit) {
   if (localStorage.getItem("simulate_nonadmin")) {
     headers.set("SimulateNonAdmin", "true");
   }
-  return headers;
+  return Object.fromEntries(headers);
 }
 /**
  * `NamedBlob` is essentially a 2-tuple consisting of a `Blob` and a `string` acting as
