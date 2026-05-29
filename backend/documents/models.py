@@ -29,6 +29,12 @@ class Document(ExportModelOperationsMixin("document"), models.Model):
     author = models.ForeignKey("auth.User", on_delete=models.CASCADE)
     likes = models.ManyToManyField("auth.User", related_name="liked_documents")
     api_key = models.CharField(max_length=1024, default=generate_api_key)
+    pending_transfer_user = models.ForeignKey(
+        "auth.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="pending_document_transfer_receive_requests",
+    )
 
     def current_user_can_delete(self, request):
         is_admin = auth_check.has_admin_rights_for_document(request, self)
@@ -37,6 +43,11 @@ class Document(ExportModelOperationsMixin("document"), models.Model):
 
     def current_user_can_edit(self, request):
         return self.current_user_can_delete(request)
+
+    def current_user_can_accept_transfer(self, request):
+        is_admin = auth_check.has_admin_rights_for_document(request, self)
+        is_transferee = self.pending_transfer_user.pk == request.user.pk
+        return is_admin or is_transferee
 
     def save(self, *args, **kwargs):
         # makes sure slugs are always unique and get incremented
