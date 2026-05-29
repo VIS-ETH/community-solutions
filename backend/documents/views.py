@@ -83,6 +83,12 @@ def get_document_obj(
     include_comments: bool = False,
     include_files: bool = False,
 ):
+    pending_transfer_user = (
+        document.pending_transfer_user.username
+        if document.pending_transfer_user is not None
+        else None
+    )
+
     obj = {
         "slug": document.slug,
         "display_name": document.display_name,
@@ -96,6 +102,7 @@ def get_document_obj(
         "can_delete": document.current_user_can_delete(request),
         "time": document.time,
         "edittime": document.edittime,
+        "pending_transfer_user": pending_transfer_user,
     }
     if hasattr(document, "like_count"):
         obj["like_count"] = document.like_count
