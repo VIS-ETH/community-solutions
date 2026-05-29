@@ -73,17 +73,6 @@ export function getHeaders(requestInit?: RequestInit) {
   }
   return headers;
 }
-/**
- * `NamedBlob` is essentially a 2-tuple consisting of a `Blob` and a `string` acting as
- * a filename. A `NamedBlob` can be passed to `performDataRequest` if the `Blob` should have
- * a multipart filename attached to it.
- */
-export class NamedBlob {
-  constructor(
-    public blob: Blob,
-    public filename: string,
-  ) {}
-}
 
 export async function performDataRequest<T>(
   method: string,
@@ -117,8 +106,6 @@ export async function performDataRequest<T>(
       if (value === undefined) continue;
       if (value instanceof File || value instanceof Blob) {
         formData.append(key, value);
-      } else if (value instanceof NamedBlob) {
-        formData.append(key, value.blob, value.filename);
       } else {
         formData.append(key, value.toString());
       }

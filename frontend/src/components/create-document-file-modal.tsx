@@ -1,7 +1,6 @@
 import { Alert, Button, FileInput, Stack, TextInput } from "@mantine/core";
 import * as React from "react";
 import { useState } from "react";
-import { NamedBlob } from "../api/fetch-utils";
 import { Mutate, useCreateDocumentFile } from "../api/hooks";
 import { Document } from "../interfaces";
 import { IconCloudUpload, IconPlus } from "@tabler/icons-react";
@@ -60,10 +59,9 @@ const CreateDocumentFileModal: React.FC<Props> = ({
             createDocumentFile(
               displayName.trim(),
               file ??
-                new NamedBlob(
-                  new Blob([], { type: "application/octet-stream" }),
-                  "document.md",
-                ),
+                new File([], "document.md", {
+                  type: "text/markdown",
+                }),
             );
           }}
         >
