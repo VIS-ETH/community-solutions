@@ -113,6 +113,7 @@ class DocumentSchema(Schema):
     category_display_name: str
     author: str
     author_displayname: str
+    pending_transfer_user: str | None
     can_edit: bool
     can_delete: bool
 
@@ -221,6 +222,11 @@ def make_document_response(
         files=[make_file_response(f) for f in document.files.all()]
         if include_files
         else None,
+        pending_transfer_user=(
+            document.pending_transfer_user.username
+            if document.pending_transfer_user is not None
+            else None
+        ),
     )
 
 
