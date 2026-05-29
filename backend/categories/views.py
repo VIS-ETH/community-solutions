@@ -1,7 +1,6 @@
 from django.conf import settings
+from django.db.models import Exists, OuterRef
 from django.shortcuts import get_object_or_404
-from django.db.models import OuterRef, Exists
-
 
 from answers.models import ExamUserSolved
 from categories.models import Category, MetaCategory
@@ -130,10 +129,9 @@ def list_exams(request, slug):
     )
 
     exams = (
-        cat.exam_set
-           .select_related("exam_type", "import_claim", "counts")
-           .annotate(user_solved=Exists(solved_subquery))
-           .all()
+        cat.exam_set.select_related("exam_type", "import_claim", "counts")
+        .annotate(user_solved=Exists(solved_subquery))
+        .all()
     )
 
     res = sorted(

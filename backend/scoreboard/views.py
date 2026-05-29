@@ -4,7 +4,6 @@ from django.db.models.expressions import Case, When
 from django.db.models.functions import Concat
 from django.shortcuts import get_object_or_404
 
-from answers.models import Answer
 from myauth import auth_check
 from myauth.models import MyUser
 from util import func_cache, response
@@ -24,9 +23,7 @@ def get_user_scores(user, res):
         {
             "rank": rank,
             "total_users": total_users,
-            "score": scores.document_likes
-            + scores.upvotes
-            - scores.downvotes,
+            "score": scores.document_likes + scores.upvotes - scores.downvotes,
             "score_answers": scores.answers,
             "score_comments": scores.comments,
             "score_cuts": scores.cuts,
@@ -107,9 +104,7 @@ def get_scoreboard_top(scoretype, limit):
 @response.request_get()
 @auth_check.require_login
 def userinfo(request, username):
-    user = get_object_or_404(
-          MyUser.objects.select_related("scores"), username=username
-      )
+    user = get_object_or_404(MyUser.objects.select_related("scores"), username=username)
     res = {
         "username": username,
         "displayName": user.displayname(),
