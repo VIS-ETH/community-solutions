@@ -17,19 +17,22 @@ def get_user_scores(user, res):
         rank = list.index(user.username) + 1
     else:
         rank = total_users
+
+    scores = user.scores
+
     res.update(
         {
             "rank": rank,
             "total_users": total_users,
-            "score": user.scores.document_likes
-            + user.scores.upvotes
-            - user.scores.downvotes,
-            "score_answers": user.answer_set.filter(kind=Answer.Kind.PERSONAL).count(),
-            "score_comments": user.answers_comments.count(),
-            "score_cuts": user.answersection_set.count(),
-            "score_legacy": user.answer_set.filter(kind=Answer.Kind.LEGACY).count(),
-            "score_official": user.answer_set.filter(kind=Answer.Kind.OFFICIAL).count(),
-            "score_documents": user.document_set.count(),
+            "score": scores.document_likes
+            + scores.upvotes
+            - scores.downvotes,
+            "score_answers": scores.answers,
+            "score_comments": scores.comments,
+            "score_cuts": scores.cuts,
+            "score_legacy": scores.legacy,
+            "score_official": scores.official,
+            "score_documents": scores.documents,
         }
     )
     return res
@@ -104,7 +107,9 @@ def get_scoreboard_top(scoretype, limit):
 @response.request_get()
 @auth_check.require_login
 def userinfo(request, username):
-    user = get_object_or_404(MyUser, username=username)
+    user = get_object_or_404(
+          MyUser.objects.select_related("scores"), username=username
+      )
     res = {
         "username": username,
         "displayName": user.displayname(),
