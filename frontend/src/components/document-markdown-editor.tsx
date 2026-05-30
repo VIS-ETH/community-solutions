@@ -1,7 +1,6 @@
 import { Button, Loader } from "@mantine/core";
 import { useRequest } from "ahooks";
 import React, { lazy, Suspense, useState } from "react";
-import { NamedBlob } from "../api/fetch-utils";
 import { usePendingImages } from "./Editor/pending-images";
 import { useUpdateDocumentFile } from "../api/hooks";
 import { Document, DocumentFile } from "../interfaces";
@@ -30,21 +29,26 @@ const DocumentMarkdownEditor: React.FC<Props> = ({ document, file, url }) => {
     prev: [],
     next: [],
   });
-  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } = usePendingImages();
+  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
+    usePendingImages();
   return (
     <Suspense fallback={<Loader />}>
       <Editor
         value={draftText}
         onChange={setDraftText}
         imageHandler={deferredImageHandler}
-        preview={value => <MarkdownText value={value} pendingImages={pendingObjectUrls} />}
+        preview={value => (
+          <MarkdownText value={value} pendingImages={pendingObjectUrls} />
+        )}
         undoStack={undoStack}
         setUndoStack={setUndoStack}
       />
       <Button
         onClick={async () => {
           const finalText = await flushPendingImages(draftText);
-          updateDocument({ file: new NamedBlob(new Blob([finalText]), "file.md") });
+          updateDocument({
+            file: new File([finalText], "file.md", { type: "text/markdown" }),
+          });
         }}
         loading={loading}
         leftSection={<IconDeviceFloppy />}
