@@ -22,13 +22,7 @@ import {
 } from "../interfaces";
 import PDF from "../pdf/pdf-renderer";
 import { getDocument } from "../pdf/pdfjs";
-import {
-  fetchDelete,
-  fetchGet,
-  fetchPost,
-  fetchPut,
-  NamedBlob,
-} from "./fetch-utils";
+import { fetchDelete, fetchGet, fetchPost, fetchPut } from "./fetch-utils";
 
 // Interval to consider "close succession" to de-dupe requests
 const RAPID_SUCCESSIVE_REQUESTS_DEDUPE_INTERVAL = 500; // milliseconds
@@ -788,7 +782,7 @@ export const createDocumentFile = async (
   author: string,
   documentSlug: string,
   display_name: string,
-  file: NamedBlob | File,
+  file: File,
 ) => {
   return (
     await fetchPost(`/api/document/${author}/${documentSlug}/files/`, {
@@ -803,7 +797,7 @@ export const useCreateDocumentFile = (
   onSuccess?: (res: DocumentFile) => void,
 ) =>
   useRequest(
-    (display_name: string, file: NamedBlob | File) =>
+    (display_name: string, file: File) =>
       createDocumentFile(author, documentSlug, display_name, file),
     { manual: true, onSuccess },
   );
@@ -829,7 +823,7 @@ export const useDeleteDocumentFile = (
 
 interface DocumentFileUpdate {
   display_name?: string;
-  file?: NamedBlob | File;
+  file?: File;
 }
 export const updateDocumentFile = async (
   author: string,
