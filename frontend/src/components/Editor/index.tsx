@@ -58,7 +58,7 @@ const Editor: React.FC<Props> = ({
   );
 
   const setSelectionRangeRef = useRef<(newSelection: Range) => void>(
-    (a: Range) => undefined,
+    () => undefined,
   );
   const getSelectionRangeRef = useRef<() => Range | undefined>(() => ({
     start: 0,

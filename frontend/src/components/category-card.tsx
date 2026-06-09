@@ -1,4 +1,4 @@
-import { Card, Text, Progress, Anchor, Stack, Tooltip, useComputedColorScheme, useMantineTheme } from "@mantine/core";
+import { Card, Text, Progress, Anchor, Stack, Tooltip } from "@mantine/core";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authenticated, login } from "../api/fetch-utils";

@@ -2,7 +2,6 @@ import { useDisclosure } from "@mantine/hooks";
 import { fetchPost } from "../api/fetch-utils";
 import useInitialState from "../hooks/useInitialState";
 import { useRequest } from "ahooks";
-import { useMetaCategories } from "../api/hooks";
 import { useEffect, useMemo } from "react";
 import {
   ActionIcon,
@@ -66,7 +65,7 @@ export const EditMeta1: React.FC<EditMeta1Props> = ({
       onChange();
     },
   });
-  const { loading: deleteLoading, run: deleteRun } = useRequest(deleteMeta1, {
+  const { run: deleteRun } = useRequest(deleteMeta1, {
     manual: true,
     onSuccess: () => {
       onChange();
@@ -172,7 +171,7 @@ export const EditMeta2: React.FC<EditMeta2Props> = ({
     },
   });
 
-  const { loading: deleteLoading, run: deleteRun } = useRequest(deleteMeta2, {
+  const { run: deleteRun } = useRequest(deleteMeta2, {
     manual: true,
     onSuccess: () => {
       onChange();

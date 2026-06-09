@@ -6,7 +6,6 @@ import {
   Group,
   Stack,
   useMantineTheme,
-  Text,
 } from "@mantine/core";
 
 import { NavItem, translate } from "./GlobalNav";

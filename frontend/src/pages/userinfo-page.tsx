@@ -51,7 +51,7 @@ const UserPage: React.FC = () => {
               {!isMyself && !user.isAdmin && (
                 <Alert color="gray">There's nothing here</Alert>
               )}
-              {isMyself && <UserNotifications username={username} />}
+              {isMyself && <UserNotifications />}
               {(isMyself || user.isAdmin) && (
                 <UserPayments username={username} />
               )}
@@ -67,7 +67,7 @@ const UserPage: React.FC = () => {
             <UserDocuments username={username} userInfo={userInfo} />
           </Tabs.Panel>
           <Tabs.Panel value="settings" pt="sm">
-            {isMyself && <UserNotificationsSettings username={username} />}
+            {isMyself && <UserNotificationsSettings />}
           </Tabs.Panel>
         </Tabs>
       </Container>

@@ -1,10 +1,8 @@
 import {
   Alert,
-  Box,
   Button,
   Container,
   Flex,
-  Group,
   Loader,
   Modal,
   Paper,
@@ -18,7 +16,7 @@ import { useLocalStorageState, useRequest } from "ahooks";
 import React, { useCallback, useMemo, useState } from "react";
 import { fetchGet, fetchPost } from "../api/fetch-utils";
 import { loadMetaCategories } from "../api/hooks";
-import { User, useUser } from "../auth";
+import { useUser } from "../auth";
 import CategoryCard from "../components/category-card";
 import RecentlyViewedExams from "../components/recently-viewed-exams";
 import Grid from "../components/grid";
@@ -27,7 +25,7 @@ import useSearch from "../hooks/useSearch";
 import useTitle from "../hooks/useTitle";
 import { CategoryMetaData, MetaCategory } from "../interfaces";
 import CourseCategoriesPanel from "../components/course-categories-panel";
-import { IconFilter, IconPlus, IconSearch } from "@tabler/icons-react";
+import { IconFilter, IconPlus } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { EditMeta1, EditMeta2 } from "../components/edit-meta-categories";
 import CollapseWrapper from "../components/collapse-wrapper";

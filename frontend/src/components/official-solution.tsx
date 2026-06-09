@@ -1,13 +1,6 @@
 import { PDFDocumentLoadingTask } from "pdfjs-dist";
 import { getDocument } from "../pdf/pdfjs";
-import React, {
-  forwardRef,
-  memo,
-  useMemo,
-  useRef,
-  useEffect,
-  useState,
-} from "react";
+import React, { memo, useMemo, useRef, useEffect, useState } from "react";
 import { ComponentRenderer } from "./markdown-text";
 import { Tooltip } from "@mantine/core";
 import { fetchGet } from "../api/fetch-utils";

@@ -133,11 +133,8 @@ const FlaggedTable: React.FC<FlaggedTableProps> = ({ flaggedList, typed }) => {
 };
 
 const FlaggedContent: React.FC = () => {
-  const {
-    error: flaggedError,
-    loading: flaggedLoading,
-    data: flaggedList,
-  } = useRequest(loadFlagged);
+  const { loading: flaggedLoading, data: flaggedList } =
+    useRequest(loadFlagged);
 
   const [mode, setMode] = useLocalStorageState("flaggedMode", "noGrouping");
 
