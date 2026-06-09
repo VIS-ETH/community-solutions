@@ -14,13 +14,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import React, { useEffect, useState } from "react";
-import {
-  Link,
-  redirect,
-  useLocation,
-  useNavigate,
-  useParams,
-} from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { download } from "../api/fetch-utils";
 import {
   acceptDocumentTransfer,
