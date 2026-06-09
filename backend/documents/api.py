@@ -1012,3 +1012,51 @@ def move_document_file(
         moved_file.save()
 
     return 204, None
+
+
+@router.put(
+    "{username}/{slug}/transfer/accept",
+    response={200: ValueWrapped[DocumentSchema], 403: ErrorSchema},
+    operation_id="acceptDocumentTransfer",
+)
+@auth_check.require_login
+def accept_document_transfer(request, username: str, slug: str):
+    document = get_object_or_404(Document, author__username=username, slug=slug)
+
+    if not document.current_user_can_accept_transfer(request):
+        return not_allowed()
+
+    document.author = document.pending_transfer_user
+    document.pending_transfer_user = None
+    document.api_key = generate_api_key()
+
+    document.edittime = timezone.now()
+    document.save()
+
+    return {
+        "value": make_document_response(document, request),
+    }
+
+
+@router.put(
+    "{username}/{slug}/transfer/reject",
+    response={200: ValueWrapped[DocumentSchema], 403: ErrorSchema},
+    operation_id="rejectDocumentTransfer",
+)
+@auth_check.require_login
+def reject_document_transfer(request, username: str, slug: str):
+    document = get_object_or_404(Document, author__username=username, slug=slug)
+
+    if not document.current_user_can_accept_transfer(
+        request
+    ) and not document.current_user_can_edit(request):
+        return not_allowed()
+
+    document.pending_transfer_user = None
+    document.edittime = timezone.now()
+
+    document.save()
+
+    return {
+        "value": make_document_response(document, request),
+    }

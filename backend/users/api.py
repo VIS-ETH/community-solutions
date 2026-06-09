@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db.models import CharField, Q, Value
 from django.db.models.functions import Concat
-from ninja import Router, Schema
+from ninja import ModelSchema, Router
 
 from myauth import auth_check, models
 from util.response import not_possible
@@ -11,13 +11,20 @@ router = Router(tags=["Users"])
 User = get_user_model()
 
 
-class UserSchema(Schema):
+class UserSchema(ModelSchema):
+    class Meta:
+        model = models.MyUser
+        fields = ["id", "username"]
+
     id: int
     username: str
     display_name: str
 
     @staticmethod
     def resolve_display_name(obj):
+        if isinstance(obj, UserSchema):
+            return obj.display_name
+
         return models.get_my_user(obj).displayname()
 
 

@@ -39,7 +39,6 @@ import {
   useUpdateDocument,
 } from "../api/hooks/documents";
 import type { DocumentSchema } from "../api/model/documentSchema";
-import { useUser } from "../auth";
 import type { UserSchema } from "../api/model/userSchema";
 
 const Editor = lazy(() => import("./Editor"));
@@ -121,7 +120,6 @@ const DocumentSettings: React.FC<Props> = ({ document, refetch }) => {
   const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
     usePendingImages();
   const [transferUser, setTransferUser] = useState<UserSchema | null>();
-  const user = useUser();
 
   const [
     addModalIsOpen,
@@ -201,7 +199,7 @@ const DocumentSettings: React.FC<Props> = ({ document, refetch }) => {
           <UserSelect
             label="Transfer to User"
             value={transferUser ?? document.pending_transfer_user}
-            filter={other => other.id !== user?.userid}
+            filter={other => other.id !== document.author.id}
             onChange={setTransferUser}
           />
           <Flex justify="end">

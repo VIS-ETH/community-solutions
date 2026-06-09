@@ -49,7 +49,6 @@ import { useDisclosure } from "@mantine/hooks";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
 import { useScrollToPermalink } from "../hooks/useScrollToPermalink";
 import { useUser, type User } from "../auth";
-import type { UserSchema } from "../api/model/userSchema";
 import type { DocumentFileSchema } from "../api/model/documentFileSchema";
 import type { DocumentSchema } from "../api/model/documentSchema";
 import {
@@ -58,6 +57,7 @@ import {
   useRejectDocumentTransfer,
 } from "../api/hooks/documents";
 import serverData from "../utils/server-data";
+import type { UserSchema } from "../api/model";
 
 const isPdf = (file: DocumentFileSchema) =>
   file.mime_type === "application/pdf";
