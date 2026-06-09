@@ -25,7 +25,7 @@ class UserSchema(ModelSchema):
         return models.get_my_user(obj).displayname()
 
 
-@router.get("/search/", operation_id="userSearch", response=list[UserSchema])
+@router.get("/search", operation_id="userSearch", response=list[UserSchema])
 @auth_check.require_login
 def user_search(request, q: str, limit: int = 20):
     # Normalise it a bit for better search results
