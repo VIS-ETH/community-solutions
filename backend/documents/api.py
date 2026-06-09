@@ -3,6 +3,7 @@ import os.path
 from typing import Literal
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import Count, Exists, Max, OuterRef, Prefetch, Q
 from django.shortcuts import get_object_or_404
@@ -23,6 +24,7 @@ from documents.models import (
 from myauth import auth_check
 from myauth.models import get_my_user
 from notifications import notification_util
+from users.api import UserSchema
 from util import s3_util
 from util.response import ErrorSchema, not_allowed, not_possible
 from util.schemas import ValueWrapped
@@ -111,9 +113,8 @@ class DocumentSchema(Schema):
     category: str
     document_type: str
     category_display_name: str
-    author: str
-    author_displayname: str
-    pending_transfer_user: str | None
+    author: UserSchema
+    pending_transfer_user: UserSchema | None
     can_edit: bool
     can_delete: bool
 
@@ -146,6 +147,7 @@ class UpdateDocumentSchema(Schema):
     display_name: str | None = None
     category: str | None = None
     document_type: str | None = None
+    pending_transfer_user: str | None = None
 
 
 class DocumentWrappedSchema(ValueWrapped[DocumentSchema]):
@@ -207,8 +209,7 @@ def make_document_response(
         category=document.category.slug,
         document_type=document.document_type.display_name,
         category_display_name=document.category.displayname,
-        author=document.author.username,
-        author_displayname=get_my_user(document.author).displayname(),
+        author=document.author,
         can_edit=document.current_user_can_edit(request),
         can_delete=document.current_user_can_delete(request),
         time=document.time,
@@ -222,11 +223,7 @@ def make_document_response(
         files=[make_file_response(f) for f in document.files.all()]
         if include_files
         else None,
-        pending_transfer_user=(
-            document.pending_transfer_user.username
-            if document.pending_transfer_user is not None
-            else None
-        ),
+        pending_transfer_user=document.pending_transfer_user,
     )
 
 
@@ -457,6 +454,24 @@ def update_document(
         document.save()
         if old_document_type.id > 4 and not old_document_type.type_set.exists():
             old_document_type.delete()
+        edited = True
+
+    if "pending_transfer_user" in update_data:
+        if not can_edit:
+            return not_allowed()
+
+        target_username: str | None = update_data["pending_transfer_user"]
+
+        if target_username is None:
+            document.pending_transfer_user = None
+        else:
+            if target_username == document.author.username:
+                return not_possible("Cannot transfer document to same user.")
+
+            user = get_object_or_404(User, username=target_username)
+
+            document.pending_transfer_user = user
+
         edited = True
 
     if edited:

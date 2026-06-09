@@ -56,7 +56,7 @@ const CreateDocumentFileModal: React.FC<Props> = ({
           disabled={isPending || displayName.trim() === ""}
           onClick={() => {
             mutate({
-              username: document.author,
+              username: document.author.username,
               slug: document.slug,
               data: {
                 display_name: displayName.trim(),

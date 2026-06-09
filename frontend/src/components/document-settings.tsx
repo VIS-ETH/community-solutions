@@ -31,6 +31,7 @@ import {
 } from "@tabler/icons-react";
 import Creatable from "./creatable";
 import { useDisclosure } from "@mantine/hooks";
+import UserSelect from "./user-select.js";
 import {
   useDeleteDocument,
   useListDocumentTypes,
@@ -38,6 +39,8 @@ import {
   useUpdateDocument,
 } from "../api/hooks/documents";
 import type { DocumentSchema } from "../api/model/documentSchema";
+import { useUser } from "../auth";
+import type { UserSchema } from "../api/model/userSchema";
 
 const Editor = lazy(() => import("./Editor"));
 
@@ -68,6 +71,7 @@ const DocumentSettings: React.FC<Props> = ({ document, refetch }) => {
         setDisplayName(undefined);
         setCategory(undefined);
         setDocumentType(undefined);
+        setTransferUser(undefined);
 
         if (newDocument.slug !== document.slug) {
           void navigate(
@@ -116,6 +120,8 @@ const DocumentSettings: React.FC<Props> = ({ document, refetch }) => {
   });
   const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
     usePendingImages();
+  const [transferUser, setTransferUser] = useState<UserSchema | null>();
+  const user = useUser();
 
   const [
     addModalIsOpen,
@@ -192,6 +198,12 @@ const DocumentSettings: React.FC<Props> = ({ document, refetch }) => {
               />
             </Suspense>
           </div>
+          <UserSelect
+            label="Transfer to User"
+            value={transferUser ?? document.pending_transfer_user}
+            filter={other => other.id !== user?.userid}
+            onChange={setTransferUser}
+          />
           <Flex justify="end">
             <Button
               loading={updateDocument.isPending}
@@ -202,14 +214,23 @@ const DocumentSettings: React.FC<Props> = ({ document, refetch }) => {
                   descriptionDraftText !== undefined
                     ? await flushPendingImages(descriptionDraftText)
                     : undefined;
+
+                // undefined is for unchanged (we don't want to edit if nothing changed)
+                // null is to unset
+                let pendingTransferUser = undefined;
+                if (transferUser !== undefined) {
+                  pendingTransferUser = transferUser?.username ?? null;
+                }
+
                 updateDocument.mutate({
-                  username: document.author,
+                  username: document.author.username,
                   slug: document.slug,
                   data: {
                     display_name: displayName,
                     category,
                     document_type: documentType,
                     description: finalDescription,
+                    pending_transfer_user: pendingTransferUser,
                   },
                 });
               }}
@@ -229,7 +250,7 @@ const DocumentSettings: React.FC<Props> = ({ document, refetch }) => {
             loading={regenerate.isPending}
             onClick={() =>
               regenerate.mutate({
-                username: document.author,
+                username: document.author.username,
                 slug: document.slug,
               })
             }
@@ -294,7 +315,7 @@ const DocumentSettings: React.FC<Props> = ({ document, refetch }) => {
             <Button
               onClick={() => {
                 deleteDocument.mutate({
-                  username: document.author,
+                  username: document.author.username,
                   slug: document.slug,
                 });
               }}

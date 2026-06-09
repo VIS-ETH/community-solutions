@@ -73,7 +73,7 @@ const DocumentMarkdownEditor: React.FC<Props> = ({ document, file, url }) => {
           const finalText = await flushPendingImages(draftText);
           mutate({
             slug: document.slug,
-            username: document.author,
+            username: document.author.username,
             id: file.oid,
             data: {
               file: new File([finalText], "file.md", { type: "text/markdown" }),

@@ -3,7 +3,7 @@ from django.db.models import CharField, Q, Value
 from django.db.models.functions import Concat
 from ninja import Router, Schema
 
-from myauth import auth_check
+from myauth import auth_check, models
 from util.response import not_possible
 
 router = Router(tags=["Users"])
@@ -12,11 +12,16 @@ User = get_user_model()
 
 
 class UserSchema(Schema):
+    id: int
     username: str
-    full_name: str
+    display_name: str
+
+    @staticmethod
+    def resolve_display_name(obj):
+        return models.get_my_user(obj).displayname()
 
 
-@router.get("/search/", operation_id="userSearch", response=list[UserSchema])
+@router.get("/search", operation_id="userSearch", response=list[UserSchema])
 @auth_check.require_login
 def user_search(request, q: str, limit: int = 20):
     # Normalise it a bit for better search results
@@ -28,10 +33,8 @@ def user_search(request, q: str, limit: int = 20):
     if not q:
         return []
 
-    return list(
-        User.objects.annotate(
-            full_name=Concat(
-                "first_name", Value(" "), "last_name", output_field=CharField()
-            )
-        ).filter(Q(username__icontains=q) | Q(full_name__icontains=q))[:limit]
-    )
+    return User.objects.annotate(
+        display_name=Concat(
+            "first_name", Value(" "), "last_name", output_field=CharField()
+        )
+    ).filter(Q(username__icontains=q) | Q(display_name__icontains=q))[:limit]

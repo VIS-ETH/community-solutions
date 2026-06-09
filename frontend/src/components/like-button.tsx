@@ -26,7 +26,7 @@ const LikeButton: React.FC<Props> = ({ document, refetch }) => {
       variant="subtle"
       onClick={() => {
         updateDocument.mutate({
-          username: document.author,
+          username: document.author.username,
           slug: document.slug,
           data: {
             liked: !document.liked,
