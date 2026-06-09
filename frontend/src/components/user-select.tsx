@@ -6,12 +6,17 @@ import type { UserSchema } from "../api/model/userSchema.js";
 
 interface UserSelectProps {
   label: string;
-  value: number | undefined;
-  // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-  onChange(this: void, user: UserSchema | undefined): void;
+  value: number | null;
+  onChange: (user: UserSchema | undefined) => void;
+  filter: (user: UserSchema) => boolean;
 }
 
-const UserSelect: React.FC<UserSelectProps> = ({ onChange, value, label }) => {
+const UserSelect: React.FC<UserSelectProps> = ({
+  onChange,
+  filter: shouldFilter,
+  value,
+  label,
+}) => {
   const [searchValue, setSearchValue] = useState("");
   const [debouncedSearch] = useDebouncedValue(searchValue, 300);
 
@@ -21,16 +26,18 @@ const UserSelect: React.FC<UserSelectProps> = ({ onChange, value, label }) => {
 
   const { data: initialUser, isLoading: isInitialLoading } = useUser(value!, {
     query: {
-      enabled: value !== undefined && !users?.some(u => u.id === value),
+      enabled: value != null && !users?.some(u => u.id === value),
     },
   });
 
   const selectData =
-    users?.map(user => ({
-      value: String(user.id),
-      label: user.full_name,
-      user,
-    })) ?? [];
+    users
+      ?.filter(user => shouldFilter(user))
+      ?.map(user => ({
+        value: String(user.id),
+        label: user.displayname,
+        user,
+      })) ?? [];
 
   if (
     initialUser &&
@@ -38,7 +45,7 @@ const UserSelect: React.FC<UserSelectProps> = ({ onChange, value, label }) => {
   ) {
     selectData.unshift({
       value: String(initialUser.id),
-      label: initialUser.full_name,
+      label: initialUser.displayname,
       user: initialUser,
     });
   }
@@ -63,7 +70,7 @@ const UserSelect: React.FC<UserSelectProps> = ({ onChange, value, label }) => {
 
         return (
           <Group gap="sm">
-            <Text size="sm">{user.full_name}</Text>
+            <Text size="sm">{user.displayname}</Text>
             <Text size="xs" c="dimmed">
               @{user.username}
             </Text>

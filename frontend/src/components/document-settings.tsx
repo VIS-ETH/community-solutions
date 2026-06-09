@@ -39,7 +39,8 @@ import {
 } from "@tabler/icons-react";
 import Creatable from "./creatable";
 import { useDisclosure } from "@mantine/hooks";
-import UserSelect from "./user-select.js";
+import UserSelect from "./user-select";
+import { useUser } from "../auth";
 
 const Editor = lazy(() => import("./Editor"));
 
@@ -113,6 +114,7 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate, reload }) => {
   const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
     usePendingImages();
   const [transferUser, setTransferUser] = useState<number | undefined>();
+  const user = useUser();
 
   const [
     addModalIsOpen,
@@ -191,6 +193,7 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate, reload }) => {
           <UserSelect
             label="Transfer to User"
             value={transferUser ?? data.pending_transfer_user}
+            filter={other => other.id !== user?.userid}
             onChange={user => {
               setTransferUser(user?.id);
             }}

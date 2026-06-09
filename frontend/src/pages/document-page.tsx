@@ -14,9 +14,20 @@ import {
   Tooltip,
 } from "@mantine/core";
 import React, { useEffect, useState } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import {
+  Link,
+  redirect,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import { download } from "../api/fetch-utils";
-import { useDocument } from "../api/hooks";
+import {
+  acceptDocumentTransfer,
+  rejectDocumentTransfer,
+  useDocument,
+} from "../api/hooks";
+import { useUser as useUserApi } from "../api/hooks/users";
 import IconButton from "../components/icon-button";
 import LikeButton from "../components/like-button";
 import ContentContainer from "../components/secondary-container";
@@ -32,6 +43,7 @@ import { Document, DocumentFile } from "../interfaces";
 import MarkdownText from "../components/markdown-text";
 import { differenceInSeconds, formatDistanceToNow } from "date-fns";
 import {
+  IconCheck,
   IconChevronRight,
   IconDownload,
   IconEdit,
@@ -40,11 +52,12 @@ import {
   IconFileTypeZip,
   IconMessage,
   IconSettings,
+  IconX,
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
 import { useScrollToPermalink } from "../hooks/useScrollToPermalink";
-import { useUser } from "../auth";
+import { useUser, type User } from "../auth";
 
 const isPdf = (file: DocumentFile) => file.mime_type === "application/pdf";
 const isMarkdown = (file: DocumentFile) =>
@@ -94,6 +107,144 @@ const FileIcon: React.FC<{ filename: string }> = ({ filename }) => {
   return <IconFile />;
 };
 
+interface UserRenderProps {
+  username: string | undefined;
+  displayname: string | undefined;
+}
+
+const UserRender: React.FC<UserRenderProps> = ({ username, displayname }) => {
+  if (!username || !displayname) return;
+
+  return (
+    <Anchor component={Link} to={`/user/${username}`}>
+      <Text fw={700} component="span">
+        {displayname}
+      </Text>
+      <Text ml="0.25em" c="dimmed" component="span">
+        @{username}
+      </Text>
+    </Anchor>
+  );
+};
+
+interface AcceptTransferBannerProps {
+  loggedInUser: User | undefined;
+  document: Document | undefined;
+  reload: () => void;
+  mutate: (document: Document) => void;
+}
+const AcceptTransferBanner: React.FC<AcceptTransferBannerProps> = ({
+  loggedInUser,
+  document,
+  reload,
+  mutate,
+}) => {
+  const target = document?.pending_transfer_user;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { data: targetUser } = useUserApi(target!, {
+    query: {
+      enabled: target != null,
+    },
+  });
+  const navigate = useNavigate();
+
+  if (target == null || !loggedInUser?.loggedin || !document) return;
+
+  // Why are we showing the banner?
+  // Is the current user the target, or are they an admin?
+  const showReasonUser = loggedInUser.userid === target;
+  const showReasonAdmin = loggedInUser.isCategoryAdmin || loggedInUser.isAdmin;
+  const showReasonDocumentOwner = loggedInUser.username === document.author;
+
+  if (!showReasonAdmin && !showReasonUser) return;
+
+  async function onAccept() {
+    setIsSubmitting(true);
+
+    const newDocument = await acceptDocumentTransfer(
+      document!.author,
+      document!.slug,
+    );
+    setIsSubmitting(false);
+    await navigate(`/user/${newDocument.author}/document/${newDocument.slug}`);
+    mutate(newDocument);
+  }
+
+  async function onReject() {
+    setIsSubmitting(true);
+
+    await rejectDocumentTransfer(document!.author, document!.slug);
+    setIsSubmitting(false);
+    reload();
+    return;
+  }
+
+  const body = showReasonDocumentOwner ? (
+    <span>
+      You are in the process of transfering this document to{" "}
+      <UserRender
+        username={document.author}
+        displayname={document.author_displayname}
+      />
+      .
+    </span>
+  ) : showReasonUser ? (
+    <span>
+      <UserRender
+        username={document.author}
+        displayname={document.author_displayname}
+      />{" "}
+      wants to transfer this document to you.
+    </span>
+  ) : (
+    <span>
+      <UserRender
+        username={document.author}
+        displayname={document.author_displayname}
+      />{" "}
+      wants to transfer this document to{" "}
+      <UserRender
+        displayname={targetUser?.displayname}
+        username={targetUser?.username}
+      />
+      .
+    </span>
+  );
+
+  return (
+    <Alert color="cyan">
+      <Flex align="baseline" gap="md" justify="center">
+        {body}
+
+        {!showReasonDocumentOwner && (
+          <Button
+            color="green"
+            type="button"
+            onClick={() => {
+              void onAccept();
+            }}
+            disabled={isSubmitting}
+            rightSection={<IconCheck />}
+          >
+            Accept
+          </Button>
+        )}
+        <Button
+          color="red"
+          type="button"
+          onClick={() => {
+            void onReject();
+          }}
+          disabled={isSubmitting}
+          rightSection={<IconX />}
+        >
+          {showReasonDocumentOwner ? "Abort" : "Reject"}
+        </Button>
+      </Flex>
+    </Alert>
+  );
+};
+
 interface Props {}
 const DocumentPage: React.FC<Props> = () => {
   const { author, slug } = useParams() as { slug: string; author: string };
@@ -130,11 +281,6 @@ const DocumentPage: React.FC<Props> = () => {
   }, [searchParams, data]);
   useScrollToPermalink();
   const user = useUser();
-  const showTransferAcceptForm =
-    data?.pending_transfer_user &&
-    (user?.userid === data.pending_transfer_user ||
-      user?.isAdmin ||
-      user?.isCategoryAdmin);
 
   function formatDisplayName(file: DocumentFile): string {
     const ext = file.filename.split(".").at(-1);
@@ -213,7 +359,12 @@ const DocumentPage: React.FC<Props> = () => {
             <MarkdownText value={data.description} />
           </div>
         )}
-        {showTransferAcceptForm && <div>Accept this transfer request?</div>}
+        <AcceptTransferBanner
+          loggedInUser={user}
+          document={data}
+          reload={reload}
+          mutate={mutate}
+        />
       </Container>
       <Container size="xl" mt="sm">
         <Tabs value={tab} onChange={setTab}>

@@ -314,6 +314,9 @@ class DocumentElementView(View):
             except ValueError:
                 return response.not_possible()
 
+            if target_user_id == document.author.id:
+                return response.not_possible("Cannot transfer document to same user.")
+
             user = get_object_or_404(User, id=target_user_id)
 
             document.pending_transfer_user = user
@@ -602,6 +605,46 @@ def set_marked_as_ai(request, oid):
         comment.save()
     return response.success(
         value=get_comment_obj(prep_comment_obj(comment, request), request)
+    )
+
+
+@response.request_put()
+@auth_check.require_login
+def accept_document_transfer(request, username: str, document_slug: str):
+    document = get_object_or_404(
+        Document, author__username=username, slug=document_slug
+    )
+
+    if not document.current_user_can_accept_transfer(request):
+        return response.not_allowed()
+
+    document.author = document.pending_transfer_user
+    document.pending_transfer_user = None
+    document.api_key = generate_api_key()
+
+    document.edittime = timezone.now()
+    document.save()
+
+    return response.success(value=get_document_obj(document, request, True, True))
+
+
+@response.request_put()
+@auth_check.require_login
+def reject_document_transfer(request, username: str, document_slug: str):
+    document = get_object_or_404(
+        Document, author__username=username, slug=document_slug
+    )
+
+    if not document.current_user_can_accept_transfer(request):
+        return response.not_allowed()
+
+    document.pending_transfer_user = None
+    document.edittime = timezone.now()
+
+    document.save()
+
+    return response.success(
+        value=get_document_obj(document, request),
     )
 
 

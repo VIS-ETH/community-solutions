@@ -60,4 +60,14 @@ urlpatterns = [
         views.reset_marked_as_ai,
         name="resetcommentmarkedasai",
     ),
+    path(
+        "<str:username>/<str:document_slug>/transfer/accept",
+        views.accept_document_transfer,
+        name="acceptdocumenttransfer",
+    ),
+    path(
+        "<str:username>/<str:document_slug>/transfer/reject",
+        views.reject_document_transfer,
+        name="rejectdocumenttransfer",
+    ),
 ]

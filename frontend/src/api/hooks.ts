@@ -669,7 +669,7 @@ export const useDocument = (
     mutate,
     run: reload,
   } = useRequest(() => loadDocument(author, documentSlug), {
-    cacheKey: `document-${documentSlug}`,
+    cacheKey: `document-${author}-${documentSlug}`,
     onSuccess,
   });
   return [error, loading, data, mutate, reload] as const;
@@ -710,6 +710,39 @@ export const useUpdateDocument = (
     (data: DocumentUpdate) => updateDocument(author, documentSlug, data),
     cb,
   );
+
+export const acceptDocumentTransfer = async (
+  author: string,
+  documentSlug: string,
+) =>
+  (
+    await fetchPut(
+      `/api/document/${author}/${documentSlug}/transfer/accept`,
+      {},
+    )
+  ).value as Document;
+
+export const useAcceptDocumentTransfer = (
+  author: string,
+  documentSlug: string,
+  cb: (document: Document) => void,
+) => useMutation(() => acceptDocumentTransfer(author, documentSlug), cb);
+
+export const rejectDocumentTransfer = async (
+  author: string,
+  documentSlug: string,
+) =>
+  (
+    await fetchPut(
+      `/api/document/${author}/${documentSlug}/transfer/reject`,
+      {},
+    )
+  ).value as Document;
+export const useRejectDocumentTransfer = (
+  author: string,
+  documentSlug: string,
+  cb: (document: Document) => void,
+) => useMutation(() => rejectDocumentTransfer(author, documentSlug), cb);
 
 export const createDocumentComment = async (
   author: string,
