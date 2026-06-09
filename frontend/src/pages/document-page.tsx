@@ -172,7 +172,7 @@ const AcceptTransferBanner: React.FC<AcceptTransferBannerProps> = ({
 
   const body = showReasonDocumentOwner ? (
     <span>
-      You are in the process of transfering this document to{" "}
+      You are in the process of transferring this document to{" "}
       <UserRender
         username={document.author}
         displayname={document.author_displayname}
