@@ -3,6 +3,7 @@ import os.path
 from urllib import parse
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import Count, Exists, Max, OuterRef, Prefetch, Q
 from django.http import HttpRequest
@@ -84,7 +85,7 @@ def get_document_obj(
     include_files: bool = False,
 ):
     pending_transfer_user = (
-        document.pending_transfer_user.username
+        document.pending_transfer_user.id
         if document.pending_transfer_user is not None
         else None
     )
@@ -302,6 +303,20 @@ class DocumentElementView(View):
             document.save()
             if old_document_type.id > 4 and not old_document_type.type_set.exists():
                 old_document_type.delete()
+            edited = True
+
+        if "pending_transfer_user" in request.DATA:
+            if not can_edit:
+                return response.not_allowed()
+
+            try:
+                target_user_id = int(request.DATA["pending_transfer_user"])
+            except ValueError:
+                return response.not_possible()
+
+            user = get_object_or_404(User, id=target_user_id)
+
+            document.pending_transfer_user = user
             edited = True
 
         if edited:

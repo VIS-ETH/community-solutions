@@ -380,7 +380,7 @@ export interface Document {
   like_count: number;
   time: string; // ISO 8601, creation time
   edittime: string; // ISO 8601, last edit time
-  pending_transfer_user: string;
+  pending_transfer_user: number;
 
   can_edit: boolean;
   can_delete: boolean;

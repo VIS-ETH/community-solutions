@@ -44,6 +44,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
 import { useScrollToPermalink } from "../hooks/useScrollToPermalink";
+import { useUser } from "../auth";
 
 const isPdf = (file: DocumentFile) => file.mime_type === "application/pdf";
 const isMarkdown = (file: DocumentFile) =>
@@ -128,6 +129,12 @@ const DocumentPage: React.FC<Props> = () => {
     }
   }, [searchParams, data]);
   useScrollToPermalink();
+  const user = useUser();
+  const showTransferAcceptForm =
+    data?.pending_transfer_user &&
+    (user?.userid === data.pending_transfer_user ||
+      user?.isAdmin ||
+      user?.isCategoryAdmin);
 
   function formatDisplayName(file: DocumentFile): string {
     const ext = file.filename.split(".").at(-1);
@@ -206,6 +213,7 @@ const DocumentPage: React.FC<Props> = () => {
             <MarkdownText value={data.description} />
           </div>
         )}
+        {showTransferAcceptForm && <div>Accept this transfer request?</div>}
       </Container>
       <Container size="xl" mt="sm">
         <Tabs value={tab} onChange={setTab}>

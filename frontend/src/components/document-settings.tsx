@@ -39,6 +39,7 @@ import {
 } from "@tabler/icons-react";
 import Creatable from "./creatable";
 import { useDisclosure } from "@mantine/hooks";
+import UserSelect from "./user-select.js";
 
 const Editor = lazy(() => import("./Editor"));
 
@@ -76,6 +77,7 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate, reload }) => {
       setDisplayName(undefined);
       setCategory(undefined);
       setDocumentType(undefined);
+      setTransferUser(undefined);
       if (result.slug !== data.slug) {
         navigate(`/user/${result.author}/document/${result.slug}`, {
           replace: true,
@@ -108,7 +110,9 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate, reload }) => {
     prev: [],
     next: [],
   });
-  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } = usePendingImages();
+  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
+    usePendingImages();
+  const [transferUser, setTransferUser] = useState<number | undefined>();
 
   const [
     addModalIsOpen,
@@ -173,25 +177,39 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate, reload }) => {
                 value={descriptionDraftText ?? data.description}
                 onChange={setDescriptionDraftText}
                 imageHandler={deferredImageHandler}
-                preview={value => <MarkdownText value={value} pendingImages={pendingObjectUrls} />}
+                preview={value => (
+                  <MarkdownText
+                    value={value}
+                    pendingImages={pendingObjectUrls}
+                  />
+                )}
                 undoStack={descriptionUndoStack}
                 setUndoStack={setDescriptionUndoStack}
               />
             </Suspense>
           </div>
+          <UserSelect
+            label="Transfer to User"
+            value={transferUser ?? data.pending_transfer_user}
+            onChange={user => {
+              setTransferUser(user?.id);
+            }}
+          />
           <Flex justify="end">
             <Button
               loading={loading}
               leftSection={<IconDeviceFloppy />}
               onClick={async () => {
-                const finalDescription = descriptionDraftText !== undefined
-                  ? await flushPendingImages(descriptionDraftText)
-                  : undefined;
+                const finalDescription =
+                  descriptionDraftText !== undefined
+                    ? await flushPendingImages(descriptionDraftText)
+                    : undefined;
                 updateDocument({
                   display_name: displayName,
                   category,
                   document_type: documentType,
                   description: finalDescription,
+                  pending_transfer_user: transferUser,
                 });
               }}
               disabled={displayName?.trim() === ""}

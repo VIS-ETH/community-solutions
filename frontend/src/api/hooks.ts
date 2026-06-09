@@ -691,6 +691,7 @@ export interface DocumentUpdate {
   liked?: boolean;
   description?: string;
   document_type?: string;
+  pending_transfer_user?: number;
 }
 export const updateDocument = async (
   author: string,

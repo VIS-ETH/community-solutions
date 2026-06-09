@@ -186,6 +186,7 @@ const App: React.FC = () => {
           setUser({
             loggedin: res.loggedin,
             username: res.username,
+            userid: res.userid,
             displayname: res.displayname,
             isAdmin: res.adminrights,
             isCategoryAdmin: res.adminrightscat,
