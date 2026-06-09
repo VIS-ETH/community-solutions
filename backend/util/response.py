@@ -94,11 +94,8 @@ def internal_error():
     return JsonResponse({"err": "Internal Server Error"}, status=500)
 
 
-def missing_argument(argument_name: str | None = None):
-    if not argument_name:
-        return not_possible("Missing argument")
-
-    return not_possible(f'Missing argument "{argument_name}"')
+def missing_argument():
+    return not_possible("Missing argument")
 
 
 def send_file(file_, **kwargs):
