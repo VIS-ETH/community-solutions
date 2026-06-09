@@ -131,13 +131,11 @@ interface AcceptTransferBannerProps {
   loggedInUser: User | undefined;
   document: Document | undefined;
   reload: () => void;
-  mutate: (document: Document) => void;
 }
 const AcceptTransferBanner: React.FC<AcceptTransferBannerProps> = ({
   loggedInUser,
   document,
   reload,
-  mutate,
 }) => {
   const target = document?.pending_transfer_user;
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -167,7 +165,6 @@ const AcceptTransferBanner: React.FC<AcceptTransferBannerProps> = ({
     );
     setIsSubmitting(false);
     await navigate(`/user/${newDocument.author}/document/${newDocument.slug}`);
-    mutate(newDocument);
   }
 
   async function onReject() {
@@ -363,7 +360,6 @@ const DocumentPage: React.FC<Props> = () => {
           loggedInUser={user}
           document={data}
           reload={reload}
-          mutate={mutate}
         />
       </Container>
       <Container size="xl" mt="sm">

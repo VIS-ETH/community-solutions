@@ -671,6 +671,7 @@ export const useDocument = (
   } = useRequest(() => loadDocument(author, documentSlug), {
     cacheKey: `document-${author}-${documentSlug}`,
     onSuccess,
+    refreshDeps: [author, documentSlug],
   });
   return [error, loading, data, mutate, reload] as const;
 };
