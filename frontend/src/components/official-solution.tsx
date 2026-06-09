@@ -104,7 +104,9 @@ const PdfRenderer: React.FC<PProps> = memo(
       let cancelled = false;
 
       const renderPdf = async () => {
-        const loadingTask: PDFDocumentLoadingTask = getDocument(pdfUrl);
+        const loadingTask: PDFDocumentLoadingTask = getDocument({
+          url: pdfUrl,
+        });
         const pdf = await loadingTask.promise;
         if (cancelled) return;
 
