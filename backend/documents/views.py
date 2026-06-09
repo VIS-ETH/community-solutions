@@ -635,7 +635,9 @@ def reject_document_transfer(request, username: str, document_slug: str):
         Document, author__username=username, slug=document_slug
     )
 
-    if not document.current_user_can_accept_transfer(request):
+    if not document.current_user_can_accept_transfer(
+        request
+    ) and not document.current_user_can_edit(request):
         return response.not_allowed()
 
     document.pending_transfer_user = None
