@@ -134,13 +134,21 @@ const AcceptTransferBanner: React.FC<AcceptTransferBannerProps> = ({
 
   if (target == null || !loggedInUser?.loggedin || !document) return;
 
-  // Why are we showing the banner?
-  // Is the current user the target, or are they an admin?
-  const showReasonUser = loggedInUser.userid === target.id;
-  const showReasonAdmin = loggedInUser.isCategoryAdmin || loggedInUser.isAdmin;
-  const showReasonDocumentOwner = loggedInUser.userid === document.author.id;
+  // Different reasons to show the banner
+  // Is the current user the target, are they an admin, or are they the current owner?
+  // (These aren't mutually exclusive!)
+  const showBecause = {
+    targetUser: loggedInUser.userid === target.id,
+    admin: loggedInUser.isCategoryAdmin || loggedInUser.isAdmin,
+    documentOwner: loggedInUser.userid === document.author.id,
+  };
 
-  if (!showReasonAdmin && !showReasonUser) return;
+  if (
+    !showBecause.admin &&
+    !showBecause.targetUser &&
+    !showBecause.documentOwner
+  )
+    return;
 
   async function onAccept() {
     setIsSubmitting(true);
@@ -164,12 +172,12 @@ const AcceptTransferBanner: React.FC<AcceptTransferBannerProps> = ({
     return;
   }
 
-  const body = showReasonDocumentOwner ? (
+  const body = showBecause.documentOwner ? (
     <span>
       You are in the process of transferring this document to{" "}
       <UserRender user={target} />.
     </span>
-  ) : showReasonUser ? (
+  ) : showBecause.targetUser ? (
     <span>
       <UserRender user={document.author} /> wants to transfer this document to
       you.
@@ -186,7 +194,8 @@ const AcceptTransferBanner: React.FC<AcceptTransferBannerProps> = ({
       <Flex align="baseline" gap="md" justify="center">
         {body}
 
-        {!showReasonDocumentOwner && (
+        {/* Hide accept button if the user is the owner (even if admin) */}
+        {!showBecause.documentOwner && (
           <Button
             color="green"
             type="button"
@@ -208,7 +217,7 @@ const AcceptTransferBanner: React.FC<AcceptTransferBannerProps> = ({
           disabled={isSubmitting}
           rightSection={<IconX />}
         >
-          {showReasonDocumentOwner ? "Abort" : "Reject"}
+          {showBecause.documentOwner ? "Abort" : "Reject"}
         </Button>
       </Flex>
     </Alert>
