@@ -174,8 +174,8 @@ const AcceptTransferBanner: React.FC<AcceptTransferBannerProps> = ({
     <span>
       You are in the process of transferring this document to{" "}
       <UserRender
-        username={document.author}
-        displayname={document.author_displayname}
+        username={targetUser?.username}
+        displayname={targetUser?.displayname}
       />
       .
     </span>

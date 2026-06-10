@@ -106,6 +106,8 @@ export async function performDataRequest<T>(
       if (value === undefined) continue;
       if (value instanceof File || value instanceof Blob) {
         formData.append(key, value);
+      } else if (value === null) {
+        formData.append(key, "null");
       } else {
         formData.append(key, value.toString());
       }

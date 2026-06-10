@@ -113,7 +113,7 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate, reload }) => {
   });
   const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
     usePendingImages();
-  const [transferUser, setTransferUser] = useState<number | undefined>();
+  const [transferUser, setTransferUser] = useState<number | null>();
   const user = useUser();
 
   const [
@@ -195,7 +195,7 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate, reload }) => {
             value={transferUser ?? data.pending_transfer_user}
             filter={other => other.id !== user?.userid}
             onChange={user => {
-              setTransferUser(user?.id);
+              setTransferUser(user?.id ?? null);
             }}
           />
           <Flex justify="end">

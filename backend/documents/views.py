@@ -305,26 +305,39 @@ class DocumentElementView(View):
                 old_document_type.delete()
             edited = True
 
+        send_document_transfer_notification = False
         if "pending_transfer_user" in request.DATA:
             if not can_edit:
                 return response.not_allowed()
 
-            try:
-                target_user_id = int(request.DATA["pending_transfer_user"])
-            except ValueError:
-                return response.not_possible()
+            target_id_ = request.DATA["pending_transfer_user"]
 
-            if target_user_id == document.author.id:
-                return response.not_possible("Cannot transfer document to same user.")
+            if target_id_ == "null":
+                document.pending_transfer_user = None
 
-            user = get_object_or_404(User, id=target_user_id)
+            else:
+                try:
+                    target_user_id = int(target_id_)
+                except ValueError:
+                    return response.not_possible()
 
-            document.pending_transfer_user = user
+                if target_user_id == document.author.id:
+                    return response.not_possible(
+                        "Cannot transfer document to same user."
+                    )
+
+                user = get_object_or_404(User, id=target_user_id)
+
+                document.pending_transfer_user = user
+                send_document_transfer_notification = True
             edited = True
 
         if edited:
             document.edittime = timezone.now()
             document.save()
+
+        if send_document_transfer_notification:
+            notification_util.new_document_transfer_request(document)
 
         return response.success(value=get_document_obj(document, request))
 
@@ -618,12 +631,15 @@ def accept_document_transfer(request, username: str, document_slug: str):
     if not document.current_user_can_accept_transfer(request):
         return response.not_allowed()
 
+    old_owner = document.author
     document.author = document.pending_transfer_user
     document.pending_transfer_user = None
     document.api_key = generate_api_key()
 
     document.edittime = timezone.now()
     document.save()
+
+    notification_util.accepted_document_transfer_request(document, old_owner)
 
     return response.success(value=get_document_obj(document, request, True, True))
 
