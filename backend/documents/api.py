@@ -456,6 +456,7 @@ def update_document(
             old_document_type.delete()
         edited = True
 
+    send_document_transfer_notification = False
     if "pending_transfer_user" in update_data:
         if not can_edit:
             return not_allowed()
@@ -471,12 +472,16 @@ def update_document(
             user = get_object_or_404(User, username=target_username)
 
             document.pending_transfer_user = user
+            send_document_transfer_notification = True
 
         edited = True
 
     if edited:
         document.edittime = timezone.now()
         document.save()
+
+    if send_document_transfer_notification:
+        notification_util.new_document_transfer_request(document)
 
     return {
         "value": make_document_response(document, request),
@@ -1026,12 +1031,16 @@ def accept_document_transfer(request, username: str, slug: str):
     if not document.current_user_can_accept_transfer(request):
         return not_allowed()
 
+    old_owner = document.author
+
     document.author = document.pending_transfer_user
     document.pending_transfer_user = None
     document.api_key = generate_api_key()
 
     document.edittime = timezone.now()
     document.save()
+
+    notification_util.accepted_document_transfer_request(document, old_owner)
 
     return {
         "value": make_document_response(document, request),
@@ -1052,10 +1061,20 @@ def reject_document_transfer(request, username: str, slug: str):
     ) and not document.current_user_can_edit(request):
         return not_allowed()
 
+    old_target = document.pending_transfer_user
+
+    if not old_target:
+        return {
+            "value": make_document_response(document, request),
+        }
+
     document.pending_transfer_user = None
     document.edittime = timezone.now()
 
     document.save()
+
+    if document.author.id != request.user.id:
+        notification_util.rejected_document_transfer_request(document, old_target)
 
     return {
         "value": make_document_response(document, request),
