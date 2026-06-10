@@ -177,3 +177,16 @@ def accepted_document_transfer_request(document: Document, old_owner: User):
         message=f"{target_user_displayname} has accepted your document transfer.",
         document=document,
     )
+
+
+def rejected_document_transfer_request(document: Document, target: User):
+    target_user_displayname = get_my_user(target).displayname()
+
+    send_doc_notification(
+        sender=target,
+        receiver=document.author,
+        type_=NotificationType.DOCUMENT_TRANSFER,
+        title="Document transfer request rejected",
+        message=f"{target_user_displayname} has rejected your document transfer.",
+        document=document,
+    )

@@ -660,10 +660,18 @@ def reject_document_transfer(request, username: str, document_slug: str):
     ) and not document.current_user_can_edit(request):
         return response.not_allowed()
 
+    old_target = document.pending_transfer_user
+
+    if not old_target:
+        return response.success(value=get_document_obj(document, request))
+
     document.pending_transfer_user = None
     document.edittime = timezone.now()
 
     document.save()
+
+    if document.author.id != request.user.id:
+        notification_util.rejected_document_transfer_request(document, old_target)
 
     return response.success(
         value=get_document_obj(document, request),
