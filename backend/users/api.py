@@ -4,7 +4,7 @@ from django.db.models.functions import Concat
 from ninja import ModelSchema, Router
 
 from myauth import auth_check, models
-from util.response import not_found, not_possible
+from util.response import not_possible
 
 router = Router(tags=["Users"])
 
@@ -18,10 +18,10 @@ class UserSchema(ModelSchema):
 
     id: int
     username: str
-    displayname: str
+    display_name: str
 
     @staticmethod
-    def resolve_displayname(obj):
+    def resolve_display_name(obj):
         return models.get_my_user(obj).displayname()
 
 
@@ -44,13 +44,3 @@ def user_search(request, q: str, limit: int = 20):
             )
         ).filter(Q(username__icontains=q) | Q(display_name__icontains=q))[:limit]
     )
-
-
-@router.get("/{int:user_id}", operation_id="user", response=UserSchema)
-@auth_check.require_login
-def user(request, user_id: int):
-    user = User.objects.filter(id=user_id).first()
-    if user:
-        return user
-
-    return not_found()

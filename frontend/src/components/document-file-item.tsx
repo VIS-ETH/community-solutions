@@ -48,21 +48,21 @@ const DocumentFileItem: React.FC<Props> = ({
   const [replaceFile, setFile] = useState<File | undefined>(undefined);
 
   const [_errorMoveUp, _loadingMoveUp, moveUp] = useMoveDocumentFile(
-    document.author,
+    document.author.username,
     document.slug,
     file.filename,
     -1,
     reload,
   );
   const [_errorMoveDown, _loadingMoveDown, moveDown] = useMoveDocumentFile(
-    document.author,
+    document.author.username,
     document.slug,
     file.filename,
     1,
     reload,
   );
   const [_, deleteFile] = useDeleteDocumentFile(
-    document.author,
+    document.author.username,
     document.slug,
     file.oid,
     () => {
@@ -73,7 +73,7 @@ const DocumentFileItem: React.FC<Props> = ({
     },
   );
   const [updateLoading, updateFile] = useUpdateDocumentFile(
-    document.author,
+    document.author.username,
     document.slug,
     file.oid,
     file => {
@@ -167,7 +167,7 @@ const DocumentFileItem: React.FC<Props> = ({
           </p>
           <pre>
             <code>
-              {`curl ${window.location.origin}/api/document/${document.author}/${document.slug}/files/${file.oid}/update/ \\\n  -H "Authorization: ${document.api_key}" \\\n  -F "file=@my_document.pdf"`}
+              {`curl ${location.origin}/api/document/${document.author.username}/${document.slug}/files/${file.oid}/update/ \\\n  -H "Authorization: ${document.api_key}" \\\n  -F "file=@my_document.pdf"`}
             </code>
           </pre>
         </Modal.Body>

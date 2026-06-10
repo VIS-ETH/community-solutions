@@ -23,13 +23,13 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
       key={document.slug}
       p="md"
       component={Link}
-      to={`/user/${document.author}/document/${document.slug}`}
+      to={`/user/${document.author.username}/document/${document.slug}`}
       fw={600}
     >
       <Text lineClamp={3}>{document.display_name}</Text>
       <Group justify="space-between" mt="sm">
-        <Anchor component={Link} to={`/user/${document.author}`}>
-          <Text c="dimmed">@{document.author}</Text>
+        <Anchor component={Link} to={`/user/${document.author.username}`}>
+          <Text c="dimmed">@{document.author.username}</Text>
         </Anchor>
         {document.liked ? (
           <Flex align="center" color="red">

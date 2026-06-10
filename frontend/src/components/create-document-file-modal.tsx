@@ -23,7 +23,7 @@ const CreateDocumentFileModal: React.FC<Props> = ({
     loading,
     error,
     run: createDocumentFile,
-  } = useCreateDocumentFile(document.author, document.slug, f => {
+  } = useCreateDocumentFile(document.author.username, document.slug, f => {
     onClose();
     mutate(s => ({ ...s, files: [...s.files, f] }));
     setDisplayName("");

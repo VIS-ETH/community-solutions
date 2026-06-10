@@ -41,6 +41,7 @@ import Creatable from "./creatable";
 import { useDisclosure } from "@mantine/hooks";
 import UserSelect from "./user-select";
 import { useUser } from "../auth";
+import type { UserSchema } from "../api/model/userSchema";
 
 const Editor = lazy(() => import("./Editor"));
 
@@ -71,7 +72,7 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate, reload }) => {
   }, [documentTypes]);
 
   const [loading, updateDocument] = useUpdateDocument(
-    data.author,
+    data.author.username,
     data.slug,
     result => {
       mutate(s => ({ ...s, ...result }));
@@ -80,19 +81,19 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate, reload }) => {
       setDocumentType(undefined);
       setTransferUser(undefined);
       if (result.slug !== data.slug) {
-        navigate(`/user/${result.author}/document/${result.slug}`, {
+        navigate(`/user/${result.author.username}/document/${result.slug}`, {
           replace: true,
         });
       }
     },
   );
   const [regenerateLoading, regenerate] = useRegenerateDocumentAPIKey(
-    data.author,
+    data.author.username,
     data.slug,
     result => mutate(s => ({ ...s, ...result })),
   );
   const [_, deleteDocument] = useDeleteDocument(
-    data.author,
+    data.author.username,
     data.slug,
     () => data && navigate(`/category/${data.category}`),
   );
@@ -113,7 +114,7 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate, reload }) => {
   });
   const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
     usePendingImages();
-  const [transferUser, setTransferUser] = useState<number | null>();
+  const [transferUser, setTransferUser] = useState<UserSchema | null>();
   const user = useUser();
 
   const [
@@ -194,9 +195,7 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate, reload }) => {
             label="Transfer to User"
             value={transferUser ?? data.pending_transfer_user}
             filter={other => other.id !== user?.userid}
-            onChange={user => {
-              setTransferUser(user?.id ?? null);
-            }}
+            onChange={setTransferUser}
           />
           <Flex justify="end">
             <Button
@@ -212,7 +211,12 @@ const DocumentSettings: React.FC<Props> = ({ data, mutate, reload }) => {
                   category,
                   document_type: documentType,
                   description: finalDescription,
-                  pending_transfer_user: transferUser,
+                  // Undefined is for unmodified
+                  // null is for "nothing", i.e. reset the transfer
+                  pending_transfer_user:
+                    transferUser === undefined
+                      ? undefined
+                      : (transferUser?.id ?? null),
                 });
               }}
               disabled={displayName?.trim() === ""}

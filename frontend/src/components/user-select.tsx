@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Select, Loader, Group, Text } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
-import { useUser, useUserSearch } from "../api/hooks/users.js";
-import type { UserSchema } from "../api/model/userSchema.js";
+import { useUserSearch } from "../api/hooks/users";
+import type { UserSchema } from "../api/model/userSchema";
 
 interface UserSelectProps {
   label: string;
-  value: number | null;
-  onChange: (user: UserSchema | undefined) => void;
+  value: UserSchema | null;
+  onChange: (user: UserSchema | null) => void;
   filter: (user: UserSchema) => boolean;
 }
 
@@ -24,29 +24,20 @@ const UserSelect: React.FC<UserSelectProps> = ({
     q: debouncedSearch,
   });
 
-  const { data: initialUser, isLoading: isInitialLoading } = useUser(value!, {
-    query: {
-      enabled: value != null && !users?.some(u => u.id === value),
-    },
-  });
-
   const selectData =
     users
       ?.filter(user => shouldFilter(user))
       ?.map(user => ({
         value: String(user.id),
-        label: user.displayname,
+        label: user.display_name,
         user,
       })) ?? [];
 
-  if (
-    initialUser &&
-    !selectData.some(user => user.user.id === initialUser.id)
-  ) {
+  if (value && !selectData.some(user => user.user.id === value.id)) {
     selectData.unshift({
-      value: String(initialUser.id),
-      label: initialUser.displayname,
-      user: initialUser,
+      value: String(value.id),
+      label: value.display_name,
+      user: value,
     });
   }
 
@@ -60,17 +51,17 @@ const UserSelect: React.FC<UserSelectProps> = ({
         setSearchValue(value);
       }}
       data={selectData}
-      rightSection={isLoading || isInitialLoading ? <Loader size="xs" /> : null}
+      rightSection={isLoading ? <Loader size="xs" /> : null}
       // Filter only in backend
       filter={({ options }) => options}
       clearable
-      value={value === undefined ? null : String(value)}
+      value={value ? String(value.id) : null}
       renderOption={({ option }) => {
         const user = (option as unknown as { user: UserSchema }).user;
 
         return (
           <Group gap="sm">
-            <Text size="sm">{user.displayname}</Text>
+            <Text size="sm">{user.display_name}</Text>
             <Text size="xs" c="dimmed">
               @{user.username}
             </Text>
@@ -80,7 +71,7 @@ const UserSelect: React.FC<UserSelectProps> = ({
       onChange={(_selectedValue, option) => {
         const user = (option as unknown as { user: UserSchema } | undefined)
           ?.user;
-        onChange(user);
+        onChange(user ?? null);
       }}
     />
   );

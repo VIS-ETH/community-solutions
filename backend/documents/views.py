@@ -78,18 +78,23 @@ def get_file_obj(file: DocumentFile):
     }
 
 
+def get_user_obj(user: User | None):
+    if user is None:
+        return None
+
+    return {
+        "display_name": get_my_user(user).displayname(),
+        "id": user.id,
+        "username": user.username,
+    }
+
+
 def get_document_obj(
     document: Document,
     request: HttpRequest,
     include_comments: bool = False,
     include_files: bool = False,
 ):
-    pending_transfer_user = (
-        document.pending_transfer_user.id
-        if document.pending_transfer_user is not None
-        else None
-    )
-
     obj = {
         "slug": document.slug,
         "display_name": document.display_name,
@@ -97,13 +102,12 @@ def get_document_obj(
         "category": document.category.slug,
         "document_type": document.document_type.display_name,
         "category_display_name": document.category.displayname,
-        "author": document.author.username,
-        "author_displayname": get_my_user(document.author).displayname(),
+        "author": get_user_obj(document.author),
         "can_edit": document.current_user_can_edit(request),
         "can_delete": document.current_user_can_delete(request),
         "time": document.time,
         "edittime": document.edittime,
-        "pending_transfer_user": pending_transfer_user,
+        "pending_transfer_user": get_user_obj(document.pending_transfer_user),
     }
     if hasattr(document, "like_count"):
         obj["like_count"] = document.like_count

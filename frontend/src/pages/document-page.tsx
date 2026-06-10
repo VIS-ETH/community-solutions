@@ -21,7 +21,6 @@ import {
   rejectDocumentTransfer,
   useDocument,
 } from "../api/hooks";
-import { useUser as useUserApi } from "../api/hooks/users";
 import IconButton from "../components/icon-button";
 import LikeButton from "../components/like-button";
 import ContentContainer from "../components/secondary-container";
@@ -52,6 +51,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
 import { useScrollToPermalink } from "../hooks/useScrollToPermalink";
 import { useUser, type User } from "../auth";
+import type { UserSchema } from "../api/model/userSchema";
 
 const isPdf = (file: DocumentFile) => file.mime_type === "application/pdf";
 const isMarkdown = (file: DocumentFile) =>
@@ -102,20 +102,17 @@ const FileIcon: React.FC<{ filename: string }> = ({ filename }) => {
 };
 
 interface UserRenderProps {
-  username: string | undefined;
-  displayname: string | undefined;
+  user: UserSchema;
 }
 
-const UserRender: React.FC<UserRenderProps> = ({ username, displayname }) => {
-  if (!username || !displayname) return;
-
+const UserRender: React.FC<UserRenderProps> = ({ user }) => {
   return (
-    <Anchor component={Link} to={`/user/${username}`}>
-      <Text fw={700} component="span">
-        {displayname}
+    <Anchor component={Link} to={`/user/${user.username}`}>
+      <Text fw={700} span>
+        {user.display_name}
       </Text>
-      <Text ml="0.25em" c="dimmed" component="span">
-        @{username}
+      <Text ml="0.25em" c="dimmed" span>
+        @{user.username}
       </Text>
     </Anchor>
   );
@@ -133,20 +130,15 @@ const AcceptTransferBanner: React.FC<AcceptTransferBannerProps> = ({
 }) => {
   const target = document?.pending_transfer_user;
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { data: targetUser } = useUserApi(target!, {
-    query: {
-      enabled: target != null,
-    },
-  });
   const navigate = useNavigate();
 
   if (target == null || !loggedInUser?.loggedin || !document) return;
 
   // Why are we showing the banner?
   // Is the current user the target, or are they an admin?
-  const showReasonUser = loggedInUser.userid === target;
+  const showReasonUser = loggedInUser.userid === target.id;
   const showReasonAdmin = loggedInUser.isCategoryAdmin || loggedInUser.isAdmin;
-  const showReasonDocumentOwner = loggedInUser.username === document.author;
+  const showReasonDocumentOwner = loggedInUser.userid === document.author.id;
 
   if (!showReasonAdmin && !showReasonUser) return;
 
@@ -154,17 +146,19 @@ const AcceptTransferBanner: React.FC<AcceptTransferBannerProps> = ({
     setIsSubmitting(true);
 
     const newDocument = await acceptDocumentTransfer(
-      document!.author,
+      document!.author.username,
       document!.slug,
     );
     setIsSubmitting(false);
-    await navigate(`/user/${newDocument.author}/document/${newDocument.slug}`);
+    await navigate(
+      `/user/${newDocument.author.username}/document/${newDocument.slug}`,
+    );
   }
 
   async function onReject() {
     setIsSubmitting(true);
 
-    await rejectDocumentTransfer(document!.author, document!.slug);
+    await rejectDocumentTransfer(document!.author.username, document!.slug);
     setIsSubmitting(false);
     reload();
     return;
@@ -173,32 +167,17 @@ const AcceptTransferBanner: React.FC<AcceptTransferBannerProps> = ({
   const body = showReasonDocumentOwner ? (
     <span>
       You are in the process of transferring this document to{" "}
-      <UserRender
-        username={targetUser?.username}
-        displayname={targetUser?.displayname}
-      />
-      .
+      <UserRender user={target} />.
     </span>
   ) : showReasonUser ? (
     <span>
-      <UserRender
-        username={document.author}
-        displayname={document.author_displayname}
-      />{" "}
-      wants to transfer this document to you.
+      <UserRender user={document.author} /> wants to transfer this document to
+      you.
     </span>
   ) : (
     <span>
-      <UserRender
-        username={document.author}
-        displayname={document.author_displayname}
-      />{" "}
-      wants to transfer this document to{" "}
-      <UserRender
-        displayname={targetUser?.displayname}
-        username={targetUser?.username}
-      />
-      .
+      <UserRender user={document.author} /> wants to transfer this document to{" "}
+      <UserRender user={target} />.
     </span>
   );
 
@@ -316,14 +295,7 @@ const DocumentPage: React.FC<Props> = () => {
                 <LikeButton document={data} mutate={mutate} />
               </Group>
             </Flex>
-            <Anchor component={Link} to={`/user/${data.author}`}>
-              <Text fw={700} component="span">
-                {data.author_displayname}
-              </Text>
-              <Text ml="0.3em" c="dimmed" component="span">
-                @{data.author}
-              </Text>
-            </Anchor>
+            <UserRender user={data.author} />
             {differenceInSeconds(new Date(data.edittime), new Date(data.time)) >
               1 && (
               <>
@@ -443,7 +415,7 @@ const DocumentPage: React.FC<Props> = () => {
             )}
             {data.comments.map(comment => (
               <DocumentCommentComponent
-                documentAuthor={data.author}
+                documentAuthor={data.author.username}
                 documentSlug={slug}
                 comment={comment}
                 key={comment.oid}

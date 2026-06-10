@@ -1,3 +1,5 @@
+import type { UserSchema } from "./api/model/userSchema";
+
 export type Section = AnswerSection | PdfSection;
 
 export enum SectionKind {
@@ -372,15 +374,14 @@ export interface Document {
   category: string;
   document_type: string;
   category_display_name: string;
-  author: string;
-  author_displayname: string;
+  author: UserSchema;
   comments: DocumentComment[];
   files: DocumentFile[];
   liked: boolean;
   like_count: number;
   time: string; // ISO 8601, creation time
   edittime: string; // ISO 8601, last edit time
-  pending_transfer_user: number | null;
+  pending_transfer_user: UserSchema;
 
   can_edit: boolean;
   can_delete: boolean;
