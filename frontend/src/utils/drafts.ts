@@ -9,11 +9,11 @@ type StorageDraft = Record<
 >;
 
 export function saveDraftToStorage(
-  answerId: string | undefined,
+  oId: string | undefined,
   newValue: string,
   isAnswer: boolean,
 ) {
-  if (answerId === undefined) {
+  if (oId === undefined) {
     return;
   }
   const part = isAnswer ? "answers" : "comments";
@@ -24,29 +24,28 @@ export function saveDraftToStorage(
   const now = new Date();
   const currentTimeStamp = now.getTime();
   if (newValue.length === 0) {
-    delete draftPartJSON[answerId];
+    delete draftPartJSON[oId];
   } else {
-    draftPartJSON[answerId] = {
+    draftPartJSON[oId] = {
       draft: newValue,
       draftTime: currentTimeStamp,
     };
   }
-  draftJSON[part] = draftPartJSON;
   localStorage.setItem(draftPartKey, JSON.stringify(draftJSON));
 }
 
 export function readDraftFromStorage(
-  answerId: string | undefined,
+  oId: string | undefined,
   isAnswer: boolean,
 ): string {
-  if (answerId === undefined) {
+  if (oId === undefined) {
     return "";
   }
   const part = isAnswer ? "answers" : "comments";
   const partFromLocalStorage =
     localStorage.getItem(draftPartKey) ?? '{"answers": {},"comments": {}}';
   const draftJSON = JSON.parse(partFromLocalStorage)[part] as StorageDraft;
-  const text = draftJSON[answerId]?.draft ?? "";
+  const text = draftJSON[oId]?.draft ?? "";
   return text;
 }
 
