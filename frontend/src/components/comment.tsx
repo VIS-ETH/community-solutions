@@ -44,7 +44,7 @@ import MarkedAsAiBadge from "./MarkedAsAiBadge";
 import { useDisclosure } from "@mantine/hooks";
 import TimeText from "./time-text";
 import { copy } from "../utils/clipboard";
-import { saveDraftToStorage, readDraftFromStorage } from "./answer";
+import { saveDraftToStorage, readDraftFromStorage } from "../utils/drafts";
 
 const Editor = lazy(() => import("./Editor"));
 
