@@ -1,4 +1,5 @@
 const draftPartKey = "draft-ans/com-json";
+const lifeSpan = 1000 * 60 * 60 * 24 * 30; // 1 Month
 
 type StorageDraft = Record<
   string,
@@ -60,7 +61,6 @@ export function clearExpiredDrafts() {
   ] as StorageDraft;
   const now = new Date();
   const currentTimeStamp = now.getTime();
-  const lifeSpan = 1000 * 60 * 60 * 24 * 3; // 3 Days
   // Answers
   Object.entries(draftAnswersJSON).forEach(([answerId, element]) => {
     if (element.draftTime + lifeSpan < currentTimeStamp) {
