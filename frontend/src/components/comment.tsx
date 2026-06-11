@@ -69,21 +69,13 @@ const CommentComponent: React.FC<Props> = ({
   const [, resetExamCommentMarkedAsAi] =
     useResetExamCommentMarkedAsAi(onSectionChanged);
   const [viewSource, { toggle: toggleViewSource }] = useDisclosure();
-  const [setFlaggedLoading, setExamCommentFlagged] =
-    useSetExamCommentFlagged(onSectionChanged);
-  const [resetFlaggedLoading, resetExamCommentFlagged] =
-    useResetExamCommentFlaggedVote(onSectionChanged);
-  const [, setExamCommentMarkedAsAi] =
-    useSetExamCommentMarkedAsAi(onSectionChanged);
-  const [, resetExamCommentMarkedAsAi] =
-    useResetExamCommentMarkedAsAi(onSectionChanged);
-  const [viewSource, { toggle: toggleViewSource }] = useDisclosure();
   const { isAdmin, username } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
   const [editing, setEditing] = useState(false);
   const [draftText, setDraftText] = useState("");
   const [undoStack, setUndoStack] = useState<UndoStack>({ prev: [], next: [] });
-  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } = usePendingImages();
+  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
+    usePendingImages();
   const [addNewLoading, runAddNewComment] = useMutation(addNewComment, res => {
     if (onDelete) onDelete();
     onSectionChanged(res);
@@ -105,8 +97,6 @@ const CommentComponent: React.FC<Props> = ({
     setDraftText(readDraftFromStorage(commentId, false));
   }, []);
 
-  const onSave = () => {
-    saveDraftToStorage(commentId, "", false);
   const onSave = async () => {
     const finalText = await flushPendingImages(draftText);
     if (comment === undefined) {
@@ -164,7 +154,6 @@ const CommentComponent: React.FC<Props> = ({
             ·
           </Text>
           {comment && <TimeText time={comment.time} suffix="ago" />}
-          {comment && <TimeText time={comment.time} suffix="ago" />}
           {comment &&
             differenceInSeconds(
               new Date(comment.edittime),
@@ -174,11 +163,6 @@ const CommentComponent: React.FC<Props> = ({
                 <Text component="span" mx={6} c="dimmed">
                   ·
                 </Text>
-                <TimeText
-                  time={comment.edittime}
-                  prefix="edited"
-                  suffix="ago"
-                />
                 <TimeText
                   time={comment.edittime}
                   prefix="edited"
@@ -198,17 +182,11 @@ const CommentComponent: React.FC<Props> = ({
               onToggle={() =>
                 setExamCommentFlagged(comment.oid, !comment.isFlagged)
               }
-              onToggle={() =>
-                setExamCommentFlagged(comment.oid, !comment.isFlagged)
-              }
             />
           )}
           {comment && (
             <Menu withinPortal>
               <Menu.Target>
-                <Button size="xs" variant="light" color="gray" mr="md">
-                  <IconDots />
-                </Button>
                 <Button size="xs" variant="light" color="gray" mr="md">
                   <IconDots />
                 </Button>
@@ -246,14 +224,6 @@ const CommentComponent: React.FC<Props> = ({
                   }
                 >
                   Copy Permalink
-                  leftSection={<IconLink />}
-                  onClick={() =>
-                    copy(
-                      `${document.location.origin}/exams/${answer.filename}?comment=${comment.longId}&answer=${answer.longId}`,
-                    )
-                  }
-                >
-                  Copy Permalink
                 </Menu.Item>
                 {isAdmin && comment.markedAsAiCount > 0 && (
                   <Menu.Item
@@ -273,7 +243,6 @@ const CommentComponent: React.FC<Props> = ({
                 )}
                 {!editing && comment.canEdit && (
                   <Menu.Item leftSection={<IconEdit />} onClick={startEditing}>
-                  <Menu.Item leftSection={<IconEdit />} onClick={startEditing}>
                     Edit
                   </Menu.Item>
                 )}
@@ -289,18 +258,10 @@ const CommentComponent: React.FC<Props> = ({
                   >
                     Toggle Source Code Mode
                   </Menu.Item>
-                  <Menu.Item
-                    leftSection={<IconCode />}
-                    onClick={toggleViewSource}
-                  >
-                    Toggle Source Code Mode
-                  </Menu.Item>
                 )}
               </Menu.Dropdown>
             </Menu>
           )}
-        </Flex>
-      </Flex>
         </Flex>
       </Flex>
       {comment === undefined || editing ? (
@@ -311,11 +272,13 @@ const CommentComponent: React.FC<Props> = ({
               setDraftText(newValue);
               saveDraftToStorage(commentId, newValue, false);
             }}
-            imageHandler={imageHandler}
-            onChange={setDraftText}
             imageHandler={deferredImageHandler}
             preview={value => (
-              <MarkdownText value={value} languages={languages} pendingImages={pendingObjectUrls} />
+              <MarkdownText
+                value={value}
+                languages={languages}
+                pendingImages={pendingObjectUrls}
+              />
             )}
             undoStack={undoStack}
             setUndoStack={setUndoStack}
