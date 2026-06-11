@@ -47,14 +47,14 @@ const DocumentFileItem: React.FC<Props> = ({
   const [displayName, setDisplayName] = useState<string | undefined>();
   const [replaceFile, setFile] = useState<File | undefined>(undefined);
 
-  const [errorMoveUp, loadingMoveUp, moveUp] = useMoveDocumentFile(
+  const [_errorMoveUp, _loadingMoveUp, moveUp] = useMoveDocumentFile(
     document.author,
     document.slug,
     file.filename,
     -1,
     reload,
   );
-  const [errorMoveDown, loadingMoveDown, moveDown] = useMoveDocumentFile(
+  const [_errorMoveDown, _loadingMoveDown, moveDown] = useMoveDocumentFile(
     document.author,
     document.slug,
     file.filename,

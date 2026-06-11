@@ -175,7 +175,6 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
     onSectionChange,
     onToggleHidden,
     hidden,
-    cutVersion,
     setCutVersion,
 
     cutName,

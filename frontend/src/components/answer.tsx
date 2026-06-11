@@ -104,7 +104,8 @@ const AnswerComponent: React.FC<Props> = ({
 
   const [draftText, setDraftText] = useState("");
   const [undoStack, setUndoStack] = useState<UndoStack>({ prev: [], next: [] });
-  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } = usePendingImages();
+  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
+    usePendingImages();
   const startEdit = useCallback(() => {
     setDraftText(answer?.text ?? "");
     setEditing(true);
@@ -275,7 +276,6 @@ const AnswerComponent: React.FC<Props> = ({
                   <Score
                     oid={answer.oid}
                     upvotes={answer.upvotes}
-                    expertUpvotes={answer.expertvotes}
                     userVote={
                       answer.isUpvoted ? 1 : answer.isDownvoted ? -1 : 0
                     }
@@ -295,7 +295,11 @@ const AnswerComponent: React.FC<Props> = ({
                   onChange={setDraftText}
                   imageHandler={deferredImageHandler}
                   preview={value => (
-                    <MarkdownText value={value} languages={languages} pendingImages={pendingObjectUrls} />
+                    <MarkdownText
+                      value={value}
+                      languages={languages}
+                      pendingImages={pendingObjectUrls}
+                    />
                   )}
                   undoStack={undoStack}
                   setUndoStack={setUndoStack}

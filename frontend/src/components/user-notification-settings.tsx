@@ -5,12 +5,7 @@ import {
   useSetEnabledNotifications,
 } from "../api/hooks";
 
-interface UserNotificationsProps {
-  username: string;
-}
-const UserNotificationsSettings: React.FC<UserNotificationsProps> = ({
-  username,
-}) => {
+const UserNotificationsSettings: React.FC = () => {
   const [enabledError, enabledLoading, enabled, reloadEnabled] =
     useEnabledNotifications(true);
   const [setEnabledError, setEnabledLoading, setEnabled] =

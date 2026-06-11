@@ -13,7 +13,13 @@ import {
   useComputedColorScheme,
   Center,
 } from "@mantine/core";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Link,
   Navigate,
@@ -66,7 +72,6 @@ import {
   IconEdit,
   IconFileCheck,
   IconLink,
-  IconX,
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
