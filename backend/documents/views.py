@@ -314,14 +314,14 @@ class DocumentElementView(View):
             if not can_edit:
                 return response.not_allowed()
 
-            target_id_ = request.DATA["pending_transfer_user"]
+            target_id = request.DATA["pending_transfer_user"]
 
-            if target_id_ == "null":
+            if target_id == "null":
                 document.pending_transfer_user = None
 
             else:
                 try:
-                    target_user_id = int(target_id_)
+                    target_user_id = int(target_id)
                 except ValueError:
                     return response.not_possible()
 
@@ -645,7 +645,7 @@ def accept_document_transfer(request, username: str, document_slug: str):
 
     notification_util.accepted_document_transfer_request(document, old_owner)
 
-    return response.success(value=get_document_obj(document, request, True, True))
+    return response.success(value=get_document_obj(document, request))
 
 
 @response.request_put()
