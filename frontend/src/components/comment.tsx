@@ -1,9 +1,15 @@
 import { differenceInSeconds } from "date-fns";
-import React, { lazy, Suspense, useState } from "react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { addNewComment, removeComment, updateComment } from "../api/comment";
+import {
+  useMutation,
+  useResetExamCommentFlaggedVote,
+  useResetExamCommentMarkedAsAi,
+  useSetExamCommentFlagged,
+  useSetExamCommentMarkedAsAi,
+} from "../api/hooks";
 import { usePendingImages } from "./Editor/pending-images";
-import { useMutation, useResetExamCommentFlaggedVote, useResetExamCommentMarkedAsAi, useSetExamCommentFlagged, useSetExamCommentMarkedAsAi } from "../api/hooks";
 import { useUser } from "../auth";
 import useRemoveConfirm from "../hooks/useRemoveConfirm";
 import { Answer, AnswerSection, Comment } from "../interfaces";
@@ -38,6 +44,7 @@ import MarkedAsAiBadge from "./MarkedAsAiBadge";
 import { useDisclosure } from "@mantine/hooks";
 import TimeText from "./time-text";
 import { copy } from "../utils/clipboard";
+import { saveDraftToStorage, readDraftFromStorage } from "../utils/drafts";
 
 const Editor = lazy(() => import("./Editor"));
 
@@ -67,7 +74,8 @@ const CommentComponent: React.FC<Props> = ({
   const [editing, setEditing] = useState(false);
   const [draftText, setDraftText] = useState("");
   const [undoStack, setUndoStack] = useState<UndoStack>({ prev: [], next: [] });
-  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } = usePendingImages();
+  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
+    usePendingImages();
   const [addNewLoading, runAddNewComment] = useMutation(addNewComment, res => {
     if (onDelete) onDelete();
     onSectionChanged(res);
@@ -83,6 +91,12 @@ const CommentComponent: React.FC<Props> = ({
   const loading = addNewLoading || updateLoading || removeLoading;
   const languages = useOfficialSolutionLanguage();
 
+  const commentId = answer?.oid;
+
+  useEffect(() => {
+    setDraftText(readDraftFromStorage(commentId, false));
+  }, []);
+
   const onSave = async () => {
     const finalText = await flushPendingImages(draftText);
     if (comment === undefined) {
@@ -92,6 +106,7 @@ const CommentComponent: React.FC<Props> = ({
     }
   };
   const onCancel = () => {
+    saveDraftToStorage(commentId, "", false);
     if (comment === undefined) {
       if (onDelete) onDelete();
     } else {
@@ -105,7 +120,10 @@ const CommentComponent: React.FC<Props> = ({
   };
   const remove = () => {
     if (comment)
-      removeConfirm("Remove comment?", () => runRemoveComment(comment.oid));
+      removeConfirm("Remove comment?", () => {
+        runRemoveComment(comment.oid);
+        saveDraftToStorage(comment.oid, "", false);
+      });
   };
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
 
@@ -250,10 +268,17 @@ const CommentComponent: React.FC<Props> = ({
         <Suspense fallback={<Loader />}>
           <Editor
             value={draftText}
-            onChange={setDraftText}
+            onChange={newValue => {
+              setDraftText(newValue);
+              saveDraftToStorage(commentId, newValue, false);
+            }}
             imageHandler={deferredImageHandler}
             preview={value => (
-              <MarkdownText value={value} languages={languages} pendingImages={pendingObjectUrls} />
+              <MarkdownText
+                value={value}
+                languages={languages}
+                pendingImages={pendingObjectUrls}
+              />
             )}
             undoStack={undoStack}
             setUndoStack={setUndoStack}
