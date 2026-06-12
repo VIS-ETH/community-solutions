@@ -13,7 +13,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { differenceInSeconds } from "date-fns";
-import React, { lazy, Suspense, useCallback, useState } from "react";
+import React, { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
 import { usePendingImages } from "./Editor/pending-images";
@@ -60,6 +60,11 @@ import MarkedAsAiBadge from "./MarkedAsAiBadge";
 import classes from "./answer.module.css";
 import { useDisclosure } from "@mantine/hooks";
 import TimeText from "./time-text";
+import {
+  saveDraftToStorage,
+  readDraftFromStorage,
+  clearExpiredDrafts,
+} from "../utils/drafts";
 
 const Editor = lazy(() => import("./Editor"));
 
@@ -93,10 +98,12 @@ const AnswerComponent: React.FC<Props> = ({
   const [setExpertVoteLoading, setExpertVote] =
     useSetExpertVote(onSectionChanged);
   const removeAnswer = useRemoveAnswer(onSectionChanged);
+  const answerId = section?.oid;
   const [updating, update] = useUpdateAnswer(res => {
     setEditing(false);
     if (onSectionChanged) onSectionChanged(res);
     if (answer === undefined && onDelete) onDelete();
+    saveDraftToStorage(answerId, "", true);
   });
   const { isAdmin, isExpert } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
@@ -107,12 +114,19 @@ const AnswerComponent: React.FC<Props> = ({
   const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
     usePendingImages();
   const startEdit = useCallback(() => {
-    setDraftText(answer?.text ?? "");
+    const possibleAnswer = readDraftFromStorage(answerId, true);
+    if (possibleAnswer) {
+      setDraftText(possibleAnswer);
+    } else {
+      setDraftText(answer?.text ?? "");
+    }
+
     setEditing(true);
   }, [answer]);
   const onCancel = useCallback(() => {
     setEditing(false);
     if (answer === undefined && onDelete) onDelete();
+    saveDraftToStorage(answerId, "", true);
   }, [onDelete, answer]);
   const save = useCallback(async () => {
     if (!section) return;
@@ -126,6 +140,11 @@ const AnswerComponent: React.FC<Props> = ({
   const languages = useOfficialSolutionLanguage();
 
   const isDraft = !answer;
+
+  useEffect(() => {
+    clearExpiredDrafts();
+    setDraftText(readDraftFromStorage(answerId, true));
+  }, []);
 
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
   const canEdit = section && onSectionChanged && answer?.canEdit;
@@ -292,7 +311,10 @@ const AnswerComponent: React.FC<Props> = ({
               <Suspense fallback={<Loader />}>
                 <Editor
                   value={draftText}
-                  onChange={setDraftText}
+                  onChange={newValue => {
+                    setDraftText(newValue);
+                    saveDraftToStorage(answerId, newValue, true);
+                  }}
                   imageHandler={deferredImageHandler}
                   preview={value => (
                     <MarkdownText
