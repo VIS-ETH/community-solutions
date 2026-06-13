@@ -66,6 +66,10 @@ export default defineConfig({
     },
     input: {
       target: inputTarget,
+      filters: {
+        mode: "exclude",
+        tags: ["frontend-exclude"],
+      },
     },
   },
 });
