@@ -1,5 +1,6 @@
 import datetime
 import os.path
+from typing import Literal
 from urllib import parse
 
 from django.conf import settings
@@ -34,7 +35,7 @@ class DocumentTypeListSchema(ValueWrapped[list[str]]):
     pass
 
 
-class CommentSchema(Schema):
+class DocumentCommentSchema(Schema):
     oid: int
     text: str
     authorId: str
@@ -48,35 +49,35 @@ class CommentSchema(Schema):
     markedAsAiCount: int
 
 
-class CommentListSchema(ValueWrapped[list[CommentSchema]]):
+class CommentListSchema(ValueWrapped[list[DocumentCommentSchema]]):
     pass
 
 
-class CreateCommentSchema(Schema):
+class CreateDocumentCommentSchema(Schema):
     text: str
 
 
-class UpdateCommentSchema(Schema):
+class UpdateDocumentCommentSchema(Schema):
     text: str | None = None
 
 
-class SetFlaggedSchema(Schema):
-    flagged: str
+class SetDocumentCommentFlaggedSchema(Schema):
+    flagged: bool
 
 
-class SetMarkedAsAiSchema(Schema):
-    marked_as_ai: str
+class SetDocumentCommentMarkedAsAiSchema(Schema):
+    marked_as_ai: bool
 
 
-class MoveFileSchema(Schema):
-    direction: int
+class MoveDocumentFileSchema(Schema):
+    direction: Literal["down"] | Literal["up"]
 
 
-class CommentWrappedSchema(ValueWrapped[CommentSchema]):
+class DocumentCommentWrappedSchema(ValueWrapped[DocumentCommentSchema]):
     pass
 
 
-class FileSchema(Schema):
+class DocumentFileSchema(Schema):
     oid: int
     display_name: str
     filename: str
@@ -84,23 +85,23 @@ class FileSchema(Schema):
     order: int
 
 
-class FileListSchema(ValueWrapped[list[FileSchema]]):
+class DocumentFileListSchema(ValueWrapped[list[DocumentFileSchema]]):
     pass
 
 
-class CreateFileSchema(Schema):
+class CreateDocumentFileSchema(Schema):
     display_name: str
 
 
-class UpdateFileSchema(Schema):
+class UpdateDocumentFileSchema(Schema):
     display_name: str | None = None
 
 
-class FileWrappedSchema(ValueWrapped[FileSchema]):
+class DocumentFileWrappedSchema(ValueWrapped[DocumentFileSchema]):
     pass
 
 
-class DeleteFileResponse(ValueWrapped[bool]):
+class DeleteDocumentFileResponse(ValueWrapped[bool]):
     pass
 
 
@@ -120,8 +121,8 @@ class DocumentSchema(Schema):
     like_count: int | None = None
     liked: int | None = None
     api_key: str | None = None
-    comments: list[CommentSchema] | None = None
-    files: list[FileSchema] | None = None
+    comments: list[DocumentCommentSchema] | None = None
+    files: list[DocumentFileSchema] | None = None
 
 
 class DocumentListSchema(ValueWrapped[list[DocumentSchema]]):
@@ -136,7 +137,7 @@ class CreateDocumentSchema(Schema):
 
 
 class UpdateDocumentSchema(Schema):
-    liked: str | None = None
+    liked: bool | None = None
     description: str | None = None
     display_name: str | None = None
     category: str | None = None
@@ -167,7 +168,7 @@ def prep_comment_obj(comment: Comment, request):
 
 
 def make_comment_response(comment, request):
-    return CommentSchema(
+    return DocumentCommentSchema(
         oid=comment.pk,
         text=comment.text,
         authorId=comment.author.username,
@@ -183,7 +184,7 @@ def make_comment_response(comment, request):
 
 
 def make_file_response(file):
-    return FileSchema(
+    return DocumentFileSchema(
         oid=file.pk,
         display_name=file.display_name,
         filename=file.filename,
@@ -392,7 +393,7 @@ def update_document(
     update_data = data.dict(exclude_unset=True) if data else {}
 
     if "liked" in update_data:
-        if update_data["liked"] == "true":
+        if update_data["liked"]:
             document.likes.add(request.user)
         else:
             document.likes.remove(request.user)
@@ -464,15 +465,13 @@ def delete_document(request, username: str, slug: str):
 
 
 @router.get(
-    "/{username}/{document_slug}/comments/",
+    "/{username}/{slug}/comments/",
     response={200: CommentListSchema},
     operation_id="listDocumentComments",
 )
 @auth_check.require_login
-def list_document_comments(request, username: str, document_slug: str):
-    document = get_object_or_404(
-        Document, author__username=username, slug=document_slug
-    )
+def list_document_comments(request, username: str, slug: str):
+    document = get_object_or_404(Document, author__username=username, slug=slug)
     objects = (
         Comment.objects.filter(document=document)
         .all()
@@ -493,20 +492,18 @@ def list_document_comments(request, username: str, document_slug: str):
 
 
 @router.post(
-    "/{username}/{document_slug}/comments/",
-    response={200: CommentWrappedSchema, 400: ErrorSchema},
+    "/{username}/{slug}/comments/",
+    response={200: DocumentCommentWrappedSchema, 400: ErrorSchema},
     operation_id="createDocumentComment",
 )
 @auth_check.require_login
 def create_document_comment(
     request,
     username: str,
-    document_slug: str,
-    data: CreateCommentSchema = Form(...),  # noqa: B008
+    slug: str,
+    data: CreateDocumentCommentSchema = Form(...),  # noqa: B008
 ):
-    document = get_object_or_404(
-        Document, author__username=username, slug=document_slug
-    )
+    document = get_object_or_404(Document, author__username=username, slug=slug)
     comment = Comment(document=document, text=data.text, author=request.user)
     comment.save()
     notification_util.new_comment_to_document(document, comment)
@@ -518,41 +515,41 @@ def create_document_comment(
 
 
 @router.get(
-    "/{username}/{document_slug}/comments/{id}/",
-    response={200: CommentSchema},
+    "/{username}/{slug}/comments/{id}/",
+    response={200: DocumentCommentSchema},
     operation_id="getDocumentComment",
 )
 @auth_check.require_login
-def get_document_comment(request, username: str, document_slug: str, id: int):
+def get_document_comment(request, username: str, slug: str, id: int):
     comment = get_object_or_404(
         Comment,
         pk=id,
         document__author__username=username,
-        document__slug=document_slug,
+        document__slug=slug,
     )
     comment = prep_comment_obj(comment, request)
     return make_comment_response(comment, request)
 
 
 @router.put(
-    "/{username}/{document_slug}/comments/{id}/",
-    response={200: CommentWrappedSchema, 403: ErrorSchema},
+    "/{username}/{slug}/comments/{id}/",
+    response={200: DocumentCommentWrappedSchema, 403: ErrorSchema},
     operation_id="updateDocumentComment",
 )
 @auth_check.require_login
 def update_document_comment(
     request,
     username: str,
-    document_slug: str,
+    slug: str,
     id: int,
-    data: UpdateCommentSchema = Form(None),  # noqa: B008
+    data: UpdateDocumentCommentSchema = Form(None),  # noqa: B008
 ):
     objects = Comment.objects.prefetch_related("author")
     comment = get_object_or_404(
         objects,
         pk=id,
         document__author__username=username,
-        document__slug=document_slug,
+        document__slug=slug,
     )
     if not comment.current_user_can_edit(request):
         return not_allowed()
@@ -570,18 +567,18 @@ def update_document_comment(
 
 
 @router.delete(
-    "/{username}/{document_slug}/comments/{id}/",
+    "/{username}/{slug}/comments/{id}/",
     response={204: None, 403: ErrorSchema},
     operation_id="deleteDocumentComment",
 )
 @auth_check.require_login
-def delete_document_comment(request, username: str, document_slug: str, id: int):
+def delete_document_comment(request, username: str, slug: str, id: int):
     objects = Comment.objects.prefetch_related("author")
     comment = get_object_or_404(
         objects,
         pk=id,
         document__author__username=username,
-        document__slug=document_slug,
+        document__slug=slug,
     )
     if not comment.current_user_can_delete(request):
         return not_allowed()
@@ -594,15 +591,13 @@ def is_upload_allowed(ext: str, mime_type: str):
 
 
 @router.get(
-    "/{username}/{document_slug}/files/",
-    response={200: FileListSchema},
+    "/{username}/{slug}/files/",
+    response={200: DocumentFileListSchema},
     operation_id="listDocumentFiles",
 )
 @auth_check.require_login
-def list_document_files(request, username: str, document_slug: str):
-    document = get_object_or_404(
-        Document, author__username=username, slug=document_slug
-    )
+def list_document_files(request, username: str, slug: str):
+    document = get_object_or_404(Document, author__username=username, slug=slug)
     objects = DocumentFile.objects.filter(document=document).all()
     return {
         "value": [make_file_response(file) for file in objects],
@@ -610,9 +605,9 @@ def list_document_files(request, username: str, document_slug: str):
 
 
 @router.post(
-    "/{username}/{document_slug}/files/",
+    "/{username}/{slug}/files/",
     response={
-        200: FileWrappedSchema,
+        200: DocumentFileWrappedSchema,
         400: ErrorSchema,
         403: ErrorSchema,
         415: ErrorSchema,
@@ -623,13 +618,11 @@ def list_document_files(request, username: str, document_slug: str):
 def create_document_file(
     request,
     username: str,
-    document_slug: str,
-    data: CreateFileSchema = Form(...),  # noqa: B008
+    slug: str,
+    data: CreateDocumentFileSchema = Form(...),  # noqa: B008
     file: UploadedFile = File(...),  # noqa: B008
 ):
-    document = get_object_or_404(
-        Document, author__username=username, slug=document_slug
-    )
+    document = get_object_or_404(Document, author__username=username, slug=slug)
     if not document.current_user_can_edit(request):
         return not_allowed()
 
@@ -674,17 +667,17 @@ def create_document_file(
 
 
 @router.get(
-    "/{username}/{document_slug}/files/{id}/",
-    response={200: FileWrappedSchema},
+    "/{username}/{slug}/files/{id}/",
+    response={200: DocumentFileWrappedSchema},
     operation_id="getDocumentFileMeta",
 )
 @auth_check.require_login
-def get_document_file_meta(request, username: str, document_slug: str, id: int):
+def get_document_file_meta(request, username: str, slug: str, id: int):
     document_file = get_object_or_404(
         DocumentFile,
         pk=id,
         document__author__username=username,
-        document__slug=document_slug,
+        document__slug=slug,
     )
     return {
         "value": make_file_response(document_file),
@@ -692,9 +685,9 @@ def get_document_file_meta(request, username: str, document_slug: str, id: int):
 
 
 @router.put(
-    "/{username}/{document_slug}/files/{id}/",
+    "/{username}/{slug}/files/{id}/",
     response={
-        200: FileWrappedSchema,
+        200: DocumentFileWrappedSchema,
         400: ErrorSchema,
         403: ErrorSchema,
         415: ErrorSchema,
@@ -705,14 +698,12 @@ def get_document_file_meta(request, username: str, document_slug: str, id: int):
 def update_document_file(
     request,
     username: str,
-    document_slug: str,
+    slug: str,
     id: int,
-    data: UpdateFileSchema = Form(None),  # noqa: B008
+    data: UpdateDocumentFileSchema = Form(None),  # noqa: B008
     file: UploadedFile = File(None),  # noqa: B008
 ):
-    document = get_object_or_404(
-        Document, author__username=username, slug=document_slug
-    )
+    document = get_object_or_404(Document, author__username=username, slug=slug)
     if not document.current_user_can_edit(request):
         return not_allowed()
 
@@ -756,15 +747,13 @@ def update_document_file(
 
 
 @router.delete(
-    "/{username}/{document_slug}/files/{id}/",
-    response={200: DeleteFileResponse, 403: ErrorSchema},
+    "/{username}/{slug}/files/{id}/",
+    response={200: DeleteDocumentFileResponse, 403: ErrorSchema},
     operation_id="deleteDocumentFile",
 )
 @auth_check.require_login
-def delete_document_file(request, username: str, document_slug: str, id: int):
-    document = get_object_or_404(
-        Document, author__username=username, slug=document_slug
-    )
+def delete_document_file(request, username: str, slug: str, id: int):
+    document = get_object_or_404(Document, author__username=username, slug=slug)
     if not document.current_user_can_edit(request):
         return not_allowed()
 
@@ -789,16 +778,19 @@ def delete_document_file(request, username: str, document_slug: str, id: int):
 
 
 @router.post(
-    "/setflaggedcomment/{oid}",
-    response={200: CommentWrappedSchema},
+    "/setflaggedcomment/{id}",
+    response={200: DocumentCommentWrappedSchema},
     operation_id="setFlaggedComment",
 )
 @auth_check.require_login
-def set_flagged(request, oid: int, data: SetFlaggedSchema = Form(...)):  # noqa: B008
-    comment = get_object_or_404(Comment, pk=oid)
-    flagged = data.flagged != "false"
+def set_flagged_comment(
+    request,
+    id: int,
+    data: SetDocumentCommentFlaggedSchema = Form(...),  # noqa: B008
+):
+    comment = get_object_or_404(Comment, pk=id)
     old_flagged = comment.flagged.filter(pk=request.user.pk).exists()
-    if flagged != old_flagged:
+    if data.flagged != old_flagged:
         if old_flagged:
             comment.flagged.remove(request.user)
         else:
@@ -810,16 +802,19 @@ def set_flagged(request, oid: int, data: SetFlaggedSchema = Form(...)):  # noqa:
 
 
 @router.post(
-    "/setmarkedasaicomment/{oid}",
-    response={200: CommentWrappedSchema},
-    operation_id="setMarkedAsAiComment",
+    "/setmarkedasaicomment/{id}",
+    response={200: DocumentCommentWrappedSchema},
+    operation_id="setCommentMarkedAsAi",
 )
 @auth_check.require_login
-def set_marked_as_ai(request, oid: int, data: SetMarkedAsAiSchema = Form(...)):  # noqa: B008
-    comment = get_object_or_404(Comment, pk=oid)
-    marked_as_ai = data.marked_as_ai != "false"
+def set_marked_as_ai(
+    request,
+    id: int,
+    data: SetDocumentCommentMarkedAsAiSchema = Form(...),  # noqa: B008
+):
+    comment = get_object_or_404(Comment, pk=id)
     old_marked_as_ai = comment.marked_as_ai.filter(pk=request.user.pk).exists()
-    if marked_as_ai != old_marked_as_ai:
+    if data.marked_as_ai != old_marked_as_ai:
         if old_marked_as_ai:
             comment.marked_as_ai.remove(request.user)
         else:
@@ -831,13 +826,13 @@ def set_marked_as_ai(request, oid: int, data: SetMarkedAsAiSchema = Form(...)): 
 
 
 @router.post(
-    "/resetflaggedcomment/{oid}",
-    response={200: CommentWrappedSchema},
+    "/resetflaggedcomment/{id}",
+    response={200: DocumentCommentWrappedSchema},
     operation_id="resetFlaggedComment",
 )
 @auth_check.require_admin
-def reset_flagged(request, oid: int):
-    comment = get_object_or_404(Comment, pk=oid)
+def reset_flagged_comment(request, id: int):
+    comment = get_object_or_404(Comment, pk=id)
     comment.flagged.clear()
     comment.save()
     return {
@@ -846,13 +841,13 @@ def reset_flagged(request, oid: int):
 
 
 @router.post(
-    "/resetmarkedasaicomment/{oid}",
-    response={200: CommentWrappedSchema},
-    operation_id="resetMarkedAsAiComment",
+    "/resetmarkedasaicomment/{id}",
+    response={200: DocumentCommentWrappedSchema},
+    operation_id="resetCommentMarkedAsAi",
 )
 @auth_check.require_admin
-def reset_marked_as_ai(request, oid: int):
-    comment = get_object_or_404(Comment, pk=oid)
+def reset_comment_marked_as_ai(request, id: int):
+    comment = get_object_or_404(Comment, pk=id)
     comment.marked_as_ai.clear()
     comment.save()
     return {
@@ -861,16 +856,14 @@ def reset_marked_as_ai(request, oid: int):
 
 
 @router.post(
-    "/{username}/{document_slug}/regenerate_api_key/",
+    "/{username}/{slug}/regenerate_api_key/",
     response={200: DocumentWrappedSchema, 403: ErrorSchema},
-    operation_id="regenerateApiKey",
+    operation_id="regenerateDocumentApiKey",
     exclude_none=True,
 )
 @auth_check.require_login
-def regenerate_api_key(request, username: str, document_slug: str):
-    document = get_object_or_404(
-        Document, author__username=username, slug=document_slug
-    )
+def regenerate_document_api_key(request, username: str, slug: str):
+    document = get_object_or_404(Document, author__username=username, slug=slug)
     if not document.current_user_can_edit(request):
         return not_allowed()
     document.api_key = generate_api_key()
@@ -897,22 +890,21 @@ def get_document_file(request, filename):
 
 
 @router.post(
-    "/{username}/{document_slug}/files/{id}/update/",
+    "/{username}/{slug}/files/{id}/update/",
     response={204: None, 403: ErrorSchema, 415: ErrorSchema},
-    operation_id="updateFileContent",
+    operation_id="updateDocumentFileContent",
+    tags=["frontend-exclude"],
 )
 @csrf_exempt
-def update_file(
+def update_document_file_content(
     request,
     username: str,
-    document_slug: str,
+    slug: str,
     id: int,
     file: UploadedFile = File(...),  # noqa: B008
 ):
     token = request.headers.get("Authorization", "")
-    document = get_object_or_404(
-        Document, author__username=username, slug=document_slug
-    )
+    document = get_object_or_404(Document, author__username=username, slug=slug)
     if document.api_key != token:
         return 403, {"error": "invalid authorization token"}
 
@@ -955,30 +947,30 @@ def update_file(
 
 
 @router.post(
-    "/{username}/{document_slug}/files/{filename}/move/",
+    "/{username}/{slug}/files/{filename}/move/",
     response={204: None, 403: ErrorSchema},
-    operation_id="moveFile",
+    operation_id="moveDocumentFile",
 )
 @auth_check.require_login
-def move_file(
+def move_document_file(
     request,
     username: str,
-    document_slug: str,
+    slug: str,
     filename: str,
-    data: MoveFileSchema = Form(...),  # noqa: B008
+    data: MoveDocumentFileSchema = Form(...),  # noqa: B008
 ):
-    document = get_object_or_404(
-        Document, author__username=username, slug=document_slug
-    )
+    document = get_object_or_404(Document, author__username=username, slug=slug)
     if not document.current_user_can_edit(request):
         return not_allowed()
 
+    direction = -1 if data.direction == "up" else 1
+
     file = get_object_or_404(DocumentFile, filename=filename)
     moved_file = get_object_or_404(
-        DocumentFile, document=document, order=file.order + data.direction
+        DocumentFile, document=document, order=file.order + direction
     )
-    file.order += data.direction
-    moved_file.order -= data.direction
+    file.order += direction
+    moved_file.order -= direction
 
     with transaction.atomic():
         file.save()

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import {
   Alert,
   Anchor,
@@ -13,10 +14,9 @@ import {
   Box,
   Tooltip,
 } from "@mantine/core";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { download } from "../api/fetch-utils";
-import { useDocument } from "../api/hooks";
 import IconButton from "../components/icon-button";
 import LikeButton from "../components/like-button";
 import ContentContainer from "../components/secondary-container";
@@ -28,7 +28,6 @@ import DocumentMarkdownEditor from "../components/document-markdown-editor";
 import DocumentPdf from "../components/document-pdf";
 import DocumentSettings from "../components/document-settings";
 import { useDocumentDownload } from "../hooks/useDocumentDownload";
-import { Document, DocumentFile } from "../interfaces";
 import MarkdownText from "../components/markdown-text";
 import { differenceInSeconds, formatDistanceToNow } from "date-fns";
 import {
@@ -44,22 +43,34 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
 import { useScrollToPermalink } from "../hooks/useScrollToPermalink";
+import type { DocumentFileSchema } from "../api/model/documentFileSchema";
+import type { DocumentSchema } from "../api/model/documentSchema";
+import { useGetDocument } from "../api/hooks/documents";
 
-const isPdf = (file: DocumentFile) => file.mime_type === "application/pdf";
-const isMarkdown = (file: DocumentFile) =>
+const isPdf = (file: DocumentFileSchema) =>
+  file.mime_type === "application/pdf";
+const isMarkdown = (file: DocumentFileSchema) =>
   file.filename.toLowerCase().endsWith(".md");
-const isTex = (file: DocumentFile) =>
+const isTex = (file: DocumentFileSchema) =>
   file.filename.toLowerCase().endsWith(".tex");
-const isTypst = (file: DocumentFile) =>
+const isTypst = (file: DocumentFileSchema) =>
   file.filename.toLowerCase().endsWith(".typ");
 
 const getComponents = (
-  file: DocumentFile | undefined,
+  file: DocumentFileSchema | undefined,
 ):
   | {
-      Viewer: React.FC<{ document: Document; file: DocumentFile; url: string }>;
+      Viewer: React.FC<{
+        document: DocumentSchema;
+        file: DocumentFileSchema;
+        url: string;
+      }>;
       Editor:
-        | React.FC<{ document: Document; file: DocumentFile; url: string }>
+        | React.FC<{
+            document: DocumentSchema;
+            file: DocumentFileSchema;
+            url: string;
+          }>
         | undefined;
     }
   | undefined => {
@@ -78,8 +89,8 @@ const getComponents = (
   return undefined;
 };
 
-const getFile = (document: Document | undefined, oid: number) =>
-  document ? document.files.find(x => x.oid === oid) : undefined;
+const getFile = (document: DocumentSchema | undefined, oid: number) =>
+  document ? document.files?.find(x => x.oid === oid) : undefined;
 
 const FileIcon: React.FC<{ filename: string }> = ({ filename }) => {
   if (filename.endsWith(".pdf")) {
@@ -93,43 +104,85 @@ const FileIcon: React.FC<{ filename: string }> = ({ filename }) => {
   return <IconFile />;
 };
 
-interface Props {}
-const DocumentPage: React.FC<Props> = () => {
+// Calculate tab to show based on state if user hasn't
+// navigated to a tab yet
+function resolveTab(
+  storedTab: string | null | undefined,
+  searchParams: string,
+  document?: DocumentSchema,
+): string | undefined {
+  if (storedTab) return storedTab;
+
+  if (!document) return undefined;
+
+  // If ?comment=... in url and that is a valid comment
+  // navigate to comments
+  const sp = new URLSearchParams(searchParams);
+  const commentId = sp.get("comment");
+  if (
+    commentId &&
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    document.comments!.some(item => String(item.oid) === commentId)
+  ) {
+    return "comments";
+  }
+
+  // Navigate to first file if it exists
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const files = document.files!;
+  if (files.length > 0) {
+    return String(files[0].oid);
+  }
+
+  return undefined;
+}
+
+const DocumentPage: React.FC = () => {
   const { author, slug } = useParams() as { slug: string; author: string };
-  const [error, _, data, mutate, reload] = useDocument(
+  const {
+    data: document,
+    isSuccess,
+    refetch,
+    isError,
+    error,
+  } = useGetDocument(
     author,
     slug,
-    document => {
-      if (document.files.length > 0) setTab(document.files[0].oid.toString());
+    {
+      include_comments: true,
+      include_files: true,
+    },
+    {
+      query: {
+        select({ value: document }) {
+          return document;
+        },
+      },
     },
   );
 
   useQuickSearchFilter(
-    data && { slug: data.category, displayname: data.category_display_name },
+    isSuccess
+      ? { slug: document.category, displayname: document.category_display_name }
+      : undefined,
   );
 
-  const [tab, setTab] = useState<string | null>("none");
-  const activeFile = !Number.isNaN(Number(tab))
-    ? getFile(data, Number(tab))
-    : undefined;
+  const { search: searchParams } = useLocation();
+
+  const [tab, setTab] = useState<string | null>();
+  const resolvedTab = resolveTab(tab, searchParams, document);
+
+  const activeFile =
+    resolvedTab && !Number.isNaN(Number(resolvedTab))
+      ? getFile(document, Number(resolvedTab))
+      : undefined;
   const Components = getComponents(activeFile);
   const [editing, { toggle: toggleEditing }] = useDisclosure();
-  const [loadingDownload, startDownload] = useDocumentDownload(data);
-  const reloadSettings = async () => {
-    await reload();
-    setTab("settings");
-  };
-  const { search: searchParams } = useLocation();
-  useEffect(() => {
-    const params = new URLSearchParams(searchParams);
-    const id = params.get("comment");
-    if (id && data?.comments.map(item => String(item.oid)).includes(id)) {
-      setTab("comments");
-    }
-  }, [searchParams, data]);
+  const [loadingDownload, startDownload] = useDocumentDownload(document);
+
   useScrollToPermalink();
 
-  function formatDisplayName(file: DocumentFile): string {
+  function formatDisplayName(file: DocumentFileSchema): string {
     const ext = file.filename.split(".").at(-1);
     if (ext && file.display_name.endsWith(`.${ext}`)) {
       return file.display_name;
@@ -149,18 +202,18 @@ const DocumentPage: React.FC<Props> = () => {
             size="xs"
             tt="uppercase"
             component={Link}
-            to={`/category/${data ? data.category : ""}`}
+            to={`/category/${document ? document.category : ""}`}
           >
-            {data?.category_display_name}
+            {document?.category_display_name}
           </Anchor>
           <Anchor size="xs" tt="uppercase">
-            {data?.display_name}
+            {document?.display_name}
           </Anchor>
         </Breadcrumbs>
-        {data && (
+        {document && (
           <Box my="sm">
             <Flex justify="space-between" align="center">
-              <Title>{data.display_name ?? slug}</Title>
+              <Title>{document.display_name}</Title>
               <Group>
                 <IconButton
                   icon={<IconDownload />}
@@ -169,19 +222,21 @@ const DocumentPage: React.FC<Props> = () => {
                   tooltip="Download"
                   loading={loadingDownload}
                 />
-                <LikeButton document={data} mutate={mutate} />
+                <LikeButton document={document} refetch={refetch} />
               </Group>
             </Flex>
-            <Anchor component={Link} to={`/user/${data.author}`}>
+            <Anchor component={Link} to={`/user/${document.author}`}>
               <Text fw={700} component="span">
-                {data.author_displayname}
+                {document.author_displayname}
               </Text>
               <Text ml="0.3em" c="dimmed" component="span">
-                @{data.author}
+                @{document.author}
               </Text>
             </Anchor>
-            {differenceInSeconds(new Date(data.edittime), new Date(data.time)) >
-              1 && (
+            {differenceInSeconds(
+              new Date(document.edittime),
+              new Date(document.time),
+            ) > 1 && (
               <>
                 <Text c="dimmed" mx={6} component="span">
                   ·
@@ -189,29 +244,30 @@ const DocumentPage: React.FC<Props> = () => {
                 <Tooltip
                   withArrow
                   withinPortal
-                  label={`Created ${formatDistanceToNow(new Date(data.time))} ago`}
-                  disabled={data.time === null}
+                  label={`Created ${formatDistanceToNow(new Date(document.time))} ago`}
                 >
                   <Text c="dimmed" component="span">
-                    updated {formatDistanceToNow(new Date(data.edittime))} ago
+                    updated {formatDistanceToNow(new Date(document.edittime))}{" "}
+                    ago
                   </Text>
                 </Tooltip>
               </>
             )}
           </Box>
         )}
-        {error && <Alert color="red">{error.toString()}</Alert>}
-        {data?.description && (
+        {isError && <Alert color="red">{String(error)}</Alert>}
+        {document?.description && (
           <div>
-            <MarkdownText value={data.description} />
+            <MarkdownText value={document.description} />
           </div>
         )}
       </Container>
       <Container size="xl" mt="sm">
-        <Tabs value={tab} onChange={setTab}>
+        <Tabs value={resolvedTab} onChange={setTab}>
           <Tabs.List>
-            {data?.files
-              .sort((a, b) => a.order - b.order)
+            {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
+            {document
+              ?.files!.sort((a, b) => a.order - b.order)
               .map(file => (
                 <Tabs.Tab
                   key={file.oid}
@@ -224,7 +280,7 @@ const DocumentPage: React.FC<Props> = () => {
             <Tabs.Tab value="comments" leftSection={<IconMessage />}>
               Comments
             </Tabs.Tab>
-            {data && (data.can_delete || data.can_edit) && (
+            {document && (document.can_delete || document.can_edit) && (
               <Tabs.Tab value="settings" leftSection={<IconSettings />}>
                 Settings
               </Tabs.Tab>
@@ -233,10 +289,10 @@ const DocumentPage: React.FC<Props> = () => {
         </Tabs>
       </Container>
 
-      {!Number.isNaN(Number(tab)) &&
-        data &&
+      {activeFile &&
+        document &&
         (Components?.Viewer ? (
-          data.can_edit && Components.Editor !== undefined ? (
+          document.can_edit && Components.Editor !== undefined ? (
             <ContentContainer mt="-2px">
               <Container>
                 <Flex py="sm" justify="center">
@@ -247,26 +303,26 @@ const DocumentPage: React.FC<Props> = () => {
               </Container>
               {!editing && (
                 <Components.Viewer
-                  file={activeFile!}
-                  document={data}
-                  url={`/api/document/file/${activeFile?.filename}`}
+                  file={activeFile}
+                  document={document}
+                  url={`/api/document/file/${activeFile.filename}`}
                 />
               )}
               {editing && (
                 <Container size="xl">
                   <Components.Editor
-                    file={activeFile!}
-                    document={data}
-                    url={`/api/document/file/${activeFile?.filename}`}
+                    file={activeFile}
+                    document={document}
+                    url={`/api/document/file/${activeFile.filename}`}
                   />
                 </Container>
               )}
             </ContentContainer>
           ) : (
             <Components.Viewer
-              file={activeFile!}
-              document={data}
-              url={`/api/document/file/${activeFile?.filename}`}
+              file={activeFile}
+              document={document}
+              url={`/api/document/file/${activeFile.filename}`}
             />
           )
         ) : (
@@ -278,7 +334,7 @@ const DocumentPage: React.FC<Props> = () => {
               <Button
                 leftSection={<IconDownload />}
                 onClick={() =>
-                  download(`/api/document/file/${activeFile?.filename}`)
+                  download(`/api/document/file/${activeFile.filename}`)
                 }
               >
                 Download
@@ -286,40 +342,38 @@ const DocumentPage: React.FC<Props> = () => {
             </Container>
           </ContentContainer>
         ))}
-      {tab === "comments" && data && (
+      {tab === "comments" && document && (
         <ContentContainer mt="-2px">
           <Container size="xl">
-            {data.comments.length === 0 && (
+            {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
+            {document.comments!.length === 0 && (
               <Alert mb="sm">There are no comments yet.</Alert>
             )}
-            {data.comments.map(comment => (
+            {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
+            {document.comments!.map(comment => (
               <DocumentCommentComponent
-                documentAuthor={data.author}
+                documentAuthor={document.author}
                 documentSlug={slug}
                 comment={comment}
                 key={comment.oid}
-                mutate={mutate}
+                refetch={refetch}
               />
             ))}
             <Card shadow="md" withBorder>
               <DocumentCommentForm
                 documentAuthor={author}
                 documentSlug={slug}
-                mutate={mutate}
+                refetch={refetch}
               />
             </Card>
           </Container>
         </ContentContainer>
       )}
 
-      {tab === "settings" && data && (
+      {tab === "settings" && document && (
         <ContentContainer mt="-2px">
           <Container size="xl">
-            <DocumentSettings
-              data={data}
-              mutate={mutate}
-              reload={reloadSettings}
-            />
+            <DocumentSettings document={document} refetch={refetch} />
           </Container>
         </ContentContainer>
       )}
