@@ -653,7 +653,7 @@ export const useDocumentsLikedBy = (likedBy: string, isMyself: boolean) => {
 export const loadDocument = async (author: string, documentSlug: string) => {
   return (
     await fetchGet(
-      `/api/document/${author}/${documentSlug}/?include_comments&include_files`,
+      `/api/document/${author}/${documentSlug}/?include_comments=true&include_files=true`,
     )
   ).value as Document;
 };
@@ -736,7 +736,7 @@ export const deleteDocumentComment = async (
   documentSlug: string,
   commentId: number,
 ) => {
-  await fetchDelete(
+  await fetchDelete<undefined>(
     `/api/document/${author}/${documentSlug}/comments/${commentId}/`,
   );
 };

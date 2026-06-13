@@ -279,6 +279,7 @@ MIDDLEWARE = [
     "csp.middleware.CSPMiddleware",
     "util.middleware.parse_request_middleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
+    "ninja.compatibility.files.fix_request_files_middleware",
 ]
 
 if DEBUG and not TESTING:
