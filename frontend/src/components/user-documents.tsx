@@ -46,7 +46,9 @@ const UserDocuments: React.FC<UserDocumentsProps> = ({
         {isMyself ? "Your" : `${userInfo?.displayName ?? `@${username}`}'s`}{" "}
         Documents
       </h3>
-      {documents.isError && <Alert color="red">{documents.error.err}</Alert>}
+      {documents.isError && (
+        <Alert color="red">{documents.error as unknown as string}</Alert>
+      )}
       {documents.data && displayDocuments(documents.data.value)}
       {(!documents.data || documents.data.value.length === 0) && (
         <Alert color="gray">No documents</Alert>
@@ -57,7 +59,9 @@ const UserDocuments: React.FC<UserDocumentsProps> = ({
         <>
           <h3>Liked Documents</h3>
           {likedDocuments.isError && (
-            <Alert color="red">{likedDocuments.error.err}</Alert>
+            <Alert color="red">
+              {likedDocuments.error as unknown as string}
+            </Alert>
           )}
           {likedDocuments.data && displayDocuments(likedDocuments.data.value)}
           {(!likedDocuments.data || likedDocuments.data.value.length === 0) && (
