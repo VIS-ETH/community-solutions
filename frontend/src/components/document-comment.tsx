@@ -68,13 +68,15 @@ const DocumentCommentComponent = ({
     },
   });
 
-  const deleteComment = useDeleteDocumentComment({
+  const hooksOptionsRefetch = {
     mutation: {
       onSuccess() {
         refetch();
       },
     },
-  });
+  };
+
+  const deleteComment = useDeleteDocumentComment(hooksOptionsRefetch);
 
   const [hasDraft, setHasDraft] = useState(false);
   const [showActions, setShowActions] = useState(false);
@@ -87,34 +89,10 @@ const DocumentCommentComponent = ({
     usePendingImages();
   const toggle = () => setHasDraft(e => !e);
 
-  const setCommentFlagged = useSetFlaggedComment({
-    mutation: {
-      onSuccess() {
-        refetch();
-      },
-    },
-  });
-  const setCommentMarkedAsAi = useSetCommentMarkedAsAi({
-    mutation: {
-      onSuccess() {
-        refetch();
-      },
-    },
-  });
-  const resetCommentFlagged = useResetFlaggedComment({
-    mutation: {
-      onSuccess() {
-        refetch();
-      },
-    },
-  });
-  const resetCommentMarkedAsAi = useResetCommentMarkedAsAi({
-    mutation: {
-      onSuccess() {
-        refetch();
-      },
-    },
-  });
+  const setCommentFlagged = useSetFlaggedComment(hooksOptionsRefetch);
+  const setCommentMarkedAsAi = useSetCommentMarkedAsAi(hooksOptionsRefetch);
+  const resetCommentFlagged = useResetFlaggedComment(hooksOptionsRefetch);
+  const resetCommentMarkedAsAi = useResetCommentMarkedAsAi(hooksOptionsRefetch);
 
   const flaggedLoading =
     setCommentFlagged.isPending || resetCommentFlagged.isPending;
