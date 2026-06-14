@@ -33,7 +33,7 @@ const CreateDocumentFileModal: React.FC<Props> = ({
   return (
     <>
       <Stack>
-        {isError && <Alert color="red">{error.err}</Alert>}
+        {isError && <Alert color="red">{error as unknown as string}</Alert>}
         <TextInput
           label="Display Name"
           value={displayName}
