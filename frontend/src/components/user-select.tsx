@@ -8,12 +8,12 @@ interface UserSelectProps {
   label: string;
   value: UserSchema | null;
   onChange: (user: UserSchema | null) => void;
-  filter: (user: UserSchema) => boolean;
+  filter?: (user: UserSchema) => boolean;
 }
 
 const UserSelect: React.FC<UserSelectProps> = ({
   onChange,
-  filter: shouldFilter,
+  filter: shouldFilter = () => true,
   value,
   label,
 }) => {
