@@ -8,14 +8,14 @@ interface UserSelectProps {
   label: string;
   value: UserSchema | null;
   onChange: (user: UserSchema | null) => void;
-  filter: (user: UserSchema) => boolean;
+  filter?: (user: UserSchema) => boolean;
 }
 
 const UserSelect: React.FC<UserSelectProps> = ({
   onChange,
   value,
   label,
-  filter,
+  filter = () => true,
 }) => {
   const [searchValue, setSearchValue] = useState("");
   const [debouncedSearch] = useDebouncedValue(searchValue, 300);
