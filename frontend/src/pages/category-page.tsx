@@ -13,6 +13,7 @@ import {
   Box,
   Title,
   Loader,
+  CloseButton,
 } from "@mantine/core";
 import React, { useCallback, useMemo } from "react";
 import {
@@ -44,9 +45,35 @@ import {
   IconInfoCircle,
   IconStar,
   IconTrash,
+  IconUpload,
   IconUserStar,
 } from "@tabler/icons-react";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
+import UploadPdfCard from "../components/upload-pdf-card";
+
+interface PdfUploadPageProps {
+  category: string;
+  onCancel: () => void;
+}
+
+const PdfUploadPage: React.FC<PdfUploadPageProps> = ({
+  category,
+  onCancel,
+}) => (
+  <>
+    <Group justify="space-between" pt="sm">
+      <Title order={2}>Upload PDF</Title>
+      <CloseButton onClick={onCancel} />
+    </Group>
+    <Grid>
+      <Grid.Col span="auto" />
+      <Grid.Col span={{ lg: 6 }}>
+        <UploadPdfCard category={category} />
+      </Grid.Col>
+      <Grid.Col span="auto" />
+    </Grid>
+  </>
+);
 
 interface CategoryPageContentProps {
   onMetaDataChange: (newMetaData: CategoryMetaData) => void;
@@ -91,7 +118,12 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
         <Anchor tt="uppercase" size="xs" component={Link} to="/">
           Home
         </Anchor>
-        <Anchor tt="uppercase" size="xs">
+        <Anchor
+          tt="uppercase"
+          size="xs"
+          component={Link}
+          to={`/category/${metaData.slug}`}
+        >
           {metaData.displayname}
         </Anchor>
       </Breadcrumbs>
@@ -105,13 +137,30 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
               offeredIn && (
                 <CategoryMetaDataEditor
                   onMetaDataChange={editorOnMetaDataChange}
-                  close={() => {navigate("./..")}}
+                  close={() => {
+                    void navigate("./..");
+                  }}
                   currentMetaData={metaData}
                   offeredIn={offeredIn.flatMap(b =>
                     b.meta2.map(d => [b.displayname, d.displayname] as const),
                   )}
                 />
               )
+            )
+          }
+        />
+        <Route
+          path="uploadpdf"
+          element={
+            user.isCategoryAdmin ? (
+              <PdfUploadPage
+                category={metaData.slug}
+                onCancel={() => {
+                  void navigate("./..");
+                }}
+              />
+            ) : (
+              <Navigate to="./.." replace />
             )
           }
         />
@@ -129,6 +178,13 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                 </Title>
                 {user.isCategoryAdmin && (
                   <Group>
+                    <Button
+                      leftSection={<IconUpload />}
+                      component={Link}
+                      to="./uploadpdf"
+                    >
+                      Upload PDF
+                    </Button>
                     <Button
                       leftSection={<IconEdit />}
                       component={Link}

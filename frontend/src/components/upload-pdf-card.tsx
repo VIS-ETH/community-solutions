@@ -14,13 +14,21 @@ import { useNavigate } from "react-router-dom";
 import { loadCategories, uploadPdf } from "../api/hooks";
 import { IconCloudUpload } from "@tabler/icons-react";
 
-const UploadPdfCard: React.FC = () => {
+interface UploadPdfCardProps {
+  category?: string;
+}
+
+const UploadPdfCard: React.FC<UploadPdfCardProps> = ({
+  category: givenCategory,
+}) => {
   const navigate = useNavigate();
   const {
     error: categoriesError,
     loading: categoriesLoading,
     data: categories,
-  } = useRequest(loadCategories);
+  } = useRequest(loadCategories, {
+    manual: !!givenCategory,
+  });
   const {
     error: uploadError,
     loading: uploadLoading,
@@ -43,10 +51,12 @@ const UploadPdfCard: React.FC = () => {
   const [file, setFile] = useState<File | null>();
   const [displayname, setDisplayname] = useState("");
   const [category, setCategory] = useState<string | undefined>();
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (file && category) {
-      upload(file, displayname, category);
+
+    const actualCategory = givenCategory ?? category;
+    if (file && actualCategory) {
+      void upload(file, displayname, actualCategory);
     } else if (file === undefined) {
       setValidationError("No file selected");
     } else {
@@ -77,15 +87,17 @@ const UploadPdfCard: React.FC = () => {
               onChange={e => setDisplayname(e.currentTarget.value)}
               required
             />
-            <Select
-              label="Category"
-              placeholder="Choose category..."
-              searchable
-              nothingFoundMessage="No category found"
-              data={options}
-              onChange={(value: string | null) => value && setCategory(value)}
-              required
-            />
+            {!givenCategory && (
+              <Select
+                label="Category"
+                placeholder="Choose category..."
+                searchable
+                nothingFoundMessage="No category found"
+                data={options}
+                onChange={(value: string | null) => value && setCategory(value)}
+                required
+              />
+            )}
             <Button type="submit" loading={loading}>
               Submit
             </Button>
