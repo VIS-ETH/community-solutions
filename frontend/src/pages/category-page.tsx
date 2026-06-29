@@ -51,6 +51,7 @@ import {
 } from "@tabler/icons-react";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
 import UploadPdfCard from "../components/upload-pdf-card";
+import UploadTranscriptCard from "../components/upload-transcript-card.js";
 
 interface PdfUploadPageProps {
   category: string;
@@ -92,7 +93,9 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
     },
     [run, onMetaDataChange],
   );
-  const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
+  const [showUploadModal, setShowUploadModal] = useState<
+    false | "exam" | "transcript"
+  >(false);
 
   return (
     <>
@@ -144,15 +147,35 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                 <Title order={1} my="md">
                   {metaData.displayname}
                 </Title>
+                {!user.isCategoryAdmin && metaData.has_payments && (
+                  <Button
+                    leftSection={<IconUpload />}
+                    onClick={() => {
+                      setShowUploadModal("transcript");
+                    }}
+                  >
+                    Upload Transcript
+                  </Button>
+                )}
                 {user.isCategoryAdmin && (
                   <Group>
+                    {metaData.has_payments && (
+                      <Button
+                        leftSection={<IconUpload />}
+                        onClick={() => {
+                          setShowUploadModal("transcript");
+                        }}
+                      >
+                        Upload Transcript
+                      </Button>
+                    )}
                     <Button
                       leftSection={<IconUpload />}
                       onClick={() => {
-                        setShowUploadModal(true);
+                        setShowUploadModal("exam");
                       }}
                     >
-                      Upload PDF
+                      Upload Exam
                     </Button>
                     <Button
                       leftSection={<IconEdit />}
@@ -289,15 +312,24 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                   </List>
                 </>
               )}
-              {user.isCategoryAdmin && (
+              {(user.isCategoryAdmin || metaData.has_payments) && (
                 <Modal
-                  opened={showUploadModal}
+                  opened={showUploadModal !== false}
                   onClose={() => {
                     setShowUploadModal(false);
                   }}
-                  title="Upload Exam"
+                  title={
+                    showUploadModal === "exam"
+                      ? "Upload Exam"
+                      : "Upload Transcript"
+                  }
                 >
-                  <UploadPdfCard inline category={metaData.slug} />
+                  {showUploadModal === "exam" && (
+                    <UploadPdfCard inline category={metaData.slug} />
+                  )}
+                  {showUploadModal === "transcript" && (
+                    <UploadTranscriptCard inline category={metaData.slug} />
+                  )}
                 </Modal>
               )}
             </>

@@ -1,20 +1,28 @@
 import {
   Alert,
+  Button,
   Card,
   FileInput,
+  Select,
   Stack,
   Text,
   Title,
-  Select,
-  Button,
 } from "@mantine/core";
+import { IconCloudUpload, IconDownload } from "@tabler/icons-react";
 import { useRequest } from "ahooks";
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loadPaymentCategories, uploadTranscript } from "../api/hooks";
-import { IconCloudUpload, IconDownload } from "@tabler/icons-react";
 
-const UploadTranscriptCard: React.FC = () => {
+interface UploadTranscriptCardProps {
+  inline?: boolean;
+  category?: string;
+}
+
+const UploadTranscriptCard: React.FC<UploadTranscriptCardProps> = ({
+  category: givenCategory,
+  inline,
+}) => {
   const navigate = useNavigate();
   const {
     error: categoriesError,
@@ -44,10 +52,12 @@ const UploadTranscriptCard: React.FC = () => {
 
   const [file, setFile] = useState<File | null>();
   const [category, setCategory] = useState<string | undefined>();
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (file && category) {
-      upload(file, category);
+
+    const actualCategory = givenCategory ?? category;
+    if (file && actualCategory) {
+      void upload(file, actualCategory);
     } else if (file === undefined) {
       setValidationError("No file selected");
     } else {
@@ -55,30 +65,27 @@ const UploadTranscriptCard: React.FC = () => {
     }
   };
 
-  return (
-    <Card withBorder shadow="md">
-      <Card.Section withBorder p="md">
-        <Title order={4}>Submit Transcript for Oral Exam</Title>
-      </Card.Section>
-      <Stack mt="sm">
-        <Text>Please use the following template:</Text>
-        <Button
-          leftSection={<IconDownload />}
-          onClick={() => window.open("/static/transcript_template.tex")}
-        >
-          Download template
-        </Button>
-        <form onSubmit={onSubmit}>
-          <Stack>
-            {error && <Alert color="red">{error.toString()}</Alert>}
-            <FileInput
-              label="File"
-              placeholder="Click to choose file..."
-              leftSection={<IconCloudUpload />}
-              value={file}
-              onChange={setFile}
-              accept="application/pdf"
-            />
+  const body = (
+    <Stack mt="sm">
+      <Text>Please use the following template:</Text>
+      <Button
+        leftSection={<IconDownload />}
+        onClick={() => window.open("/static/transcript_template.tex")}
+      >
+        Download template
+      </Button>
+      <form onSubmit={onSubmit}>
+        <Stack>
+          {error && <Alert color="red">{error.toString()}</Alert>}
+          <FileInput
+            label="File"
+            placeholder="Click to choose file..."
+            leftSection={<IconCloudUpload />}
+            value={file}
+            onChange={setFile}
+            accept="application/pdf"
+          />
+          {!givenCategory && (
             <Select
               label="Category"
               placeholder="Choose category..."
@@ -89,12 +96,22 @@ const UploadTranscriptCard: React.FC = () => {
                 value != null && setCategory(value)
               }
             />
-            <Button type="submit" loading={loading}>
-              Submit
-            </Button>
-          </Stack>
-        </form>
-      </Stack>
+          )}
+          <Button type="submit" loading={loading}>
+            Submit
+          </Button>
+        </Stack>
+      </form>
+    </Stack>
+  );
+  return inline ? (
+    body
+  ) : (
+    <Card withBorder shadow="md">
+      <Card.Section withBorder p="md">
+        <Title order={4}>Submit Transcript for Oral Exam</Title>
+      </Card.Section>
+      {body}
     </Card>
   );
 };

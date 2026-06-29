@@ -1,18 +1,18 @@
 import {
+  Alert,
+  Button,
+  Card,
   FileInput,
   Select,
   Stack,
   TextInput,
   Title,
-  Alert,
-  Button,
-  Card,
 } from "@mantine/core";
+import { IconCloudUpload } from "@tabler/icons-react";
 import { useRequest } from "ahooks";
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loadCategories, uploadPdf } from "../api/hooks";
-import { IconCloudUpload } from "@tabler/icons-react";
 
 interface UploadPdfCardProps {
   inline?: boolean;
