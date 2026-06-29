@@ -14,14 +14,12 @@ import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loadCategories, uploadPdf } from "../api/hooks";
 
-interface UploadPdfCardProps {
-  inline?: boolean;
+interface UploadPdfFormProps {
   category?: string;
 }
 
-const UploadPdfCard: React.FC<UploadPdfCardProps> = ({
+export const UploadPdfForm: React.FC<UploadPdfFormProps> = ({
   category: givenCategory,
-  inline = false,
 }) => {
   const navigate = useNavigate();
   const {
@@ -37,7 +35,7 @@ const UploadPdfCard: React.FC<UploadPdfCardProps> = ({
     run: upload,
   } = useRequest(uploadPdf, {
     manual: true,
-    onSuccess: filename => navigate(`/exams/${filename}`),
+    onSuccess: filename => void navigate(`/exams/${filename}`),
   });
   const [validationError, setValidationError] = useState("");
   const error = categoriesError ?? uploadError ?? validationError;
@@ -66,7 +64,7 @@ const UploadPdfCard: React.FC<UploadPdfCardProps> = ({
     }
   };
 
-  const form = (
+  return (
     <form onSubmit={onSubmit}>
       <Stack mt="sm">
         {error && <Alert color="red">{error.toString()}</Alert>}
@@ -102,16 +100,15 @@ const UploadPdfCard: React.FC<UploadPdfCardProps> = ({
       </Stack>
     </form>
   );
-
-  return inline ? (
-    form
-  ) : (
-    <Card withBorder shadow="md">
-      <Card.Section withBorder p="md">
-        <Title order={4}>Upload PDF</Title>
-      </Card.Section>
-      <div>{form}</div>
-    </Card>
-  );
 };
+
+const UploadPdfCard: React.FC = () => (
+  <Card withBorder shadow="md">
+    <Card.Section withBorder p="md">
+      <Title order={4}>Upload PDF</Title>
+    </Card.Section>
+    <UploadPdfForm />
+  </Card>
+);
+
 export default UploadPdfCard;

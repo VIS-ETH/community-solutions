@@ -14,14 +14,12 @@ import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loadPaymentCategories, uploadTranscript } from "../api/hooks";
 
-interface UploadTranscriptCardProps {
-  inline?: boolean;
+interface UploadTranscriptFormProps {
   category?: string;
 }
 
-const UploadTranscriptCard: React.FC<UploadTranscriptCardProps> = ({
+export const UploadTranscriptForm: React.FC<UploadTranscriptFormProps> = ({
   category: givenCategory,
-  inline,
 }) => {
   const navigate = useNavigate();
   const {
@@ -35,7 +33,7 @@ const UploadTranscriptCard: React.FC<UploadTranscriptCardProps> = ({
     run: upload,
   } = useRequest(uploadTranscript, {
     manual: true,
-    onSuccess: filename => navigate(`/exams/${filename}`),
+    onSuccess: filename => void navigate(`/exams/${filename}`),
   });
   const [validationError, setValidationError] = useState("");
   const error = categoriesError ?? uploadError ?? validationError;
@@ -65,7 +63,7 @@ const UploadTranscriptCard: React.FC<UploadTranscriptCardProps> = ({
     }
   };
 
-  const body = (
+  return (
     <Stack mt="sm">
       <Text>Please use the following template:</Text>
       <Button
@@ -104,15 +102,15 @@ const UploadTranscriptCard: React.FC<UploadTranscriptCardProps> = ({
       </form>
     </Stack>
   );
-  return inline ? (
-    body
-  ) : (
-    <Card withBorder shadow="md">
-      <Card.Section withBorder p="md">
-        <Title order={4}>Submit Transcript for Oral Exam</Title>
-      </Card.Section>
-      {body}
-    </Card>
-  );
 };
+
+const UploadTranscriptCard: React.FC = () => (
+  <Card withBorder shadow="md">
+    <Card.Section withBorder p="md">
+      <Title order={4}>Submit Transcript for Oral Exam</Title>
+    </Card.Section>
+    <UploadTranscriptForm />
+  </Card>
+);
+
 export default UploadTranscriptCard;

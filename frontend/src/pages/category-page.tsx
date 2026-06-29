@@ -13,10 +13,9 @@ import {
   Box,
   Title,
   Loader,
-  CloseButton,
   Modal,
 } from "@mantine/core";
-import React, { use, useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   Link,
   Navigate,
@@ -50,13 +49,8 @@ import {
   IconUserStar,
 } from "@tabler/icons-react";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
-import UploadPdfCard from "../components/upload-pdf-card";
-import UploadTranscriptCard from "../components/upload-transcript-card.js";
-
-interface PdfUploadPageProps {
-  category: string;
-  onCancel: () => void;
-}
+import { UploadPdfForm } from "../components/upload-pdf-card";
+import { UploadTranscriptForm } from "../components/upload-transcript-card.js";
 
 interface CategoryPageContentProps {
   onMetaDataChange: (newMetaData: CategoryMetaData) => void;
@@ -325,10 +319,10 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                   }
                 >
                   {showUploadModal === "exam" && (
-                    <UploadPdfCard inline category={metaData.slug} />
+                    <UploadPdfForm category={metaData.slug} />
                   )}
                   {showUploadModal === "transcript" && (
-                    <UploadTranscriptCard inline category={metaData.slug} />
+                    <UploadTranscriptForm category={metaData.slug} />
                   )}
                 </Modal>
               )}
