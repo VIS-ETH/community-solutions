@@ -15,11 +15,13 @@ import { loadCategories, uploadPdf } from "../api/hooks";
 import { IconCloudUpload } from "@tabler/icons-react";
 
 interface UploadPdfCardProps {
+  inline?: boolean;
   category?: string;
 }
 
 const UploadPdfCard: React.FC<UploadPdfCardProps> = ({
   category: givenCategory,
+  inline = false,
 }) => {
   const navigate = useNavigate();
   const {
@@ -63,47 +65,52 @@ const UploadPdfCard: React.FC<UploadPdfCardProps> = ({
       setValidationError("No category selected");
     }
   };
-  return (
+
+  const form = (
+    <form onSubmit={onSubmit}>
+      <Stack mt="sm">
+        {error && <Alert color="red">{error.toString()}</Alert>}
+        <FileInput
+          label="File"
+          placeholder="Click to choose file..."
+          leftSection={<IconCloudUpload />}
+          value={file}
+          onChange={setFile}
+          accept="application/pdf"
+        />
+        <TextInput
+          label="Name"
+          placeholder="Name"
+          value={displayname}
+          onChange={e => setDisplayname(e.currentTarget.value)}
+          required
+        />
+        {!givenCategory && (
+          <Select
+            label="Category"
+            placeholder="Choose category..."
+            searchable
+            nothingFoundMessage="No category found"
+            data={options}
+            onChange={(value: string | null) => value && setCategory(value)}
+            required
+          />
+        )}
+        <Button type="submit" loading={loading}>
+          Submit
+        </Button>
+      </Stack>
+    </form>
+  );
+
+  return inline ? (
+    form
+  ) : (
     <Card withBorder shadow="md">
       <Card.Section withBorder p="md">
         <Title order={4}>Upload PDF</Title>
       </Card.Section>
-      <div>
-        <form onSubmit={onSubmit}>
-          <Stack mt="sm">
-            {error && <Alert color="red">{error.toString()}</Alert>}
-            <FileInput
-              label="File"
-              placeholder="Click to choose file..."
-              leftSection={<IconCloudUpload />}
-              value={file}
-              onChange={setFile}
-              accept="application/pdf"
-            />
-            <TextInput
-              label="Name"
-              placeholder="Name"
-              value={displayname}
-              onChange={e => setDisplayname(e.currentTarget.value)}
-              required
-            />
-            {!givenCategory && (
-              <Select
-                label="Category"
-                placeholder="Choose category..."
-                searchable
-                nothingFoundMessage="No category found"
-                data={options}
-                onChange={(value: string | null) => value && setCategory(value)}
-                required
-              />
-            )}
-            <Button type="submit" loading={loading}>
-              Submit
-            </Button>
-          </Stack>
-        </form>
-      </div>
+      <div>{form}</div>
     </Card>
   );
 };

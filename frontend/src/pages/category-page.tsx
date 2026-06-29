@@ -14,8 +14,9 @@ import {
   Title,
   Loader,
   CloseButton,
+  Modal,
 } from "@mantine/core";
-import React, { useCallback, useMemo } from "react";
+import React, { use, useCallback, useMemo, useState } from "react";
 import {
   Link,
   Navigate,
@@ -56,25 +57,6 @@ interface PdfUploadPageProps {
   onCancel: () => void;
 }
 
-const PdfUploadPage: React.FC<PdfUploadPageProps> = ({
-  category,
-  onCancel,
-}) => (
-  <>
-    <Group justify="space-between" pt="sm">
-      <Title order={2}>Upload PDF</Title>
-      <CloseButton onClick={onCancel} />
-    </Group>
-    <Grid>
-      <Grid.Col span="auto" />
-      <Grid.Col span={{ lg: 6 }}>
-        <UploadPdfCard category={category} />
-      </Grid.Col>
-      <Grid.Col span="auto" />
-    </Grid>
-  </>
-);
-
 interface CategoryPageContentProps {
   onMetaDataChange: (newMetaData: CategoryMetaData) => void;
   metaData: CategoryMetaData;
@@ -110,6 +92,7 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
     },
     [run, onMetaDataChange],
   );
+  const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
 
   return (
     <>
@@ -150,21 +133,6 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
           }
         />
         <Route
-          path="uploadpdf"
-          element={
-            user.isCategoryAdmin ? (
-              <PdfUploadPage
-                category={metaData.slug}
-                onCancel={() => {
-                  void navigate("./..");
-                }}
-              />
-            ) : (
-              <Navigate to="./.." replace />
-            )
-          }
-        />
-        <Route
           path="/"
           element={
             <>
@@ -180,8 +148,9 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                   <Group>
                     <Button
                       leftSection={<IconUpload />}
-                      component={Link}
-                      to="./uploadpdf"
+                      onClick={() => {
+                        setShowUploadModal(true);
+                      }}
                     >
                       Upload PDF
                     </Button>
@@ -319,6 +288,17 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                     ))}
                   </List>
                 </>
+              )}
+              {user.isCategoryAdmin && (
+                <Modal
+                  opened={showUploadModal}
+                  onClose={() => {
+                    setShowUploadModal(false);
+                  }}
+                  title="Upload Exam"
+                >
+                  <UploadPdfCard inline category={metaData.slug} />
+                </Modal>
               )}
             </>
           }
