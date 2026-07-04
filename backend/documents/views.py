@@ -115,9 +115,6 @@ def get_document_obj(
     return obj
 
 
-
-
-
 def prepare_document_file(request: HttpRequest, override_allowed=False):
     file = request.FILES.get("file")
     if not file:

@@ -14,6 +14,7 @@ import {
   Tooltip,
   Modal,
   Stack,
+  List
 } from "@mantine/core";
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
@@ -172,17 +173,24 @@ const DocumentPage: React.FC<Props> = () => {
       <Modal
         opened={showWarningModal}
         onClose={closeWarningModal}
-        title="Unsafe files in download"
+        withCloseButton={false}
       >
         <Stack>
+          <Text>Some requested files have uncommon file extensions.</Text>
           <Text>
-            You are about to download files that might be unsafe. Are you sure
-            you want to continue?
+            Please note that the server has not scanned or verified the files for viruses,
+            and you should exercise caution when downloading user-uploaded files.
           </Text>
-          <Alert>
-            Unsafe files:{" "}
-            {warningFiles.map(file => formatDisplayName(file)).join(", ")}
+          <Alert title={`Possibly unsafe file${warningFiles.length > 1 ? "s" : ""}`}>
+            <List spacing={4} size="sm">
+                  {warningFiles.map((file) => (
+                    <List.Item key={file.display_name}>
+                      {formatDisplayName(file)}
+                    </List.Item>
+                  ))}
+                </List>
           </Alert>
+          <Text>Are you sure you want to continue?</Text>
           <Group justify="flex-end">
             <Button onClick={closeWarningModal}>Cancel</Button>
             <Button
@@ -330,7 +338,7 @@ const DocumentPage: React.FC<Props> = () => {
           <ContentContainer mt="-2px">
             <Container size="xl">
               {activeFile && (isUnsafeFile(activeFile) ? <Alert color="red" my="sm">
-                This file may be unsafe. Be careful when downloading it.
+                This file has an uncommon file extension. Be careful when downloading it, as the server does not scan user-uploaded files for viruses.
               </Alert> : <Alert color="blue" my="sm">
                 This file can only be downloaded.
               </Alert>)}
