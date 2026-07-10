@@ -13,8 +13,9 @@ import {
   Box,
   Title,
   Loader,
+  Modal,
 } from "@mantine/core";
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   Link,
   Navigate,
@@ -44,9 +45,12 @@ import {
   IconInfoCircle,
   IconStar,
   IconTrash,
+  IconUpload,
   IconUserStar,
 } from "@tabler/icons-react";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
+import { UploadPdfForm } from "../components/upload-pdf-card";
+import { UploadTranscriptForm } from "../components/upload-transcript-card.js";
 
 interface CategoryPageContentProps {
   onMetaDataChange: (newMetaData: CategoryMetaData) => void;
@@ -83,6 +87,9 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
     },
     [run, onMetaDataChange],
   );
+  const [showUploadModal, setShowUploadModal] = useState<
+    false | "exam" | "transcript"
+  >(false);
 
   return (
     <>
@@ -91,7 +98,12 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
         <Anchor tt="uppercase" size="xs" component={Link} to="/">
           Home
         </Anchor>
-        <Anchor tt="uppercase" size="xs">
+        <Anchor
+          tt="uppercase"
+          size="xs"
+          component={Link}
+          to={`/category/${metaData.slug}`}
+        >
           {metaData.displayname}
         </Anchor>
       </Breadcrumbs>
@@ -105,7 +117,9 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
               offeredIn && (
                 <CategoryMetaDataEditor
                   onMetaDataChange={editorOnMetaDataChange}
-                  close={() => {navigate("./..")}}
+                  close={() => {
+                    void navigate("./..");
+                  }}
                   currentMetaData={metaData}
                   offeredIn={offeredIn.flatMap(b =>
                     b.meta2.map(d => [b.displayname, d.displayname] as const),
@@ -127,8 +141,36 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                 <Title order={1} my="md">
                   {metaData.displayname}
                 </Title>
+                {!user.isCategoryAdmin && metaData.has_payments && (
+                  <Button
+                    leftSection={<IconUpload />}
+                    onClick={() => {
+                      setShowUploadModal("transcript");
+                    }}
+                  >
+                    Upload Transcript
+                  </Button>
+                )}
                 {user.isCategoryAdmin && (
                   <Group>
+                    {metaData.has_payments && (
+                      <Button
+                        leftSection={<IconUpload />}
+                        onClick={() => {
+                          setShowUploadModal("transcript");
+                        }}
+                      >
+                        Upload Transcript
+                      </Button>
+                    )}
+                    <Button
+                      leftSection={<IconUpload />}
+                      onClick={() => {
+                        setShowUploadModal("exam");
+                      }}
+                    >
+                      Upload Exam
+                    </Button>
                     <Button
                       leftSection={<IconEdit />}
                       component={Link}
@@ -263,6 +305,26 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                     ))}
                   </List>
                 </>
+              )}
+              {(user.isCategoryAdmin || metaData.has_payments) && (
+                <Modal
+                  opened={showUploadModal !== false}
+                  onClose={() => {
+                    setShowUploadModal(false);
+                  }}
+                  title={
+                    showUploadModal === "exam"
+                      ? "Upload Exam"
+                      : "Upload Transcript"
+                  }
+                >
+                  {showUploadModal === "exam" && (
+                    <UploadPdfForm category={metaData.slug} />
+                  )}
+                  {showUploadModal === "transcript" && (
+                    <UploadTranscriptForm category={metaData.slug} />
+                  )}
+                </Modal>
               )}
             </>
           }
