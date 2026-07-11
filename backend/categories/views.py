@@ -23,7 +23,16 @@ def list_categories(request):
 
 @response.request_get()
 def list_categories_with_meta(request):
-    categories = Category.objects.select_related("meta").order_by("displayname").all()
+    pinned_subquery = CategoryUserPinned.objects.filter(
+        user=request.user,
+        category=OuterRef("pk"),
+    )
+    categories = (
+        Category.objects.select_related("meta")
+        .annotate(pinned=Exists(pinned_subquery))
+        .order_by("displayname")
+        .all()
+    )
     res = [
         {
             "displayname": cat.displayname,
@@ -32,6 +41,7 @@ def list_categories_with_meta(request):
             "examcountpublic": cat.meta.examcount_public,
             "examcountanswered": cat.meta.examcount_answered,
             "answerprogress": cat.answer_progress(),
+            "pinned": cat.pinned,
         }
         for cat in categories
     ]
@@ -172,6 +182,11 @@ def list_exams(request, slug):
 
 
 def get_category_data(request, cat):
+    pinned = CategoryUserPinned.objects.filter(
+        user=request.user,
+        category=cat,
+    ).exists()
+
     res = {
         "displayname": cat.displayname,
         "slug": cat.slug,
@@ -184,6 +199,7 @@ def get_category_data(request, cat):
         "has_payments": cat.has_payments,
         "catadmin": auth_check.has_admin_rights_for_category(request, cat),
         "more_exams_link": cat.more_exams_link,
+        "pinned": pinned,
         # These values are not needed in the frontend and are expensive to calculate
         # 'examcountpublic': cat.exam_set.filter(public=True).count(),
         # 'examcountanswered': cat.exam_count_answered(),
@@ -436,7 +452,7 @@ def set_metacategory_order(request):
 
 @response.request_method(["DELETE", "PUT", "GET"])()
 @auth_check.require_login
-def category_user_pinned(request, slug:str):
+def category_user_pinned(request, slug: str):
     category = get_object_or_404(Category, slug=slug)
 
     if request.method == "DELETE":

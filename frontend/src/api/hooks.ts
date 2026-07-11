@@ -924,3 +924,11 @@ export const unmarkExamUserSolved = async (exam: string) => {
 };
 export const useUnmarkExamUserSolved = (exam: string) =>
   useMutation(() => unmarkExamUserSolved(exam));
+
+export const markCategoryUserPinned = async (slug: string) => {
+  return fetchPut<{ category_pinned: boolean }>(`/api/category/${slug}/pinned/`, {});
+};
+
+export const unmarkCategoryUserPinned = async (slug: string) => {
+  return fetchDelete<{ category_pinned: boolean }>(`/api/category/${slug}/pinned/`);
+};

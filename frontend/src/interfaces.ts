@@ -205,6 +205,7 @@ export interface CategoryMetaData {
   examcountanswered: number;
   answerprogress: number;
   attachments: Attachment[];
+  pinned: boolean;
 }
 
 export type CategoryMetaDataAny =
