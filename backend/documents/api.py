@@ -323,7 +323,7 @@ def list_documents(
     operation_id="createDocument",
 )
 @auth_check.require_login
-def create_document(request, data: CreateDocumentSchema = Form(...)):  # noqa: B008
+def create_document(request, data: Form[CreateDocumentSchema]):
     category = get_object_or_404(Category, slug=data.category)
     if slugify(parse.quote(data.display_name, " ")).strip() == "":
         return not_possible("Invalid displayname")
@@ -515,7 +515,7 @@ def create_document_comment(
     request,
     username: str,
     slug: str,
-    data: CreateDocumentCommentSchema = Form(...),  # noqa: B008
+    data: Form[CreateDocumentCommentSchema],
 ):
     document = get_object_or_404(Document, author__username=username, slug=slug)
     comment = Comment(document=document, text=data.text, author=request.user)
@@ -629,8 +629,8 @@ def create_document_file(
     request,
     username: str,
     slug: str,
-    data: CreateDocumentFileSchema = Form(...),  # noqa: B008
-    file: UploadedFile = File(...),  # noqa: B008
+    data: Form[CreateDocumentFileSchema],
+    file: File[UploadedFile],
 ):
     document = get_object_or_404(Document, author__username=username, slug=slug)
     if not document.current_user_can_edit(request):
@@ -794,7 +794,7 @@ def delete_document_file(request, username: str, slug: str, id: int):
 def set_flagged_comment(
     request,
     id: int,
-    data: SetDocumentCommentFlaggedSchema = Form(...),  # noqa: B008
+    data: Form[SetDocumentCommentFlaggedSchema],
 ):
     comment = get_object_or_404(Comment, pk=id)
     old_flagged = comment.flagged.filter(pk=request.user.pk).exists()
@@ -818,7 +818,7 @@ def set_flagged_comment(
 def set_marked_as_ai(
     request,
     id: int,
-    data: SetDocumentCommentMarkedAsAiSchema = Form(...),  # noqa: B008
+    data: Form[SetDocumentCommentMarkedAsAiSchema],
 ):
     comment = get_object_or_404(Comment, pk=id)
     old_marked_as_ai = comment.marked_as_ai.filter(pk=request.user.pk).exists()
@@ -909,7 +909,7 @@ def update_document_file_content(
     username: str,
     slug: str,
     id: int,
-    file: UploadedFile = File(...),  # noqa: B008
+    file: File[UploadedFile],
 ):
     token = request.headers.get("Authorization", "")
     document = get_object_or_404(Document, author__username=username, slug=slug)
@@ -963,7 +963,7 @@ def move_document_file(
     username: str,
     slug: str,
     filename: str,
-    data: MoveDocumentFileSchema = Form(...),  # noqa: B008
+    data: Form[MoveDocumentFileSchema],
 ):
     document = get_object_or_404(Document, author__username=username, slug=slug)
     if not document.current_user_can_edit(request):
