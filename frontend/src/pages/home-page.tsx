@@ -321,7 +321,7 @@ export const CategoryList: React.FC = () => {
                 </>
               )}
               <Title order={3} my="md">
-                Pinned
+                Rest
               </Title>
               <Grid>
                 {unpinnedResults.map(category => (
