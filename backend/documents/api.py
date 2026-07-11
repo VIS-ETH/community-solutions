@@ -221,6 +221,20 @@ def make_document_response(
     )
 
 
+# Takes document files that are ordered but not with orders 0..n
+# This happens when a file is deleted, e.g. the file with order 0
+# Then the remaining files have order 1, 2, ...
+# It is cleaner to normalise instead and being able to decrement
+# to get the previous file, vs. needing to scan for the previous file
+def normalise_document_order(document: Document):
+    document_files = document.files.order_by("order")
+
+    for order, file in enumerate(document_files):
+        file.order = order
+
+    DocumentFile.objects.bulk_update(document_files, ["order"])
+
+
 @router.get(
     "/listdocumenttypes/",
     response=DocumentTypeListSchema,
@@ -760,6 +774,8 @@ def delete_document_file(request, username: str, slug: str, id: int):
         settings.COMSOL_DOCUMENT_DIR,
         document_file.filename,
     )
+
+    normalise_document_order(document)
 
     document.edittime = timezone.now()
     document.save()
