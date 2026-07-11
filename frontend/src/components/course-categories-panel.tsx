@@ -62,9 +62,16 @@ const CourseCategoriesPanel: React.FC<CourseCategoriesPanelProps> = ({
     setAvailableLetters(letters);
   }, []);
 
+  const headerByMode: Record<string, string> = {
+    alphabetical: "Alphabet",
+    bySemester: "Semester",
+    pinned: "Pinned",
+  };
+  const header = headerByMode[mode] ?? "Semester";
+
   return (
     <Panel
-      header={mode === "alphabetical" ? "Alphabet" : "Semester"}
+      header={header}
       isOpen={isOpen}
       toggle={toggle}
     >

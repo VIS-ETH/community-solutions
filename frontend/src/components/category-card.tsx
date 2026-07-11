@@ -2,22 +2,38 @@ import { Card, Text, Progress, Anchor, Stack, Tooltip } from "@mantine/core";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authenticated, login } from "../api/fetch-utils";
+import { markCategoryUserPinned, unmarkCategoryUserPinned } from "../api/hooks";
 import { SearchResult } from "../hooks/useSearch";
 import { CategoryMetaData } from "../interfaces";
 import { highlight } from "../utils/search-utils";
 import clsx from "clsx";
 import classes from "../utils/focus-outline.module.css";
+import IconButton from "./icon-button";
+import { IconPinned } from "@tabler/icons-react";
 
 interface Props {
   category: SearchResult<CategoryMetaData> | CategoryMetaData;
+  reload: () => void;
 }
-const CategoryCard: React.FC<Props> = ({ category }) => {
+const CategoryCard: React.FC<Props> = ({ category, reload }) => {
   const navigate = useNavigate();
   const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
     if (e.code === "Enter") {
       if (!authenticated()) login(`/category/${category.slug}`);
       else navigate(`/category/${category.slug}`);
     }
+  };
+  const handleTogglePinned = async (event: React.SyntheticEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    if (category.pinned) {
+      await unmarkCategoryUserPinned(category.slug);
+    } else {
+      await markCategoryUserPinned(category.slug);
+    }
+
+    reload();
   };
   return (
     <Card
@@ -30,12 +46,23 @@ const CategoryCard: React.FC<Props> = ({ category }) => {
         }
       }}
       withBorder
+      pos="relative"
       px="lg"
       py="md"
       className={clsx(classes.focusOutline, classes.hoverShadow)}
       tabIndex={0}
       onKeyDown={handleKeyDown}
     >
+      <IconButton
+        pos="absolute"
+        top={8}
+        right={8}
+        size="md"
+        color={category.pinned ? "yellow" : "gray"}
+        tooltip={category.pinned ? "Unpin category" : "Pin category"}
+        icon={<IconPinned />}
+        onClick={handleTogglePinned}
+      />
       <Stack h="100%" justify="space-between">
         <div className="category-card" id={category.slug}>
           <Anchor
