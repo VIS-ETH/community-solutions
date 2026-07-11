@@ -556,7 +556,7 @@ def update_document_comment(
     username: str,
     slug: str,
     id: int,
-    data: UpdateDocumentCommentSchema = Form(None),  # noqa: B008
+    data: UpdateDocumentCommentSchema,
 ):
     objects = Comment.objects.prefetch_related("author")
     comment = get_object_or_404(
@@ -568,7 +568,7 @@ def update_document_comment(
     if not comment.current_user_can_edit(request):
         return not_allowed()
 
-    update_data = data.dict(exclude_unset=True) if data else {}
+    update_data = data.dict(exclude_unset=True)
     if "text" in update_data:
         comment.text = update_data["text"]
         comment.edittime = timezone.now()
