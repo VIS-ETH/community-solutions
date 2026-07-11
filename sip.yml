@@ -61,7 +61,7 @@ env:
     secret:
       key: frontend-favicon-url
       create: provided
-  - name: "FRONTEND_DOCUMENT_DOWNLOAD_SAFE_EXTENSION"
+  - name: "FRONTEND_DOCUMENT_DOWNLOAD_SAFE_EXTENSIONS"
     secret:
       key: frontend-document-download-safe-extension
       create: provided
