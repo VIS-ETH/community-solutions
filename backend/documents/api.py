@@ -400,11 +400,11 @@ def update_document(
     request,
     username: str,
     slug: str,
-    data: UpdateDocumentSchema = Form(None),  # noqa: B008
+    data: UpdateDocumentSchema,
 ):
     document = get_object_or_404(Document, author__username=username, slug=slug)
 
-    update_data = data.dict(exclude_unset=True) if data else {}
+    update_data = data.dict(exclude_unset=True)
 
     if "liked" in update_data:
         if update_data["liked"]:
@@ -708,8 +708,8 @@ def update_document_file(
     username: str,
     slug: str,
     id: int,
-    data: UpdateDocumentFileSchema = Form(None),  # noqa: B008
-    file: UploadedFile = File(None),  # noqa: B008
+    data: Form[UpdateDocumentFileSchema],
+    file: File[UploadedFile | None] = None,
 ):
     document = get_object_or_404(Document, author__username=username, slug=slug)
     if not document.current_user_can_edit(request):
@@ -721,7 +721,7 @@ def update_document_file(
         document=document,
     )
 
-    update_data = data.dict(exclude_unset=True) if data else {}
+    update_data = data.dict(exclude_unset=True)
     if "display_name" in update_data:
         if slugify(parse.quote(update_data["display_name"], " ")).strip() == "":
             return not_possible("Invalid displayname")
