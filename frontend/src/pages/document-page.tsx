@@ -15,7 +15,7 @@ import {
   Tooltip,
   Modal,
   Stack,
-  List
+  List,
 } from "@mantine/core";
 import React, { useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
@@ -182,7 +182,7 @@ const DocumentPage: React.FC = () => {
       : undefined;
   const Components = getComponents(activeFile);
   const [editing, { toggle: toggleEditing }] = useDisclosure();
-  const [warningFiles, setWarningFiles] = useState<DocumentFile[]>([]);
+  const [warningFiles, setWarningFiles] = useState<DocumentFileSchema[]>([]);
   const [
     showWarningModal,
     { open: openWarningModal, close: closeWarningModal },
@@ -204,13 +204,16 @@ const DocumentPage: React.FC = () => {
     return `${file.display_name}.${ext}`;
   }
 
-  const isUnsafeFile = (file: DocumentFile): boolean => {
+  const isUnsafeFile = (file: DocumentFileSchema): boolean => {
     const ext = getFileExtension(file.filename);
-    return ext !== undefined && !serverData.document_download_safe_extensions.includes(ext);
+    return (
+      ext !== undefined &&
+      !serverData.document_download_safe_extensions.includes(ext)
+    );
   };
 
   const handleDownload = () => {
-    const warningFiles = data?.files.filter(file => {
+    const warningFiles = document?.files?.filter(file => {
       return isUnsafeFile(file);
     });
     if (warningFiles && warningFiles.length > 0) {
@@ -231,17 +234,20 @@ const DocumentPage: React.FC = () => {
         <Stack>
           <Text>Some requested files have uncommon file extensions.</Text>
           <Text>
-            Please note that the server has not scanned or verified the files for viruses,
-            and you should exercise caution when downloading user-uploaded files.
+            Please note that the server has not scanned or verified the files
+            for viruses, and you should exercise caution when downloading
+            user-uploaded files.
           </Text>
-          <Alert title={`Possibly unsafe file${warningFiles.length > 1 ? "s" : ""}`}>
+          <Alert
+            title={`Possibly unsafe file${warningFiles.length > 1 ? "s" : ""}`}
+          >
             <List spacing={4} size="sm">
-                  {warningFiles.map((file) => (
-                    <List.Item key={file.display_name}>
-                      {formatDisplayName(file)}
-                    </List.Item>
-                  ))}
-                </List>
+              {warningFiles.map(file => (
+                <List.Item key={file.display_name}>
+                  {formatDisplayName(file)}
+                </List.Item>
+              ))}
+            </List>
           </Alert>
           <Text>Are you sure you want to continue?</Text>
           <Group justify="flex-end">
@@ -393,11 +399,18 @@ const DocumentPage: React.FC = () => {
         ) : (
           <ContentContainer mt="-2px">
             <Container size="xl">
-              {activeFile && (isUnsafeFile(activeFile) ? <Alert color="red" my="sm">
-                This file has an uncommon file extension. Be careful when downloading it, as the server does not scan user-uploaded files for viruses.
-              </Alert> : <Alert color="blue" my="sm">
-                This file can only be downloaded.
-              </Alert>)}
+              {activeFile &&
+                (isUnsafeFile(activeFile) ? (
+                  <Alert color="red" my="sm">
+                    This file has an uncommon file extension. Be careful when
+                    downloading it, as the server does not scan user-uploaded
+                    files for viruses.
+                  </Alert>
+                ) : (
+                  <Alert color="blue" my="sm">
+                    This file can only be downloaded.
+                  </Alert>
+                ))}
               <Button
                 leftSection={<IconDownload />}
                 onClick={() =>
