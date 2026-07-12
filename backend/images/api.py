@@ -35,7 +35,7 @@ class ImageUploadResponse(Schema):
     operation_id="uploadImage",
 )
 @auth_check.require_login
-def upload_image(request, file: UploadedFile = File(...)):  # noqa: B008
+def upload_image(request, file: File[UploadedFile]):
     ext = s3_util.check_filename(file.name, settings.COMSOL_IMAGE_ALLOWED_EXTENSIONS)
     if not ext:
         return not_possible("Invalid File Extensions")
