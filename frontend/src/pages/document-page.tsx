@@ -12,6 +12,9 @@ import {
   Tabs,
   Box,
   Tooltip,
+  Modal,
+  Stack,
+  List
 } from "@mantine/core";
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
@@ -44,6 +47,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
 import { useScrollToPermalink } from "../hooks/useScrollToPermalink";
+import serverData from "../utils/server-data";
 
 const isPdf = (file: DocumentFile) => file.mime_type === "application/pdf";
 const isMarkdown = (file: DocumentFile) =>
@@ -114,6 +118,11 @@ const DocumentPage: React.FC<Props> = () => {
     : undefined;
   const Components = getComponents(activeFile);
   const [editing, { toggle: toggleEditing }] = useDisclosure();
+  const [warningFiles, setWarningFiles] = useState<DocumentFile[]>([]);
+  const [
+    showWarningModal,
+    { open: openWarningModal, close: closeWarningModal },
+  ] = useDisclosure();
   const [loadingDownload, startDownload] = useDocumentDownload(data);
   const reloadSettings = async () => {
     await reload();
@@ -129,8 +138,12 @@ const DocumentPage: React.FC<Props> = () => {
   }, [searchParams, data]);
   useScrollToPermalink();
 
+  const getFileExtension = (filename: string): string | undefined => {
+    return filename.split(".").at(-1)?.toLowerCase();
+  };
+
   function formatDisplayName(file: DocumentFile): string {
-    const ext = file.filename.split(".").at(-1);
+    const ext = getFileExtension(file.filename);
     if (ext && file.display_name.endsWith(`.${ext}`)) {
       return file.display_name;
     }
@@ -138,8 +151,60 @@ const DocumentPage: React.FC<Props> = () => {
     return `${file.display_name}.${ext}`;
   }
 
+  const isUnsafeFile = (file: DocumentFile): boolean => {
+    const ext = getFileExtension(file.filename);
+    return ext !== undefined && !serverData.document_download_safe_extensions.includes(ext);
+  };
+
+  const handleDownload = () => {
+    const warningFiles = data?.files.filter(file => {
+      return isUnsafeFile(file);
+    });
+    if (warningFiles && warningFiles.length > 0) {
+      setWarningFiles(warningFiles);
+      openWarningModal();
+    } else {
+      startDownload();
+    }
+  };
+
   return (
     <>
+      <Modal
+        opened={showWarningModal}
+        onClose={closeWarningModal}
+        withCloseButton={false}
+      >
+        <Stack>
+          <Text>Some requested files have uncommon file extensions.</Text>
+          <Text>
+            Please note that the server has not scanned or verified the files for viruses,
+            and you should exercise caution when downloading user-uploaded files.
+          </Text>
+          <Alert title={`Possibly unsafe file${warningFiles.length > 1 ? "s" : ""}`}>
+            <List spacing={4} size="sm">
+                  {warningFiles.map((file) => (
+                    <List.Item key={file.display_name}>
+                      {formatDisplayName(file)}
+                    </List.Item>
+                  ))}
+                </List>
+          </Alert>
+          <Text>Are you sure you want to continue?</Text>
+          <Group justify="flex-end">
+            <Button onClick={closeWarningModal}>Cancel</Button>
+            <Button
+              color="red"
+              onClick={() => {
+                startDownload();
+                closeWarningModal();
+              }}
+            >
+              Download
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
       <Container size="xl">
         <Breadcrumbs separator={<IconChevronRight />}>
           <Anchor tt="uppercase" size="xs" component={Link} to="/">
@@ -164,7 +229,7 @@ const DocumentPage: React.FC<Props> = () => {
               <Group>
                 <IconButton
                   icon={<IconDownload />}
-                  onClick={startDownload}
+                  onClick={handleDownload}
                   color="gray"
                   tooltip="Download"
                   loading={loadingDownload}
@@ -272,9 +337,11 @@ const DocumentPage: React.FC<Props> = () => {
         ) : (
           <ContentContainer mt="-2px">
             <Container size="xl">
-              <Alert color="blue" my="sm">
+              {activeFile && (isUnsafeFile(activeFile) ? <Alert color="red" my="sm">
+                This file has an uncommon file extension. Be careful when downloading it, as the server does not scan user-uploaded files for viruses.
+              </Alert> : <Alert color="blue" my="sm">
                 This file can only be downloaded.
-              </Alert>
+              </Alert>)}
               <Button
                 leftSection={<IconDownload />}
                 onClick={() =>

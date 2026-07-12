@@ -45,7 +45,6 @@ const CreateDocumentFileModal: React.FC<Props> = ({
           leftSection={<IconCloudUpload />}
           value={file}
           onChange={setFile}
-          accept=".pdf,.tex,.md,.typ,.txt,.zip,.apkg,.colpkg,.csv,.xlsx,.xls,.ods" // apkg=anki
         />
         <div>
           If you don't select any file we will create an empty markdown file for

@@ -14,6 +14,7 @@ interface IServerData {
     content: string;
     icon: string | undefined;
   }[];
+  document_download_safe_extensions: string[];
 }
 const getServerData = () => {
   const element = document.getElementById("server-data");

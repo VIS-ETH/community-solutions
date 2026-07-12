@@ -115,17 +115,11 @@ def get_document_obj(
     return obj
 
 
-def is_allowed(ext: str, mime_type: str):
-    return (ext, mime_type) in settings.COMSOL_DOCUMENT_ALLOWED_EXTENSIONS
-
-
 def prepare_document_file(request: HttpRequest, override_allowed=False):
     file = request.FILES.get("file")
     if not file:
         return response.missing_argument(), None, None
     _, ext = os.path.splitext(file.name)
-    if not is_allowed(ext, file.content_type):
-        return response.unsupported_media_type(), None, None
     return None, file, ext
 
 
