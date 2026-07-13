@@ -1,11 +1,10 @@
 import React from "react";
 import { Alert, Loader } from "@mantine/core";
+import { useDocumentsLikedBy, useDocumentsUsername } from "../api/hooks";
 import Grid from "../components/grid";
 import { useUser } from "../auth";
-import { UserInfo } from "../interfaces";
+import { Document, UserInfo } from "../interfaces";
 import DocumentCard from "./document-card";
-import type { DocumentSchema } from "../api/model/documentSchema";
-import { useListDocuments } from "../api/hooks/documents";
 
 interface UserDocumentsProps {
   username: string;
@@ -15,28 +14,24 @@ const UserDocuments: React.FC<UserDocumentsProps> = ({
   username,
   userInfo,
 }) => {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const user = useUser()!;
   const isMyself = user.username === username;
-  const documents = useListDocuments({
+  const [documentsError, loading, documents] = useDocumentsUsername(username);
+  const [likedError, likedLoading, likedDocuments] = useDocumentsLikedBy(
     username,
-  });
-  const likedDocuments = useListDocuments(
-    {
-      liked_by: username,
-    },
-    {
-      query: {
-        enabled: isMyself,
-      },
-    },
+    isMyself,
   );
-  const displayDocuments = (documents: DocumentSchema[]) => {
+  const displayDocuments = (documents: Document[]) => {
     return (
       <Grid>
-        {documents.map(document => (
-          <DocumentCard key={document.slug} document={document} showCategory />
-        ))}
+        {documents &&
+          documents.map(document => (
+            <DocumentCard
+              key={document.slug}
+              document={document}
+              showCategory
+            />
+          ))}
       </Grid>
     );
   };
@@ -46,28 +41,22 @@ const UserDocuments: React.FC<UserDocumentsProps> = ({
         {isMyself ? "Your" : `${userInfo?.displayName ?? `@${username}`}'s`}{" "}
         Documents
       </h3>
-      {documents.isError && (
-        <Alert color="red">{documents.error as unknown as string}</Alert>
-      )}
-      {documents.data && displayDocuments(documents.data.value)}
-      {(!documents.data || documents.data.value.length === 0) && (
+      {documentsError && <Alert color="red">{documentsError.toString()}</Alert>}
+      {documents && displayDocuments(documents)}
+      {(!documents || documents.length === 0) && (
         <Alert color="gray">No documents</Alert>
       )}
-      {documents.isLoading && <Loader />}
+      {loading && <Loader />}
 
       {isMyself && (
         <>
           <h3>Liked Documents</h3>
-          {likedDocuments.isError && (
-            <Alert color="red">
-              {likedDocuments.error as unknown as string}
-            </Alert>
-          )}
-          {likedDocuments.data && displayDocuments(likedDocuments.data.value)}
-          {(!likedDocuments.data || likedDocuments.data.value.length === 0) && (
+          {likedError && <Alert color="red">{likedError.toString()}</Alert>}
+          {likedDocuments && displayDocuments(likedDocuments)}
+          {(!likedDocuments || likedDocuments.length === 0) && (
             <Alert color="gray">No liked documents</Alert>
           )}
-          {likedDocuments.isLoading && <Loader />}
+          {likedLoading && <Loader />}
         </>
       )}
     </>

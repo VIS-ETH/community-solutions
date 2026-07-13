@@ -1,76 +1,81 @@
 import { Button, Paper, Tooltip, Title } from "@mantine/core";
-import React, { Fragment, useMemo } from "react";
+import React, { useEffect, useState, Fragment } from "react";
+import { loadDocumentTypes, useDocuments } from "../api/hooks";
 import CreateDocumentForm from "./create-document-modal";
 import Grid from "./grid";
 import DocumentCard from "./document-card";
+import { Document } from "../interfaces";
 import { IconPlus } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import classes from "../utils/focus-outline.module.css";
-import { clsx } from "clsx";
-import { useListDocuments, useListDocumentTypes } from "../api/hooks/documents";
-import type { DocumentListSchema } from "../api/model/documentListSchema";
-import type { DocumentSchema } from "../api/model/documentSchema";
+import clsx from "clsx";
 
 interface Props {
   slug: string;
 }
 
-// Take list of documents and mutate it
-// into a record<document-type, documents[]>
-function splitDocuments(
-  documents: DocumentListSchema,
-): Record<string, readonly DocumentSchema[]> {
-  const grouped = Object.groupBy(
-    documents.value,
-    document => document.document_type,
-  ) as Record<string, DocumentSchema[]>;
-  for (const documents of Object.values(grouped)) {
-    documents.sort(
-      (a, b) =>
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        b.like_count! - a.like_count! ||
-        a.display_name.localeCompare(b.display_name),
-    );
-  }
-
-  return grouped;
-}
-
 const DocumentList: React.FC<Props> = ({ slug }) => {
-  const [isOpen, { open, close }] = useDisclosure();
-  const documents = useListDocuments({
-    category: slug,
-  });
-  const docTypes = useListDocumentTypes();
-  const splitDocs = useMemo(
-    () => (documents.isSuccess ? splitDocuments(documents.data) : undefined),
-    [documents.isSuccess, documents.data],
-  );
-
+  const [isOpen, {open, close}] = useDisclosure();
+  const [documents] = useDocuments(slug);
+  const [docTypes, setDocTypes] = useState<string[] | null>(null);
+  const [sortedDocs, setSortedDocs] = useState<
+    { type: string; docs: Document[] }[]
+  >([]);
+  useEffect(() => {
+    (async () => {
+      setDocTypes(await loadDocumentTypes());
+    })();
+  }, []);
+  useEffect(() => {
+    const currentDocTypes = new Map<string, Document[]>();
+    if (!docTypes || documents === undefined) {
+      return;
+    }
+    docTypes.forEach(type => currentDocTypes.set(type, []));
+    documents.forEach(doc => currentDocTypes.get(doc.document_type)?.push(doc));
+    currentDocTypes.forEach(docs =>
+      docs.sort(
+        (a, b) =>
+          b.like_count - a.like_count ||
+          a.display_name.localeCompare(b.display_name),
+      ),
+    );
+    setSortedDocs(
+      Array.from(currentDocTypes, ([type, docs]) => ({ type, docs })).filter(
+        value => value.docs.length > 0,
+      ),
+    );
+  }, [docTypes, documents]);
   return (
     <>
-      <CreateDocumentForm isOpen={isOpen} categorySlug={slug} onClose={close} />
-      <Title order={2} mt="xl" mb="lg">
+      <CreateDocumentForm
+        isOpen={isOpen}
+        categorySlug={slug}
+        onClose={close}
+      />
+      <Title
+        order={2}
+        mt="xl"
+        mb={sortedDocs[0] && sortedDocs[0].docs.length && "lg"}
+      >
         Documents
       </Title>
-      {docTypes.isSuccess &&
-        docTypes.data.value.map(
-          type =>
-            splitDocs?.[type] && (
-              <Fragment key={type}>
-                {type !== "Documents" && (
-                  <Title order={3} mt="xl" mb="lg">
-                    {type}
-                  </Title>
-                )}
-                <Grid>
-                  {splitDocs[type].map(document => (
-                    <DocumentCard key={document.slug} document={document} />
-                  ))}
-                </Grid>
-              </Fragment>
-            ),
-        )}
+      {sortedDocs &&
+        sortedDocs.map(obj => (
+          <Fragment key={obj.type}>
+            {obj.type !== "Documents" && (
+              <Title order={3} mt="xl" mb="lg">
+                {obj.type}
+              </Title>
+            )}
+            <Grid>
+              {obj.docs &&
+                obj.docs.map(document => (
+                  <DocumentCard key={document.slug} document={document} />
+                ))}
+            </Grid>
+          </Fragment>
+        ))}
       <Title order={3} mt="xl" mb="lg">
         Add Documents
       </Title>

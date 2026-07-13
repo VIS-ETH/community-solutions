@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
 import {
   Alert,
   Anchor,
@@ -15,11 +14,12 @@ import {
   Tooltip,
   Modal,
   Stack,
-  List,
+  List
 } from "@mantine/core";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { download } from "../api/fetch-utils";
+import { useDocument } from "../api/hooks";
 import IconButton from "../components/icon-button";
 import LikeButton from "../components/like-button";
 import ContentContainer from "../components/secondary-container";
@@ -31,6 +31,7 @@ import DocumentMarkdownEditor from "../components/document-markdown-editor";
 import DocumentPdf from "../components/document-pdf";
 import DocumentSettings from "../components/document-settings";
 import { useDocumentDownload } from "../hooks/useDocumentDownload";
+import { Document, DocumentFile } from "../interfaces";
 import MarkdownText from "../components/markdown-text";
 import { differenceInSeconds, formatDistanceToNow } from "date-fns";
 import {
@@ -46,35 +47,23 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
 import { useScrollToPermalink } from "../hooks/useScrollToPermalink";
-import type { DocumentFileSchema } from "../api/model/documentFileSchema";
-import type { DocumentSchema } from "../api/model/documentSchema";
-import { useGetDocument } from "../api/hooks/documents";
 import serverData from "../utils/server-data";
 
-const isPdf = (file: DocumentFileSchema) =>
-  file.mime_type === "application/pdf";
-const isMarkdown = (file: DocumentFileSchema) =>
+const isPdf = (file: DocumentFile) => file.mime_type === "application/pdf";
+const isMarkdown = (file: DocumentFile) =>
   file.filename.toLowerCase().endsWith(".md");
-const isTex = (file: DocumentFileSchema) =>
+const isTex = (file: DocumentFile) =>
   file.filename.toLowerCase().endsWith(".tex");
-const isTypst = (file: DocumentFileSchema) =>
+const isTypst = (file: DocumentFile) =>
   file.filename.toLowerCase().endsWith(".typ");
 
 const getComponents = (
-  file: DocumentFileSchema | undefined,
+  file: DocumentFile | undefined,
 ):
   | {
-      Viewer: React.FC<{
-        document: DocumentSchema;
-        file: DocumentFileSchema;
-        url: string;
-      }>;
+      Viewer: React.FC<{ document: Document; file: DocumentFile; url: string }>;
       Editor:
-        | React.FC<{
-            document: DocumentSchema;
-            file: DocumentFileSchema;
-            url: string;
-          }>
+        | React.FC<{ document: Document; file: DocumentFile; url: string }>
         | undefined;
     }
   | undefined => {
@@ -93,8 +82,8 @@ const getComponents = (
   return undefined;
 };
 
-const getFile = (document: DocumentSchema | undefined, oid: number) =>
-  document ? document.files?.find(x => x.oid === oid) : undefined;
+const getFile = (document: Document | undefined, oid: number) =>
+  document ? document.files.find(x => x.oid === oid) : undefined;
 
 const FileIcon: React.FC<{ filename: string }> = ({ filename }) => {
   if (filename.endsWith(".pdf")) {
@@ -108,94 +97,52 @@ const FileIcon: React.FC<{ filename: string }> = ({ filename }) => {
   return <IconFile />;
 };
 
-// Calculate tab to show based on state if user hasn't
-// navigated to a tab yet
-function resolveTab(
-  storedTab: string | null | undefined,
-  searchParams: string,
-  document?: DocumentSchema,
-): string | undefined {
-  if (storedTab) return storedTab;
-
-  if (!document) return undefined;
-
-  // If ?comment=... in url and that is a valid comment
-  // navigate to comments
-  const sp = new URLSearchParams(searchParams);
-  const commentId = sp.get("comment");
-  if (
-    commentId &&
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    document.comments!.some(item => String(item.oid) === commentId)
-  ) {
-    return "comments";
-  }
-
-  // Navigate to first file if it exists
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const files = document.files!;
-  if (files.length > 0) {
-    return String(files[0].oid);
-  }
-
-  return undefined;
-}
-
-const DocumentPage: React.FC = () => {
+interface Props {}
+const DocumentPage: React.FC<Props> = () => {
   const { author, slug } = useParams() as { slug: string; author: string };
-  const {
-    data: document,
-    isSuccess,
-    refetch,
-    isError,
-    error,
-  } = useGetDocument(
+  const [error, _, data, mutate, reload] = useDocument(
     author,
     slug,
-    {
-      include_comments: true,
-      include_files: true,
-    },
-    {
-      query: {
-        select({ value: document }) {
-          return document;
-        },
-      },
+    document => {
+      if (document.files.length > 0) setTab(document.files[0].oid.toString());
     },
   );
 
   useQuickSearchFilter(
-    isSuccess
-      ? { slug: document.category, displayname: document.category_display_name }
-      : undefined,
+    data && { slug: data.category, displayname: data.category_display_name },
   );
 
-  const { search: searchParams } = useLocation();
-
-  const [tab, setTab] = useState<string | null>();
-  const resolvedTab = resolveTab(tab, searchParams, document);
-
-  const activeFile =
-    resolvedTab && !Number.isNaN(Number(resolvedTab))
-      ? getFile(document, Number(resolvedTab))
-      : undefined;
+  const [tab, setTab] = useState<string | null>("none");
+  const activeFile = !Number.isNaN(Number(tab))
+    ? getFile(data, Number(tab))
+    : undefined;
   const Components = getComponents(activeFile);
   const [editing, { toggle: toggleEditing }] = useDisclosure();
-  const [warningFiles, setWarningFiles] = useState<DocumentFileSchema[]>([]);
+  const [warningFiles, setWarningFiles] = useState<DocumentFile[]>([]);
   const [
     showWarningModal,
     { open: openWarningModal, close: closeWarningModal },
   ] = useDisclosure();
-  const [loadingDownload, startDownload] = useDocumentDownload(document);
-
+  const [loadingDownload, startDownload] = useDocumentDownload(data);
+  const reloadSettings = async () => {
+    await reload();
+    setTab("settings");
+  };
+  const { search: searchParams } = useLocation();
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    const id = params.get("comment");
+    if (id && data?.comments.map(item => String(item.oid)).includes(id)) {
+      setTab("comments");
+    }
+  }, [searchParams, data]);
   useScrollToPermalink();
 
   const getFileExtension = (filename: string): string | undefined => {
     return filename.split(".").at(-1)?.toLowerCase();
   };
 
-  function formatDisplayName(file: DocumentFileSchema): string {
+  function formatDisplayName(file: DocumentFile): string {
     const ext = getFileExtension(file.filename);
     if (ext && file.display_name.endsWith(`.${ext}`)) {
       return file.display_name;
@@ -204,16 +151,13 @@ const DocumentPage: React.FC = () => {
     return `${file.display_name}.${ext}`;
   }
 
-  const isUnsafeFile = (file: DocumentFileSchema): boolean => {
+  const isUnsafeFile = (file: DocumentFile): boolean => {
     const ext = getFileExtension(file.filename);
-    return (
-      ext !== undefined &&
-      !serverData.document_download_safe_extensions.includes(ext)
-    );
+    return ext !== undefined && !serverData.document_download_safe_extensions.includes(ext);
   };
 
   const handleDownload = () => {
-    const warningFiles = document?.files?.filter(file => {
+    const warningFiles = data?.files.filter(file => {
       return isUnsafeFile(file);
     });
     if (warningFiles && warningFiles.length > 0) {
@@ -234,20 +178,17 @@ const DocumentPage: React.FC = () => {
         <Stack>
           <Text>Some requested files have uncommon file extensions.</Text>
           <Text>
-            Please note that the server has not scanned or verified the files
-            for viruses, and you should exercise caution when downloading
-            user-uploaded files.
+            Please note that the server has not scanned or verified the files for viruses,
+            and you should exercise caution when downloading user-uploaded files.
           </Text>
-          <Alert
-            title={`Possibly unsafe file${warningFiles.length > 1 ? "s" : ""}`}
-          >
+          <Alert title={`Possibly unsafe file${warningFiles.length > 1 ? "s" : ""}`}>
             <List spacing={4} size="sm">
-              {warningFiles.map(file => (
-                <List.Item key={file.display_name}>
-                  {formatDisplayName(file)}
-                </List.Item>
-              ))}
-            </List>
+                  {warningFiles.map((file) => (
+                    <List.Item key={file.display_name}>
+                      {formatDisplayName(file)}
+                    </List.Item>
+                  ))}
+                </List>
           </Alert>
           <Text>Are you sure you want to continue?</Text>
           <Group justify="flex-end">
@@ -273,18 +214,18 @@ const DocumentPage: React.FC = () => {
             size="xs"
             tt="uppercase"
             component={Link}
-            to={`/category/${document ? document.category : ""}`}
+            to={`/category/${data ? data.category : ""}`}
           >
-            {document?.category_display_name}
+            {data?.category_display_name}
           </Anchor>
           <Anchor size="xs" tt="uppercase">
-            {document?.display_name}
+            {data?.display_name}
           </Anchor>
         </Breadcrumbs>
-        {document && (
+        {data && (
           <Box my="sm">
             <Flex justify="space-between" align="center">
-              <Title>{document.display_name}</Title>
+              <Title>{data.display_name ?? slug}</Title>
               <Group>
                 <IconButton
                   icon={<IconDownload />}
@@ -293,21 +234,19 @@ const DocumentPage: React.FC = () => {
                   tooltip="Download"
                   loading={loadingDownload}
                 />
-                <LikeButton document={document} refetch={refetch} />
+                <LikeButton document={data} mutate={mutate} />
               </Group>
             </Flex>
-            <Anchor component={Link} to={`/user/${document.author}`}>
+            <Anchor component={Link} to={`/user/${data.author}`}>
               <Text fw={700} component="span">
-                {document.author_displayname}
+                {data.author_displayname}
               </Text>
               <Text ml="0.3em" c="dimmed" component="span">
-                @{document.author}
+                @{data.author}
               </Text>
             </Anchor>
-            {differenceInSeconds(
-              new Date(document.edittime),
-              new Date(document.time),
-            ) > 1 && (
+            {differenceInSeconds(new Date(data.edittime), new Date(data.time)) >
+              1 && (
               <>
                 <Text c="dimmed" mx={6} component="span">
                   ·
@@ -315,30 +254,29 @@ const DocumentPage: React.FC = () => {
                 <Tooltip
                   withArrow
                   withinPortal
-                  label={`Created ${formatDistanceToNow(new Date(document.time))} ago`}
+                  label={`Created ${formatDistanceToNow(new Date(data.time))} ago`}
+                  disabled={data.time === null}
                 >
                   <Text c="dimmed" component="span">
-                    updated {formatDistanceToNow(new Date(document.edittime))}{" "}
-                    ago
+                    updated {formatDistanceToNow(new Date(data.edittime))} ago
                   </Text>
                 </Tooltip>
               </>
             )}
           </Box>
         )}
-        {isError && <Alert color="red">{String(error)}</Alert>}
-        {document?.description && (
+        {error && <Alert color="red">{error.toString()}</Alert>}
+        {data?.description && (
           <div>
-            <MarkdownText value={document.description} />
+            <MarkdownText value={data.description} />
           </div>
         )}
       </Container>
       <Container size="xl" mt="sm">
-        <Tabs value={resolvedTab} onChange={setTab}>
+        <Tabs value={tab} onChange={setTab}>
           <Tabs.List>
-            {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
-            {document
-              ?.files!.sort((a, b) => a.order - b.order)
+            {data?.files
+              .sort((a, b) => a.order - b.order)
               .map(file => (
                 <Tabs.Tab
                   key={file.oid}
@@ -351,7 +289,7 @@ const DocumentPage: React.FC = () => {
             <Tabs.Tab value="comments" leftSection={<IconMessage />}>
               Comments
             </Tabs.Tab>
-            {document && (document.can_delete || document.can_edit) && (
+            {data && (data.can_delete || data.can_edit) && (
               <Tabs.Tab value="settings" leftSection={<IconSettings />}>
                 Settings
               </Tabs.Tab>
@@ -360,10 +298,10 @@ const DocumentPage: React.FC = () => {
         </Tabs>
       </Container>
 
-      {activeFile &&
-        document &&
+      {!Number.isNaN(Number(tab)) &&
+        data &&
         (Components?.Viewer ? (
-          document.can_edit && Components.Editor !== undefined ? (
+          data.can_edit && Components.Editor !== undefined ? (
             <ContentContainer mt="-2px">
               <Container>
                 <Flex py="sm" justify="center">
@@ -374,47 +312,40 @@ const DocumentPage: React.FC = () => {
               </Container>
               {!editing && (
                 <Components.Viewer
-                  file={activeFile}
-                  document={document}
-                  url={`/api/document/file/${activeFile.filename}`}
+                  file={activeFile!}
+                  document={data}
+                  url={`/api/document/file/${activeFile?.filename}`}
                 />
               )}
               {editing && (
                 <Container size="xl">
                   <Components.Editor
-                    file={activeFile}
-                    document={document}
-                    url={`/api/document/file/${activeFile.filename}`}
+                    file={activeFile!}
+                    document={data}
+                    url={`/api/document/file/${activeFile?.filename}`}
                   />
                 </Container>
               )}
             </ContentContainer>
           ) : (
             <Components.Viewer
-              file={activeFile}
-              document={document}
-              url={`/api/document/file/${activeFile.filename}`}
+              file={activeFile!}
+              document={data}
+              url={`/api/document/file/${activeFile?.filename}`}
             />
           )
         ) : (
           <ContentContainer mt="-2px">
             <Container size="xl">
-              {activeFile &&
-                (isUnsafeFile(activeFile) ? (
-                  <Alert color="red" my="sm">
-                    This file has an uncommon file extension. Be careful when
-                    downloading it, as the server does not scan user-uploaded
-                    files for viruses.
-                  </Alert>
-                ) : (
-                  <Alert color="blue" my="sm">
-                    This file can only be downloaded.
-                  </Alert>
-                ))}
+              {activeFile && (isUnsafeFile(activeFile) ? <Alert color="red" my="sm">
+                This file has an uncommon file extension. Be careful when downloading it, as the server does not scan user-uploaded files for viruses.
+              </Alert> : <Alert color="blue" my="sm">
+                This file can only be downloaded.
+              </Alert>)}
               <Button
                 leftSection={<IconDownload />}
                 onClick={() =>
-                  download(`/api/document/file/${activeFile.filename}`)
+                  download(`/api/document/file/${activeFile?.filename}`)
                 }
               >
                 Download
@@ -422,38 +353,40 @@ const DocumentPage: React.FC = () => {
             </Container>
           </ContentContainer>
         ))}
-      {tab === "comments" && document && (
+      {tab === "comments" && data && (
         <ContentContainer mt="-2px">
           <Container size="xl">
-            {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
-            {document.comments!.length === 0 && (
+            {data.comments.length === 0 && (
               <Alert mb="sm">There are no comments yet.</Alert>
             )}
-            {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
-            {document.comments!.map(comment => (
+            {data.comments.map(comment => (
               <DocumentCommentComponent
-                documentAuthor={document.author}
+                documentAuthor={data.author}
                 documentSlug={slug}
                 comment={comment}
                 key={comment.oid}
-                refetch={refetch}
+                mutate={mutate}
               />
             ))}
             <Card shadow="md" withBorder>
               <DocumentCommentForm
                 documentAuthor={author}
                 documentSlug={slug}
-                refetch={refetch}
+                mutate={mutate}
               />
             </Card>
           </Container>
         </ContentContainer>
       )}
 
-      {tab === "settings" && document && (
+      {tab === "settings" && data && (
         <ContentContainer mt="-2px">
           <Container size="xl">
-            <DocumentSettings document={document} refetch={refetch} />
+            <DocumentSettings
+              data={data}
+              mutate={mutate}
+              reload={reloadSettings}
+            />
           </Container>
         </ContentContainer>
       )}
