@@ -57,7 +57,7 @@ const DocumentCommentComponent = ({
   comment,
   mutate,
 }: Props) => {
-  const { isAdmin } = useUser()!;
+  const { isAdmin, username } = useUser()!;
   const [editLoading, updateComment] = useUpdateDocumentComment(
     documentAuthor,
     documentSlug,
@@ -87,7 +87,8 @@ const DocumentCommentComponent = ({
     prev: [],
     next: [],
   });
-  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } = usePendingImages();
+  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
+    usePendingImages();
   const toggle = () => setHasDraft(e => !e);
 
   const mutateComment = (res: DocumentComment) =>
@@ -106,6 +107,7 @@ const DocumentCommentComponent = ({
     useResetDocumentCommentMarkedAsAi(mutateComment);
 
   const flaggedLoading = setCommentFlaggedLoading || resetCommentFlaggedLoading;
+  const isOwnComment = comment.authorId === username;
 
   return (
     <div id={String(comment.oid)}>
@@ -116,7 +118,9 @@ const DocumentCommentComponent = ({
               value={draftText}
               onChange={setDraftText}
               imageHandler={deferredImageHandler}
-              preview={value => <MarkdownText value={value} pendingImages={pendingObjectUrls} />}
+              preview={value => (
+                <MarkdownText value={value} pendingImages={pendingObjectUrls} />
+              )}
               undoStack={undoStack}
               setUndoStack={setUndoStack}
             />
@@ -124,7 +128,9 @@ const DocumentCommentComponent = ({
               mt="sm"
               tooltip="Save comment"
               disabled={editLoading || draftText.length === 0}
-              onClick={async () => updateComment(await flushPendingImages(draftText))}
+              onClick={async () =>
+                updateComment(await flushPendingImages(draftText))
+              }
             >
               Save
             </TooltipButton>
@@ -174,8 +180,10 @@ const DocumentCommentComponent = ({
                   isFlagged={comment.isFlagged}
                   loading={flaggedLoading}
                   size="xs"
-                  onToggle={() =>
-                    setCommentFlagged(comment.oid, !comment.isFlagged)
+                  onToggle={
+                    isOwnComment
+                      ? undefined
+                      : () => setCommentFlagged(comment.oid, !comment.isFlagged)
                   }
                 />
               )}
@@ -189,30 +197,41 @@ const DocumentCommentComponent = ({
               </SmallButton>
               {showActions && (
                 <Button.Group>
-                  <SmallButton
-                    tooltip={
-                      comment.isMarkedAsAi
-                        ? "Remove AI-generated mark"
-                        : "Mark as AI-generated"
-                    }
-                    size="xs"
-                    color="white"
-                    onClick={() =>
-                      setCommentMarkedAsAi(comment.oid, !comment.isMarkedAsAi)
-                    }
-                  >
-                    {comment.isMarkedAsAi ? <IconRobotOff /> : <IconRobot />}
-                  </SmallButton>
-                  <SmallButton
-                    tooltip="Flag as inappropriate"
-                    size="xs"
-                    color="white"
-                    onClick={() =>
-                      setCommentFlagged(comment.oid, !comment.isFlagged)
-                    }
-                  >
-                    <IconFlag />
-                  </SmallButton>
+                  {!isOwnComment && (
+                    <>
+                      <SmallButton
+                        tooltip={
+                          comment.isMarkedAsAi
+                            ? "Remove AI-generated mark"
+                            : "Mark as AI-generated"
+                        }
+                        size="xs"
+                        color="white"
+                        onClick={() =>
+                          setCommentMarkedAsAi(
+                            comment.oid,
+                            !comment.isMarkedAsAi,
+                          )
+                        }
+                      >
+                        {comment.isMarkedAsAi ? (
+                          <IconRobotOff />
+                        ) : (
+                          <IconRobot />
+                        )}
+                      </SmallButton>
+                      <SmallButton
+                        tooltip="Flag as inappropriate"
+                        size="xs"
+                        color="white"
+                        onClick={() =>
+                          setCommentFlagged(comment.oid, !comment.isFlagged)
+                        }
+                      >
+                        <IconFlag />
+                      </SmallButton>
+                    </>
+                  )}
                   <SmallButton
                     tooltip="Copy Permalink"
                     size="xs"

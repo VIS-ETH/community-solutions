@@ -547,6 +547,8 @@ class DocumentFileElementView(View):
 @auth_check.require_login
 def set_flagged(request, oid):
     comment = get_object_or_404(Comment, pk=oid)
+    if request.user == comment.author:
+        return response.not_possible("User can't flag their own comment")
     flagged = request.POST["flagged"] != "false"
     old_flagged = comment.flagged.filter(pk=request.user.pk).exists()
     if flagged != old_flagged:
@@ -564,6 +566,8 @@ def set_flagged(request, oid):
 @auth_check.require_login
 def set_marked_as_ai(request, oid):
     comment = get_object_or_404(Comment, pk=oid)
+    if request.user == comment.author:
+        return response.not_possible("User can't mark their own comment as AI")
     marked_as_ai = request.POST["marked_as_ai"] != "false"
     old_marked_as_ai = comment.marked_as_ai.filter(pk=request.user.pk).exists()
     if marked_as_ai != old_marked_as_ai:
