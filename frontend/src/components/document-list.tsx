@@ -1,4 +1,4 @@
-import { Button, Paper, Tooltip, Title } from "@mantine/core";
+import { Alert, Button, Paper, Tooltip, Title } from "@mantine/core";
 import React, { Fragment, useMemo } from "react";
 import CreateDocumentForm from "./create-document-modal";
 import Grid from "./grid";
@@ -55,6 +55,12 @@ const DocumentList: React.FC<Props> = ({ slug }) => {
       <Title order={2} mt="xl" mb="lg">
         Documents
       </Title>
+      {documents.isError && (
+        <Alert color="red">{documents.error as unknown as string}</Alert>
+      )}
+      {docTypes.isError && (
+        <Alert color="red">{docTypes.error as string}</Alert>
+      )}
       {docTypes.isSuccess &&
         docTypes.data.value.map(
           type =>

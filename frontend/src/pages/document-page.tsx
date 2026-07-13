@@ -304,26 +304,28 @@ const DocumentPage: React.FC = () => {
                 @{document.author}
               </Text>
             </Anchor>
-            {differenceInSeconds(
-              new Date(document.edittime),
-              new Date(document.time),
-            ) > 1 && (
-              <>
-                <Text c="dimmed" mx={6} component="span">
-                  ·
-                </Text>
-                <Tooltip
-                  withArrow
-                  withinPortal
-                  label={`Created ${formatDistanceToNow(new Date(document.time))} ago`}
-                >
-                  <Text c="dimmed" component="span">
-                    updated {formatDistanceToNow(new Date(document.edittime))}{" "}
-                    ago
+            {document.time &&
+              document.edittime &&
+              differenceInSeconds(
+                new Date(document.edittime),
+                new Date(document.time),
+              ) > 1 && (
+                <>
+                  <Text c="dimmed" mx={6} component="span">
+                    ·
                   </Text>
-                </Tooltip>
-              </>
-            )}
+                  <Tooltip
+                    withArrow
+                    withinPortal
+                    label={`Created ${formatDistanceToNow(new Date(document.time))} ago`}
+                  >
+                    <Text c="dimmed" component="span">
+                      updated {formatDistanceToNow(new Date(document.edittime))}{" "}
+                      ago
+                    </Text>
+                  </Tooltip>
+                </>
+              )}
           </Box>
         )}
         {isError && <Alert color="red">{String(error)}</Alert>}

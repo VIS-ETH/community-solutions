@@ -25,7 +25,7 @@ from myauth import auth_check
 from myauth.models import get_my_user
 from notifications import notification_util
 from util import s3_util
-from util.response import ErrorSchema, not_allowed, not_possible, unsupported_media_type
+from util.response import ErrorSchema, not_allowed, not_possible
 from util.schemas import ValueWrapped
 
 router = Router(tags=["Documents"])
@@ -116,8 +116,12 @@ class DocumentSchema(Schema):
     author_displayname: str
     can_edit: bool
     can_delete: bool
-    time: datetime.datetime
-    edittime: datetime.datetime
+
+    # Old documents created before these columns
+    # existed have no timestamps
+    time: datetime.datetime | None
+    edittime: datetime.datetime | None
+
     like_count: int | None = None
     liked: int | None = None
     api_key: str | None = None
