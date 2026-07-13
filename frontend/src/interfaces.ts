@@ -40,6 +40,7 @@ export interface Answer {
   authorId: string; // username
   authorDisplayName: string; // display name of author
   canEdit: boolean; // whether the current user can edit the answer
+  isAuthor: boolean; // whether the current user is the author of the answer
   isUpvoted: boolean; // whether the current user upvoted the answer
   isDownvoted: boolean; // whether the current user downvoted the answer
   isExpertVoted: boolean; // whether the current user expert upvoted the answer

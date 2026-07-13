@@ -149,7 +149,7 @@ const AnswerComponent: React.FC<Props> = ({
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
   const canEdit = section && onSectionChanged && answer?.canEdit;
   const canRemove = section && onSectionChanged && (isAdmin || answer?.canEdit);
-  const isOwnAnswer = answer?.authorId === username;
+  const isOwnAnswer = answer?.isAuthor ?? false;
   return (
     <>
       {modals}
