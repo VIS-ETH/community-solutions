@@ -20,10 +20,12 @@ interface Props {
 function splitDocuments(
   documents: DocumentListSchema,
 ): Record<string, readonly DocumentSchema[]> {
-  const grouped = Object.groupBy(
-    documents.value,
-    document => document.document_type,
-  ) as Record<string, DocumentSchema[]>;
+  const grouped: Record<string, DocumentSchema[]> = {};
+  for (const document of documents.value) {
+    grouped[document.document_type] ??= [];
+    grouped[document.document_type].push(document);
+  }
+
   for (const documents of Object.values(grouped)) {
     documents.sort(
       (a, b) =>
