@@ -1,43 +1,42 @@
 import { Flex, Loader } from "@mantine/core";
 import React, { lazy, Suspense, useState } from "react";
 import { usePendingImages } from "./Editor/pending-images";
+import { Mutate, useCreateDocumentComment } from "../api/hooks";
+import { Document } from "../interfaces";
 import { UndoStack } from "./Editor/utils/undo-stack";
 import MarkdownText from "./markdown-text";
 import TooltipButton from "./TooltipButton";
-import { useCreateDocumentComment } from "../api/hooks/documents";
 
 const Editor = lazy(() => import("./Editor"));
 
 interface Props {
   documentAuthor: string;
   documentSlug: string;
-  refetch: () => void;
+  mutate: Mutate<Document>;
 }
 const DocumentCommentForm: React.FC<Props> = ({
   documentAuthor,
   documentSlug,
-  refetch,
+  mutate,
 }) => {
   const [draftText, setDraftText] = useState("");
   const [undoStack, setUndoStack] = useState<UndoStack>({
     prev: [],
     next: [],
   });
-  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
-    usePendingImages();
-
-  const createDocumentComment = useCreateDocumentComment({
-    mutation: {
-      onSuccess() {
-        refetch();
-        setDraftText("");
-        setUndoStack({
-          prev: [],
-          next: [],
-        });
-      },
+  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } = usePendingImages();
+  const [loading, createDocumentComment] = useCreateDocumentComment(
+    documentAuthor,
+    documentSlug,
+    document => {
+      mutate(data => ({ ...data, comments: [...data.comments, document] }));
+      setDraftText("");
+      setUndoStack({
+        prev: [],
+        next: [],
+      });
     },
-  });
+  );
 
   return (
     <Suspense fallback={<Loader />}>
@@ -45,9 +44,7 @@ const DocumentCommentForm: React.FC<Props> = ({
         value={draftText}
         onChange={setDraftText}
         imageHandler={deferredImageHandler}
-        preview={value => (
-          <MarkdownText value={value} pendingImages={pendingObjectUrls} />
-        )}
+        preview={value => <MarkdownText value={value} pendingImages={pendingObjectUrls} />}
         undoStack={undoStack}
         setUndoStack={setUndoStack}
       />
@@ -55,17 +52,8 @@ const DocumentCommentForm: React.FC<Props> = ({
         <TooltipButton
           size="md"
           tooltip="Submit comment"
-          disabled={createDocumentComment.isPending || draftText.length === 0}
-          onClick={async () => {
-            const text = await flushPendingImages(draftText);
-            createDocumentComment.mutate({
-              slug: documentSlug,
-              username: documentAuthor,
-              data: {
-                text,
-              },
-            });
-          }}
+          disabled={loading || draftText.length === 0}
+          onClick={async () => createDocumentComment(await flushPendingImages(draftText))}
         >
           Submit
         </TooltipButton>

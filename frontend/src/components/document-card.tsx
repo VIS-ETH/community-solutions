@@ -1,13 +1,13 @@
 import React from "react";
+import { Document } from "../interfaces";
 import { Link } from "react-router-dom";
 import { Anchor, Badge, Card, Flex, Group, Text } from "@mantine/core";
 import { IconHeart, IconHeartFilled } from "@tabler/icons-react";
-import { clsx } from "clsx";
+import clsx from "clsx";
 import classes from "../utils/focus-outline.module.css";
-import type { DocumentSchema } from "../api/model/documentSchema";
 
 interface DocumentCardProps {
-  document: DocumentSchema;
+  document: Document;
   showCategory?: boolean;
 }
 

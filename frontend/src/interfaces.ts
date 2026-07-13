@@ -364,3 +364,37 @@ export type SearchResult =
   | AnswerSearchResult
   | CommentSearchResult;
 export type SearchResponse = SearchResult[];
+
+export interface Document {
+  slug: string;
+  display_name: string;
+  description: string;
+  category: string;
+  document_type: string;
+  category_display_name: string;
+  author: string;
+  author_displayname: string;
+  comments: DocumentComment[];
+  files: DocumentFile[];
+  liked: boolean;
+  like_count: number;
+  time: string; // ISO 8601, creation time
+  edittime: string; // ISO 8601, last edit time
+
+  can_edit: boolean;
+  can_delete: boolean;
+  api_key?: string;
+}
+
+export interface DocumentFile {
+  oid: number;
+  display_name: string;
+  filename: string;
+  mime_type: string;
+  order: number;
+}
+
+export interface DocumentComment extends Omit<Comment, "longId" | "oid"> {
+  oid: number;
+  documentId: number;
+}

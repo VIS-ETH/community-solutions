@@ -1,39 +1,39 @@
 import { Alert, Button, FileInput, Stack, TextInput } from "@mantine/core";
 import * as React from "react";
 import { useState } from "react";
+import { Mutate, useCreateDocumentFile } from "../api/hooks";
+import { Document } from "../interfaces";
 import { IconCloudUpload, IconPlus } from "@tabler/icons-react";
-import { useCreateDocumentFile } from "../api/hooks/documents";
-import type { DocumentSchema } from "../api/model/documentSchema";
 
 interface Props {
-  document: DocumentSchema;
+  document: Document;
   onClose: () => void;
-  refetch: () => void;
+  mutate: Mutate<Document>;
 }
 
 const CreateDocumentFileModal: React.FC<Props> = ({
   onClose,
   document,
-  refetch,
+  mutate,
 }) => {
   const [displayName, setDisplayName] = useState("");
   const [file, setFile] = useState<File | null>(null);
 
-  const { mutate, isError, error, isPending } = useCreateDocumentFile({
-    mutation: {
-      onSuccess() {
-        onClose();
-        refetch();
-        setDisplayName("");
-        setFile(null);
-      },
-    },
+  const {
+    loading,
+    error,
+    run: createDocumentFile,
+  } = useCreateDocumentFile(document.author, document.slug, f => {
+    onClose();
+    mutate(s => ({ ...s, files: [...s.files, f] }));
+    setDisplayName("");
+    setFile(null);
   });
 
   return (
     <>
       <Stack>
-        {isError && <Alert color="red">{error as unknown as string}</Alert>}
+        {error && <Alert color="red">{String(error)}</Alert>}
         <TextInput
           label="Display Name"
           value={displayName}
@@ -51,22 +51,17 @@ const CreateDocumentFileModal: React.FC<Props> = ({
           you that you can edit afterwards.
         </div>
         <Button
-          loading={isPending}
+          loading={loading}
           leftSection={<IconPlus />}
-          disabled={isPending || displayName.trim() === ""}
+          disabled={loading || displayName.trim() === ""}
           onClick={() => {
-            mutate({
-              username: document.author,
-              slug: document.slug,
-              data: {
-                display_name: displayName.trim(),
-                file:
-                  file ??
-                  new File([], "document.md", {
-                    type: "text/markdown",
-                  }),
-              },
-            });
+            createDocumentFile(
+              displayName.trim(),
+              file ??
+                new File([], "document.md", {
+                  type: "text/markdown",
+                }),
+            );
           }}
         >
           Add
