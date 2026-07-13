@@ -1023,6 +1023,7 @@ def move_document_file(
     "{username}/{slug}/transfer/accept",
     response={200: ValueWrapped[DocumentSchema], 403: ErrorSchema},
     operation_id="acceptDocumentTransfer",
+    exclude_none=True,
 )
 @auth_check.require_login
 def accept_document_transfer(request, username: str, slug: str):
@@ -1051,6 +1052,7 @@ def accept_document_transfer(request, username: str, slug: str):
     "{username}/{slug}/transfer/reject",
     response={200: ValueWrapped[DocumentSchema], 403: ErrorSchema},
     operation_id="rejectDocumentTransfer",
+    exclude_none=True,
 )
 @auth_check.require_login
 def reject_document_transfer(request, username: str, slug: str):
