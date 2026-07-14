@@ -1,12 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { download } from "../api/fetch-utils";
-import { Document } from "../interfaces";
-import {
-  downloadZipFile,
-  type ZipFileItem,
-} from "../utils/download-zip-file.js";
+import { downloadZipFile, type ZipFileItem } from "../utils/download-zip-file";
+import type { DocumentSchema } from "../api/model/documentSchema";
 
-export const useDocumentDownload = (doc: Document | undefined) => {
+export const useDocumentDownload = (doc: DocumentSchema | undefined) => {
   const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     if (doc === undefined) return;
@@ -22,14 +19,17 @@ export const useDocumentDownload = (doc: Document | undefined) => {
     };
 
     void (async () => {
-      if (doc.files.length === 0) return;
-      if (doc.files.length === 1) {
-        download(`/api/document/file/${doc.files[0].filename}`);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const files = doc.files!;
+
+      if (files.length === 0) return;
+      if (files.length === 1) {
+        download(`/api/document/file/${files[0].filename}`);
         setIsLoading(false);
         return;
       }
 
-      const zipFileItems = doc.files.map(
+      const zipFileItems = files.map(
         async (file): Promise<ZipFileItem | undefined> => {
           const controller = new AbortController();
           controllers.push(controller);

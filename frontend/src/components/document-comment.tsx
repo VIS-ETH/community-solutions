@@ -12,17 +12,7 @@ import { differenceInSeconds } from "date-fns";
 import { lazy, Suspense, useState } from "react";
 import { Link } from "react-router-dom";
 import { usePendingImages } from "./Editor/pending-images";
-import {
-  Mutate,
-  useDeleteDocumentComment,
-  useResetDocumentCommentFlaggedVote,
-  useResetDocumentCommentMarkedAsAi,
-  useSetDocumentCommentFlagged,
-  useSetDocumentCommentMarkedAsAi,
-  useUpdateDocumentComment,
-} from "../api/hooks";
 import { useUser } from "../auth";
-import { Document, DocumentComment } from "../interfaces";
 import { UndoStack } from "./Editor/utils/undo-stack";
 import MarkdownText from "./markdown-text";
 import SmallButton from "./small-button";
@@ -42,44 +32,52 @@ import FlaggedBadge from "./FlaggedBadge";
 import MarkedAsAiBadge from "./MarkedAsAiBadge";
 import TimeText from "./time-text";
 import { copy } from "../utils/clipboard";
+import {
+  useDeleteDocumentComment,
+  useResetCommentMarkedAsAi,
+  useResetFlaggedComment,
+  useSetCommentMarkedAsAi,
+  useSetFlaggedComment,
+  useUpdateDocumentComment,
+} from "../api/hooks/documents";
+import type { DocumentCommentSchema } from "../api/model/documentCommentSchema";
 
 const Editor = lazy(() => import("./Editor"));
 
 interface Props {
   documentAuthor: string;
   documentSlug: string;
-  comment: DocumentComment;
-  mutate: Mutate<Document>;
+  comment: DocumentCommentSchema;
+  refetch: () => void;
 }
 const DocumentCommentComponent = ({
   documentAuthor,
   documentSlug,
   comment,
-  mutate,
+  refetch,
 }: Props) => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { isAdmin, username } = useUser()!;
-  const [editLoading, updateComment] = useUpdateDocumentComment(
-    documentAuthor,
-    documentSlug,
-    comment.oid,
-    res => {
-      setHasDraft(false);
-      mutate(document => ({
-        ...document,
-        comments: document.comments.map(c => (c.oid !== res.oid ? c : res)),
-      }));
+
+  const updateComment = useUpdateDocumentComment({
+    mutation: {
+      onSuccess() {
+        setHasDraft(false);
+        refetch();
+      },
     },
-  );
-  const [_, deleteComment] = useDeleteDocumentComment(
-    documentAuthor,
-    documentSlug,
-    comment.oid,
-    () =>
-      mutate(document => ({
-        ...document,
-        comments: document.comments.filter(c => c.oid !== comment.oid),
-      })),
-  );
+  });
+
+  const hooksOptionsRefetch = {
+    mutation: {
+      onSuccess() {
+        refetch();
+      },
+    },
+  };
+
+  const deleteComment = useDeleteDocumentComment(hooksOptionsRefetch);
+
   const [hasDraft, setHasDraft] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [draftText, setDraftText] = useState("");
@@ -91,22 +89,13 @@ const DocumentCommentComponent = ({
     usePendingImages();
   const toggle = () => setHasDraft(e => !e);
 
-  const mutateComment = (res: DocumentComment) =>
-    mutate(document => ({
-      ...document,
-      comments: document.comments.map(c => (c.oid !== res.oid ? c : res)),
-    }));
+  const setCommentFlagged = useSetFlaggedComment(hooksOptionsRefetch);
+  const setCommentMarkedAsAi = useSetCommentMarkedAsAi(hooksOptionsRefetch);
+  const resetCommentFlagged = useResetFlaggedComment(hooksOptionsRefetch);
+  const resetCommentMarkedAsAi = useResetCommentMarkedAsAi(hooksOptionsRefetch);
 
-  const [setCommentFlaggedLoading, setCommentFlagged] =
-    useSetDocumentCommentFlagged(mutateComment);
-  const [, setCommentMarkedAsAi] =
-    useSetDocumentCommentMarkedAsAi(mutateComment);
-  const [resetCommentFlaggedLoading, resetCommentFlagged] =
-    useResetDocumentCommentFlaggedVote(mutateComment);
-  const [, resetCommentMarkedAsAi] =
-    useResetDocumentCommentMarkedAsAi(mutateComment);
-
-  const flaggedLoading = setCommentFlaggedLoading || resetCommentFlaggedLoading;
+  const flaggedLoading =
+    setCommentFlagged.isPending || resetCommentFlagged.isPending;
   const isOwnComment = comment.authorId === username;
 
   return (
@@ -127,10 +116,18 @@ const DocumentCommentComponent = ({
             <TooltipButton
               mt="sm"
               tooltip="Save comment"
-              disabled={editLoading || draftText.length === 0}
-              onClick={async () =>
-                updateComment(await flushPendingImages(draftText))
-              }
+              disabled={updateComment.isPending || draftText.length === 0}
+              onClick={async () => {
+                const text = await flushPendingImages(draftText);
+                updateComment.mutate({
+                  slug: documentSlug,
+                  username: documentAuthor,
+                  id: comment.oid,
+                  data: {
+                    text,
+                  },
+                });
+              }}
             >
               Save
             </TooltipButton>
@@ -153,40 +150,43 @@ const DocumentCommentComponent = ({
                 <Text component="span" mx={6} c="dimmed">
                   ·
                 </Text>
-                {comment && <TimeText time={comment.time} suffix="ago" />}
-                {comment &&
-                  differenceInSeconds(
-                    new Date(comment.edittime),
-                    new Date(comment.time),
-                  ) > 1 && (
-                    <>
-                      <Text component="span" c="dimmed" mx={6}>
-                        ·
-                      </Text>
-                      <TimeText
-                        time={comment.edittime}
-                        prefix="edited"
-                        suffix="ago"
-                      />
-                    </>
-                  )}
+                <TimeText time={comment.time} suffix="ago" />
+                {differenceInSeconds(
+                  new Date(comment.edittime),
+                  new Date(comment.time),
+                ) > 1 && (
+                  <>
+                    <Text component="span" c="dimmed" mx={6}>
+                      ·
+                    </Text>
+                    <TimeText
+                      time={comment.edittime}
+                      prefix="edited"
+                      suffix="ago"
+                    />
+                  </>
+                )}
               </Flex>
               <MarkedAsAiBadge count={comment.markedAsAiCount} />
             </div>
             <Flex>
-              {comment && (
-                <FlaggedBadge
-                  count={comment.flaggedCount}
-                  isFlagged={comment.isFlagged}
-                  loading={flaggedLoading}
-                  size="xs"
-                  onToggle={
-                    isOwnComment
-                      ? undefined
-                      : () => setCommentFlagged(comment.oid, !comment.isFlagged)
-                  }
-                />
-              )}
+              <FlaggedBadge
+                count={comment.flaggedCount}
+                isFlagged={comment.isFlagged}
+                loading={flaggedLoading}
+                size="xs"
+                onToggle={
+                  isOwnComment
+                    ? undefined
+                    : () =>
+                        setCommentFlagged.mutate({
+                          id: comment.oid,
+                          data: {
+                            flagged: !comment.isFlagged,
+                          },
+                        })
+                }
+              />
               <SmallButton
                 tooltip={showActions ? "Hide actions" : "Show actions"}
                 size="xs"
@@ -208,10 +208,12 @@ const DocumentCommentComponent = ({
                         size="xs"
                         color="white"
                         onClick={() =>
-                          setCommentMarkedAsAi(
-                            comment.oid,
-                            !comment.isMarkedAsAi,
-                          )
+                          setCommentMarkedAsAi.mutate({
+                            id: comment.oid,
+                            data: {
+                              marked_as_ai: !comment.isMarkedAsAi,
+                            },
+                          })
                         }
                       >
                         {comment.isMarkedAsAi ? (
@@ -225,7 +227,12 @@ const DocumentCommentComponent = ({
                         size="xs"
                         color="white"
                         onClick={() =>
-                          setCommentFlagged(comment.oid, !comment.isFlagged)
+                          setCommentFlagged.mutate({
+                            id: comment.oid,
+                            data: {
+                              flagged: !comment.isFlagged,
+                            },
+                          })
                         }
                       >
                         <IconFlag />
@@ -251,7 +258,11 @@ const DocumentCommentComponent = ({
                           tooltip="Remove all inappropriate flags"
                           size="xs"
                           color="white"
-                          onClick={() => resetCommentFlagged(comment.oid)}
+                          onClick={() =>
+                            resetCommentFlagged.mutate({
+                              id: comment.oid,
+                            })
+                          }
                         >
                           <IconFlagCancel />
                         </SmallButton>
@@ -261,7 +272,11 @@ const DocumentCommentComponent = ({
                           tooltip="Remove all AI-generated marks"
                           size="xs"
                           color="white"
-                          onClick={() => resetCommentMarkedAsAi(comment.oid)}
+                          onClick={() =>
+                            resetCommentMarkedAsAi.mutate({
+                              id: comment.oid,
+                            })
+                          }
                         >
                           <IconRobotOff />
                         </SmallButton>
@@ -274,7 +289,13 @@ const DocumentCommentComponent = ({
                         tooltip="Delete comment"
                         size="xs"
                         color="white"
-                        onClick={deleteComment}
+                        onClick={() =>
+                          deleteComment.mutate({
+                            slug: documentSlug,
+                            username: documentAuthor,
+                            id: comment.oid,
+                          })
+                        }
                       >
                         <IconTrash />
                       </SmallButton>
