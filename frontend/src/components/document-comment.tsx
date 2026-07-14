@@ -57,7 +57,7 @@ const DocumentCommentComponent = ({
   refetch,
 }: Props) => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const { isAdmin } = useUser()!;
+  const { isAdmin, username } = useUser()!;
 
   const updateComment = useUpdateDocumentComment({
     mutation: {
@@ -96,6 +96,7 @@ const DocumentCommentComponent = ({
 
   const flaggedLoading =
     setCommentFlagged.isPending || resetCommentFlagged.isPending;
+  const isOwnComment = comment.authorId === username;
 
   return (
     <div id={String(comment.oid)}>
@@ -174,13 +175,16 @@ const DocumentCommentComponent = ({
                 isFlagged={comment.isFlagged}
                 loading={flaggedLoading}
                 size="xs"
-                onToggle={() =>
-                  setCommentFlagged.mutate({
-                    id: comment.oid,
-                    data: {
-                      flagged: !comment.isFlagged,
-                    },
-                  })
+                onToggle={
+                  isOwnComment
+                    ? undefined
+                    : () =>
+                        setCommentFlagged.mutate({
+                          id: comment.oid,
+                          data: {
+                            flagged: !comment.isFlagged,
+                          },
+                        })
                 }
               />
               <SmallButton
@@ -193,40 +197,48 @@ const DocumentCommentComponent = ({
               </SmallButton>
               {showActions && (
                 <Button.Group>
-                  <SmallButton
-                    tooltip={
-                      comment.isMarkedAsAi
-                        ? "Remove AI-generated mark"
-                        : "Mark as AI-generated"
-                    }
-                    size="xs"
-                    color="white"
-                    onClick={() =>
-                      setCommentMarkedAsAi.mutate({
-                        id: comment.oid,
-                        data: {
-                          marked_as_ai: !comment.isMarkedAsAi,
-                        },
-                      })
-                    }
-                  >
-                    {comment.isMarkedAsAi ? <IconRobotOff /> : <IconRobot />}
-                  </SmallButton>
-                  <SmallButton
-                    tooltip="Flag as inappropriate"
-                    size="xs"
-                    color="white"
-                    onClick={() =>
-                      setCommentFlagged.mutate({
-                        id: comment.oid,
-                        data: {
-                          flagged: !comment.isFlagged,
-                        },
-                      })
-                    }
-                  >
-                    <IconFlag />
-                  </SmallButton>
+                  {!isOwnComment && (
+                    <>
+                      <SmallButton
+                        tooltip={
+                          comment.isMarkedAsAi
+                            ? "Remove AI-generated mark"
+                            : "Mark as AI-generated"
+                        }
+                        size="xs"
+                        color="white"
+                        onClick={() =>
+                          setCommentMarkedAsAi.mutate({
+                            id: comment.oid,
+                            data: {
+                              marked_as_ai: !comment.isMarkedAsAi,
+                            },
+                          })
+                        }
+                      >
+                        {comment.isMarkedAsAi ? (
+                          <IconRobotOff />
+                        ) : (
+                          <IconRobot />
+                        )}
+                      </SmallButton>
+                      <SmallButton
+                        tooltip="Flag as inappropriate"
+                        size="xs"
+                        color="white"
+                        onClick={() =>
+                          setCommentFlagged.mutate({
+                            id: comment.oid,
+                            data: {
+                              flagged: !comment.isFlagged,
+                            },
+                          })
+                        }
+                      >
+                        <IconFlag />
+                      </SmallButton>
+                    </>
+                  )}
                   <SmallButton
                     tooltip="Copy Permalink"
                     size="xs"

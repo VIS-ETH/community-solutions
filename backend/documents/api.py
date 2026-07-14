@@ -791,7 +791,7 @@ def delete_document_file(request, username: str, slug: str, id: int):
 
 @router.post(
     "/setflaggedcomment/{id}",
-    response={200: DocumentCommentWrappedSchema},
+    response={200: DocumentCommentWrappedSchema, 400: ErrorSchema},
     operation_id="setFlaggedComment",
 )
 @auth_check.require_login
@@ -801,6 +801,8 @@ def set_flagged_comment(
     data: Form[SetDocumentCommentFlaggedSchema],
 ):
     comment = get_object_or_404(Comment, pk=id)
+    if request.user == comment.author:
+        return not_possible("User can't flag their own comment")
     old_flagged = comment.flagged.filter(pk=request.user.pk).exists()
     if data.flagged != old_flagged:
         if old_flagged:
@@ -815,7 +817,7 @@ def set_flagged_comment(
 
 @router.post(
     "/setmarkedasaicomment/{id}",
-    response={200: DocumentCommentWrappedSchema},
+    response={200: DocumentCommentWrappedSchema, 400: ErrorSchema},
     operation_id="setCommentMarkedAsAi",
 )
 @auth_check.require_login
@@ -825,6 +827,8 @@ def set_marked_as_ai(
     data: Form[SetDocumentCommentMarkedAsAiSchema],
 ):
     comment = get_object_or_404(Comment, pk=id)
+    if request.user == comment.author:
+        return not_possible("User can't mark their own comment as AI")
     old_marked_as_ai = comment.marked_as_ai.filter(pk=request.user.pk).exists()
     if data.marked_as_ai != old_marked_as_ai:
         if old_marked_as_ai:
