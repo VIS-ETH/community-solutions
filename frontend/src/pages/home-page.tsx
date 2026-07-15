@@ -388,14 +388,15 @@ export const CategoryList: React.FC = () => {
           )}
         </Container>
       </ContentContainer>
-      {!loading ? (
+      {!loading && (
         <CourseCategoriesPanel
           mode={mode}
           isOpen={panelIsOpen}
           toggle={togglePanel}
           metaList={metaList}
+          categories={searchResult}
         />
-      ) : null}
+      )}
     </>
   );
 };
