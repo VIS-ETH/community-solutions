@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useMemo } from "react";
 import { Text, Title } from "@mantine/core";
 import Panel from "./panel-left";
 import { CategoryMetaData } from "../interfaces";
@@ -25,16 +25,6 @@ const CourseCategoriesPanel: React.FC<CourseCategoriesPanelProps> = ({
   metaList,
   categories,
 }) => {
-  const scrollToTop = useCallback(() => {
-    const c = document.documentElement.scrollTop || document.body.scrollTop;
-    if (c > 0) {
-      requestAnimationFrame(scrollToTop);
-      scrollTo(0, c - c / 10 - 1);
-    } else {
-      toggle();
-    }
-  }, [toggle]);
-
   const availableLetters = useMemo<ReadonlyMap<string, string>>(() => {
     const letters = new Map<string, string>();
     const sorted = categories.toSorted((a, b) =>
