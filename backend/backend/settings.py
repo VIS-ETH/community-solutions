@@ -111,7 +111,7 @@ document_download_safe_extensions = os.environ.get(
 )
 document_download_safe_extensions = (
     DEFAULT_COMSOL_DOCUMENT_SAFE_EXTENSIONS
-    if document_download_safe_extensions is None
+    if not document_download_safe_extensions
     else document_download_safe_extensions.split(",")
 )
 
