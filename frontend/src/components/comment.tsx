@@ -60,6 +60,8 @@ const CommentComponent: React.FC<Props> = ({
   onSectionChanged,
   onDelete,
 }) => {
+  const draftKey = comment?.oid ?? answer.oid;
+
   const [setFlaggedLoading, setExamCommentFlagged] =
     useSetExamCommentFlagged(onSectionChanged);
   const [resetFlaggedLoading, resetExamCommentFlagged] =
@@ -72,17 +74,21 @@ const CommentComponent: React.FC<Props> = ({
   const { isAdmin, username } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
   const [editing, setEditing] = useState(false);
-  const [draftText, setDraftText] = useState("");
+  const [draftText, setDraftText] = useState(() =>
+    readDraftFromStorage(draftKey, false),
+  );
   const [undoStack, setUndoStack] = useState<UndoStack>({ prev: [], next: [] });
   const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
     usePendingImages();
   const [addNewLoading, runAddNewComment] = useMutation(addNewComment, res => {
     if (onDelete) onDelete();
     onSectionChanged(res);
+    saveDraftToStorage(draftKey, "", false);
   });
   const [updateLoading, runUpdateComment] = useMutation(updateComment, res => {
     setEditing(false);
     onSectionChanged(res);
+    saveDraftToStorage(draftKey, "", false);
   });
   const [removeLoading, runRemoveComment] = useMutation(
     removeComment,
@@ -91,11 +97,12 @@ const CommentComponent: React.FC<Props> = ({
   const loading = addNewLoading || updateLoading || removeLoading;
   const languages = useOfficialSolutionLanguage();
 
-  const commentId = answer?.oid;
-
   useEffect(() => {
-    setDraftText(readDraftFromStorage(commentId, false));
-  }, []);
+    // On first render it is already set as a default value.
+    // This only reruns if the comment id changes
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDraftText(readDraftFromStorage(draftKey, false));
+  }, [draftKey, setDraftText]);
 
   const onSave = async () => {
     const finalText = await flushPendingImages(draftText);
@@ -106,7 +113,7 @@ const CommentComponent: React.FC<Props> = ({
     }
   };
   const onCancel = () => {
-    saveDraftToStorage(commentId, "", false);
+    saveDraftToStorage(draftKey, "", false);
     if (comment === undefined) {
       if (onDelete) onDelete();
     } else {
@@ -115,14 +122,14 @@ const CommentComponent: React.FC<Props> = ({
   };
   const startEditing = () => {
     if (comment === undefined) return;
-    setDraftText(comment.text);
+    setDraftText(readDraftFromStorage(comment.oid, false) || comment.text);
     setEditing(true);
   };
   const remove = () => {
     if (comment)
       removeConfirm("Remove comment?", () => {
         runRemoveComment(comment.oid);
-        saveDraftToStorage(comment.oid, "", false);
+        saveDraftToStorage(draftKey, "", false);
       });
   };
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
@@ -182,7 +189,7 @@ const CommentComponent: React.FC<Props> = ({
               size="xs"
               onToggle={
                 isOwnComment
-                ? undefined
+                  ? undefined
                   : () => setExamCommentFlagged(comment.oid, !comment.isFlagged)
               }
             />
@@ -281,7 +288,7 @@ const CommentComponent: React.FC<Props> = ({
             value={draftText}
             onChange={newValue => {
               setDraftText(newValue);
-              saveDraftToStorage(commentId, newValue, false);
+              saveDraftToStorage(draftKey, newValue, false);
             }}
             imageHandler={deferredImageHandler}
             preview={value => (
