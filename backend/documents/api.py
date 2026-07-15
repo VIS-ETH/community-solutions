@@ -1,7 +1,6 @@
 import datetime
 import os.path
 from typing import Literal
-from urllib import parse
 
 from django.conf import settings
 from django.db import transaction
@@ -329,7 +328,7 @@ def list_documents(
 @auth_check.require_login
 def create_document(request, data: Form[CreateDocumentSchema]):
     category = get_object_or_404(Category, slug=data.category)
-    if slugify(parse.quote(data.display_name, " ")).strip() == "":
+    if slugify(data.display_name) == "":
         return not_possible("Invalid displayname")
 
     document = Document(
@@ -429,7 +428,7 @@ def update_document(
         if not can_edit:
             return not_allowed()
         # avoids empty or whitespaced displaynames
-        if slugify(parse.quote(update_data["display_name"], " ")).strip() == "":
+        if slugify(update_data["display_name"]) == "":
             return not_possible("Invalid displayname")
         document.display_name = update_data["display_name"]
         edited = True
@@ -640,7 +639,7 @@ def create_document_file(
     if not document.current_user_can_edit(request):
         return not_allowed()
 
-    if slugify(parse.quote(data.display_name, " ")).strip() == "":
+    if slugify(data.display_name) == "":
         return not_possible("Invalid displayname")
 
     _, ext = os.path.splitext(file.name)
@@ -727,7 +726,7 @@ def update_document_file(
 
     update_data = data.dict(exclude_unset=True)
     if "display_name" in update_data:
-        if slugify(parse.quote(update_data["display_name"], " ")).strip() == "":
+        if slugify(update_data["display_name"]) == "":
             return not_possible("Invalid displayname")
         document_file.display_name = update_data["display_name"]
 

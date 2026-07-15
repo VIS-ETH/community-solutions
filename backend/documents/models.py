@@ -1,5 +1,4 @@
 import secrets
-from urllib import parse
 
 from django.db import models
 from django.utils import timezone
@@ -40,7 +39,9 @@ class Document(ExportModelOperationsMixin("document"), models.Model):
 
     def save(self, *args, **kwargs):
         # makes sure slugs are always unique and get incremented
-        oslug = slugify(parse.quote(self.display_name, " "))
+        # slugify strips leading and trailing spaces and dashes
+        # slugify removes diacritics and other nonsense
+        oslug = slugify(self.display_name)
 
         def exists(aslug):
             objects = Document.objects.filter(slug=aslug)
@@ -49,9 +50,9 @@ class Document(ExportModelOperationsMixin("document"), models.Model):
             return objects.exists()
 
         slug = oslug
-        cnt = 0
+        cnt = 1
         while exists(slug):
-            slug = oslug + "_" + str(cnt)
+            slug = oslug + "-" + str(cnt)
             cnt += 1
 
         self.slug = slug

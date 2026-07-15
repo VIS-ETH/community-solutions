@@ -96,9 +96,7 @@ const CourseCategoriesPanel: React.FC<CourseCategoriesPanelProps> = ({
                       cursor: "pointer",
                     }}
                     onClick={() =>
-                      scrollToElementById(
-                        slugify(meta1display) + slugify(meta2display),
-                      )
+                      scrollToElementById(slugify(meta1display + meta2display))
                     }
                   >
                     {meta2display}
