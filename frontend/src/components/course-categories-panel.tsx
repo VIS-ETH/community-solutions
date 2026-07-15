@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Text, Title } from "@mantine/core";
 import Panel from "./panel-left";
 import { CategoryMetaData } from "../interfaces";
+import { slugify } from "../utils/slugify";
 
 export interface DisplayOptions {
   displayHiddenPdfSections: boolean;
@@ -31,14 +32,6 @@ const CourseCategoriesPanel: React.FC<CourseCategoriesPanelProps> = ({
       toggle();
     }
   }, [toggle]);
-
-  const slugify = (str: string): string =>
-    str
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, "")
-      .replace(/[\s_-]+/g, "-")
-      .replace(/^-+|-+$/g, "");
 
   const scrollToElementById = (id: string): void => {
     const element = document.getElementById(id);
