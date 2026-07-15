@@ -431,6 +431,7 @@ def update_document(
         if slugify(update_data["display_name"]) == "":
             return not_possible("Invalid displayname")
         document.display_name = update_data["display_name"]
+        document.recompute_slug()
         edited = True
 
     if "category" in update_data:

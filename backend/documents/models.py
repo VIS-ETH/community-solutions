@@ -37,10 +37,7 @@ class Document(ExportModelOperationsMixin("document"), models.Model):
     def current_user_can_edit(self, request):
         return self.current_user_can_delete(request)
 
-    def save(self, *args, **kwargs):
-        # makes sure slugs are always unique and get incremented
-        # slugify strips leading and trailing spaces and dashes
-        # slugify removes diacritics and other nonsense
+    def recompute_slug(self):
         oslug = slugify(self.display_name)
 
         def exists(aslug):
@@ -52,10 +49,14 @@ class Document(ExportModelOperationsMixin("document"), models.Model):
         slug = oslug
         cnt = 1
         while exists(slug):
-            slug = oslug + "-" + str(cnt)
+            slug = f"{oslug}-{cnt}"
             cnt += 1
 
         self.slug = slug
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.recompute_slug()
 
         super().save(*args, **kwargs)
 
