@@ -20,7 +20,7 @@ dependencies = [
     "psycogreen==1.0.2",
     "psycopg2-binary==2.9.12",
     "pypdfium2>=5.5.0",
-    "pyroscope-io==0.8.16; sys_platform != 'win32'",
+    "pyroscope-io==1.1.0; sys_platform != 'win32'",
     "pyroscope-otel==0.4.1 ; sys_platform != 'win32'",
     "pyyaml==6.0.3",
     "requests==2.25.1",

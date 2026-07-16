@@ -192,7 +192,7 @@ requires-dist = [
     { name = "psycogreen", specifier = "==1.0.2" },
     { name = "psycopg2-binary", specifier = "==2.9.12" },
     { name = "pypdfium2", specifier = ">=5.5.0" },
-    { name = "pyroscope-io", marker = "sys_platform != 'win32'", specifier = "==0.8.16" },
+    { name = "pyroscope-io", marker = "sys_platform != 'win32'", specifier = "==1.1.0" },
     { name = "pyroscope-otel", marker = "sys_platform != 'win32'", specifier = "==0.4.1" },
     { name = "pyyaml", specifier = "==6.0.3" },
     { name = "requests", specifier = "==2.25.1" },
@@ -904,16 +904,19 @@ wheels = [
 
 [[package]]
 name = "pyroscope-io"
-version = "0.8.16"
+version = "1.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cffi" },
 ]
+sdist = { url = "https://files.pythonhosted.org/packages/a9/41/862922fcb3a2ec6b55a7e097f5bb93ffc01dbf3346481bcfaf20d1764a5f/pyroscope_io-1.1.0.tar.gz", hash = "sha256:03eb69c7a421fb8cc37d0e7e03a248aaa41a789cd7617dcefdabdefbac9c4a80", size = 49609, upload-time = "2026-07-07T12:42:24.367Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a8/50/607b38b120ba8adad954119ba512c53590c793f0cf7f009ba6549e4e1d77/pyroscope_io-0.8.16-py2.py3-none-macosx_11_0_arm64.whl", hash = "sha256:e07edcfd59f5bdce42948b92c9b118c824edbd551730305f095a6b9af401a9e8", size = 3138869, upload-time = "2026-01-22T06:23:24.664Z" },
-    { url = "https://files.pythonhosted.org/packages/5e/c1/90fc335f2224da86d49016ebe15fb4f709c7b8853d4b5beced5a052d9ea3/pyroscope_io-0.8.16-py2.py3-none-macosx_11_0_x86_64.whl", hash = "sha256:dc98355e27c0b7b61f27066500fe1045b70e9459bb8b9a3082bc4755cb6392b6", size = 3375865, upload-time = "2026-01-22T06:23:27.736Z" },
-    { url = "https://files.pythonhosted.org/packages/39/7a/261f53ede16b7db19984ec80480572b8e9aa3be0ffc82f62650c4b9ca7d6/pyroscope_io-0.8.16-py2.py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:86f0f047554ff62bd92c3e5a26bc2809ccd467d11fbacb9fef898ba299dbda59", size = 3236172, upload-time = "2026-01-22T06:23:29.107Z" },
-    { url = "https://files.pythonhosted.org/packages/eb/8f/88d792e9cacd6ff3bd9a50100586ddc665e02a917662c17d30931f778542/pyroscope_io-0.8.16-py2.py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:6b91ce5b240f8de756c16a17022ca8e25ef8a4eed461c7d074b8a0841cf7b445", size = 3485288, upload-time = "2026-01-22T06:23:32Z" },
+    { url = "https://files.pythonhosted.org/packages/a7/19/fb358975d05a2fce29186cf5176524d06fd4f37a5844293bce65627d6f7a/pyroscope_io-1.1.0-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:4f48ef1a734df6d9ed82d7f768fd29c802e9a9219c2e8ec8ebae3d454d5d91a8", size = 2076250, upload-time = "2026-07-07T12:42:14.338Z" },
+    { url = "https://files.pythonhosted.org/packages/46/fd/a6a9240cf7339ae7d4f66f102756f408e32e83a7f66102f81a53768d64c5/pyroscope_io-1.1.0-cp310-abi3-macosx_11_0_x86_64.whl", hash = "sha256:7bc2fab0e5dfa88be8ff8617f85145d69cad582a8825e6214136d305103d889d", size = 2167068, upload-time = "2026-07-07T12:42:16.112Z" },
+    { url = "https://files.pythonhosted.org/packages/dc/0c/e1d7cddf0428f7ebe1be4a94ebaf92b90d85827633812c363c8d3b2aae8a/pyroscope_io-1.1.0-cp310-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:9bb6e3ee6733744e3c1cd267c031a77a91dfae0ea1d406162e6954d7642fd432", size = 5315580, upload-time = "2026-07-07T12:42:17.491Z" },
+    { url = "https://files.pythonhosted.org/packages/1f/c4/17c1ce933e346a5c430bf392c631b9694c7356874a30a16a10cdf35a0f5f/pyroscope_io-1.1.0-cp310-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:593bd81a7ebc73f0b6cf1e9df8a031fb625e0628854b9cfb3efd715298a0c9ad", size = 4885996, upload-time = "2026-07-07T12:42:19.076Z" },
+    { url = "https://files.pythonhosted.org/packages/fa/35/0250b3c7952d15067a4cb9e732f01d3f209be8a13aab8f7c49cadbd49a1c/pyroscope_io-1.1.0-cp310-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:921b6e67f660eb048fa527ed00d93ba6128516310fe949f704ddac7bf9925456", size = 5438580, upload-time = "2026-07-07T12:42:20.832Z" },
+    { url = "https://files.pythonhosted.org/packages/91/21/e88b87fb5a20c19394b78b4198c9a76c0ec90f0ad19f02882f42c3dce0a1/pyroscope_io-1.1.0-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:b5bb155cdbe7865963c60cc4c78589bed62025fc6d833d8adbe8f4daf6e086ff", size = 5168218, upload-time = "2026-07-07T12:42:22.957Z" },
 ]
 
 [[package]]
