@@ -40,11 +40,12 @@ export function usePendingImages() {
       return Promise.resolve({
         name: file.name,
         src: id,
-        remove: async () => {
+        remove: () => {
           const entry = registryRef.current.get(id);
           if (entry) URL.revokeObjectURL(entry.objectUrl);
           registryRef.current.delete(id);
           syncObjectUrls();
+          return Promise.resolve();
         },
       });
     },
