@@ -6,7 +6,6 @@ stages:
 "Backend Check":
   stage: Lint and Test
   tags: [kata]
-  when: manual # while CI executor is not yet stable
   image: debian:trixie
   rules:
     # This job runs on protected branches and on merge requests to master.
@@ -80,7 +79,6 @@ stages:
 "Frontend Check":
   stage: Lint and Test
   tags: [kata]
-  when: manual # while CI executor is not yet stable
   rules:
     # This job runs on protected branches and on merge requests to master.
     # Both should be done because the branch state within the MR and the
