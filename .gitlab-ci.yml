@@ -19,6 +19,15 @@ stages:
     - cd backend
   script:
     - uv run manage.py export_openapi
+  cache:
+    key:
+      files:
+        - backend/uv.lock
+    paths:
+      - backend/.venv
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master"
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"
   artifacts:
     paths:
       - ./backend/static/openapi.json
