@@ -5,7 +5,9 @@ stages:
 
 "Backend Check":
   stage: Lint and Test
+  tags: [kata]
   when: manual # while CI executor is not yet stable
+  image: debian:trixie
   rules:
     # This job runs on protected branches and on merge requests to master.
     # Both should be done because the branch state within the MR and the
@@ -15,40 +17,20 @@ stages:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master" # Run on merge requests to master
       changes:
         - backend/**/*
-  variables:
-    # Set the pip cache directory to a directory that we can access and cache
-    PIP_CACHE_DIR: "$CI_PROJECT_DIR/backend/.cache/pip"
-
-    POSTGRES_DB: testdb
-    POSTGRES_USER: testuser
-    POSTGRES_PASSWORD: testpw
-    POSTGRES_HOST_AUTH_METHOD: trust
-    MINIO_ACCESS_KEY: minio
-    MINIO_SECRET_KEY: minio123
-    MINIO_DOMAIN: localhost
+  services:
+    - name: postgres:16
+      alias: postgres
+      command: ["postgres"]
+      variables:
+        POSTGRES_DB: testdb
+        POSTGRES_USER: testuser
+        POSTGRES_PASSWORD: testpw
+        POSTGRES_HOST_AUTH_METHOD: trust
+    - name: minio/minio:RELEASE.2023-10-25T06-33-25Z
+      alias: minio
+      command: ["server", "/minio"]
   before_script:
     - set -euo pipefail
-    # Run postgres and minio services as Docker containers.
-    # The KubeVirt CI executor has rootless docker.
-    - docker run
-      --network=host
-      --name postgres
-      -e POSTGRES_DB=$POSTGRES_DB
-      -e POSTGRES_USER=$POSTGRES_USER
-      -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD
-      -e POSTGRES_HOST_AUTH_METHOD=$POSTGRES_HOST_AUTH_METHOD
-      -d
-      postgres:16
-    - docker run
-      --network=host
-      --name minio
-      -e MINIO_ACCESS_KEY=$MINIO_ACCESS_KEY
-      -e MINIO_SECRET_KEY=$MINIO_SECRET_KEY
-      -e MINIO_DOMAIN=$MINIO_DOMAIN
-      -d
-      minio/minio:RELEASE.2023-10-25T06-33-25Z
-      server /minio
-
     # The Django backend will be run bare-metal on the VM, so that we can
     # cache the Python dependencies etc.
     # KubeVirt CI executor runs on Debian 13 "Trixie" which comes with Python
@@ -62,7 +44,7 @@ stages:
     # Install mc so that we can create the community-solutions bucket in minio
     - curl https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o mc
     - chmod +x ./mc
-    - ./mc alias set myminio http://localhost:9000 $MINIO_ACCESS_KEY $MINIO_SECRET_KEY
+    - ./mc alias set myminio http://minio:9000 $MINIO_ACCESS_KEY $MINIO_SECRET_KEY
     - ./mc mb myminio/community-solutions
 
     # Install poppler to get pdftotext binary
@@ -70,7 +52,7 @@ stages:
     - pip install -r backend/requirements.txt
     - pip install tblib
 
-    # Make/copy files (same as Dockerfile definition) to make resources availabe to tests
+    # Make/copy files (same as Dockerfile definition) to make resources available to tests
     - mkdir backend/intermediate_pdf_storage
     - mv ./frontend/public/exam10.pdf backend
     - mv ./frontend/public/static backend
@@ -95,9 +77,9 @@ stages:
     - cd backend
     - python3 manage.py test --parallel # parallel speeds up by approx 4x.
 
-
 "Frontend Check":
   stage: Lint and Test
+  tags: [kata]
   when: manual # while CI executor is not yet stable
   rules:
     # This job runs on protected branches and on merge requests to master.
