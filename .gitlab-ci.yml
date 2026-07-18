@@ -1,8 +1,8 @@
 variables:
   KUBERNETES_CPU_LIMIT: "8"
-  KUBERNETES_CPU_REQUEST: "1"
-  KUBERNETES_MEMORY_REQUEST: "600Mi"
-  KUBERNETES_MEMORY_LIMIT: "2Gi"
+  KUBERNETES_CPU_REQUEST: "1500m"
+  KUBERNETES_MEMORY_REQUEST: "1600Mi"
+  KUBERNETES_MEMORY_LIMIT: "3Gi"
 
 # List of stages for jobs, which is executed in order. To define dependencies
 # between jobs in the same stage, use the 'needs' keyword.
