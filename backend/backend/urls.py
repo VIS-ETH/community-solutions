@@ -42,6 +42,7 @@ def restrict_proxied(f):
 api = NinjaAPI()
 api.add_router("feedback/", "feedback.api.router")
 api.add_router("image/", "images.api.router")
+api.add_router("user/", "users.api.router")
 api.add_router("document/", "documents.api.router")
 
 urlpatterns = [

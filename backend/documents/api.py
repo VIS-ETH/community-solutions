@@ -3,6 +3,7 @@ import os.path
 from typing import Literal
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import Count, Exists, Max, OuterRef, Prefetch, Q
 from django.shortcuts import get_object_or_404
@@ -23,6 +24,7 @@ from documents.models import (
 from myauth import auth_check
 from myauth.models import get_my_user
 from notifications import notification_util
+from users.api import UserSchema
 from util import s3_util
 from util.response import ErrorSchema, not_allowed, not_possible
 from util.schemas import ValueWrapped
@@ -111,8 +113,8 @@ class DocumentSchema(Schema):
     category: str
     document_type: str
     category_display_name: str
-    author: str
-    author_displayname: str
+    author: UserSchema
+    pending_transfer_user: UserSchema | None
     can_edit: bool
     can_delete: bool
 
@@ -145,6 +147,7 @@ class UpdateDocumentSchema(Schema):
     display_name: str | None = None
     category: str | None = None
     document_type: str | None = None
+    pending_transfer_user: str | None = None
 
 
 class DocumentWrappedSchema(ValueWrapped[DocumentSchema]):
@@ -206,8 +209,7 @@ def make_document_response(
         category=document.category.slug,
         document_type=document.document_type.display_name,
         category_display_name=document.category.displayname,
-        author=document.author.username,
-        author_displayname=get_my_user(document.author).displayname(),
+        author=document.author,
         can_edit=document.current_user_can_edit(request),
         can_delete=document.current_user_can_delete(request),
         time=document.time,
@@ -221,6 +223,7 @@ def make_document_response(
         files=[make_file_response(f) for f in document.files.all()]
         if include_files
         else None,
+        pending_transfer_user=document.pending_transfer_user,
     )
 
 
@@ -453,9 +456,32 @@ def update_document(
             old_document_type.delete()
         edited = True
 
+    send_document_transfer_notification = False
+    if "pending_transfer_user" in update_data:
+        if not can_edit:
+            return not_allowed()
+
+        target_username: str | None = update_data["pending_transfer_user"]
+
+        if target_username is None:
+            document.pending_transfer_user = None
+        else:
+            if target_username == document.author.username:
+                return not_possible("Cannot transfer document to same user.")
+
+            user = get_object_or_404(User, username=target_username)
+
+            document.pending_transfer_user = user
+            send_document_transfer_notification = True
+
+        edited = True
+
     if edited:
         document.edittime = timezone.now()
         document.save()
+
+    if send_document_transfer_notification:
+        notification_util.new_document_transfer_request(document)
 
     return {
         "value": make_document_response(document, request),
@@ -991,3 +1017,67 @@ def move_document_file(
         moved_file.save()
 
     return 204, None
+
+
+@router.put(
+    "{username}/{slug}/transfer/accept",
+    response={200: ValueWrapped[DocumentSchema], 403: ErrorSchema},
+    operation_id="acceptDocumentTransfer",
+    exclude_none=True,
+)
+@auth_check.require_login
+def accept_document_transfer(request, username: str, slug: str):
+    document = get_object_or_404(Document, author__username=username, slug=slug)
+
+    if not document.current_user_can_accept_transfer(request):
+        return not_allowed()
+
+    old_owner = document.author
+
+    document.author = document.pending_transfer_user
+    document.pending_transfer_user = None
+    document.api_key = generate_api_key()
+
+    document.edittime = timezone.now()
+    document.save()
+
+    notification_util.accepted_document_transfer_request(document, old_owner)
+
+    return {
+        "value": make_document_response(document, request),
+    }
+
+
+@router.put(
+    "{username}/{slug}/transfer/reject",
+    response={200: ValueWrapped[DocumentSchema], 403: ErrorSchema},
+    operation_id="rejectDocumentTransfer",
+    exclude_none=True,
+)
+@auth_check.require_login
+def reject_document_transfer(request, username: str, slug: str):
+    document = get_object_or_404(Document, author__username=username, slug=slug)
+
+    if not document.current_user_can_accept_transfer(
+        request
+    ) and not document.current_user_can_edit(request):
+        return not_allowed()
+
+    old_target = document.pending_transfer_user
+
+    if not old_target:
+        return {
+            "value": make_document_response(document, request),
+        }
+
+    document.pending_transfer_user = None
+    document.edittime = timezone.now()
+
+    document.save()
+
+    if document.author.id != request.user.id:
+        notification_util.rejected_document_transfer_request(document, old_target)
+
+    return {
+        "value": make_document_response(document, request),
+    }

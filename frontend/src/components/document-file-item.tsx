@@ -57,7 +57,7 @@ const DocumentFileItem: React.FC<Props> = ({
       moveFile.mutate({
         filename: file.filename,
         slug: document.slug,
-        username: document.author,
+        username: document.author.username,
         data: {
           direction,
         },
@@ -75,7 +75,7 @@ const DocumentFileItem: React.FC<Props> = ({
   });
   const handleDeleteFile = useCallback(() => {
     deleteDocumentFile.mutate({
-      username: document.author,
+      username: document.author.username,
       slug: document.slug,
       id: file.oid,
     });
@@ -105,7 +105,7 @@ const DocumentFileItem: React.FC<Props> = ({
   const handleUpdateFile = useCallback(
     (displayName: string | undefined, newFile: File | undefined) => {
       updateDocumentFile.mutate({
-        username: document.author,
+        username: document.author.username,
         slug: document.slug,
         id: file.oid,
         data: {
@@ -131,10 +131,7 @@ const DocumentFileItem: React.FC<Props> = ({
             onChange={e => setDisplayName(e.currentTarget.value)}
           />
           <label>Replace File</label>
-          <FileInput
-            value={replaceFile}
-            onChange={setFile}
-          />
+          <FileInput value={replaceFile} onChange={setFile} />
           <Button
             disabled={displayName?.trim() === ""}
             onClick={() => handleUpdateFile(displayName?.trim(), replaceFile)}
@@ -184,7 +181,7 @@ const DocumentFileItem: React.FC<Props> = ({
           </p>
           <pre>
             <code>
-              {`curl ${window.location.origin}/api/document/${document.author}/${document.slug}/files/${file.oid}/update/ \\\n  -H "Authorization: ${document.api_key}" \\\n  -F "file=@my_document.pdf"`}
+              {`curl ${location.origin}/api/document/${document.author.username}/${document.slug}/files/${file.oid}/update/ \\\n  -H "Authorization: ${document.api_key}" \\\n  -F "file=@my_document.pdf"`}
             </code>
           </pre>
         </Modal.Body>

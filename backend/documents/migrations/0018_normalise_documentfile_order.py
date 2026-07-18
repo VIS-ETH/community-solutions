@@ -2,11 +2,16 @@ from django.db import migrations
 
 
 def normalise_order(apps, schema_editor):
-    from documents.api import normalise_document_order
-    from documents.models import Document
+    Document = apps.get_model("documents", "Document")
+    DocumentFile = apps.get_model("documents", "DocumentFile")
 
     for document in Document.objects.all():
-        normalise_document_order(document)
+        document_files = document.files.order_by("order")
+
+        for order, file in enumerate(document_files):
+            file.order = order
+
+        DocumentFile.objects.bulk_update(document_files, ["order"])
 
 
 class Migration(migrations.Migration):

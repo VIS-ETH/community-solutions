@@ -10,6 +10,7 @@ class NotificationType(enum.Enum):
     NEW_ANSWER_TO_ANSWER = 3
     NEW_COMMENT_TO_DOCUMENT = 4
     NEW_COMMENT_TO_FEEDBACK = 5
+    DOCUMENT_TRANSFER = 6
 
 
 class Notification(models.Model):

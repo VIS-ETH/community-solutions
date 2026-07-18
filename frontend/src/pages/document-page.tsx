@@ -18,7 +18,7 @@ import {
   List,
 } from "@mantine/core";
 import React, { useState } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { download } from "../api/fetch-utils";
 import IconButton from "../components/icon-button";
 import LikeButton from "../components/like-button";
@@ -34,6 +34,8 @@ import { useDocumentDownload } from "../hooks/useDocumentDownload";
 import MarkdownText from "../components/markdown-text";
 import { differenceInSeconds, formatDistanceToNow } from "date-fns";
 import {
+  IconArrowBigRightLine,
+  IconCheck,
   IconChevronRight,
   IconDownload,
   IconEdit,
@@ -42,14 +44,21 @@ import {
   IconFileTypeZip,
   IconMessage,
   IconSettings,
+  IconX,
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
 import { useScrollToPermalink } from "../hooks/useScrollToPermalink";
+import { useUser, type User } from "../auth";
 import type { DocumentFileSchema } from "../api/model/documentFileSchema";
 import type { DocumentSchema } from "../api/model/documentSchema";
-import { useGetDocument } from "../api/hooks/documents";
+import {
+  useAcceptDocumentTransfer,
+  useGetDocument,
+  useRejectDocumentTransfer,
+} from "../api/hooks/documents";
 import serverData from "../utils/server-data";
+import type { UserSchema } from "../api/model";
 
 const isPdf = (file: DocumentFileSchema) =>
   file.mime_type === "application/pdf";
@@ -106,6 +115,164 @@ const FileIcon: React.FC<{ filename: string }> = ({ filename }) => {
   }
 
   return <IconFile />;
+};
+
+interface UserRenderProps {
+  user: UserSchema;
+}
+
+const UserRender: React.FC<UserRenderProps> = ({ user }) => {
+  return (
+    <Anchor component={Link} to={`/user/${user.username}`}>
+      <Text fw={700} span>
+        {user.display_name}
+      </Text>
+      <Text ml="0.25em" c="dimmed" span>
+        @{user.username}
+      </Text>
+    </Anchor>
+  );
+};
+
+interface AcceptTransferBannerProps {
+  loggedInUser: User | undefined;
+  document: DocumentSchema | undefined;
+  refetch: () => void;
+}
+const AcceptTransferBanner: React.FC<AcceptTransferBannerProps> = ({
+  loggedInUser,
+  document,
+  refetch,
+}) => {
+  const target = document?.pending_transfer_user;
+  const acceptDocument = useAcceptDocumentTransfer({
+    mutation: {
+      onSuccess: async ({ value: newDocument }) => {
+        await navigate(
+          `/user/${newDocument.author.username}/document/${newDocument.slug}`,
+        );
+        refetch();
+      },
+    },
+  });
+  const rejectDocument = useRejectDocumentTransfer({
+    mutation: {
+      onSuccess: () => {
+        refetch();
+      },
+    },
+  });
+  const navigate = useNavigate();
+
+  if (target == null || !loggedInUser?.loggedin || !document) return;
+
+  // Different reasons to show the banner
+  // Is the current user the target, are they an admin, or are they the current owner?
+  // (These aren't mutually exclusive!)
+  const showBecause = {
+    targetUser: loggedInUser.userid === target.id,
+    admin: loggedInUser.isCategoryAdmin || loggedInUser.isAdmin,
+    documentOwner: loggedInUser.userid === document.author.id,
+  };
+
+  if (
+    !showBecause.admin &&
+    !showBecause.targetUser &&
+    !showBecause.documentOwner
+  )
+    return;
+
+  const onAccept = () => {
+    acceptDocument.mutate({
+      username: document.author.username,
+      slug: document.slug,
+    });
+  };
+
+  const onReject = () => {
+    rejectDocument.mutate({
+      username: document.author.username,
+      slug: document.slug,
+    });
+  };
+
+  const isSubmitting = acceptDocument.isPending || rejectDocument.isPending;
+
+  const body = showBecause.documentOwner ? (
+    <span>
+      You are in the process of transferring this document to{" "}
+      <UserRender user={target} />. They must accept the transfer before it is
+      completed.
+    </span>
+  ) : showBecause.targetUser ? (
+    <span>
+      <UserRender user={document.author} /> wants to transfer this document to
+      you.
+    </span>
+  ) : (
+    <span>
+      <UserRender user={document.author} /> wants to transfer this document to{" "}
+      <UserRender user={target} />.
+    </span>
+  );
+
+  return (
+    <Alert
+      color="gray"
+      title="Transfer Pending"
+      icon={<IconArrowBigRightLine />}
+    >
+      <Flex align="baseline" gap="md" justify="left">
+        {body}
+
+        {/* Only show accept button if user is the target (and not owner self, just in case) */}
+        {showBecause.targetUser && !showBecause.documentOwner ? (
+          <Button
+            color="brand"
+            variant="filled"
+            size="compact-sm"
+            type="button"
+            onClick={() => {
+              onAccept();
+            }}
+            disabled={isSubmitting}
+            rightSection={<IconCheck />}
+          >
+            Accept
+          </Button>
+        ) : (
+          showBecause.admin && (
+            <Button
+              color="red"
+              variant="filled"
+              size="compact-sm"
+              type="button"
+              onClick={() => {
+                onAccept();
+              }}
+              disabled={isSubmitting}
+              rightSection={<IconCheck />}
+            >
+              Accept as admin
+            </Button>
+          )
+        )}
+        <Button
+          color="red"
+          variant="subtle"
+          size="compact-sm"
+          type="button"
+          onClick={() => {
+            onReject();
+          }}
+          disabled={isSubmitting}
+          rightSection={<IconX />}
+        >
+          {showBecause.documentOwner ? "Abort" : "Reject"}
+        </Button>
+      </Flex>
+    </Alert>
+  );
 };
 
 // Calculate tab to show based on state if user hasn't
@@ -190,6 +357,7 @@ const DocumentPage: React.FC = () => {
   const [loadingDownload, startDownload] = useDocumentDownload(document);
 
   useScrollToPermalink();
+  const user = useUser();
 
   const getFileExtension = (filename: string): string | undefined => {
     return filename.split(".").at(-1)?.toLowerCase();
@@ -296,14 +464,7 @@ const DocumentPage: React.FC = () => {
                 <LikeButton document={document} refetch={refetch} />
               </Group>
             </Flex>
-            <Anchor component={Link} to={`/user/${document.author}`}>
-              <Text fw={700} component="span">
-                {document.author_displayname}
-              </Text>
-              <Text ml="0.3em" c="dimmed" component="span">
-                @{document.author}
-              </Text>
-            </Anchor>
+            <UserRender user={document.author} />
             {document.time &&
               document.edittime &&
               differenceInSeconds(
@@ -334,6 +495,11 @@ const DocumentPage: React.FC = () => {
             <MarkdownText value={document.description} />
           </div>
         )}
+        <AcceptTransferBanner
+          loggedInUser={user}
+          document={document}
+          refetch={refetch}
+        />
       </Container>
       <Container size="xl" mt="sm">
         <Tabs value={resolvedTab} onChange={setTab}>
@@ -434,7 +600,7 @@ const DocumentPage: React.FC = () => {
             {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
             {document.comments!.map(comment => (
               <DocumentCommentComponent
-                documentAuthor={document.author}
+                documentAuthor={document.author.username}
                 documentSlug={slug}
                 comment={comment}
                 key={comment.oid}
