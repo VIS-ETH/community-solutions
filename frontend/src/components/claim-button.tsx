@@ -3,15 +3,9 @@ import { useUser } from "../auth";
 import { claimExpiryRelative, hasValidClaim } from "../utils/exam-utils";
 import { Button, ButtonProps } from "@mantine/core";
 import React from "react";
-import { fetchPost } from "../api/fetch-utils";
 import { useRequest } from "ahooks";
 import TooltipButton from "./TooltipButton";
-
-const setClaim = async (filename: string, claim: boolean) => {
-  await fetchPost(`/api/exam/claimexam/${filename}/`, {
-    claim,
-  });
-};
+import { claimExam } from "../api/hooks";
 
 interface Props extends ButtonProps {
   exam: CategoryExam;
@@ -23,7 +17,7 @@ const ClaimButton: React.FC<Props> = ({
   ...buttonProps
 }) => {
   const { username } = useUser()!;
-  const { loading, run: runSetClaim } = useRequest(setClaim, {
+  const { loading, run: runSetClaim } = useRequest(claimExam, {
     manual: true,
     onSuccess: reloadExams,
   });
