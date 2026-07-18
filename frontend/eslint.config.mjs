@@ -121,6 +121,9 @@ export default defineConfig(
             globals: {
                 ...globals.browser,
             },
+            parserOptions: {
+                ecmaVersion: 2020,
+            },
         },
 
         // Custom rules
