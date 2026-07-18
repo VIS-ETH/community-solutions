@@ -16,7 +16,6 @@
     "chroma-js": "^3.0.0",
     "clsx": "^2.1.0",
     "date-fns": "^4.0.0",
-    "intersection-observer": "^0.12.2",
     "jszip": "^3.10.0",
     "katex": "^0.16.9",
     "lodash-es": "^4.17.21",
