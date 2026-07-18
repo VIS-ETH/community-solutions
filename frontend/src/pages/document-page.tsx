@@ -34,6 +34,7 @@ import { useDocumentDownload } from "../hooks/useDocumentDownload";
 import MarkdownText from "../components/markdown-text";
 import { differenceInSeconds, formatDistanceToNow } from "date-fns";
 import {
+  IconArrowBigRightLine,
   IconCheck,
   IconChevronRight,
   IconDownload,
@@ -144,11 +145,9 @@ const AcceptTransferBanner: React.FC<AcceptTransferBannerProps> = ({
   refetch,
 }) => {
   const target = document?.pending_transfer_user;
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const acceptDocument = useAcceptDocumentTransfer({
     mutation: {
-      async onSuccess({ value: newDocument }) {
-        setIsSubmitting(false);
+      onSuccess: async ({ value: newDocument }) => {
         await navigate(
           `/user/${newDocument.author.username}/document/${newDocument.slug}`,
         );
@@ -158,8 +157,7 @@ const AcceptTransferBanner: React.FC<AcceptTransferBannerProps> = ({
   });
   const rejectDocument = useRejectDocumentTransfer({
     mutation: {
-      onSuccess() {
-        setIsSubmitting(false);
+      onSuccess: () => {
         refetch();
       },
     },
@@ -184,26 +182,27 @@ const AcceptTransferBanner: React.FC<AcceptTransferBannerProps> = ({
   )
     return;
 
-  function onAccept() {
-    setIsSubmitting(true);
+  const onAccept = () => {
     acceptDocument.mutate({
-      username: document!.author.username,
-      slug: document!.slug,
+      username: document.author.username,
+      slug: document.slug,
     });
-  }
+  };
 
-  function onReject() {
-    setIsSubmitting(true);
+  const onReject = () => {
     rejectDocument.mutate({
-      username: document!.author.username,
-      slug: document!.slug,
+      username: document.author.username,
+      slug: document.slug,
     });
-  }
+  };
+
+  const isSubmitting = acceptDocument.isPending || rejectDocument.isPending;
 
   const body = showBecause.documentOwner ? (
     <span>
       You are in the process of transferring this document to{" "}
-      <UserRender user={target} />.
+      <UserRender user={target} />. They must accept the transfer before it is
+      completed.
     </span>
   ) : showBecause.targetUser ? (
     <span>
@@ -218,14 +217,20 @@ const AcceptTransferBanner: React.FC<AcceptTransferBannerProps> = ({
   );
 
   return (
-    <Alert color="cyan">
-      <Flex align="baseline" gap="md" justify="center">
+    <Alert
+      color="gray"
+      title="Transfer Pending"
+      icon={<IconArrowBigRightLine />}
+    >
+      <Flex align="baseline" gap="md" justify="left">
         {body}
 
-        {/* Hide accept button if the user is the owner (even if admin) */}
-        {!showBecause.documentOwner && (
+        {/* Only show accept button if user is the target (and not owner self, just in case) */}
+        {showBecause.targetUser && !showBecause.documentOwner ? (
           <Button
-            color="green"
+            color="brand"
+            variant="filled"
+            size="compact-sm"
             type="button"
             onClick={() => {
               onAccept();
@@ -235,9 +240,27 @@ const AcceptTransferBanner: React.FC<AcceptTransferBannerProps> = ({
           >
             Accept
           </Button>
+        ) : (
+          showBecause.admin && (
+            <Button
+              color="red"
+              variant="filled"
+              size="compact-sm"
+              type="button"
+              onClick={() => {
+                onAccept();
+              }}
+              disabled={isSubmitting}
+              rightSection={<IconCheck />}
+            >
+              Accept as admin
+            </Button>
+          )
         )}
         <Button
           color="red"
+          variant="subtle"
+          size="compact-sm"
           type="button"
           onClick={() => {
             onReject();
