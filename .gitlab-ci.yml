@@ -4,6 +4,10 @@ variables:
   KUBERNETES_MEMORY_REQUEST: "1600Mi"
   KUBERNETES_MEMORY_LIMIT: "3Gi"
 
+  UV_LINK_MODE: copy
+  UV_SYSTEM_PYTHON: 1
+  UV_CACHE_DIR: .uv-cache
+
 # List of stages for jobs, which is executed in order. To define dependencies
 # between jobs in the same stage, use the 'needs' keyword.
 stages:
@@ -19,12 +23,15 @@ stages:
     - cd backend
   script:
     - uv run manage.py export_openapi
+  after_script:
+    - cd backend
+    - uv cache prune --ci
   cache:
     key:
       files:
         - backend/uv.lock
     paths:
-      - backend/.venv
+      - backend/.uv-cache
   rules:
     - if: $CI_COMMIT_BRANCH == "master"
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"
@@ -35,6 +42,9 @@ stages:
 "Backend Check":
   stage: Lint and Test
   tags: [kata]
+  needs:
+    - artifacts: true
+      job: "Generate OpenAPI"
   rules:
     # This job runs on protected branches and on merge requests to master.
     # Both should be done because the branch state within the MR and the
@@ -87,7 +97,7 @@ stages:
       files:
         - backend/uv.lock
     paths:
-      - backend/.venv
+      - backend/.uv-cache
   script:
     - export SIP_POSTGRES_DB_NAME=$POSTGRES_DB
     - export SIP_POSTGRES_DB_USER=$POSTGRES_USER
@@ -101,6 +111,9 @@ stages:
     - export SIP_S3_FILES_BUCKET=community-solutions
     - export SIP_S3_FILES_USE_SSL=false
     - uv run manage.py test --parallel # parallel speeds up by approx 4x.
+  after_script:
+    - cd backend
+    - uv cache prune --ci
 
 "Frontend Check":
   stage: Lint and Test
