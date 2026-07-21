@@ -31,7 +31,6 @@
     "rehype-mermaid": "^3.0.0",
     "remark-gfm": "^4.0.0",
     "remark-math": "^6.0.0",
-    "use-query-params": "2.2.2",
     "vite": "^8.0.1",
     "vite-plugin-svgr": "^4.5.0"
   },
