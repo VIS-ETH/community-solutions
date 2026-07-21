@@ -12,7 +12,15 @@ import os
 from django.core.wsgi import get_wsgi_application
 from gevent.monkey import is_module_patched
 
-# Only patch under gevent to avoid file descriptor leak
+# When running under gevent (and therefore under Gunicorn with `--worker-class gevent`),
+# we should patch psycopg to ensure correctness.
+# This must be disabled when not using gevent (e.g. Django's runserver
+# command) to avoid file descriptor leakage.
+# Django runs each request in an unbounded amount of thread and gevent opens
+# a new epoll per thread if this patch is (incorrectly) applied, which leads to leakage.
+# To distinguish these two scenarios, we can use the fact that Gunicorn
+# calls gevent.monkey.patch_all() on init, and check if stdlib modules are
+# patched at this point.
 if is_module_patched("socket"):
     from psycogreen.gevent import patch_psycopg
 
