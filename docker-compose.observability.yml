@@ -20,7 +20,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     volumes:
-      - ./contrib/local-observability/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./configs/local-observability/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./data/prometheus:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
@@ -37,8 +37,8 @@ services:
       - "3001:3000"
     volumes:
       - ./data/grafana:/var/lib/grafana
-      - ./contrib/local-observability/grafana:/etc/grafana/provisioning
-      - ./contrib/dashboards:/etc/grafana/dashboardFiles
+      - ./configs/local-observability/grafana:/etc/grafana/provisioning
+      - ./configs/dashboards:/etc/grafana/dashboardFiles
     user: ":"
 
   alloy:
@@ -47,7 +47,7 @@ services:
       - "12345:12345"
       - "12347:12347"
     volumes:
-      - ./contrib/local-observability/config.alloy:/etc/alloy/config.alloy
+      - ./configs/local-observability/config.alloy:/etc/alloy/config.alloy
     command: run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
 
   loki:
@@ -57,7 +57,7 @@ services:
       - "9600:9600"
     command: -config.file=/etc/loki/local-config.yml --log.level=info
     volumes:
-      - ./contrib/local-observability/loki-local-config.yml:/etc/loki/local-config.yml
+      - ./configs/local-observability/loki-local-config.yml:/etc/loki/local-config.yml
 
   tempo:
     image: grafana/tempo:2.10.7
@@ -65,7 +65,7 @@ services:
       - "3200:3200"
     command: -config.file=/etc/tempo/tempo.yml
     volumes:
-      - ./contrib/local-observability/tempo.yml:/etc/tempo/tempo.yml
+      - ./configs/local-observability/tempo.yml:/etc/tempo/tempo.yml
 
   pyroscope:
     image: grafana/pyroscope:latest

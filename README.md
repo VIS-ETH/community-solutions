@@ -220,7 +220,7 @@ This will result in a null pointer exception. It's best to simply stop the front
 
 Sometimes, it is helpful to have just a little bit more data at disposal, to monitor applications or to debug performance issues.
 We provide a "simple" setup that automatically gathers all information (traces, metrics & logs) for local setup, including Grafana.
-Interesting Grafana dashboard should also be shipped in `./contrib` to allow fairly easy deployments of such advanced features.
+Interesting Grafana dashboard should also be shipped in `./configs` to allow fairly easy deployments of such advanced features.
 
 To try, run
 
