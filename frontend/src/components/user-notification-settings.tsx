@@ -5,12 +5,7 @@ import {
   useSetEnabledNotifications,
 } from "../api/hooks";
 
-interface UserNotificationsProps {
-  username: string;
-}
-const UserNotificationsSettings: React.FC<UserNotificationsProps> = ({
-  username,
-}) => {
+const UserNotificationsSettings: React.FC = () => {
   const [enabledError, enabledLoading, enabled, reloadEnabled] =
     useEnabledNotifications(true);
   const [setEnabledError, setEnabledLoading, setEnabled] =
@@ -51,6 +46,12 @@ const UserNotificationsSettings: React.FC<UserNotificationsProps> = ({
           checked={enabled ? enabled.has(5) : false}
           disabled={checkboxLoading}
           onChange={e => setEnabled(5, e.currentTarget.checked)}
+        />
+        <Checkbox
+          label="New document transfer or document transfer accepted"
+          checked={enabled ? enabled.has(6) : false}
+          disabled={checkboxLoading}
+          onChange={e => setEnabled(6, e.currentTarget.checked)}
         />
       </Stack>
     </>

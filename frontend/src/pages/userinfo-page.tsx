@@ -17,61 +17,65 @@ import UserDocuments from "../components/user-documents";
 import UserPayments from "../components/user-payments";
 import UserScoreCard from "../components/user-score-card";
 import useTitle from "../hooks/useTitle";
+import NotFoundPage from "./not-found-page";
 
 const UserPage: React.FC = () => {
   const user = useUser()!;
-  const { username } = useParams() as { username: string };
+  const { username = user.username } = useParams() as { username?: string };
   useTitle(username);
   const isMyself = user.username === username;
-  const [userInfoError, userInfoLoading, userInfo] = useUserInfo(username);
-  const error = userInfoError;
-  const loading = userInfoLoading;
+  const [error, loading, userInfo] = useUserInfo(username);
   const [activeTab, setActiveTab] = useState<string | null>("overview");
 
+  // Assume any error is because of 404
+  // Other error from not being logged in shouldn't happen
+  // as we can't get here (this component) without being logged in
+  const isNotFound = !loading && !!error;
+
+  if (isNotFound) {
+    return <NotFoundPage />;
+  }
+
   return (
-    <>
-      <Container size="xl">
-        <UserScoreCard
-          username={username}
-          isMyself={isMyself}
-          userInfo={userInfo}
-        />
-        {error && <Alert color="red">{error.toString()}</Alert>}
-        <Tabs value={activeTab} onChange={setActiveTab} pos="relative" my="xl">
-          <LoadingOverlay visible={loading} />
-          <Tabs.List grow>
-            <Tabs.Tab value="overview">Overview</Tabs.Tab>
-            <Tabs.Tab value="answers">Answers</Tabs.Tab>
-            <Tabs.Tab value="comments">Comments</Tabs.Tab>
-            <Tabs.Tab value="documents">Documents</Tabs.Tab>
-            {isMyself && <Tabs.Tab value="settings">Settings</Tabs.Tab>}
-          </Tabs.List>
-          <Tabs.Panel value="overview" pt="sm">
-            <SimpleGrid cols={{ base: 1, md: 2 }}>
-              {!isMyself && !user.isAdmin && (
-                <Alert color="gray">There's nothing here</Alert>
-              )}
-              {isMyself && <UserNotifications username={username} />}
-              {(isMyself || user.isAdmin) && (
-                <UserPayments username={username} />
-              )}
-            </SimpleGrid>
-          </Tabs.Panel>
-          <Tabs.Panel value="answers" pt="sm">
-            <UserAnswers username={username} />
-          </Tabs.Panel>
-          <Tabs.Panel value="comments" pt="sm">
-            <UserComments username={username} />
-          </Tabs.Panel>
-          <Tabs.Panel value="documents" pt="sm">
-            <UserDocuments username={username} userInfo={userInfo} />
-          </Tabs.Panel>
-          <Tabs.Panel value="settings" pt="sm">
-            {isMyself && <UserNotificationsSettings username={username} />}
-          </Tabs.Panel>
-        </Tabs>
-      </Container>
-    </>
+    <Container size="xl">
+      <UserScoreCard
+        username={username}
+        isMyself={isMyself}
+        userInfo={userInfo}
+      />
+      {error && <Alert color="red">{error.toString()}</Alert>}
+      <Tabs value={activeTab} onChange={setActiveTab} pos="relative" my="xl">
+        <LoadingOverlay visible={loading} />
+        <Tabs.List grow>
+          <Tabs.Tab value="overview">Overview</Tabs.Tab>
+          <Tabs.Tab value="answers">Answers</Tabs.Tab>
+          <Tabs.Tab value="comments">Comments</Tabs.Tab>
+          <Tabs.Tab value="documents">Documents</Tabs.Tab>
+          {isMyself && <Tabs.Tab value="settings">Settings</Tabs.Tab>}
+        </Tabs.List>
+        <Tabs.Panel value="overview" pt="sm">
+          <SimpleGrid cols={{ base: 1, md: 2 }}>
+            {!isMyself && !user.isAdmin && (
+              <Alert color="gray">There's nothing here</Alert>
+            )}
+            {isMyself && <UserNotifications />}
+            {(isMyself || user.isAdmin) && <UserPayments username={username} />}
+          </SimpleGrid>
+        </Tabs.Panel>
+        <Tabs.Panel value="answers" pt="sm">
+          <UserAnswers username={username} />
+        </Tabs.Panel>
+        <Tabs.Panel value="comments" pt="sm">
+          <UserComments username={username} />
+        </Tabs.Panel>
+        <Tabs.Panel value="documents" pt="sm">
+          <UserDocuments username={username} userInfo={userInfo} />
+        </Tabs.Panel>
+        <Tabs.Panel value="settings" pt="sm">
+          {isMyself && <UserNotificationsSettings />}
+        </Tabs.Panel>
+      </Tabs>
+    </Container>
   );
 };
 export default UserPage;

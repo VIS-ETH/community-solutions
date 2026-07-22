@@ -1,12 +1,6 @@
 import { PDFDocumentLoadingTask } from "pdfjs-dist";
 import { getDocument } from "../pdf/pdfjs";
-import React, {
-  memo,
-  useMemo,
-  useRef,
-  useEffect,
-  useState,
-} from "react";
+import React, { memo, useMemo, useRef, useEffect, useState } from "react";
 import { ComponentRenderer } from "./markdown-text";
 import { Tooltip } from "@mantine/core";
 import { fetchGet } from "../api/fetch-utils";
@@ -103,7 +97,9 @@ const PdfRenderer: React.FC<PProps> = memo(
       let cancelled = false;
 
       const renderPdf = async () => {
-        const loadingTask: PDFDocumentLoadingTask = getDocument(pdfUrl);
+        const loadingTask: PDFDocumentLoadingTask = getDocument({
+          url: pdfUrl,
+        });
         const pdf = await loadingTask.promise;
         if (cancelled) return;
 

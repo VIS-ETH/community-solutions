@@ -1,3 +1,4 @@
+import json
 import logging
 
 from django.test import Client, TestCase
@@ -82,21 +83,26 @@ class ComsolTest(TestCase):
             return response.json()
         return response
 
-    def put(self, path, args, status_code=200, as_json=True):
-        for arg in args:
-            if isinstance(args[arg], bool):
-                args[arg] = "true" if args[arg] else "false"
+    def put(self, path, args, status_code=200, as_json=True, json_body=False):
+        if json_body:
+            body = json.dumps(args)
+            content_type = "application/json"
+        else:
+            for arg in args:
+                if isinstance(args[arg], bool):
+                    args[arg] = "true" if args[arg] else "false"
+            body = encode_multipart(BOUNDARY, args)
+            content_type = MULTIPART_CONTENT
+
         response = (
             self.client.put(
                 path,
-                encode_multipart(BOUNDARY, args),
-                content_type=MULTIPART_CONTENT,
+                body,
+                content_type=content_type,
                 headers={"authorization": get_token(self.user)},
             )
             if self.user
-            else self.client.put(
-                path, encode_multipart(BOUNDARY, args), content_type=MULTIPART_CONTENT
-            )
+            else self.client.put(path, body, content_type=content_type)
         )
         self.assertEqual(response.status_code, status_code)
         if as_json:

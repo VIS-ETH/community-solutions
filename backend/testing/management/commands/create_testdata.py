@@ -436,16 +436,22 @@ class Command(BaseCommand):
     def create_documents(self):
         self.stdout.write("Create documents")
         users = MyUser.objects.all()
+
+        document_counter = 0
+
         for i, category in enumerate(Category.objects.all()):
             for document_type in DocumentType.objects.all():
                 document = Document(
-                    display_name=document_type.display_name
-                    + " in "
-                    + str(category.displayname),
+                    display_name=f"{document_type.display_name} in {category.displayname}",
                     description="This is a test document.",
                     category=category,
                     author=users[i % len(users)],
                     document_type=document_type,
+                    pending_transfer_user=(
+                        users[document_counter % len(users)]
+                        if document_counter % 11 == 0
+                        else None
+                    ),
                 )
                 document.save()
 
@@ -471,6 +477,8 @@ class Command(BaseCommand):
                 for user in users:
                     if (i + user.id) % 4 == 0:
                         document.likes.add(user)
+
+                document_counter += 1
 
     def handle(self, *args, **options):
         if options.get("skip_if_exists"):

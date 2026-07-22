@@ -13,7 +13,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { differenceInSeconds } from "date-fns";
-import React, { lazy, Suspense, useCallback, useState } from "react";
+import React, { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { clsx } from "clsx";
 import { usePendingImages } from "./Editor/pending-images";
@@ -60,6 +60,11 @@ import MarkedAsAiBadge from "./MarkedAsAiBadge";
 import classes from "./answer.module.css";
 import { useDisclosure } from "@mantine/hooks";
 import TimeText from "./time-text";
+import {
+  saveDraftToStorage,
+  readDraftFromStorage,
+  clearExpiredDrafts,
+} from "../utils/drafts";
 
 const Editor = lazy(() => import("./Editor"));
 
@@ -93,25 +98,35 @@ const AnswerComponent: React.FC<Props> = ({
   const [setExpertVoteLoading, setExpertVote] =
     useSetExpertVote(onSectionChanged);
   const removeAnswer = useRemoveAnswer(onSectionChanged);
+  const answerId = section?.oid;
   const [updating, update] = useUpdateAnswer(res => {
     setEditing(false);
     if (onSectionChanged) onSectionChanged(res);
     if (answer === undefined && onDelete) onDelete();
+    saveDraftToStorage(answerId, "", true);
   });
-  const { isAdmin, isExpert } = useUser()!;
+  const { isAdmin, isExpert, username } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
   const [editing, setEditing] = useState(false);
 
   const [draftText, setDraftText] = useState("");
   const [undoStack, setUndoStack] = useState<UndoStack>({ prev: [], next: [] });
-  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } = usePendingImages();
+  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
+    usePendingImages();
   const startEdit = useCallback(() => {
-    setDraftText(answer?.text ?? "");
+    const possibleAnswer = readDraftFromStorage(answerId, true);
+    if (possibleAnswer) {
+      setDraftText(possibleAnswer);
+    } else {
+      setDraftText(answer?.text ?? "");
+    }
+
     setEditing(true);
   }, [answer]);
   const onCancel = useCallback(() => {
     setEditing(false);
     if (answer === undefined && onDelete) onDelete();
+    saveDraftToStorage(answerId, "", true);
   }, [onDelete, answer]);
   const save = useCallback(async () => {
     if (!section) return;
@@ -126,10 +141,15 @@ const AnswerComponent: React.FC<Props> = ({
 
   const isDraft = !answer;
 
+  useEffect(() => {
+    clearExpiredDrafts();
+    setDraftText(readDraftFromStorage(answerId, true));
+  }, []);
+
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
   const canEdit = section && onSectionChanged && answer?.canEdit;
   const canRemove = section && onSectionChanged && (isAdmin || answer?.canEdit);
-  const { username } = useUser()!;
+  const isOwnAnswer = answer?.isAuthor ?? false;
   return (
     <>
       {modals}
@@ -266,8 +286,10 @@ const AnswerComponent: React.FC<Props> = ({
                     count={answer.flaggedCount}
                     isFlagged={answer.isFlagged}
                     loading={flaggedLoading}
-                    onToggle={() =>
-                      setAnswerFlagged(answer.oid, !answer.isFlagged)
+                    onToggle={
+                      isOwnAnswer
+                        ? undefined
+                        : () => setAnswerFlagged(answer.oid, !answer.isFlagged)
                     }
                   />
                 )}
@@ -275,7 +297,6 @@ const AnswerComponent: React.FC<Props> = ({
                   <Score
                     oid={answer.oid}
                     upvotes={answer.upvotes}
-                    expertUpvotes={answer.expertvotes}
                     userVote={
                       answer.isUpvoted ? 1 : answer.isDownvoted ? -1 : 0
                     }
@@ -292,10 +313,17 @@ const AnswerComponent: React.FC<Props> = ({
               <Suspense fallback={<Loader />}>
                 <Editor
                   value={draftText}
-                  onChange={setDraftText}
+                  onChange={newValue => {
+                    setDraftText(newValue);
+                    saveDraftToStorage(answerId, newValue, true);
+                  }}
                   imageHandler={deferredImageHandler}
                   preview={value => (
-                    <MarkdownText value={value} languages={languages} pendingImages={pendingObjectUrls} />
+                    <MarkdownText
+                      value={value}
+                      languages={languages}
+                      pendingImages={pendingObjectUrls}
+                    />
                   )}
                   undoStack={undoStack}
                   setUndoStack={setUndoStack}
@@ -366,28 +394,32 @@ const AnswerComponent: React.FC<Props> = ({
                   <Button leftSection={<IconDots />}>More</Button>
                 </Menu.Target>
                 <Menu.Dropdown>
-                  {!answer.isMarkedAsAi ? (
-                    <Menu.Item
-                      leftSection={<IconRobot />}
-                      onClick={() => setAnswerMarkedAsAi(answer.oid, true)}
-                    >
-                      Mark as AI-generated
-                    </Menu.Item>
-                  ) : (
-                    <Menu.Item
-                      leftSection={<IconRobotOff />}
-                      onClick={() => setAnswerMarkedAsAi(answer.oid, false)}
-                    >
-                      Remove AI-generated mark
-                    </Menu.Item>
-                  )}
-                  {answer.flaggedCount === 0 && (
-                    <Menu.Item
-                      leftSection={<IconFlag />}
-                      onClick={() => setAnswerFlagged(answer.oid, true)}
-                    >
-                      Flag as Inappropriate
-                    </Menu.Item>
+                  {!isOwnAnswer && (
+                    <>
+                      {!answer.isMarkedAsAi ? (
+                        <Menu.Item
+                          leftSection={<IconRobot />}
+                          onClick={() => setAnswerMarkedAsAi(answer.oid, true)}
+                        >
+                          Mark as AI-generated
+                        </Menu.Item>
+                      ) : (
+                        <Menu.Item
+                          leftSection={<IconRobotOff />}
+                          onClick={() => setAnswerMarkedAsAi(answer.oid, false)}
+                        >
+                          Remove AI-generated mark
+                        </Menu.Item>
+                      )}
+                      {answer.flaggedCount === 0 && (
+                        <Menu.Item
+                          leftSection={<IconFlag />}
+                          onClick={() => setAnswerFlagged(answer.oid, true)}
+                        >
+                          Flag as Inappropriate
+                        </Menu.Item>
+                      )}
+                    </>
                   )}
                   <Menu.Item
                     leftSection={<IconLink />}

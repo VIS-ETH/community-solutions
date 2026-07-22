@@ -75,14 +75,16 @@ const addAttachment = async (
   ).filename as string;
 };
 const editAttachment = async (filename: string, newdisplayname: string) => {
-  await fetchPatch(`/api/filestore/edit/${filename}/`, {newdisplayname});
+  await fetchPatch(`/api/filestore/edit/${filename}/`, { newdisplayname });
 };
 const removeAttachment = async (filename: string) => {
   await fetchPost(`/api/filestore/remove/${filename}/`, {});
 };
 
-export interface CategoryMetaDataDraft
-  extends Omit<CategoryMetaData, "attachments"> {
+export interface CategoryMetaDataDraft extends Omit<
+  CategoryMetaData,
+  "attachments"
+> {
   attachments: EditorAttachment[];
 }
 
@@ -122,7 +124,9 @@ const applyChanges = async (
     }
   }
   for (const attachment of oldMetaData.attachments) {
-    const foundAttachment = newMetaData.attachments.find(otherAttachment => otherAttachment.filename === attachment.filename);
+    const foundAttachment = newMetaData.attachments.find(
+      otherAttachment => otherAttachment.filename === attachment.filename,
+    );
     if (!foundAttachment) {
       await removeAttachment(attachment.filename);
       continue;
@@ -131,7 +135,10 @@ const applyChanges = async (
       newAttachments.push(attachment);
     } else {
       await editAttachment(attachment.filename, foundAttachment.displayname);
-      newAttachments.push({ displayname: foundAttachment.displayname, filename: attachment.filename});
+      newAttachments.push({
+        displayname: foundAttachment.displayname,
+        filename: attachment.filename,
+      });
     }
   }
   for (const [newMeta1, newMeta2] of newOfferedIn) {

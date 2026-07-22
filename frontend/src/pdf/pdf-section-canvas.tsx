@@ -41,8 +41,7 @@ const usePdf = (
       let cancel = false;
       let canvasRef: PdfCanvasReference | undefined;
       let currentPromise:
-        | Promise<[HTMLCanvasElement, boolean, PdfCanvasReference]>
-        | undefined;
+        Promise<[HTMLCanvasElement, boolean, PdfCanvasReference]> | undefined;
       void (async () => {
         const page = await renderer.getPage(pageNumber);
         if (cancel) return;
@@ -118,7 +117,8 @@ const PdfSectionCanvas: React.FC<Props> = React.memo(
     const relativeHeight = end - start;
 
     const { displayCanvasType } = useContext(DebugContext);
-    const [almostInView, containerElement] = useAlmostInViewport<HTMLDivElement>();
+    const [almostInView, containerElement] =
+      useAlmostInViewport<HTMLDivElement>();
     const [containerHeight, setContainerHeight] = useState(0);
     const [translateY, setTranslateY] = useState(0);
     const [currentScale, setCurrentScale] = useState<number | undefined>(
@@ -135,7 +135,11 @@ const PdfSectionCanvas: React.FC<Props> = React.memo(
       page,
       start,
       end,
-      almostInView ? (currentScale ? currentScale * dpr : undefined) : undefined,
+      almostInView
+        ? currentScale
+          ? currentScale * dpr
+          : undefined
+        : undefined,
     );
     const inViewportRef = useRef<HTMLDivElement>(null);
     const inViewport = useInViewport(inViewportRef);
@@ -262,6 +266,6 @@ const PdfSectionCanvas: React.FC<Props> = React.memo(
         </div>
       </Card>
     );
-  }
+  },
 );
 export default PdfSectionCanvas;

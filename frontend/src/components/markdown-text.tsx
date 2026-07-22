@@ -87,7 +87,6 @@ const addMarks = (
 const createComponents = (
   regex: RegExp | undefined,
   languages?: Record<string, ComponentRenderer>,
-  targetWidth?: number,
 ): Components => ({
   table: ({ children }) => {
     return (
@@ -166,7 +165,6 @@ interface Props {
    */
   highlight_matches?: string[];
   languages?: Record<string, ComponentRenderer>;
-  targetWidth?: number;
   /** Map of pending image id → object URL for in-editor previews. */
   pendingImages?: Map<string, string>;
 }
@@ -192,7 +190,6 @@ const MarkdownText: React.FC<Props> = ({
   value,
   highlight_matches,
   languages,
-  targetWidth,
   pendingImages,
 }) => {
   // Make sure we don't generate a RegExp with empty text, as that will match
@@ -207,8 +204,8 @@ const MarkdownText: React.FC<Props> = ({
   );
 
   const renderers = useMemo(
-    () => createComponents(regex, languages, targetWidth),
-    [regex, languages, targetWidth],
+    () => createComponents(regex, languages),
+    [regex, languages],
   );
 
   return useMemo(() => {
@@ -219,7 +216,7 @@ const MarkdownText: React.FC<Props> = ({
       <div className={clsx(classes.wrapperStyle, classes.blockquoteStyle)}>
         <ErrorBoundary fallback={errorMessage}>
           <MarkdownHooks
-            urlTransform={(uri: string, key, node) => {
+            urlTransform={(uri: string, _key, node) => {
               if (node.tagName === "img") {
                 return transformImageUri(uri, pendingImages);
               }

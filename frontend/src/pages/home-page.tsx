@@ -31,6 +31,7 @@ import { EditMeta1, EditMeta2 } from "../components/edit-meta-categories";
 import CollapseWrapper from "../components/collapse-wrapper";
 import { clsx } from "clsx";
 import classes from "../utils/focus-outline.module.css";
+import { slugify } from "../utils/slugify";
 
 const displayNameGetter = (data: CategoryMetaData) => data.displayname;
 
@@ -224,14 +225,6 @@ export const CategoryList: React.FC = () => {
   }, [run]);
   const [panelIsOpen, { toggle: togglePanel }] = useDisclosure();
 
-  const slugify = (str: string): string =>
-    str
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, "")
-      .replace(/[\s_-]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-
   const is_collapsed = (category: string): boolean => {
     return collapsedCategories.includes(slugify(category));
   };
@@ -395,14 +388,15 @@ export const CategoryList: React.FC = () => {
           )}
         </Container>
       </ContentContainer>
-      {!loading ? (
+      {!loading && (
         <CourseCategoriesPanel
           mode={mode}
           isOpen={panelIsOpen}
           toggle={togglePanel}
           metaList={metaList}
+          categories={searchResult}
         />
-      ) : null}
+      )}
     </>
   );
 };

@@ -23,18 +23,19 @@ import {
   TablerIcon,
 } from "@tabler/icons-react";
 
-interface UserScoreCardProps {
-  username?: string;
-  userInfo?: UserInfo;
-  isMyself: boolean;
+interface ScoreCardProps {
+  userInfo: UserInfo | undefined;
+  title: string;
+  key_: keyof UserInfo;
+  Icon: TablerIcon;
 }
 
-function scoreCard(
-  userInfo: UserInfo | undefined,
-  title: string,
-  key: keyof UserInfo,
-  Icon: TablerIcon,
-) {
+const ScoreCard: React.FC<ScoreCardProps> = ({
+  userInfo,
+  title,
+  key_,
+  Icon,
+}) => {
   return (
     <Paper shadow="md" withBorder px="md" py="lg" pos="relative">
       <LoadingOverlay visible={!userInfo} />
@@ -51,13 +52,18 @@ function scoreCard(
         />
       </Group>
       <Text lh={1} fz="xl" fw={600}>
-        {userInfo ? userInfo[key] : "-"}
+        {userInfo ? userInfo[key_] : "-"}
       </Text>
     </Paper>
   );
+};
+
+interface RankCardProps {
+  userInfo: UserInfo | undefined;
+  Icon: TablerIcon;
 }
 
-function rankCard(userInfo: UserInfo | undefined, Icon: TablerIcon) {
+const RankCard: React.FC<RankCardProps> = ({ userInfo, Icon }) => {
   return (
     <Paper shadow="md" withBorder px="md" py="lg" pos="relative">
       <LoadingOverlay visible={!userInfo} />
@@ -80,6 +86,12 @@ function rankCard(userInfo: UserInfo | undefined, Icon: TablerIcon) {
       </Text>
     </Paper>
   );
+};
+
+interface UserScoreCardProps {
+  username?: string;
+  userInfo?: UserInfo;
+  isMyself: boolean;
 }
 
 const UserScoreCard: React.FC<UserScoreCardProps> = ({
@@ -120,17 +132,47 @@ const UserScoreCard: React.FC<UserScoreCardProps> = ({
       </Group>
 
       <SimpleGrid cols={{ base: 1, xs: 2, sm: 3 }}>
-        {rankCard(userInfo, IconTrophy)}
-        {scoreCard(userInfo, "Score", "score", IconChevronUp)}
-        {scoreCard(userInfo, "Answers", "score_answers", IconPencil)}
-        {scoreCard(userInfo, "Comments", "score_comments", IconMessage)}
-        {scoreCard(userInfo, "Documents", "score_documents", IconFile)}
-        {userInfo &&
-          userInfo.score_cuts > 0 &&
-          scoreCard(userInfo, "Exam Import", "score_cuts", IconFileUpload)}
-        {userInfo &&
-          userInfo.score_legacy > 0 &&
-          scoreCard(userInfo, "Legacy Answers", "score_legacy", IconPencilCog)}
+        <RankCard userInfo={userInfo} Icon={IconTrophy} />
+        <ScoreCard
+          userInfo={userInfo}
+          title="Score"
+          key_="score"
+          Icon={IconChevronUp}
+        />
+        <ScoreCard
+          userInfo={userInfo}
+          title="Answers"
+          key_="score_answers"
+          Icon={IconPencil}
+        />
+        <ScoreCard
+          userInfo={userInfo}
+          title="Comments"
+          key_="score_comments"
+          Icon={IconMessage}
+        />
+        <ScoreCard
+          userInfo={userInfo}
+          title="Documents"
+          key_="score_documents"
+          Icon={IconFile}
+        />
+        {userInfo && userInfo.score_cuts > 0 && (
+          <ScoreCard
+            userInfo={userInfo}
+            title="Exam Import"
+            key_="score_cuts"
+            Icon={IconFileUpload}
+          />
+        )}
+        {userInfo && userInfo.score_legacy > 0 && (
+          <ScoreCard
+            userInfo={userInfo}
+            title="Legacy Answers"
+            key_="score_legacy"
+            Icon={IconPencilCog}
+          />
+        )}
       </SimpleGrid>
     </>
   );

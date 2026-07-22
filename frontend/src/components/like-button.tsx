@@ -1,32 +1,37 @@
 import { Button } from "@mantine/core";
 import React from "react";
-import { Mutate, useUpdateDocument } from "../api/hooks";
-import { Document } from "../interfaces";
 import classes from "./like-button.module.css";
+import { useUpdateDocument } from "../api/hooks/documents";
+import type { DocumentSchema } from "../api/model/documentSchema";
 
 interface Props {
-  document: Document;
-  mutate: Mutate<Document>;
+  document: DocumentSchema;
+  refetch: () => void;
 }
 
-const LikeButton: React.FC<Props> = ({ document, mutate }) => {
-  const [_, updateDocument] = useUpdateDocument(
-    document.author,
-    document.slug,
-    () => void 0,
-  );
-  const nonLikeCount = document.like_count - (document.liked ? 1 : 0);
-  const likeCount = document.like_count + (document.liked ? 0 : 1);
+const LikeButton: React.FC<Props> = ({ document, refetch }) => {
+  const updateDocument = useUpdateDocument({
+    mutation: {
+      onSuccess() {
+        refetch();
+      },
+    },
+  });
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const nonLikeCount = document.like_count! - (document.liked ? 1 : 0);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const likeCount = document.like_count! + (document.liked ? 0 : 1);
   return (
     <Button
       variant="subtle"
       onClick={() => {
-        void updateDocument({ liked: !document.liked });
-        if (!document.liked) {
-          mutate(s => ({ ...s, liked: true, like_count: likeCount }));
-        } else {
-          mutate(s => ({ ...s, liked: false, like_count: nonLikeCount }));
-        }
+        updateDocument.mutate({
+          username: document.author.username,
+          slug: document.slug,
+          data: {
+            liked: !document.liked,
+          },
+        });
       }}
     >
       <svg

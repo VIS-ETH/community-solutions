@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.db.models import Exists, OuterRef
 from django.shortcuts import get_object_or_404
 
 from answers.models import ExamUserSolved
@@ -122,6 +123,17 @@ def remove_category(request):
 def list_exams(request, slug):
     cat = get_object_or_404(Category, slug=slug)
 
+    solved_subquery = ExamUserSolved.objects.filter(
+        user=request.user,
+        exam=OuterRef("pk"),
+    )
+
+    exams = (
+        cat.exam_set.select_related("exam_type", "import_claim", "counts")
+        .annotate(user_solved=Exists(solved_subquery))
+        .all()
+    )
+
     res = sorted(
         [
             {
@@ -146,14 +158,9 @@ def list_exams(request, slug):
                 "canView": ex.current_user_can_view(request),
                 "count_cuts": ex.counts.count_cuts,
                 "count_answered": ex.counts.count_answered,
-                "user_solved": ExamUserSolved.objects.filter(
-                    user=request.user,
-                    exam=ex,
-                ).exists(),
+                "user_solved": ex.user_solved,
             }
-            for ex in cat.exam_set.select_related(
-                "exam_type", "import_claim", "counts"
-            ).all()
+            for ex in exams
         ],
         key=lambda x: x["sort-key"],
         reverse=True,

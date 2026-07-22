@@ -24,9 +24,9 @@ const OfferedInEditor: React.FC<OfferedInEditorProps> = ({
   const meta2Options: string[] = useMemo(
     () =>
       data && newMeta1.length > 0
-        ? data
+        ? (data
             .find(m => m.displayname === newMeta1)
-            ?.meta2.map(m => m.displayname) ?? []
+            ?.meta2.map(m => m.displayname) ?? [])
         : [],
     [data, newMeta1],
   );
@@ -44,12 +44,13 @@ const OfferedInEditor: React.FC<OfferedInEditorProps> = ({
     setNewMeta2(value);
   };
   const onMeta2Create = (value: string) => {
-    const meta1 = data?.find(d => d.displayname === newMeta1);
-    if (meta1) {
+    if (data) {
       mutate([
         {
           displayname: newMeta1,
-          meta2: meta1.meta2.concat({ displayname: value, categories: [] }),
+          meta2: data
+            .find(d => d.displayname === newMeta1)!
+            .meta2.concat({ displayname: value, categories: [] }),
         },
       ]);
     }

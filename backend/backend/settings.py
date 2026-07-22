@@ -46,27 +46,6 @@ COMSOL_DOCUMENT_DIR = "documents/"
 COMSOL_IMAGE_DIR = "imgs/"
 COMSOL_FILESTORE_DIR = "files/"
 COMSOL_EXAM_ALLOWED_EXTENSIONS = {"pdf"}
-COMSOL_DOCUMENT_ALLOWED_EXTENSIONS = {
-    (".pdf", "application/pdf"),
-    (".tex", "application/octet-stream"),
-    (".tex", "text/x-tex"),
-    (".md", "application/octet-stream"),
-    (".md", "text/markdown"),
-    (".typ", "application/octet-stream"),
-    (".typ", "text/x-typst"),
-    (".txt", "text/plain"),
-    (".zip", "application/zip"),
-    (".zip", "application/octet-stream"),
-    (".zip", "multipart/x-zip"),
-    (".zip", "application/zip-compressed"),
-    (".zip", "application/x-zip-compressed"),
-    (".apkg", "application/octet-stream"),  # anki
-    (".colpkg", "application/octet-stream"),  # anki collection
-    (".csv", "text/csv"),
-    (".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
-    (".xls", "application/vnd.ms-excel"),
-    (".ods", "application/vnd.oasis.opendocument.spreadsheet"),
-}
 COMSOL_IMAGE_ALLOWED_EXTENSIONS = {"jfif", "jpg", "jpeg", "png", "svg", "gif", "webp"}
 COMSOL_FILESTORE_ALLOWED_EXTENSIONS = {"pdf", "zip", "tar.gz", "tar.xz"}
 COMSOL_CATEGORY_SLUG_CHARS = (
@@ -113,6 +92,29 @@ announcements = [
     for announcement in announcements
 ]
 
+DEFAULT_COMSOL_DOCUMENT_SAFE_EXTENSIONS = [
+    "pdf",
+    "tex",
+    "md",
+    "typ",
+    "txt",
+    "zip",
+    "apkg",
+    "colpkg",
+    "csv",
+    "xlsx",
+    "xls",
+    "ods",
+]
+document_download_safe_extensions = os.environ.get(
+    "FRONTEND_DOCUMENT_DOWNLOAD_SAFE_EXTENSIONS"
+)
+document_download_safe_extensions = (
+    DEFAULT_COMSOL_DOCUMENT_SAFE_EXTENSIONS
+    if not document_download_safe_extensions
+    else document_download_safe_extensions.split(",")
+)
+
 FRONTEND_SERVER_DATA = {
     "title_prefix": os.environ.get("FRONTEND_TITLE_PREFIX", ""),
     "title_suffix": os.environ.get("FRONTEND_TITLE_SUFFIX", ""),
@@ -122,6 +124,7 @@ FRONTEND_SERVER_DATA = {
     "privacy_policy": os.environ.get("FRONTEND_PRIVACY_POLICY", "")
     or "https://account.vseth.ethz.ch/privacy",
     "announcements": announcements,
+    "document_download_safe_extensions": document_download_safe_extensions,
 }
 
 FAVICON_URL = os.environ.get("FRONTEND_FAVICON_URL", "/favicon.ico")
@@ -274,6 +277,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "csp.middleware.CSPMiddleware",
+    "ninja.compatibility.files.fix_request_files_middleware",
     "util.middleware.parse_request_middleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]

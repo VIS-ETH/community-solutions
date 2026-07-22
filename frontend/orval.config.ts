@@ -57,6 +57,7 @@ export default defineConfig({
       mode: "tags",
       target: "src/api/hooks/api.ts",
       schemas: "src/api/model",
+      clean: true,
       client: "react-query",
       httpClient: "fetch",
       mock: false,
@@ -72,6 +73,10 @@ export default defineConfig({
     },
     input: {
       target: inputTarget,
+      filters: {
+        mode: "exclude",
+        tags: ["frontend-exclude"],
+      },
     },
   },
 });
