@@ -4,7 +4,7 @@ ingress:
     subdomain: exams
     http:
       - path: /
-        port: 80
+        port: 8080
 postgres:
   - name: db
 s3:
@@ -81,27 +81,27 @@ env:
 livenessProbe:
   httpGet:
     path: /health
-    port: 80
+    port: 8080
   initialDelaySeconds: 10
   periodSeconds: 3
 
 startupProbe:
   httpGet:
     path: /health
-    port: 80
+    port: 8080
   failureThreshold: 30
   periodSeconds: 10
 
 readinessProbe:
   httpGet:
     path: /
-    port: 80
+    port: 8080
   initialDelaySeconds: 10
   periodSeconds: 3
 
 prometheus:
   path: /metrics/
-  port: 80
+  port: 8080
 
 resources:
   limits:
