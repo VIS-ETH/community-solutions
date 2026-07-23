@@ -3665,13 +3665,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"decode-uri-component@npm:^0.2.2":
-  version: 0.2.2
-  resolution: "decode-uri-component@npm:0.2.2"
-  checksum: 10c0/1f4fa54eb740414a816b3f6c24818fbfcabd74ac478391e9f4e2282c994127db02010ce804f3d08e38255493cfe68608b3f5c8e09fd6efc4ae46c807691f7a31
-  languageName: node
-  linkType: hard
-
 "deep-is@npm:^0.1.3":
   version: 0.1.4
   resolution: "deep-is@npm:0.1.4"
@@ -4454,13 +4447,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"filter-obj@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "filter-obj@npm:1.1.0"
-  checksum: 10c0/071e0886b2b50238ca5026c5bbf58c26a7c1a1f720773b8c7813d16ba93d0200de977af14ac143c5ac18f666b2cfc83073f3a5fe6a4e996c49e0863d5500fccf
-  languageName: node
-  linkType: hard
-
 "find-up@npm:8.0.0":
   version: 8.0.0
   resolution: "find-up@npm:8.0.0"
@@ -4554,7 +4540,6 @@ __metadata:
     postcss-preset-mantine: "npm:^1.13.0"
     postcss-simple-vars: "npm:^7.0.1"
     prettier: "npm:^3.1.0"
-    query-string: "npm:^7.1.0"
     react: "npm:^19.2.5"
     react-dom: "npm:^19.2.5"
     react-image-crop: "npm:^11.0.10"
@@ -4569,7 +4554,6 @@ __metadata:
     typescript: "npm:^5.9.3"
     typescript-eslint: "npm:^8.46.1"
     unified: "npm:^11.0.5"
-    use-query-params: "npm:2.2.2"
     vite: "npm:^8.0.1"
     vite-plugin-svgr: "npm:^4.5.0"
   languageName: unknown
@@ -7482,18 +7466,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"query-string@npm:^7.1.0":
-  version: 7.1.3
-  resolution: "query-string@npm:7.1.3"
-  dependencies:
-    decode-uri-component: "npm:^0.2.2"
-    filter-obj: "npm:^1.1.0"
-    split-on-first: "npm:^1.0.0"
-    strict-uri-encode: "npm:^2.0.0"
-  checksum: 10c0/a896c08e9e0d4f8ffd89a572d11f668c8d0f7df9c27c6f49b92ab31366d3ba0e9c331b9a620ee747893436cd1f2f821a6327e2bc9776bde2402ac6c270b801b2
-  languageName: node
-  linkType: hard
-
 "queue-microtask@npm:^1.2.2":
   version: 1.2.3
   resolution: "queue-microtask@npm:1.2.3"
@@ -8090,13 +8062,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"serialize-query-params@npm:^2.0.3":
-  version: 2.0.4
-  resolution: "serialize-query-params@npm:2.0.4"
-  checksum: 10c0/42e03a6f2e6a37c5779ac74d0133c2b385d75bb505a0f2c7fec2a2deda5063304a41afa6ee423066033a4a2c6e14c00d91ee1425c0210f8f7efbf3fe77d12230
-  languageName: node
-  linkType: hard
-
 "set-cookie-parser@npm:^2.6.0":
   version: 2.7.2
   resolution: "set-cookie-parser@npm:2.7.2"
@@ -8278,13 +8243,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"split-on-first@npm:^1.0.0":
-  version: 1.1.0
-  resolution: "split-on-first@npm:1.1.0"
-  checksum: 10c0/56df8344f5a5de8521898a5c090023df1d8b8c75be6228f56c52491e0fc1617a5236f2ac3a066adb67a73231eac216ccea7b5b4a2423a543c277cb2f48d24c29
-  languageName: node
-  linkType: hard
-
 "ssri@npm:^13.0.0":
   version: 13.0.1
   resolution: "ssri@npm:13.0.1"
@@ -8301,13 +8259,6 @@ __metadata:
     es-errors: "npm:^1.3.0"
     internal-slot: "npm:^1.1.0"
   checksum: 10c0/de4e45706bb4c0354a4b1122a2b8cc45a639e86206807ce0baf390ee9218d3ef181923fa4d2b67443367c491aa255c5fbaa64bb74648e3c5b48299928af86c09
-  languageName: node
-  linkType: hard
-
-"strict-uri-encode@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "strict-uri-encode@npm:2.0.0"
-  checksum: 10c0/010cbc78da0e2cf833b0f5dc769e21ae74cdc5d5f5bd555f14a4a4876c8ad2c85ab8b5bdf9a722dc71a11dcd3184085e1c3c0bd50ec6bb85fffc0f28cf82597d
   languageName: node
   linkType: hard
 
@@ -8931,25 +8882,6 @@ __metadata:
     "@types/react":
       optional: true
   checksum: 10c0/f887488c6e6075cdad4962979da1714b217bcb1ee009a9e57ce9a844bcfc4c3a99e93983dfc2e5af9e0913824d24e730090ff255e902c516dcb58d2d3837e01c
-  languageName: node
-  linkType: hard
-
-"use-query-params@npm:2.2.2":
-  version: 2.2.2
-  resolution: "use-query-params@npm:2.2.2"
-  dependencies:
-    serialize-query-params: "npm:^2.0.3"
-  peerDependencies:
-    "@reach/router": ^1.2.1
-    react: ">=16.8.0"
-    react-dom: ">=16.8.0"
-    react-router-dom: ">=5"
-  peerDependenciesMeta:
-    "@reach/router":
-      optional: true
-    react-router-dom:
-      optional: true
-  checksum: 10c0/46408bfac810b4335fc082bb7ff963b5dcf3b4bc99d2845833135498d898db20850275150255d0b417a2d977a1d4effbdf966cebf64659d8deab5b64faf62354
   languageName: node
   linkType: hard
 
