@@ -20,7 +20,9 @@ const CreateDocumentForm: React.FC<Props> = ({
   const { mutate, isError, isPending } = useCreateDocument({
     mutation: {
       onSuccess({ value: document }) {
-        void navigate(`/user/${document.author}/document/${document.slug}`);
+        void navigate(
+          `/user/${document.author.username}/document/${document.slug}`,
+        );
       },
     },
   });
