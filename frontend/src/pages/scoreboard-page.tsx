@@ -19,15 +19,13 @@ import useTitle from "../hooks/useTitle";
 import { IconArrowsUpDown, IconChevronDown } from "@tabler/icons-react";
 import classes from "./scoreboard.module.css";
 
-const modes = [
-  "score",
-  "score_answers",
-  "score_comments",
-  "score_cuts",
-  "score_legacy",
-  "score_documents",
-] as const;
-type Mode = (typeof modes)[number];
+type Mode =
+  | "score"
+  | "score_answers"
+  | "score_comments"
+  | "score_cuts"
+  | "score_legacy"
+  | "score_documents";
 const loadScoreboard = async (scoretype: Mode) => {
   return (await fetchGet(`/api/scoreboard/top/${scoretype}/`))
     .value as UserInfo[];

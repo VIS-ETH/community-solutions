@@ -13,7 +13,7 @@ import {
   IconPhoto,
 } from "@tabler/icons-react";
 import classes from "./EditorHeader.module.css";
-import clsx from "clsx";
+import { clsx } from "clsx";
 
 interface Props {
   activeMode: string | null;

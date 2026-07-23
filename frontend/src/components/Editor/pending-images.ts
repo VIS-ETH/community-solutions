@@ -2,7 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { imageHandler } from "../../api/image-utils";
 import { ImageHandle } from "./utils/types";
 
-type PendingEntry = { file: File; objectUrl: string };
+interface PendingEntry {
+  file: File;
+  objectUrl: string;
+}
 
 /**
  * Defers image uploads until the user submits, so spammed/cancelled pastes

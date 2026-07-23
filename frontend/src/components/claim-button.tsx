@@ -29,7 +29,7 @@ const ClaimButton: React.FC<Props> = ({
         variant="outline"
         onClick={e => {
           e.stopPropagation();
-          runSetClaim(exam.filename, false);
+          void runSetClaim(exam.filename, false);
         }}
         disabled={loading}
         {...buttonProps}
@@ -53,7 +53,7 @@ const ClaimButton: React.FC<Props> = ({
       variant="filled"
       onClick={e => {
         e.stopPropagation();
-        runSetClaim(exam.filename, true);
+        void runSetClaim(exam.filename, true);
       }}
       disabled={loading}
       {...buttonProps}

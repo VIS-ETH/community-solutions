@@ -15,7 +15,7 @@ import { escapeRegExp } from "lodash-es";
 import CodeBlock from "./code-block";
 import { Alert, Table } from "@mantine/core";
 import ErrorBoundary from "./error-boundary";
-import clsx from "clsx";
+import { clsx } from "clsx";
 import classes from "./markdown-text.module.css";
 
 const transformImageUri = (

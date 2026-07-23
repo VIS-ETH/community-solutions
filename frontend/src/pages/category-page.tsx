@@ -83,7 +83,7 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
   const editorOnMetaDataChange = useCallback(
     (newMetaData: CategoryMetaData) => {
       onMetaDataChange(newMetaData);
-      run();
+      void run();
     },
     [run, onMetaDataChange],
   );
@@ -346,7 +346,7 @@ const CategoryPage: React.FC = () => {
     (newMetaData: CategoryMetaData) => {
       mutate(newMetaData);
       if (slug !== newMetaData.slug) {
-        navigate(`/category/${newMetaData.slug}`);
+        void navigate(`/category/${newMetaData.slug}`);
       }
     },
     [mutate, navigate, slug],

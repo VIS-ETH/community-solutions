@@ -43,7 +43,7 @@ import { QuickSearchResult } from "./QuickSearchResult";
 import { QuickSearchResults } from "./QuickSearchResults";
 import { QuickSearchFilterContext } from "./QuickSearchFilterContext";
 import { useNavigate } from "react-router-dom";
-import clsx from "clsx";
+import { clsx } from "clsx";
 
 /**
  * Return the max depth of an array.
@@ -110,7 +110,7 @@ export const QuickSearchBox: React.FC = () => {
   const categoryResults = useSearch(
     // Disable category results (with an empty data list) if we're already
     // searching in a single category
-    isGlobal ? categories.data ?? [] : [],
+    isGlobal ? (categories.data ?? []) : [],
     searchQuery,
     // We only really want to show almost-perfect matches for this component.
     // So the max error score we allow is 4 -- this value was found by trial and
@@ -221,7 +221,7 @@ export const QuickSearchBox: React.FC = () => {
   const confirmSelection = useCallback(() => {
     if (!currentSelection.type) return; // Make sure we don't navivate to invalid selections
 
-    navigate(
+    void navigate(
       // TODO: fix duplicate logic here to get the path for an item; we already
       // do that in QuickSearchResults to create the link href prop of results
       itemToPath(results[currentSelection.type][currentSelection.index]),

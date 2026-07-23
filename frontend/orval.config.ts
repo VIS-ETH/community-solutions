@@ -15,7 +15,9 @@ async function resolveOpenApiPath(): Promise<string> {
     if (res.ok) {
       return backendUrl;
     }
-  } catch {}
+  } catch {
+    // Ignore
+  }
 
   const frontendRoot = import.meta.url;
   const comsolRoot = new URL("../", frontendRoot);
@@ -28,12 +30,16 @@ async function resolveOpenApiPath(): Promise<string> {
   try {
     await readFile(dockerPath);
     return fileURLToPath(dockerPath);
-  } catch {}
+  } catch {
+    // Ignore
+  }
 
   try {
     await readFile(hostPath);
     return fileURLToPath(hostPath);
-  } catch {}
+  } catch {
+    // Ignore
+  }
 
   throw new Error(
     "Could not find OpenAPI schema. Try one of the following:\n" +

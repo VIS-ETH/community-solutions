@@ -5,7 +5,7 @@ import { authenticated, login } from "../api/fetch-utils";
 import { SearchResult } from "../hooks/useSearch";
 import { CategoryMetaData } from "../interfaces";
 import { highlight } from "../utils/search-utils";
-import clsx from "clsx";
+import { clsx } from "clsx";
 import classes from "../utils/focus-outline.module.css";
 
 interface Props {
@@ -16,7 +16,7 @@ const CategoryCard: React.FC<Props> = ({ category }) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
     if (e.code === "Enter") {
       if (!authenticated()) login(`/category/${category.slug}`);
-      else navigate(`/category/${category.slug}`);
+      else void navigate(`/category/${category.slug}`);
     }
   };
   return (
