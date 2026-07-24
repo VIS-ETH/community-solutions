@@ -9,7 +9,7 @@ import { highlight } from "../utils/search-utils";
 import { clsx } from "clsx";
 import classes from "../utils/focus-outline.module.css";
 import IconButton from "./icon-button";
-import { IconPinned } from "@tabler/icons-react";
+import { IconPin, IconPinnedFilled } from "@tabler/icons-react";
 
 interface Props {
   category: SearchResult<CategoryMetaData> | CategoryMetaData;
@@ -58,9 +58,10 @@ const CategoryCard: React.FC<Props> = ({ category, reload }) => {
         top={8}
         right={8}
         size="md"
-        color={category.pinned ? "yellow" : "gray"}
+        variant="transparent"
+        color="gray"
         tooltip={category.pinned ? "Unpin category" : "Pin category"}
-        icon={<IconPinned />}
+        icon={category.pinned ? <IconPinnedFilled /> : <IconPin />}
         onClick={handleTogglePinned}
       />
       <Stack h="100%" justify="space-between">
@@ -71,6 +72,7 @@ const CategoryCard: React.FC<Props> = ({ category, reload }) => {
             size="xl"
             tabIndex={-1}
             mb={0}
+            pr={16}
             lh={1.25}
             lineClamp={3}
           >
