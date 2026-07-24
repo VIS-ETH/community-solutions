@@ -42,6 +42,8 @@ def restrict_proxied(f):
 api = NinjaAPI()
 api.add_router("feedback/", "feedback.api.router")
 api.add_router("image/", "images.api.router")
+api.add_router("user/", "users.api.router")
+api.add_router("document/", "documents.api.router")
 
 urlpatterns = [
     path("", include("health.urls")),
@@ -57,7 +59,6 @@ urlpatterns = [
     path("api/notification/", include("notifications.urls")),
     path("api/payment/", include("payments.urls")),
     path("api/scoreboard/", include("scoreboard.urls")),
-    path("api/document/", include("documents.urls")),
     re_path(
         r"^static/(?P<path>.*)$",
         views.cached_serve,

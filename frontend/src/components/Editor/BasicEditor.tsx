@@ -2,16 +2,16 @@ import * as React from "react";
 import { useRef, useCallback, useEffect } from "react";
 import { EditorSizingMode, Range } from "./utils/types";
 import classes from "./BasicEditor.module.css";
-import clsx from "clsx";
+import { clsx } from "clsx";
 
 interface Props {
   value: string;
   onChange: (newValue: string) => void;
 
   getSelectionRangeRef: React.RefObject<() => Range | undefined | null>;
-  setSelectionRangeRef: React.RefObject<(newSelection: Range) => void | null>;
+  setSelectionRangeRef: React.RefObject<((newSelection: Range) => void) | null>;
 
-  textareaElRef: React.MutableRefObject<HTMLTextAreaElement>;
+  textareaElRef: React.RefObject<HTMLTextAreaElement>;
 
   onMetaKey: (str: string, shift: boolean) => boolean;
   onPaste: React.ClipboardEventHandler<HTMLTextAreaElement>;

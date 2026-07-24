@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 import { Anchor, Center, Menu } from "@mantine/core";
 
 import { NavItem } from "./GlobalNav";
-import clsx from "clsx";
+import { clsx } from "clsx";
 import { NavLink } from "react-router-dom";
 import { IconChevronDown } from "@tabler/icons-react";
 import classes from "./ExternalNav.module.css";

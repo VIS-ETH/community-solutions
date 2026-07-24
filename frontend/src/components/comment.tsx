@@ -60,6 +60,8 @@ const CommentComponent: React.FC<Props> = ({
   onSectionChanged,
   onDelete,
 }) => {
+  const draftKey = comment?.oid ?? answer.oid;
+
   const [setFlaggedLoading, setExamCommentFlagged] =
     useSetExamCommentFlagged(onSectionChanged);
   const [resetFlaggedLoading, resetExamCommentFlagged] =
@@ -72,17 +74,21 @@ const CommentComponent: React.FC<Props> = ({
   const { isAdmin, username } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
   const [editing, setEditing] = useState(false);
-  const [draftText, setDraftText] = useState("");
+  const [draftText, setDraftText] = useState(() =>
+    readDraftFromStorage(draftKey, false),
+  );
   const [undoStack, setUndoStack] = useState<UndoStack>({ prev: [], next: [] });
   const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
     usePendingImages();
   const [addNewLoading, runAddNewComment] = useMutation(addNewComment, res => {
     if (onDelete) onDelete();
     onSectionChanged(res);
+    saveDraftToStorage(draftKey, "", false);
   });
   const [updateLoading, runUpdateComment] = useMutation(updateComment, res => {
     setEditing(false);
     onSectionChanged(res);
+    saveDraftToStorage(draftKey, "", false);
   });
   const [removeLoading, runRemoveComment] = useMutation(
     removeComment,
@@ -91,22 +97,23 @@ const CommentComponent: React.FC<Props> = ({
   const loading = addNewLoading || updateLoading || removeLoading;
   const languages = useOfficialSolutionLanguage();
 
-  const commentId = answer?.oid;
-
   useEffect(() => {
-    setDraftText(readDraftFromStorage(commentId, false));
-  }, []);
+    // On first render it is already set as a default value.
+    // This only reruns if the comment id changes
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDraftText(readDraftFromStorage(draftKey, false));
+  }, [draftKey, setDraftText]);
 
   const onSave = async () => {
     const finalText = await flushPendingImages(draftText);
     if (comment === undefined) {
-      runAddNewComment(answer.oid, finalText);
+      void runAddNewComment(answer.oid, finalText);
     } else {
-      runUpdateComment(comment.oid, finalText);
+      void runUpdateComment(comment.oid, finalText);
     }
   };
   const onCancel = () => {
-    saveDraftToStorage(commentId, "", false);
+    saveDraftToStorage(draftKey, "", false);
     if (comment === undefined) {
       if (onDelete) onDelete();
     } else {
@@ -115,17 +122,18 @@ const CommentComponent: React.FC<Props> = ({
   };
   const startEditing = () => {
     if (comment === undefined) return;
-    setDraftText(comment.text);
+    setDraftText(readDraftFromStorage(comment.oid, false) || comment.text);
     setEditing(true);
   };
   const remove = () => {
     if (comment)
       removeConfirm("Remove comment?", () => {
         runRemoveComment(comment.oid);
-        saveDraftToStorage(comment.oid, "", false);
+        saveDraftToStorage(draftKey, "", false);
       });
   };
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
+  const isOwnComment = comment?.authorId === username;
 
   return (
     <Paper
@@ -179,8 +187,10 @@ const CommentComponent: React.FC<Props> = ({
               isFlagged={comment.isFlagged}
               loading={flaggedLoading}
               size="xs"
-              onToggle={() =>
-                setExamCommentFlagged(comment.oid, !comment.isFlagged)
+              onToggle={
+                isOwnComment
+                  ? undefined
+                  : () => setExamCommentFlagged(comment.oid, !comment.isFlagged)
               }
             />
           )}
@@ -192,28 +202,36 @@ const CommentComponent: React.FC<Props> = ({
                 </Button>
               </Menu.Target>
               <Menu.Dropdown>
-                {!comment.isMarkedAsAi ? (
-                  <Menu.Item
-                    leftSection={<IconRobot />}
-                    onClick={() => setExamCommentMarkedAsAi(comment.oid, true)}
-                  >
-                    Mark as AI-generated
-                  </Menu.Item>
-                ) : (
-                  <Menu.Item
-                    leftSection={<IconRobotOff />}
-                    onClick={() => setExamCommentMarkedAsAi(comment.oid, false)}
-                  >
-                    Remove AI-generated mark
-                  </Menu.Item>
-                )}
-                {comment.flaggedCount === 0 && (
-                  <Menu.Item
-                    leftSection={<IconFlag />}
-                    onClick={() => setExamCommentFlagged(comment.oid, true)}
-                  >
-                    Flag as Inappropriate
-                  </Menu.Item>
+                {!isOwnComment && (
+                  <>
+                    {!comment.isMarkedAsAi ? (
+                      <Menu.Item
+                        leftSection={<IconRobot />}
+                        onClick={() =>
+                          setExamCommentMarkedAsAi(comment.oid, true)
+                        }
+                      >
+                        Mark as AI-generated
+                      </Menu.Item>
+                    ) : (
+                      <Menu.Item
+                        leftSection={<IconRobotOff />}
+                        onClick={() =>
+                          setExamCommentMarkedAsAi(comment.oid, false)
+                        }
+                      >
+                        Remove AI-generated mark
+                      </Menu.Item>
+                    )}
+                    {comment.flaggedCount === 0 && (
+                      <Menu.Item
+                        leftSection={<IconFlag />}
+                        onClick={() => setExamCommentFlagged(comment.oid, true)}
+                      >
+                        Flag as Inappropriate
+                      </Menu.Item>
+                    )}
+                  </>
                 )}
                 <Menu.Item
                   leftSection={<IconLink />}
@@ -270,7 +288,7 @@ const CommentComponent: React.FC<Props> = ({
             value={draftText}
             onChange={newValue => {
               setDraftText(newValue);
-              saveDraftToStorage(commentId, newValue, false);
+              saveDraftToStorage(draftKey, newValue, false);
             }}
             imageHandler={deferredImageHandler}
             preview={value => (

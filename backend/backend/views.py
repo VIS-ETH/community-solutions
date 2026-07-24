@@ -1,7 +1,12 @@
+import logging
+import sys
+
 from django.utils.cache import patch_cache_control
 from django.views.static import serve
 
 from util import response
+
+logger = logging.getLogger(__name__)
 
 
 def handler400(request, exception):
@@ -17,6 +22,7 @@ def handler404(request, exception):
 
 
 def handler500(request):
+    logger.exception("Internal server error", exc_info=sys.exc_info())
     return response.internal_error()
 
 

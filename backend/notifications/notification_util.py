@@ -1,6 +1,9 @@
+from django.contrib.auth.models import User
+
 from answers.models import Answer
 from documents.models import Comment as DocumentComment
 from documents.models import Document
+from myauth.models import get_my_user
 from notifications.models import Notification, NotificationSetting, NotificationType
 
 
@@ -143,4 +146,47 @@ def new_feedback_reply(admin_user, feedback):
         "Reply to your feedback",
         f"An admin has replied to your feedback.\n\n{feedback.reply}",
         feedback=feedback,
+    )
+
+
+def new_document_transfer_request(document: Document):
+    sender_displayname = get_my_user(document.author).displayname()
+    target_user = document.pending_transfer_user
+    if not target_user:
+        raise ValueError("Received document with pending_transfer_user=None.")
+
+    send_doc_notification(
+        sender=document.author,
+        receiver=target_user,
+        type_=NotificationType.DOCUMENT_TRANSFER,
+        title="New document transfer request",
+        message=f"{sender_displayname} wants to transfer a document to you.",
+        document=document,
+    )
+
+
+# Invariant: Document has already been transferred
+def accepted_document_transfer_request(document: Document, old_owner: User):
+    target_user_displayname = get_my_user(document.author).displayname()
+
+    send_doc_notification(
+        sender=document.author,
+        receiver=old_owner,
+        type_=NotificationType.DOCUMENT_TRANSFER,
+        title="Document transfer request accepted",
+        message=f"{target_user_displayname} has accepted your document transfer.",
+        document=document,
+    )
+
+
+def rejected_document_transfer_request(document: Document, target: User):
+    target_user_displayname = get_my_user(target).displayname()
+
+    send_doc_notification(
+        sender=target,
+        receiver=document.author,
+        type_=NotificationType.DOCUMENT_TRANSFER,
+        title="Document transfer request rejected",
+        message=f"{target_user_displayname} has rejected your document transfer.",
+        document=document,
     )

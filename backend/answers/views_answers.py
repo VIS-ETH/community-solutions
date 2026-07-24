@@ -153,6 +153,8 @@ def set_flagged(request, oid):
     answer = get_object_or_404(
         Answer.objects.select_related("answer_section").all(), pk=oid
     )
+    if request.user == answer.author:
+        return response.not_possible("User can't flag their own answer")
     flagged = request.POST["flagged"] != "false"
     old_flagged = answer.flagged.filter(pk=request.user.pk).exists()
     if flagged != old_flagged:
@@ -173,6 +175,8 @@ def set_marked_as_ai(request, oid):
     answer = get_object_or_404(
         Answer.objects.select_related("answer_section").all(), pk=oid
     )
+    if request.user == answer.author:
+        return response.not_possible("User can't mark their own answer as AI")
     marked_as_ai = request.POST["marked_as_ai"] != "false"
     old_marked_as_ai = answer.marked_as_ai.filter(pk=request.user.pk).exists()
     if marked_as_ai != old_marked_as_ai:

@@ -120,7 +120,10 @@ export async function performDataRequest<T>(
     body: formData,
   });
   try {
-    const body = (await response.json()) as T;
+    let body = undefined as T;
+    if (response.status !== 204) {
+      body = (await response.json()) as T;
+    }
     if (!response.ok) {
       return Promise.reject((body as { err: string }).err);
     }
@@ -162,7 +165,10 @@ export async function performRequest<T>(
     method,
   });
   try {
-    const body = (await response.json()) as T;
+    let body = undefined as T;
+    if (response.status !== 204) {
+      body = (await response.json()) as T;
+    }
     if (!response.ok) {
       return Promise.reject((body as { err: string }).err);
     }

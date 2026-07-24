@@ -102,6 +102,7 @@ def get_answer_response(request, answer: Answer, ignore_exam_admin=False):
             else "",
             "canEdit": answer.author == request.user
             or (answer.kind != Answer.Kind.PERSONAL and exam_admin),
+            "isAuthor": answer.author == request.user,
             "isUpvoted": answer.is_upvoted,
             "isDownvoted": answer.is_downvoted,
             "isExpertVoted": answer.is_expertvoted,

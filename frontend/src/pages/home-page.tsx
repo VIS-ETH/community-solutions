@@ -29,8 +29,9 @@ import { IconFilter, IconPlus } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { EditMeta1, EditMeta2 } from "../components/edit-meta-categories";
 import CollapseWrapper from "../components/collapse-wrapper";
-import clsx from "clsx";
+import { clsx } from "clsx";
 import classes from "../utils/focus-outline.module.css";
+import { slugify } from "../utils/slugify";
 
 const displayNameGetter = (data: CategoryMetaData) => data.displayname;
 
@@ -67,7 +68,7 @@ const mapToCategories = (
       categories: categoryNames,
     } of meta2) {
       const categories = categoryNames
-        .map(name => categoryMap.get(name)!)
+        .map(name => categoryMap.get(name))
         .filter(a => a !== undefined);
       for (const category of categories) assignedCategories.add(category);
       if (categories.length === 0) continue;
@@ -103,7 +104,7 @@ const AddCategory: React.FC<{ onAddCategory: () => void }> = ({
   });
   const [categoryName, setCategoryName] = useState("");
   const onSubmit = () => {
-    run(categoryName);
+    void run(categoryName);
   };
 
   return (
@@ -227,17 +228,9 @@ export const CategoryList: React.FC = () => {
   );
 
   const onChange = useCallback(() => {
-    run();
+    void run();
   }, [run]);
   const [panelIsOpen, { toggle: togglePanel }] = useDisclosure();
-
-  const slugify = (str: string): string =>
-    str
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, "")
-      .replace(/[\s_-]+/g, "-")
-      .replace(/^-+|-+$/g, "");
 
   const is_collapsed = (category: string): boolean => {
     return collapsedCategories.includes(slugify(category));
@@ -445,14 +438,15 @@ export const CategoryList: React.FC = () => {
           )}
         </Container>
       </ContentContainer>
-      {!loading ? (
+      {!loading && (
         <CourseCategoriesPanel
           mode={mode}
           isOpen={panelIsOpen}
           toggle={togglePanel}
           metaList={metaList}
+          categories={searchResult}
         />
-      ) : null}
+      )}
     </>
   );
 };

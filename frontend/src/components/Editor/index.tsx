@@ -9,7 +9,7 @@ import EditorHeader from "./EditorHeader";
 import { ImageHandle, Range } from "./utils/types";
 import { push, redo, undo, UndoStack } from "./utils/undo-stack";
 import classes from "./Editor.module.css";
-import clsx from "clsx";
+import { clsx } from "clsx";
 
 const OfficialAnswerOverlay = lazy(() => import("../official-answer-overlay"));
 
@@ -294,7 +294,7 @@ const Editor: React.FC<Props> = ({
       resize={isFullscreen ? "fill" : "vertical"}
       onPaste={e => {
         const fileList = e.clipboardData.files;
-        onFiles([...fileList]);
+        void onFiles([...fileList]);
       }}
     />
   );

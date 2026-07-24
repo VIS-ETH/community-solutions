@@ -75,14 +75,16 @@ const addAttachment = async (
   ).filename as string;
 };
 const editAttachment = async (filename: string, newdisplayname: string) => {
-  await fetchPatch(`/api/filestore/edit/${filename}/`, {newdisplayname});
+  await fetchPatch(`/api/filestore/edit/${filename}/`, { newdisplayname });
 };
 const removeAttachment = async (filename: string) => {
   await fetchPost(`/api/filestore/remove/${filename}/`, {});
 };
 
-export interface CategoryMetaDataDraft
-  extends Omit<CategoryMetaData, "attachments"> {
+export interface CategoryMetaDataDraft extends Omit<
+  CategoryMetaData,
+  "attachments"
+> {
   attachments: EditorAttachment[];
 }
 
@@ -90,8 +92,8 @@ const applyChanges = async (
   slug: string,
   oldMetaData: CategoryMetaData,
   newMetaData: CategoryMetaDataDraft,
-  oldOfferedIn: Array<readonly [string, string]>,
-  newOfferedIn: Array<readonly [string, string]>,
+  oldOfferedIn: (readonly [string, string])[],
+  newOfferedIn: (readonly [string, string])[],
 ) => {
   const metaDataDiff: Partial<CategoryMetaData> = {};
   if (oldMetaData.displayname !== newMetaData.displayname)
@@ -122,7 +124,9 @@ const applyChanges = async (
     }
   }
   for (const attachment of oldMetaData.attachments) {
-    const foundAttachment = newMetaData.attachments.find(otherAttachment => otherAttachment.filename === attachment.filename);
+    const foundAttachment = newMetaData.attachments.find(
+      otherAttachment => otherAttachment.filename === attachment.filename,
+    );
     if (!foundAttachment) {
       await removeAttachment(attachment.filename);
       continue;
@@ -131,7 +135,10 @@ const applyChanges = async (
       newAttachments.push(attachment);
     } else {
       await editAttachment(attachment.filename, foundAttachment.displayname);
-      newAttachments.push({ displayname: foundAttachment.displayname, filename: attachment.filename});
+      newAttachments.push({
+        displayname: foundAttachment.displayname,
+        filename: attachment.filename,
+      });
     }
   }
   for (const [newMeta1, newMeta2] of newOfferedIn) {
@@ -204,7 +211,7 @@ interface CategoryMetaDataEditorProps {
   currentMetaData: CategoryMetaData;
   onMetaDataChange: (newMetaData: CategoryMetaData) => void;
   close: () => void;
-  offeredIn: Array<readonly [string, string]>;
+  offeredIn: (readonly [string, string])[];
 }
 const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
   onMetaDataChange,
@@ -224,7 +231,7 @@ const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
     },
   });
   const [offeredIn, setOfferedIn] =
-    useInitialState<Array<readonly [string, string]>>(propOfferedIn);
+    useInitialState<(readonly [string, string])[]>(propOfferedIn);
   const {
     registerInput,
     registerCheckbox,
@@ -233,7 +240,7 @@ const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
     setFormValue,
     onSubmit,
   } = useForm(currentMetaData as CategoryMetaDataDraft, data => {
-    runApplyChanges(
+    void runApplyChanges(
       currentMetaData.slug,
       currentMetaData,
       data,

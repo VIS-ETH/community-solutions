@@ -61,6 +61,10 @@ env:
     secret:
       key: frontend-favicon-url
       create: provided
+  - name: "FRONTEND_DOCUMENT_DOWNLOAD_SAFE_EXTENSIONS"
+    secret:
+      key: frontend-document-download-safe-extensions
+      create: provided
   - name: "RUNTIME_FRONTEND_KEYCLOAK_URL"
     value: https://auth.vseth.ethz.ch/auth
   - name: "RUNTIME_FRONTEND_KEYCLOAK_REALM"

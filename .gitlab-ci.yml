@@ -1,11 +1,50 @@
+variables:
+  KUBERNETES_CPU_LIMIT: "8"
+  KUBERNETES_CPU_REQUEST: "1500m"
+  KUBERNETES_MEMORY_REQUEST: "1600Mi"
+  KUBERNETES_MEMORY_LIMIT: "3Gi"
+
+  UV_LINK_MODE: copy
+  UV_SYSTEM_PYTHON: 1
+  UV_CACHE_DIR: .uv-cache
+
 # List of stages for jobs, which is executed in order. To define dependencies
 # between jobs in the same stage, use the 'needs' keyword.
 stages:
+  - Build
   - Lint and Test
+
+"Generate OpenAPI":
+  stage: Build
+  tags: [kata]
+  image: python:3.9-bookworm
+  before_script:
+    - pip install uv
+    - cd backend
+  script:
+    - uv run manage.py export_openapi
+  after_script:
+    - cd backend
+    - uv cache prune --ci
+  cache:
+    key:
+      files:
+        - backend/uv.lock
+    paths:
+      - backend/.uv-cache
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master"
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"
+  artifacts:
+    paths:
+      - ./backend/static/openapi.json
 
 "Backend Check":
   stage: Lint and Test
-  when: manual # while CI executor is not yet stable
+  tags: [kata]
+  needs:
+    - artifacts: true
+      job: "Generate OpenAPI"
   rules:
     # This job runs on protected branches and on merge requests to master.
     # Both should be done because the branch state within the MR and the
@@ -16,70 +55,49 @@ stages:
       changes:
         - backend/**/*
   variables:
-    # Set the pip cache directory to a directory that we can access and cache
-    PIP_CACHE_DIR: "$CI_PROJECT_DIR/backend/.cache/pip"
-
+    MINIO_ACCESS_KEY: minio
+    MINIO_SECRET_KEY: minio123
     POSTGRES_DB: testdb
     POSTGRES_USER: testuser
     POSTGRES_PASSWORD: testpw
-    POSTGRES_HOST_AUTH_METHOD: trust
-    MINIO_ACCESS_KEY: minio
-    MINIO_SECRET_KEY: minio123
-    MINIO_DOMAIN: localhost
+  services:
+    - name: postgres:16
+      alias: postgres
+      command: ["postgres"]
+      variables:
+        POSTGRES_HOST_AUTH_METHOD: trust
+    - name: minio/minio:RELEASE.2023-10-25T06-33-25Z
+      alias: minio
+      command: ["server", "/minio"]
+  image: python:3.9-bookworm
   before_script:
     - set -euo pipefail
-    # Run postgres and minio services as Docker containers.
-    # The KubeVirt CI executor has rootless docker.
-    - docker run
-      --network=host
-      --name postgres
-      -e POSTGRES_DB=$POSTGRES_DB
-      -e POSTGRES_USER=$POSTGRES_USER
-      -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD
-      -e POSTGRES_HOST_AUTH_METHOD=$POSTGRES_HOST_AUTH_METHOD
-      -d
-      postgres:16
-    - docker run
-      --network=host
-      --name minio
-      -e MINIO_ACCESS_KEY=$MINIO_ACCESS_KEY
-      -e MINIO_SECRET_KEY=$MINIO_SECRET_KEY
-      -e MINIO_DOMAIN=$MINIO_DOMAIN
-      -d
-      minio/minio:RELEASE.2023-10-25T06-33-25Z
-      server /minio
 
-    # The Django backend will be run bare-metal on the VM, so that we can
-    # cache the Python dependencies etc.
-    # KubeVirt CI executor runs on Debian 13 "Trixie" which comes with Python
-    # 3.13, but our production image is built with Python 3.9 so we install that.
-    - sudo apt-get update
-    - sudo apt-get install -y pyenv
-    - eval "$(pyenv init -)"
-    - pyenv install 3.9
-    - pyenv local 3.9
+    - apt-get update
+    - apt-get install -y curl
 
     # Install mc so that we can create the community-solutions bucket in minio
-    - curl https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o mc
+    - curl -L https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o mc
     - chmod +x ./mc
-    - ./mc alias set myminio http://localhost:9000 $MINIO_ACCESS_KEY $MINIO_SECRET_KEY
+    - ./mc alias set myminio http://minio:9000 $MINIO_ACCESS_KEY $MINIO_SECRET_KEY
     - ./mc mb myminio/community-solutions
 
     # Install poppler to get pdftotext binary
-    - sudo apt-get install -y poppler-utils
-    - pip install -r backend/requirements.txt
-    - pip install tblib
+    - apt-get install -y poppler-utils
+    - pip install uv
+    - cd backend
+    - uv sync
 
-    # Make/copy files (same as Dockerfile definition) to make resources availabe to tests
-    - mkdir backend/intermediate_pdf_storage
-    - mv ./frontend/public/exam10.pdf backend
-    - mv ./frontend/public/static backend
+    # Make/copy files (same as Dockerfile definition) to make resources available to tests
+    - mkdir intermediate_pdf_storage
+    - mv ../frontend/public/exam10.pdf ./
+    - mv ../frontend/public/static/* ./static/
   cache:
     key:
       files:
-        - backend/requirements.txt
+        - backend/uv.lock
     paths:
-      - backend/.cache/pip
+      - backend/.uv-cache
   script:
     - export SIP_POSTGRES_DB_NAME=$POSTGRES_DB
     - export SIP_POSTGRES_DB_USER=$POSTGRES_USER
@@ -88,17 +106,18 @@ stages:
     - export SIP_POSTGRES_DB_PORT=5432
     - export SIP_S3_FILES_HOST=localhost
     - export SIP_S3_FILES_PORT=9000
-    - export SIP_S3_FILES_ACCESS_KEY=minio
-    - export SIP_S3_FILES_SECRET_KEY=minio123
+    - export SIP_S3_FILES_ACCESS_KEY=$MINIO_ACCESS_KEY
+    - export SIP_S3_FILES_SECRET_KEY=$MINIO_SECRET_KEY
     - export SIP_S3_FILES_BUCKET=community-solutions
     - export SIP_S3_FILES_USE_SSL=false
+    - uv run manage.py test --parallel # parallel speeds up by approx 4x.
+  after_script:
     - cd backend
-    - python3 manage.py test --parallel # parallel speeds up by approx 4x.
-
+    - uv cache prune --ci
 
 "Frontend Check":
   stage: Lint and Test
-  when: manual # while CI executor is not yet stable
+  tags: [kata]
   rules:
     # This job runs on protected branches and on merge requests to master.
     # Both should be done because the branch state within the MR and the
@@ -108,19 +127,13 @@ stages:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master" # Run on merge requests to master
       changes:
         - frontend/**/*
+  image: node:24
   before_script:
     - set -euo pipefail
-    # Install Node Version Manager
-    - curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-    - export NVM_DIR=/home/debian/.nvm
-
-    # Install Node 24 (same as Dockerfile)
-    - source $NVM_DIR/nvm.sh
-    - nvm install 24
-    - nvm use 24
     - corepack enable
 
     # Prepare Yarn to save its store at a known location so it's cachable
+    - cp ./backend/static/openapi.json ./frontend/public/openapi.json
     - cd frontend
     - yarn config set enableGlobalCache false
 
@@ -136,9 +149,10 @@ stages:
         - frontend/yarn.lock
     paths:
       - frontend/.yarn/cache/
-      - /home/debian/.nvm
+      - /root/.nvm
   script:
-    - yarn --ignore-engines
+    - yarn
+    - yarn codegen
     - echo 'Typechecking...'
     - yarn run tsc
     - echo 'Checking linter errors...'
@@ -149,7 +163,7 @@ stages:
       if [[ -n ${CI_MERGE_REQUEST_TARGET_BRANCH_NAME-} ]]; then
         echo 'Checking formatting errors on modified files...'
         yarn run prettier --check $( \
-          git diff --name-only --relative $CI_COMMIT_SHA origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME -- \
+          git diff --diff-filter=d --name-only --relative $CI_COMMIT_SHA origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME -- \
             "src/**/*.js" \
             "src/**/*.jsx" \
             "src/**/*.ts" \
@@ -158,3 +172,6 @@ stages:
             "src/**/*.css" \
         )
       fi
+  needs:
+    - artifacts: true
+      job: "Generate OpenAPI"

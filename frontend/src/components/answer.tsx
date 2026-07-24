@@ -15,7 +15,7 @@ import {
 import { differenceInSeconds } from "date-fns";
 import React, { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import clsx from "clsx";
+import { clsx } from "clsx";
 import { usePendingImages } from "./Editor/pending-images";
 import {
   useRemoveAnswer,
@@ -105,7 +105,7 @@ const AnswerComponent: React.FC<Props> = ({
     if (answer === undefined && onDelete) onDelete();
     saveDraftToStorage(answerId, "", true);
   });
-  const { isAdmin, isExpert } = useUser()!;
+  const { isAdmin, isExpert, username } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
   const [editing, setEditing] = useState(false);
 
@@ -131,7 +131,7 @@ const AnswerComponent: React.FC<Props> = ({
   const save = useCallback(async () => {
     if (!section) return;
     const finalText = await flushPendingImages(draftText);
-    update(section.oid, finalText, answerKind);
+    void update(section.oid, finalText, answerKind);
   }, [section, draftText, update, answerKind, flushPendingImages]);
   const remove = useCallback(() => {
     if (answer) removeConfirm("Remove answer?", () => removeAnswer(answer.oid));
@@ -149,7 +149,7 @@ const AnswerComponent: React.FC<Props> = ({
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
   const canEdit = section && onSectionChanged && answer?.canEdit;
   const canRemove = section && onSectionChanged && (isAdmin || answer?.canEdit);
-  const { username } = useUser()!;
+  const isOwnAnswer = answer?.isAuthor ?? false;
   return (
     <>
       {modals}
@@ -286,8 +286,10 @@ const AnswerComponent: React.FC<Props> = ({
                     count={answer.flaggedCount}
                     isFlagged={answer.isFlagged}
                     loading={flaggedLoading}
-                    onToggle={() =>
-                      setAnswerFlagged(answer.oid, !answer.isFlagged)
+                    onToggle={
+                      isOwnAnswer
+                        ? undefined
+                        : () => setAnswerFlagged(answer.oid, !answer.isFlagged)
                     }
                   />
                 )}
@@ -392,28 +394,32 @@ const AnswerComponent: React.FC<Props> = ({
                   <Button leftSection={<IconDots />}>More</Button>
                 </Menu.Target>
                 <Menu.Dropdown>
-                  {!answer.isMarkedAsAi ? (
-                    <Menu.Item
-                      leftSection={<IconRobot />}
-                      onClick={() => setAnswerMarkedAsAi(answer.oid, true)}
-                    >
-                      Mark as AI-generated
-                    </Menu.Item>
-                  ) : (
-                    <Menu.Item
-                      leftSection={<IconRobotOff />}
-                      onClick={() => setAnswerMarkedAsAi(answer.oid, false)}
-                    >
-                      Remove AI-generated mark
-                    </Menu.Item>
-                  )}
-                  {answer.flaggedCount === 0 && (
-                    <Menu.Item
-                      leftSection={<IconFlag />}
-                      onClick={() => setAnswerFlagged(answer.oid, true)}
-                    >
-                      Flag as Inappropriate
-                    </Menu.Item>
+                  {!isOwnAnswer && (
+                    <>
+                      {!answer.isMarkedAsAi ? (
+                        <Menu.Item
+                          leftSection={<IconRobot />}
+                          onClick={() => setAnswerMarkedAsAi(answer.oid, true)}
+                        >
+                          Mark as AI-generated
+                        </Menu.Item>
+                      ) : (
+                        <Menu.Item
+                          leftSection={<IconRobotOff />}
+                          onClick={() => setAnswerMarkedAsAi(answer.oid, false)}
+                        >
+                          Remove AI-generated mark
+                        </Menu.Item>
+                      )}
+                      {answer.flaggedCount === 0 && (
+                        <Menu.Item
+                          leftSection={<IconFlag />}
+                          onClick={() => setAnswerFlagged(answer.oid, true)}
+                        >
+                          Flag as Inappropriate
+                        </Menu.Item>
+                      )}
+                    </>
                   )}
                   <Menu.Item
                     leftSection={<IconLink />}

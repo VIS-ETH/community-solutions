@@ -34,6 +34,7 @@ def me_view(request):
             adminrightscat=auth_check.has_admin_rights_for_any_category(request),
             username=request.user.username,
             displayname=request.user.displayname(),
+            userid=request.user.id,
         )
     else:
         return response.success(
@@ -42,6 +43,7 @@ def me_view(request):
             adminrightscat=False,
             username="",
             displayname="Not Authorized",
+            userid=-1,
         )
 
 

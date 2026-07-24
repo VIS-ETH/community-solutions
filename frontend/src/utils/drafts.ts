@@ -21,11 +21,12 @@ export function saveDraftToStorage(
   const partFromLocalStorage =
     localStorage.getItem(draftPartKey) ?? '{"answers": {},"comments": {}}';
   const draftJSON = JSON.parse(partFromLocalStorage);
-  const draftPartJSON = draftJSON[part] as StorageDraft;
+  let draftPartJSON = draftJSON[part] as StorageDraft;
   const now = new Date();
   const currentTimeStamp = now.getTime();
   if (newValue.length === 0) {
-    delete draftPartJSON[oId];
+    const { [oId]: _, ...remaining } = draftPartJSON;
+    draftPartJSON = remaining;
   } else {
     draftPartJSON[oId] = {
       draft: newValue,

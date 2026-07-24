@@ -28,7 +28,8 @@ export const FAQPage: React.FC = () => {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [undoStack, setUndoStack] = useState<UndoStack>({ prev: [], next: [] });
-  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } = usePendingImages();
+  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
+    usePendingImages();
   const handleDeleteDraft = () => {
     setQuestion("");
     setAnswer("");
@@ -37,7 +38,7 @@ export const FAQPage: React.FC = () => {
   };
   const handleNew = async () => {
     const finalAnswer = await flushPendingImages(answer);
-    add(
+    void add(
       question,
       finalAnswer,
       (faqs ?? []).reduce((old, value) => Math.max(old, value.order + 1), 0),
@@ -84,7 +85,9 @@ export const FAQPage: React.FC = () => {
               onChange={setAnswer}
               undoStack={undoStack}
               setUndoStack={setUndoStack}
-              preview={value => <MarkdownText value={value} pendingImages={pendingObjectUrls} />}
+              preview={value => (
+                <MarkdownText value={value} pendingImages={pendingObjectUrls} />
+              )}
             />
             <Flex mt="sm" justify="space-between">
               <Button

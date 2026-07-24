@@ -254,7 +254,7 @@ export default class PDF {
       // destination
       const [dx, dy, dw, dh] = [0, 0, width, height];
       const renderingReference = newManager.createRetainedRef();
-      mainCanvas.rendered.then(() => {
+      void mainCanvas.rendered.then(() => {
         const ctx = obj.context;
         if (ctx === null) throw new Error("Rendering failed.");
         if (mainCanvas === undefined) throw new Error();

@@ -47,6 +47,12 @@ const UserNotificationsSettings: React.FC = () => {
           disabled={checkboxLoading}
           onChange={e => setEnabled(5, e.currentTarget.checked)}
         />
+        <Checkbox
+          label="New document transfer or document transfer accepted"
+          checked={enabled ? enabled.has(6) : false}
+          disabled={checkboxLoading}
+          onChange={e => setEnabled(6, e.currentTarget.checked)}
+        />
       </Stack>
     </>
   );

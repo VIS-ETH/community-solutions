@@ -6,7 +6,7 @@ import { markCategoryUserPinned, unmarkCategoryUserPinned } from "../api/hooks";
 import { SearchResult } from "../hooks/useSearch";
 import { CategoryMetaData } from "../interfaces";
 import { highlight } from "../utils/search-utils";
-import clsx from "clsx";
+import { clsx } from "clsx";
 import classes from "../utils/focus-outline.module.css";
 import IconButton from "./icon-button";
 import { IconPinned } from "@tabler/icons-react";
@@ -20,7 +20,7 @@ const CategoryCard: React.FC<Props> = ({ category, reload }) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
     if (e.code === "Enter") {
       if (!authenticated()) login(`/category/${category.slug}`);
-      else navigate(`/category/${category.slug}`);
+      else void navigate(`/category/${category.slug}`);
     }
   };
   const handleTogglePinned = async (event: React.SyntheticEvent) => {

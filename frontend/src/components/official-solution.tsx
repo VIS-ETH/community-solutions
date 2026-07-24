@@ -128,7 +128,7 @@ const PdfRenderer: React.FC<PProps> = memo(
         }
       };
 
-      renderPdf();
+      void renderPdf();
 
       return () => {
         cancelled = true;
