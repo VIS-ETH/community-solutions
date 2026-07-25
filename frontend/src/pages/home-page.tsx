@@ -260,7 +260,7 @@ export const CategoryList: React.FC = () => {
             data={[
               { label: "Alphabetical", value: "alphabetical" },
               { label: "By Semester", value: "bySemester" },
-              { label: "Pinned", value: "pinned"},
+              { label: "Pinned", value: "pinned" },
             ]}
           />
           <TextInput
@@ -438,7 +438,7 @@ export const CategoryList: React.FC = () => {
           )}
         </Container>
       </ContentContainer>
-      {!loading && (
+      {!loading && mode !== "pinned" && (
         <CourseCategoriesPanel
           mode={mode}
           isOpen={panelIsOpen}
