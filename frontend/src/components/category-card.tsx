@@ -53,17 +53,19 @@ const CategoryCard: React.FC<Props> = ({ category, reload }) => {
       tabIndex={0}
       onKeyDown={handleKeyDown}
     >
-      <IconButton
-        pos="absolute"
-        top={8}
-        right={8}
-        size="md"
-        variant="transparent"
-        color="gray"
-        tooltip={category.pinned ? "Unpin category" : "Pin category"}
-        icon={category.pinned ? <IconPinnedFilled /> : <IconPin />}
-        onClick={handleTogglePinned}
-      />
+      {authenticated() && (
+        <IconButton
+          pos="absolute"
+          top={8}
+          right={8}
+          size="md"
+          variant="transparent"
+          color="gray"
+          tooltip={category.pinned ? "Unpin category" : "Pin category"}
+          icon={category.pinned ? <IconPinnedFilled /> : <IconPin />}
+          onClick={handleTogglePinned}
+        />
+      )}
       <Stack h="100%" justify="space-between">
         <div className="category-card" id={category.slug}>
           <Anchor
