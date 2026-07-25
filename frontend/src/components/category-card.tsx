@@ -3,6 +3,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authenticated, login } from "../api/fetch-utils";
 import { markCategoryUserPinned, unmarkCategoryUserPinned } from "../api/hooks";
+import { useUser } from "../auth";
 import { SearchResult } from "../hooks/useSearch";
 import { CategoryMetaData } from "../interfaces";
 import { highlight } from "../utils/search-utils";
@@ -17,6 +18,7 @@ interface Props {
 }
 const CategoryCard: React.FC<Props> = ({ category, reload }) => {
   const navigate = useNavigate();
+  const loggedIn = useUser()?.loggedin ?? false;
   const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
     if (e.code === "Enter") {
       if (!authenticated()) login(`/category/${category.slug}`);
@@ -53,7 +55,7 @@ const CategoryCard: React.FC<Props> = ({ category, reload }) => {
       tabIndex={0}
       onKeyDown={handleKeyDown}
     >
-      {authenticated() && (
+      {loggedIn && (
         <IconButton
           pos="absolute"
           top={8}

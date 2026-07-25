@@ -28,8 +28,8 @@ import {
   useOs,
 } from "@mantine/hooks";
 import { useDebounce, useRequest } from "ahooks";
-import { authenticated } from "../../../api/fetch-utils";
 import { loadAllCategories, loadSearch } from "../../../api/hooks";
+import { useUser } from "../../../auth";
 import {
   AnswerSearchResult,
   CommentSearchResult,
@@ -71,6 +71,7 @@ const displayOrder = [
 ] as const;
 
 export const QuickSearchBox: React.FC = () => {
+  const loggedIn = useUser()?.loggedin ?? false;
   const [opened, { open, close }] = useDisclosure(false);
 
   // Reference to the input element so that we can select all text upon modal open
@@ -130,7 +131,7 @@ export const QuickSearchBox: React.FC = () => {
         true,
       ),
     {
-      ready: authenticated(),
+      ready: loggedIn,
       refreshDeps: [debouncedSearchQuery, isGlobal],
     },
   );
