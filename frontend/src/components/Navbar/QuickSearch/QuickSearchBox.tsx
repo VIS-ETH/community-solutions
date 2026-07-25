@@ -28,6 +28,7 @@ import {
   useOs,
 } from "@mantine/hooks";
 import { useDebounce, useRequest } from "ahooks";
+import { authenticated } from "../../../api/fetch-utils";
 import { loadAllCategories, loadSearch } from "../../../api/hooks";
 import {
   AnswerSearchResult,
@@ -129,6 +130,7 @@ export const QuickSearchBox: React.FC = () => {
         true,
       ),
     {
+      ready: authenticated(),
       refreshDeps: [debouncedSearchQuery, isGlobal],
     },
   );
