@@ -210,9 +210,7 @@ export interface CategoryMetaData {
 }
 
 export type CategoryMetaDataAny =
-  | CategoryMetaData
-  | CategoryMetaDataOverview
-  | CategoryMetaDataMinimal;
+  CategoryMetaData | CategoryMetaDataOverview | CategoryMetaDataMinimal;
 
 export interface ExamMetaData {
   canEdit: boolean;
@@ -362,7 +360,5 @@ export interface CommentSearchResult {
   category_slug: string;
 }
 export type SearchResult =
-  | ExamSearchResult
-  | AnswerSearchResult
-  | CommentSearchResult;
+  ExamSearchResult | AnswerSearchResult | CommentSearchResult;
 export type SearchResponse = SearchResult[];

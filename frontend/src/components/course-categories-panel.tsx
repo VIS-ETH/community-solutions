@@ -53,11 +53,7 @@ const CourseCategoriesPanel: React.FC<CourseCategoriesPanelProps> = ({
   const header = headerByMode[mode] ?? "Semester";
 
   return (
-    <Panel
-      header={header}
-      isOpen={isOpen}
-      toggle={toggle}
-    >
+    <Panel header={header} isOpen={isOpen} toggle={toggle}>
       {mode === "alphabetical"
         ? [...availableLetters].map(([letter, id]) => (
             <div key={letter}>

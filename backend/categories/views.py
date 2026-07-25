@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db.models import Exists, OuterRef
-from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 
 from answers.models import ExamUserSolved
 from categories.models import Category, CategoryUserPinned, MetaCategory
@@ -449,7 +449,6 @@ def set_metacategory_order(request):
     return response.success()
 
 
-
 @response.request_method(["DELETE", "PUT", "GET"])()
 @auth_check.require_login
 def category_user_pinned(request, slug: str):
@@ -459,9 +458,13 @@ def category_user_pinned(request, slug: str):
         CategoryUserPinned.objects.filter(user=request.user, category=category).delete()
         pinned = False
     elif request.method == "PUT":
-        CategoryUserPinned.objects.update_or_create(user=request.user, category=category, defaults={})
+        CategoryUserPinned.objects.update_or_create(
+            user=request.user, category=category, defaults={}
+        )
         pinned = True
     else:
-        pinned = CategoryUserPinned.objects.filter(user=request.user, category=category).exists()
+        pinned = CategoryUserPinned.objects.filter(
+            user=request.user, category=category
+        ).exists()
 
     return JsonResponse({"category_pinned": pinned})

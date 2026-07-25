@@ -63,7 +63,9 @@ class MetaCategory(models.Model):
     order = models.IntegerField(default=0)
 
 
-class CategoryUserPinned(ExportModelOperationsMixin("category_user_pinned"), models.Model):
+class CategoryUserPinned(
+    ExportModelOperationsMixin("category_user_pinned"), models.Model
+):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     user = models.ForeignKey(
         to="auth.User", on_delete=models.CASCADE, related_name="pinned_categories"
