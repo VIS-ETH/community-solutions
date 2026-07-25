@@ -72,7 +72,7 @@ const CategoryCard: React.FC<Props> = ({ category, reload }) => {
             size="xl"
             tabIndex={-1}
             mb={0}
-            pr={16}
+            pr={24}
             lh={1.25}
             lineClamp={3}
           >
