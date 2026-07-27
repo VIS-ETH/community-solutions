@@ -136,6 +136,9 @@ If you want to additionally run the _frontend_ in docker-compose, add the `--pro
 docker compose --profile frontend up
 # or if you ONLY want the frontend without backend:
 # docker compose up react-frontend postgres rclone rclone-create-bucket
+
+# Alternatively, run a prod-like setup where the backend serves the frontend file. This will run the exact container used in prod!
+docker compose -f dockker-compose.yml -f configs/docker-compose.prod.yml up
 ```
 
 If you are too lazy to type it every time, create a `.env` file in this directory and add the line `COMPOSE_PROFILES=frontend`.
@@ -226,10 +229,10 @@ To try, run
 
 ```bash
 # For running frontend in docker:
-docker compose -f docker-compose.yml -f docker-compose.observability.yml --profile frontend up --build
+docker compose -f docker-compose.yml -f configs/docker-compose.observability.yml --profile frontend up --build
 
 # For running frontend locally:
-docker compose -f docker-compose.yml -f docker-compose.observability.yml up --build
+docker compose -f docker-compose.yml -f configs/docker-compose.observability.yml up --build
 yarn start-with-faro
 ```
 

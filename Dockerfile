@@ -22,8 +22,9 @@ RUN <<EOF
   set -euo pipefail
   apt-get update
   apt-get install -y --no-install-recommends \
-    smbclient poppler-utils pgbouncer
+    ca-certificates smbclient poppler-utils pgbouncer
   rm -rf /var/lib/apt/lists/*
+  update-ca-certificates
   useradd -s /bin/sh -m app-user
 EOF
 

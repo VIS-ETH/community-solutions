@@ -9,6 +9,7 @@ services:
       - OTEL_LOG_LEVEL=debug
       - PYROSCOPE_ENDPOINT=http://pyroscope:4040
       - DJANGO_SETTINGS_MODULE=backend.settings
+      - FRONTEND_FARO_URL=http://localhost:12347/collect
 
   react-frontend:
     extends:

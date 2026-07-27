@@ -41,7 +41,6 @@ services:
       retries: 50
 
   community-solutions:
-    platform: linux/amd64 # Required since vseth base image is only available in amd64
     build:
       target: backend-hotreload
       args:

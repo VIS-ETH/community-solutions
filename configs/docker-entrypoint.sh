@@ -13,11 +13,6 @@ set -euo pipefail
   set -a
   SIP_POSTGRES_DB_SERVER=/dev/shm
   SIP_POSTGRES_DB_PORT=6432
-  if [[ "${SIP_POSTGRES_DB_USER:-prod}" == "docker" ]]; then
-    IS_DEBUG=true
-  else
-    IS_DEBUG=false
-  fi
   SIP_POSTGRES_DB_USER=pgbouncer-community-solutions
   SIP_POSTGRES_DB_PW=""
   ALLOWED_HOSTS="${ALLOWED_HOMEORGS:-ethz.ch}"

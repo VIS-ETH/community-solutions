@@ -115,6 +115,7 @@ document_download_safe_extensions = (
     else document_download_safe_extensions.split(",")
 )
 
+FARO_URL = os.environ.get("FRONTEND_FARO_URL")
 FRONTEND_SERVER_DATA = {
     "title_prefix": os.environ.get("FRONTEND_TITLE_PREFIX", ""),
     "title_suffix": os.environ.get("FRONTEND_TITLE_SUFFIX", ""),
@@ -125,6 +126,7 @@ FRONTEND_SERVER_DATA = {
     or "https://account.vseth.ethz.ch/privacy",
     "announcements": announcements,
     "document_download_safe_extensions": document_download_safe_extensions,
+    "faro_url": FARO_URL,
 }
 
 FAVICON_URL = os.environ.get("FRONTEND_FAVICON_URL", "/favicon.ico")
@@ -227,9 +229,9 @@ CONTENT_SECURITY_POLICY = {
             "'self'",
             "https://static.vseth.ethz.ch",
             "https://auth.vseth.ethz.ch",
-            "https://" + s3_host + ":" + s3_port,
-            "http://" + s3_host + ":" + s3_port,
-        ],
+            ("http://" if DEBUG else "https://") + s3_host + ":" + s3_port,
+        ]
+        + ([FARO_URL] if FARO_URL else []),
         "img-src": [
             "'self'",
             "data:",
