@@ -302,7 +302,7 @@ make sure you're on the latest commit of the branch with `git pull`.
 
 # The important bits
 
-The pipeline is managed by [Preview Deployment Manager](https://gitlab.ethz.ch/vseth/0403-isg/sip-sip-apps/pdep). It uses Webhooks to build and deploy upon merge requests. PDep interacts with TeamCity, and schedules the actual jobs on there. As CIT / CAT member you should be able to see the TeamCity project and see pipeline status & logs as well as re-run it. It sometimes happens that the pipeline fails because of Out-Of-Memory issues, you can usually just restart it and run again if that is the case.
+The pipeline is managed by the GitLab CI and [ArgoCD](https://argocd.vis.ethz.ch). Upon updates on merge requests, ArgoCD will take action via the Pull-Request generator. Any merge request labelled with `~preview` will result in a deployment. The current status of such deployments will be given by comments on the merge requests posted by`sys-vis-gitlab`. Any CAT/CIT member should be able to see the corresponding app on ArgoCD and determine failure reasons.
 
 # License
 
