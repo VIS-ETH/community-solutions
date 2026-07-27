@@ -1,8 +1,5 @@
 services:
   community-solutions:
-    extends:
-      file: docker-compose.yml
-      service: community-solutions
     environment:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4317
       - OTEL_SERVICE_VERSION=local-dev
@@ -61,7 +58,7 @@ services:
       - ./configs/local-observability/loki-local-config.yml:/etc/loki/local-config.yml
 
   tempo:
-    image: grafana/tempo:2.10.7
+    image: grafana/tempo:3.0.2
     ports:
       - "3200:3200"
     command: -config.file=/etc/tempo/tempo.yml

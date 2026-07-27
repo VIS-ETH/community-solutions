@@ -28,4 +28,14 @@ if is_module_patched("socket"):
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings")
 
+# Only import instrumentation if we have pyroscope installed.
+# Pyroscope is not available on Windows, so this workaround is necessary
+# to be able to develop ComSol on Windows.
+try:
+    from util import instrumentation  # type: ignore
+
+    instrumentation.initialize()
+except ImportError:
+    pass
+
 application = get_wsgi_application()
