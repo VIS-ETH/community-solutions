@@ -1,3 +1,9 @@
+# This is NOT meant to be immediately deployed to prod
+# It exists to mimmick the actual prod-deployment for local
+# testing and debugging. It runs the same final image
+# than prod, but configurations are not safe for production.
+# Neither are the deployments for used services (S3, DB, ...)
+
 services:
   community-solutions: !override
     build:
