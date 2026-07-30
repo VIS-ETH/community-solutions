@@ -13,7 +13,7 @@ services:
       - "9000:9000"
     volumes:
       - ./data/s3:/data
-      - ./util/rclone.conf:/config/rclone/rclone.conf
+      - ./configs/rclone.conf:/config/rclone/rclone.conf
     command: serve s3 local:/data --addr 0.0.0.0:9000 --allow-origin '*'
     healthcheck:
       test: ["CMD", "rclone", "version"]

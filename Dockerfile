@@ -44,7 +44,7 @@ RUN uv run manage.py export_openapi
 # prevent guincorn from buffering prints from python workers
 ENV PYTHONUNBUFFERED=True
 
-COPY --chown=app-user:app-user ./pgbouncer ./pgbouncer
+COPY --chown=app-user:app-user ./configs/pgbouncer ./pgbouncer
 
 # -------------------------------
 
