@@ -87,6 +87,14 @@ RUN uv run manage.py collectstatic --noinput
 # Backend
 FROM backend AS backend-hotreload
 
+USER root
+# required for backend health check
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl \
+  && rm -rf /var/lib/apt/lists/*
+
+USER app-user
+
 ENV IS_DEBUG=true
 CMD uv run manage.py migrate \
   && uv run manage.py runserver 0:8081

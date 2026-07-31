@@ -35,7 +35,7 @@
     "vite-plugin-svgr": "^4.5.0"
   },
   "scripts": {
-    "start-docker": "vite --no-open --host 0.0.0.0",
+    "start-docker": "yarn codegen && vite --no-open --host 0.0.0.0",
     "start": "yarn codegen && vite",
     "start-with-faro": "VITE_FARO_DISABLE=false vite",
     "build": "yarn codegen && tsc && vite build",
