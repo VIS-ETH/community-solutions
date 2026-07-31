@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from answers.models import ExamUserSolved
 from testing.tests import ComsolTestExamData
 
 
@@ -80,3 +81,44 @@ class TestClaim(ComsolTestExamData):
         )
 
         self.user = self.adminUsers[1]
+
+
+class TestUserSolved(ComsolTestExamData):
+    add_sections = False
+
+    def test_user_solved(self):
+        url = f"/api/exam/{self.exam.filename}/usersolved"
+        self.assertFalse(self.get(url)["user_solved"])
+        self.assertTrue(self.put(url, {})["user_solved"])
+        self.assertTrue(self.get(url)["user_solved"])
+        self.assertEqual(ExamUserSolved.objects.count(), 1)
+        self.assertFalse(self.delete(url)["user_solved"])
+        self.assertFalse(self.get(url)["user_solved"])
+        self.assertEqual(ExamUserSolved.objects.count(), 0)
+
+    def test_mark_solved_twice(self):
+        url = f"/api/exam/{self.exam.filename}/usersolved"
+        self.put(url, {})
+        self.put(url, {})
+        self.assertEqual(ExamUserSolved.objects.count(), 1)
+
+    def test_unmark_not_solved(self):
+        # Unmarking an exam which was never marked is not an error
+        url = f"/api/exam/{self.exam.filename}/usersolved"
+        self.assertFalse(self.delete(url)["user_solved"])
+        self.assertEqual(ExamUserSolved.objects.count(), 0)
+
+    def test_user_solved_is_per_user(self):
+        url = f"/api/exam/{self.exam.filename}/usersolved"
+        self.put(url, {})
+        self.user = self.adminUsers[1]
+        self.assertFalse(self.get(url)["user_solved"])
+        self.put(url, {})
+        self.assertEqual(ExamUserSolved.objects.count(), 2)
+        self.delete(url)
+        self.user = self.adminUsers[0]
+        # Unmarking for one user leaves the marker of the other one intact
+        self.assertTrue(self.get(url)["user_solved"])
+
+    def test_not_existing_exam(self):
+        self.get("/api/exam/nonexistant.pdf/usersolved", status_code=404, as_json=False)
