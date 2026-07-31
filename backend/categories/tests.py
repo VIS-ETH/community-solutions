@@ -1,4 +1,4 @@
-from categories.models import Category, MetaCategory
+from categories.models import Category, CategoryUserPinned, MetaCategory
 from myauth.models import MyUser
 from testing.tests import ComsolTest, ComsolTestExamsData
 
@@ -61,6 +61,63 @@ class TestList(ComsolTest):
         self.assertEqual(len(res), 1)
         self.assertEqual(res[0]["displayname"], self.cat1.displayname)
         self.assertEqual(res[0]["slug"], self.cat1.slug)
+
+
+class TestPinned(ComsolTest):
+    def setUpLogin(self):
+        # Pinning a category does not require admin rights
+        self.login_as(self.nonAdminUsers[0])
+
+    def mySetUp(self):
+        self.cat1 = Category(displayname="Test 1", slug="test1")
+        self.cat1.save()
+        self.cat2 = Category(displayname="Test 2", slug="test2")
+        self.cat2.save()
+
+    def pinned_in_list(self, slug):
+        res = self.get("/api/category/listwithmeta/")["value"]
+        return next(cat["pinned"] for cat in res if cat["slug"] == slug)
+
+    def test_pinned(self):
+        self.assertFalse(self.get("/api/category/test1/pinned/")["category_pinned"])
+        self.assertTrue(self.put("/api/category/test1/pinned/", {})["category_pinned"])
+        self.assertTrue(self.get("/api/category/test1/pinned/")["category_pinned"])
+        self.assertEqual(CategoryUserPinned.objects.count(), 1)
+        self.assertFalse(self.delete("/api/category/test1/pinned/")["category_pinned"])
+        self.assertFalse(self.get("/api/category/test1/pinned/")["category_pinned"])
+        self.assertEqual(CategoryUserPinned.objects.count(), 0)
+
+    def test_pinned_in_listings(self):
+        self.put("/api/category/test1/pinned/", {})
+        # Only the pinned category is marked as such
+        self.assertTrue(self.pinned_in_list("test1"))
+        self.assertFalse(self.pinned_in_list("test2"))
+        self.assertTrue(self.get("/api/category/metadata/test1/")["value"]["pinned"])
+        self.assertFalse(self.get("/api/category/metadata/test2/")["value"]["pinned"])
+
+    def test_pin_twice(self):
+        self.put("/api/category/test1/pinned/", {})
+        self.put("/api/category/test1/pinned/", {})
+        self.assertEqual(CategoryUserPinned.objects.count(), 1)
+
+    def test_unpin_not_pinned(self):
+        # Unpinning a category which was never pinned is not an error
+        self.assertFalse(self.delete("/api/category/test1/pinned/")["category_pinned"])
+        self.assertEqual(CategoryUserPinned.objects.count(), 0)
+
+    def test_pinned_is_per_user(self):
+        self.put("/api/category/test1/pinned/", {})
+        self.user = self.nonAdminUsers[1]
+        self.assertFalse(self.get("/api/category/test1/pinned/")["category_pinned"])
+        self.put("/api/category/test1/pinned/", {})
+        self.assertEqual(CategoryUserPinned.objects.count(), 2)
+        self.delete("/api/category/test1/pinned/")
+        self.user = self.nonAdminUsers[0]
+        # Unpinning for one user leaves the category pinned for the other one
+        self.assertTrue(self.get("/api/category/test1/pinned/")["category_pinned"])
+
+    def test_not_existing_category(self):
+        self.get("/api/category/nonexistant/pinned/", status_code=404, as_json=False)
 
 
 class TestMetadata(ComsolTest):
@@ -156,7 +213,7 @@ class TestListExams(ComsolTestExamsData):
         self.assertTrue(res[2]["public"])
 
 
-class TestMetaCategories(ComsolTest):
+class MetaCategoriesMixin:
     def mySetUp(self):
         self.cat1 = Category(displayname="Test 1", slug="test1")
         self.cat1.save()
@@ -170,6 +227,8 @@ class TestMetaCategories(ComsolTest):
             meta.save()
             self.meta2.append(meta)
 
+
+class TestMetaCategories(MetaCategoriesMixin, ComsolTest):
     def test_list_meta(self):
         res = self.get("/api/category/listmetacategories/")["value"]
         self.assertEqual(len(res), 1)
@@ -242,6 +301,194 @@ class TestMetaCategories(ComsolTest):
                 "order": 9,
             },
         )
+
+    def test_edit_meta1(self):
+        self.post(
+            "/api/category/editmeta1/",
+            {"oldmeta1": "Test Meta 1", "newmeta1": "Renamed Meta 1"},
+        )
+        res = self.get("/api/category/listmetacategories/")["value"]
+        self.assertEqual(len(res), 1)
+        self.assertEqual(res[0]["displayname"], "Renamed Meta 1")
+        # Renaming must not detach the children or their categories
+        self.assertEqual(len(res[0]["meta2"]), 3)
+        self.assertEqual(res[0]["meta2"][0]["categories"], ["test1"])
+        self.assertFalse(
+            MetaCategory.objects.filter(displayname="Test Meta 1").exists()
+        )
+
+    def test_edit_meta1_existing(self):
+        other = MetaCategory(displayname="Other Meta 1", parent=None)
+        other.save()
+        self.post(
+            "/api/category/editmeta1/",
+            {"oldmeta1": "Test Meta 1", "newmeta1": "Other Meta 1"},
+            status_code=400,
+        )
+        self.meta1.refresh_from_db()
+        self.assertEqual(self.meta1.displayname, "Test Meta 1")
+
+    def test_edit_meta1_not_existing(self):
+        self.post(
+            "/api/category/editmeta1/",
+            {"oldmeta1": "nonexistant", "newmeta1": "Renamed Meta 1"},
+            status_code=404,
+        )
+
+    def test_edit_meta2(self):
+        self.post(
+            "/api/category/editmeta2/",
+            {
+                "meta1": "Test Meta 1",
+                "newmeta1": "Test Meta 1",
+                "oldmeta2": "Test Meta 2.0",
+                "newmeta2": "Renamed Meta 2",
+            },
+        )
+        res = self.get("/api/category/listmetacategories/")["value"]
+        self.assertEqual(len(res), 1)
+        self.assertEqual(len(res[0]["meta2"]), 3)
+        # meta2 entries are listed sorted by (order, displayname)
+        self.assertEqual(res[0]["meta2"][0]["displayname"], "Renamed Meta 2")
+        self.assertEqual(res[0]["meta2"][0]["categories"], ["test1"])
+
+    def test_edit_meta2_new_parent(self):
+        self.post(
+            "/api/category/editmeta2/",
+            {
+                "meta1": "Test Meta 1",
+                "newmeta1": "Test Meta 1b",
+                "oldmeta2": "Test Meta 2.0",
+                "newmeta2": "Test Meta 2.0",
+            },
+        )
+        res = self.get("/api/category/listmetacategories/")["value"]
+        self.assertEqual(len(res), 2)
+        self.assertEqual(res[0]["displayname"], "Test Meta 1")
+        self.assertEqual(len(res[0]["meta2"]), 2)
+        # The new parent is created on the fly
+        self.assertEqual(res[1]["displayname"], "Test Meta 1b")
+        self.assertEqual(len(res[1]["meta2"]), 1)
+        self.assertEqual(res[1]["meta2"][0]["displayname"], "Test Meta 2.0")
+
+    def test_edit_meta2_new_parent_all(self):
+        for meta2 in self.meta2:
+            self.post(
+                "/api/category/editmeta2/",
+                {
+                    "meta1": "Test Meta 1",
+                    "newmeta1": "Test Meta 1b",
+                    "oldmeta2": meta2.displayname,
+                    "newmeta2": meta2.displayname,
+                },
+            )
+        # The old parent is removed once it has no children left
+        self.assertFalse(
+            MetaCategory.objects.filter(displayname="Test Meta 1").exists()
+        )
+        res = self.get("/api/category/listmetacategories/")["value"]
+        self.assertEqual(len(res), 1)
+        self.assertEqual(res[0]["displayname"], "Test Meta 1b")
+        self.assertEqual(len(res[0]["meta2"]), 3)
+
+    def test_edit_meta2_existing(self):
+        self.post(
+            "/api/category/editmeta2/",
+            {
+                "meta1": "Test Meta 1",
+                "newmeta1": "Test Meta 1",
+                "oldmeta2": "Test Meta 2.0",
+                "newmeta2": "Test Meta 2.1",
+            },
+            status_code=400,
+        )
+        self.meta2[0].refresh_from_db()
+        self.assertEqual(self.meta2[0].displayname, "Test Meta 2.0")
+
+    def test_edit_meta2_not_existing(self):
+        self.post(
+            "/api/category/editmeta2/",
+            {
+                "meta1": "Test Meta 1",
+                "newmeta1": "Test Meta 1",
+                "oldmeta2": "nonexistant",
+                "newmeta2": "Renamed Meta 2",
+            },
+            status_code=404,
+        )
+
+    def test_delete_meta1(self):
+        self.post("/api/category/deletemeta1/", {"meta1": "Test Meta 1"})
+        # Deleting a meta1 cascades to its children
+        self.assertEqual(MetaCategory.objects.count(), 0)
+        res = self.get("/api/category/listmetacategories/")["value"]
+        self.assertEqual(len(res), 0)
+        # The categories themselves are not affected
+        self.assertTrue(Category.objects.filter(slug="test1").exists())
+
+    def test_delete_meta1_not_existing(self):
+        self.post(
+            "/api/category/deletemeta1/", {"meta1": "nonexistant"}, status_code=404
+        )
+
+    def test_delete_meta2(self):
+        self.post(
+            "/api/category/deletemeta2/",
+            {"meta1": "Test Meta 1", "meta2": "Test Meta 2.0"},
+        )
+        self.assertEqual(MetaCategory.objects.count(), 3)
+        res = self.get("/api/category/listmetacategories/")["value"]
+        self.assertEqual(len(res[0]["meta2"]), 2)
+        self.assertTrue(Category.objects.filter(slug="test1").exists())
+
+    def test_delete_meta2_not_existing(self):
+        self.post(
+            "/api/category/deletemeta2/",
+            {"meta1": "Test Meta 1", "meta2": "nonexistant"},
+            status_code=404,
+        )
+
+
+class TestMetaCategoriesNonadmin(MetaCategoriesMixin, ComsolTest):
+    def setUpLogin(self):
+        self.login_as(self.nonAdminUsers[0])
+
+    def test_edit_meta1(self):
+        self.post(
+            "/api/category/editmeta1/",
+            {"oldmeta1": "Test Meta 1", "newmeta1": "Renamed Meta 1"},
+            status_code=403,
+        )
+        self.meta1.refresh_from_db()
+        self.assertEqual(self.meta1.displayname, "Test Meta 1")
+
+    def test_edit_meta2(self):
+        self.post(
+            "/api/category/editmeta2/",
+            {
+                "meta1": "Test Meta 1",
+                "newmeta1": "Test Meta 1",
+                "oldmeta2": "Test Meta 2.0",
+                "newmeta2": "Renamed Meta 2",
+            },
+            status_code=403,
+        )
+        self.meta2[0].refresh_from_db()
+        self.assertEqual(self.meta2[0].displayname, "Test Meta 2.0")
+
+    def test_delete_meta1(self):
+        self.post(
+            "/api/category/deletemeta1/", {"meta1": "Test Meta 1"}, status_code=403
+        )
+        self.assertEqual(MetaCategory.objects.count(), 4)
+
+    def test_delete_meta2(self):
+        self.post(
+            "/api/category/deletemeta2/",
+            {"meta1": "Test Meta 1", "meta2": "Test Meta 2.0"},
+            status_code=403,
+        )
+        self.assertEqual(MetaCategory.objects.count(), 4)
 
 
 # TODO: test whether the counts returned in list_exams and withmeta are correct
