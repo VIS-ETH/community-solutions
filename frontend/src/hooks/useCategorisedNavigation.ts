@@ -51,7 +51,10 @@ const useCategorisedNavigation = <T extends Record<string, unknown[]>>(
     // props
     const newType = displayOrder.find(k => items[k].length > 0);
     const newIndex = 0;
-    if (currentSelection.type !== newType || currentSelection.index !== newIndex) {
+    if (
+      currentSelection.type !== newType ||
+      currentSelection.index !== newIndex
+    ) {
       setCurrentSelection({
         type: displayOrder.find(k => items[k].length > 0),
         index: 0,

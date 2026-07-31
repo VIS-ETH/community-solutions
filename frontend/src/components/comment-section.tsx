@@ -24,9 +24,11 @@ const CommentSectionComponent: React.FC<Props> = ({
   onDraftDelete,
 }) => {
   const [expandedByUser, setExpandedByUser] = useState(false);
-  const {search: searchParams} = useLocation();
+  const { search: searchParams } = useLocation();
   const paramCommentId = new URLSearchParams(searchParams).get("comment");
-  const expandedByURL = paramCommentId && answer.comments.map((item) => item.longId).includes(paramCommentId);
+  const expandedByURL =
+    paramCommentId &&
+    answer.comments.map(item => item.longId).includes(paramCommentId);
   const expanded = expandedByUser || expandedByURL;
 
   return (

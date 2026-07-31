@@ -6,14 +6,13 @@ import {
 } from "@mantine/core";
 import { IconFileUpload, IconX } from "@tabler/icons-react";
 import React, { useRef } from "react";
-interface FileInputProps
-  extends Omit<
-    React.DetailedHTMLProps<
-      React.InputHTMLAttributes<HTMLInputElement>,
-      HTMLInputElement
-    >,
-    "value" | "onChange" | "contentEditable"
-  > {
+interface FileInputProps extends Omit<
+  React.DetailedHTMLProps<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    HTMLInputElement
+  >,
+  "value" | "onChange" | "contentEditable"
+> {
   value?: File;
   onChange: (newFile?: File) => void;
 }

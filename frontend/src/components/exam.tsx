@@ -142,8 +142,7 @@ const Exam: React.FC<Props> = React.memo(
       if (answerId && answerId.length > 0) {
         // If an element already exists with that id, the browser will
         // automatically scroll there.
-        if (document.getElementById(answerId))
-          return;
+        if (document.getElementById(answerId)) return;
 
         fetchGet(`/api/exam/answer/${answerId}/`)
           .then(res => {

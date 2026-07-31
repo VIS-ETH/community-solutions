@@ -43,17 +43,16 @@ const TopHeader: React.FC<Props> = ({
           />
         </Link>
         <div className={classes.items}>
-          {translate(
-            organizationNav ?? globalNav,
-            selectedLanguage,
-          ).map((item, i) => (
-            <ExternalNavElement
-              item={item}
-              mobile={false}
-              key={i}
-              isExternal={true}
-            />
-          ))}
+          {translate(organizationNav ?? globalNav, selectedLanguage).map(
+            (item, i) => (
+              <ExternalNavElement
+                item={item}
+                mobile={false}
+                key={i}
+                isExternal={true}
+              />
+            ),
+          )}
           {languages ? (
             <ExternalNavElement
               item={{
@@ -69,7 +68,7 @@ const TopHeader: React.FC<Props> = ({
               isExternal={true}
             />
           ) : undefined}
-          <ColorSchemeToggle/>
+          <ColorSchemeToggle />
         </div>
       </Container>
     </Container>

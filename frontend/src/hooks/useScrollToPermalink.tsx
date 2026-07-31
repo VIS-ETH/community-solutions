@@ -10,7 +10,7 @@ const JUMP_TIMEOUT = 40_000;
  * **Should only be used once in the whole render tree.**
  */
 export const useScrollToPermalink = () => {
-  const {search} = useLocation();
+  const { search } = useLocation();
   const searchParams = new URLSearchParams(search);
   const answer = searchParams.get("answer");
   const comment = searchParams.get("comment");
@@ -31,7 +31,8 @@ export const useScrollToPermalink = () => {
 
       // Highlight the background for a split second.
       const oldColor = element.style.backgroundColor;
-      element.style.backgroundColor = "color-mix(in srgb, var(--mantine-primary-color-filled) 30%, transparent)";
+      element.style.backgroundColor =
+        "color-mix(in srgb, var(--mantine-primary-color-filled) 30%, transparent)";
 
       // Request the browser to render the color at least one frame before
       // we apply the normal background color, otherwise we won't see it

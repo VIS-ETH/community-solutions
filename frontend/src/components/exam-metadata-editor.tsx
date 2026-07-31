@@ -15,7 +15,12 @@ import {
   Title,
 } from "@mantine/core";
 import React, { useEffect, useState } from "react";
-import { downloadIndirect, fetchGet, fetchPost, fetchPut } from "../api/fetch-utils";
+import {
+  downloadIndirect,
+  fetchGet,
+  fetchPost,
+  fetchPut,
+} from "../api/fetch-utils";
 import { loadCategories, loadExamTypes } from "../api/hooks";
 import useInitialState from "../hooks/useInitialState";
 import { Attachment, ExamMetaData } from "../interfaces";
@@ -58,7 +63,7 @@ const addAttachment = async (exam: string, displayname: string, file: File) => {
   ).filename as string;
 };
 const editAttachment = async (filename: string, newdisplayname: string) => {
-  await fetchPut(`/api/filestore/edit/${filename}/`, {newdisplayname});
+  await fetchPut(`/api/filestore/edit/${filename}/`, { newdisplayname });
 };
 const removeAttachment = async (filename: string) => {
   await fetchPost(`/api/filestore/remove/${filename}/`, {});
@@ -113,7 +118,9 @@ const applyChanges = async (
     }
   }
   for (const attachment of oldMetaData.attachments) {
-    const foundAttachment = newMetaData.attachments.find(otherAttachment => otherAttachment.filename === attachment.filename);
+    const foundAttachment = newMetaData.attachments.find(
+      otherAttachment => otherAttachment.filename === attachment.filename,
+    );
     if (!foundAttachment) {
       await removeAttachment(attachment.filename);
       continue;
@@ -122,7 +129,10 @@ const applyChanges = async (
       newAttachments.push(attachment);
     } else {
       await editAttachment(attachment.filename, foundAttachment.displayname);
-      newAttachments.push({ displayname: foundAttachment.displayname, filename: attachment.filename});
+      newAttachments.push({
+        displayname: foundAttachment.displayname,
+        filename: attachment.filename,
+      });
     }
   }
 
