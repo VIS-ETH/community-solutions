@@ -3,10 +3,13 @@ from django.db.models import Value as V
 from django.db.models.expressions import Case, When
 from django.db.models.functions import Concat
 from django.shortcuts import get_object_or_404
+from ninja import Router
 
 from myauth import auth_check
 from myauth.models import MyUser
 from util import func_cache, response
+
+router = Router(tags=["Scoreboard"])
 
 
 def get_user_scores(user, res):
@@ -101,9 +104,9 @@ def get_scoreboard_top(scoretype, limit):
     )
 
 
-@response.request_get()
+@router.get("/userinfo/{username}/")
 @auth_check.require_login
-def userinfo(request, username):
+def userinfo(request, username: str):
     user = get_object_or_404(MyUser.objects.select_related("scores"), username=username)
     res = {
         "username": username,
@@ -113,10 +116,9 @@ def userinfo(request, username):
     return response.success(value=res)
 
 
-@response.request_get()
+@router.get("/top/{scoretype}/")
 @auth_check.require_login
-def scoreboard_top(request, scoretype):
-    limit = int(request.GET.get("limit", "10"))
+def scoreboard_top(request, scoretype: str, limit: int = 10):
     if limit > 10 and not auth_check.has_admin_rights(request):
         return response.not_allowed()
     return response.success(value=get_scoreboard_top(scoretype, limit))
