@@ -16,7 +16,9 @@ class PaymentRequest(Schema):
     username: str
 
 
-@router.post("/pay/", response={200: None, 400: response.ErrorSchema})
+@router.post(
+    "/pay/", response={200: None, 400: response.ErrorSchema}, operation_id="pay"
+)
 @auth_check.require_admin
 def pay(request, data: Form[PaymentRequest]):
     user = get_object_or_404(MyUser, username=data.username)
@@ -25,7 +27,11 @@ def pay(request, data: Form[PaymentRequest]):
     return response.success()
 
 
-@router.post("/remove/{oid}/", response={200: None, 400: response.ErrorSchema})
+@router.post(
+    "/remove/{oid}/",
+    response={200: None, 400: response.ErrorSchema},
+    operation_id="removePayment",
+)
 @auth_check.require_admin
 def remove(request, oid: int):
     payment = get_object_or_404(Payment, pk=oid)
@@ -33,7 +39,11 @@ def remove(request, oid: int):
     return response.success()
 
 
-@router.post("/refund/{oid}/", response={200: None, 400: response.ErrorSchema})
+@router.post(
+    "/refund/{oid}/",
+    response={200: None, 400: response.ErrorSchema},
+    operation_id="refundPayment",
+)
 @auth_check.require_admin
 def refund(request, oid: int):
     payment = get_object_or_404(Payment, pk=oid)
@@ -78,6 +88,7 @@ def get_user_payments(user):
 @router.get(
     "/query/{username}/",
     response={200: ValueWrapped[list[UserPayments]], 404: response.ErrorSchema},
+    operation_id="getUserPayments",
 )
 @auth_check.require_admin
 def query(request, username: str):
@@ -85,7 +96,11 @@ def query(request, username: str):
     return response.success(value=get_user_payments(user))
 
 
-@router.get("/me/", response={200: ValueWrapped[list[UserPayments]]})
+@router.get(
+    "/me/",
+    response={200: ValueWrapped[list[UserPayments]]},
+    operation_id="getMyPayments",
+)
 @auth_check.require_login
 def get_me(request):
     return response.success(value=get_user_payments(request.user))
@@ -94,6 +109,7 @@ def get_me(request):
 @router.post(
     "/markexamchecked/{filename}/",
     response={200: None, 400: response.ErrorSchema},
+    operation_id="markExamChecked",
 )
 @auth_check.require_admin
 def mark_exam_checked(request, filename: str):
