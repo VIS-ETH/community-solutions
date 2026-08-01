@@ -1,3 +1,8 @@
+include:
+  - project: vseth/1100-fv/1116-vis/cit/protected-ci-cd
+    ref: main
+    file: defaults/docker.gitlab-ci.yml
+
 variables:
   KUBERNETES_CPU_LIMIT: "8"
   KUBERNETES_CPU_REQUEST: "1500m"
@@ -173,3 +178,7 @@ stages:
   needs:
     - artifacts: true
       job: "Generate OpenAPI"
+
+"Build Sign Push":
+  stage: Build
+  needs: []
