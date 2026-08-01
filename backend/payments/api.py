@@ -54,7 +54,7 @@ def refund(request, oid: int):
     return response.success()
 
 
-class UserPayments(Schema):
+class PaymentInfo(Schema):
     oid: int
     active: bool
     payment_time: timezone.datetime
@@ -88,7 +88,7 @@ def get_user_payments(user):
 @router.get(
     "/query/{username}/",
     response={
-        200: ValueWrapped[list[UserPayments]],
+        200: ValueWrapped[list[PaymentInfo]],
         404: response.ErrorSchema,
         400: response.ErrorSchema,
     },
