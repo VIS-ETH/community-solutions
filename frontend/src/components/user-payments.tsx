@@ -3,14 +3,14 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useUser } from "../auth";
 import GlobalConsts from "../globalconsts";
-import {
-  useAddPayments,
-  usePayments,
-  useRefundPayment,
-  useRemovePayment,
-} from "../api/hooks";
 import Grid from "./grid";
 import { lightFormat, parseISO } from "date-fns";
+import {
+  useGetPayments,
+  useRefundPayment,
+  useRemovePayment,
+  usePay,
+} from "../api/hooks/payments";
 
 interface UserPaymentsProps {
   username: string;
@@ -18,19 +18,36 @@ interface UserPaymentsProps {
 const UserPayments: React.FC<UserPaymentsProps> = ({ username }) => {
   const user = useUser()!;
   const isAdmin = user.isAdmin;
-  const isMyself = username === user.username;
-  const [paymentsError, _paymentsLoading, payments, reloadPayments] =
-    usePayments(username, isMyself);
-  const [refundError, _refundLoading, refund] =
-    useRefundPayment(reloadPayments);
-  const [removeError, _removeLoading, remove] =
-    useRemovePayment(reloadPayments);
-  const [addError, _addLoading, add] = useAddPayments(reloadPayments);
+  const {
+    error: paymentsError,
+    data: payments,
+    refetch: reloadPayments,
+  } = useGetPayments(username, {
+    query: {
+      select: ({ value: data }) => data,
+    },
+  });
+  const { error: refundError, mutate: refund } = useRefundPayment({
+    mutation: {
+      onSuccess: async () => reloadPayments(),
+    },
+  });
+  const { error: removeError, mutate: remove } = useRemovePayment({
+    mutation: {
+      onSuccess: async () => reloadPayments(),
+    },
+  });
+  const { error: addError, mutate: add } = usePay({
+    mutation: {
+      onSuccess: async () => reloadPayments(),
+    },
+  });
+
   const error = paymentsError ?? refundError ?? removeError ?? addError;
-  const [openPayment, setOpenPayment] = useState("");
+  const [openPayment, setOpenPayment] = useState<number | null>(null);
   return (
     <div>
-      {error && <Alert color="red">{error.toString()}</Alert>}
+      {error && <Alert color="red">{error.err}</Alert>}
       <h3>Paid Oral Exams</h3>
       {payments && (payments.length > 0 || isAdmin) && (
         <>
@@ -49,7 +66,7 @@ const UserPayments: React.FC<UserPaymentsProps> = ({ username }) => {
           <Grid>
             {payments.map(payment =>
               openPayment === payment.oid ? (
-                <List key={payment.oid} onClick={() => setOpenPayment("")}>
+                <List key={payment.oid} onClick={() => setOpenPayment(null)}>
                   <div>
                     Payment Time:{" "}
                     {lightFormat(
@@ -86,11 +103,14 @@ const UserPayments: React.FC<UserPaymentsProps> = ({ username }) => {
                   {isAdmin && (
                     <div>
                       {!payment.refund_time && (
-                        <Button onClick={() => refund(payment.oid)} mr="xs">
+                        <Button
+                          onClick={() => refund({ oid: payment.oid })}
+                          mr="xs"
+                        >
                           Mark Refunded
                         </Button>
                       )}
-                      <Button onClick={() => remove(payment.oid)}>
+                      <Button onClick={() => remove({ oid: payment.oid })}>
                         Remove Payment
                       </Button>
                     </div>
@@ -115,7 +135,7 @@ const UserPayments: React.FC<UserPaymentsProps> = ({ username }) => {
         </>
       )}
       {isAdmin && !payments?.find(payment => payment.active) && (
-        <Button onClick={() => add(username)}>Add Payment</Button>
+        <Button onClick={() => add({ data: { username } })}>Add Payment</Button>
       )}
     </div>
   );
