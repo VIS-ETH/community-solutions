@@ -7,6 +7,7 @@ from myauth import auth_check
 from myauth.models import MyUser
 from payments.models import Payment
 from util import response
+from util.schemas import ValueWrapped
 
 router = Router(tags=["Payments"])
 
@@ -15,7 +16,7 @@ class PaymentRequest(Schema):
     username: str
 
 
-@router.post("/pay/")
+@router.post("/pay/", response={200: None, 400: response.ErrorSchema})
 @auth_check.require_admin
 def pay(request, data: Form[PaymentRequest]):
     user = get_object_or_404(MyUser, username=data.username)
@@ -24,7 +25,7 @@ def pay(request, data: Form[PaymentRequest]):
     return response.success()
 
 
-@router.post("/remove/{oid}/")
+@router.post("/remove/{oid}/", response={200: None, 400: response.ErrorSchema})
 @auth_check.require_admin
 def remove(request, oid: int):
     payment = get_object_or_404(Payment, pk=oid)
@@ -32,7 +33,7 @@ def remove(request, oid: int):
     return response.success()
 
 
-@router.post("/refund/{oid}/")
+@router.post("/refund/{oid}/", response={200: None, 400: response.ErrorSchema})
 @auth_check.require_admin
 def refund(request, oid: int):
     payment = get_object_or_404(Payment, pk=oid)
@@ -43,19 +44,29 @@ def refund(request, oid: int):
     return response.success()
 
 
+class UserPayments(Schema):
+    oid: int
+    active: bool
+    payment_time: timezone.datetime
+    check_time: timezone.datetime | None
+    refund_time: timezone.datetime | None
+    valid_until: timezone.datetime | None
+    uploaded_filename: str | None
+
+
 def get_user_payments(user):
     res = [
-        {
-            "oid": payment.id,
-            "active": payment.valid(),
-            "payment_time": payment.payment_time,
-            "check_time": payment.check_time,
-            "refund_time": payment.refund_time,
-            "valid_until": payment.valid_until(),
-            "uploaded_filename": payment.uploaded_transcript.filename
+        UserPayments(
+            oid=payment.id,
+            active=payment.valid(),
+            payment_time=payment.payment_time,
+            check_time=payment.check_time,
+            refund_time=payment.refund_time,
+            valid_until=payment.valid_until(),
+            uploaded_filename=payment.uploaded_transcript.filename
             if payment.uploaded_transcript
             else None,
-        }
+        )
         for payment in sorted(
             Payment.objects.filter(user=user),
             key=lambda x: (not x.valid(), x.payment_time),
@@ -64,20 +75,26 @@ def get_user_payments(user):
     return res
 
 
-@router.get("/query/{username}/")
+@router.get(
+    "/query/{username}/",
+    response={200: ValueWrapped[list[UserPayments]], 404: response.ErrorSchema},
+)
 @auth_check.require_admin
 def query(request, username: str):
     user = get_object_or_404(MyUser, username=username)
     return response.success(value=get_user_payments(user))
 
 
-@router.get("/me/")
+@router.get("/me/", response={200: ValueWrapped[list[UserPayments]]})
 @auth_check.require_login
 def get_me(request):
     return response.success(value=get_user_payments(request.user))
 
 
-@router.post("/markexamchecked/{filename}/")
+@router.post(
+    "/markexamchecked/{filename}/",
+    response={200: None, 400: response.ErrorSchema},
+)
 @auth_check.require_admin
 def mark_exam_checked(request, filename: str):
     exam = get_object_or_404(Exam, filename=filename)
