@@ -105,7 +105,9 @@ class UserInfoResponse(Schema):
 
 
 @router.get(
-    "/userinfo/{username}/", response={200: ValueWrapped[UserInfoResponse], 404: None}
+    "/userinfo/{username}/",
+    response={200: ValueWrapped[UserInfoResponse], 404: None},
+    operation_id="getUserScores",
 )
 @auth_check.require_login
 def userinfo(request, username: str):
@@ -119,7 +121,9 @@ def userinfo(request, username: str):
 
 
 @router.get(
-    "/top/{scoretype}/", response={200: ValueWrapped[list[UserInfoResponse]], 404: None}
+    "/top/{scoretype}/",
+    response={200: ValueWrapped[list[UserInfoResponse]], 404: None},
+    operation_id="getScoreboardTop",
 )
 @auth_check.require_login
 def scoreboard_top(request, scoretype: str, limit: int = 10):

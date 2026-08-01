@@ -13,7 +13,6 @@ import {
   PaymentInfo,
   ServerCutResponse,
   SingleComment,
-  UserInfo,
   SearchResponse,
   AnswerKind,
 } from "../interfaces";
@@ -26,18 +25,6 @@ const RAPID_SUCCESSIVE_REQUESTS_DEDUPE_INTERVAL = 500; // milliseconds
 
 export declare type Mutate<R> = (x: R | undefined | ((data: R) => R)) => void;
 
-const loadUserInfo = async (username: string) => {
-  return (await fetchGet(`/api/scoreboard/userinfo/${username}/`))
-    .value as UserInfo;
-};
-
-export const useUserInfo = (username: string) => {
-  const { error, loading, data } = useRequest(() => loadUserInfo(username), {
-    refreshDeps: [username],
-    cacheKey: `userinfo-${username}`,
-  });
-  return [error, loading, data] as const;
-};
 const loadEnabledNotifications = async (isMyself: boolean) => {
   if (isMyself) {
     return new Set<number>(
