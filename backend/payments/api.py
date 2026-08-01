@@ -66,17 +66,17 @@ class UserPayments(Schema):
 
 def get_user_payments(user):
     res = [
-        UserPayments(
-            oid=payment.id,
-            active=payment.valid(),
-            payment_time=payment.payment_time,
-            check_time=payment.check_time,
-            refund_time=payment.refund_time,
-            valid_until=payment.valid_until(),
-            uploaded_filename=payment.uploaded_transcript.filename
+        {
+            "oid": payment.id,
+            "active": payment.valid(),
+            "payment_time": payment.payment_time,
+            "check_time": payment.check_time,
+            "refund_time": payment.refund_time,
+            "valid_until": payment.valid_until(),
+            "uploaded_filename": payment.uploaded_transcript.filename
             if payment.uploaded_transcript
             else None,
-        )
+        }
         for payment in sorted(
             Payment.objects.filter(user=user),
             key=lambda x: (not x.valid(), x.payment_time),
@@ -87,23 +87,21 @@ def get_user_payments(user):
 
 @router.get(
     "/query/{username}/",
-    response={200: ValueWrapped[list[UserPayments]], 404: response.ErrorSchema},
-    operation_id="getUserPayments",
-)
-@auth_check.require_admin
-def query(request, username: str):
-    user = get_object_or_404(MyUser, username=username)
-    return response.success(value=get_user_payments(user))
-
-
-@router.get(
-    "/me/",
-    response={200: ValueWrapped[list[UserPayments]]},
-    operation_id="getMyPayments",
+    response={
+        200: ValueWrapped[list[UserPayments]],
+        404: response.ErrorSchema,
+        400: response.ErrorSchema,
+    },
+    operation_id="getPayments",
 )
 @auth_check.require_login
-def get_me(request):
-    return response.success(value=get_user_payments(request.user))
+def query(request, username: str):
+    # If username not myself, require admin
+    if not auth_check.has_admin_rights(request) and request.user.username != username:
+        return response.not_allowed()
+
+    user = get_object_or_404(MyUser, username=username)
+    return response.success(value=get_user_payments(user))
 
 
 @router.post(

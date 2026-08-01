@@ -17,10 +17,10 @@ class TestPayment(ComsolTest):
         self.assertEqual(len(res), 1)
 
     def test_me(self):
-        res = self.get("/api/payment/me/")["value"]
+        res = self.get(f"/api/payment/query/{self.user['username']}/")["value"]
         self.assertEqual(len(res), 0)
         self.post("/api/payment/pay/", {"username": self.user["username"]})
-        res = self.get("/api/payment/me/")["value"]
+        res = self.get(f"/api/payment/query/{self.user['username']}/")["value"]
         self.assertEqual(len(res), 1)
 
     def test_remove(self):
