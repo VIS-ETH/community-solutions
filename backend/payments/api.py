@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from ninja import Form, Router, Schema
 
 from answers.models import Exam
 from myauth import auth_check
@@ -7,27 +8,33 @@ from myauth.models import MyUser
 from payments.models import Payment
 from util import response
 
+router = Router(tags=["Payments"])
 
-@response.request_post("username")
+
+class PaymentRequest(Schema):
+    username: str
+
+
+@router.post("/pay/")
 @auth_check.require_admin
-def pay(request):
-    user = get_object_or_404(MyUser, username=request.POST["username"])
+def pay(request, data: Form[PaymentRequest]):
+    user = get_object_or_404(MyUser, username=data.username)
     payment = Payment(user=user)
     payment.save()
     return response.success()
 
 
-@response.request_post()
+@router.post("/remove/{oid}/")
 @auth_check.require_admin
-def remove(request, oid):
+def remove(request, oid: int):
     payment = get_object_or_404(Payment, pk=oid)
     payment.delete()
     return response.success()
 
 
-@response.request_post()
+@router.post("/refund/{oid}/")
 @auth_check.require_admin
-def refund(request, oid):
+def refund(request, oid: int):
     payment = get_object_or_404(Payment, pk=oid)
     if payment.refund_time:
         return response.not_possible("Already refundend")
@@ -57,22 +64,22 @@ def get_user_payments(user):
     return res
 
 
-@response.request_get()
+@router.get("/query/{username}/")
 @auth_check.require_admin
-def query(request, username):
+def query(request, username: str):
     user = get_object_or_404(MyUser, username=username)
     return response.success(value=get_user_payments(user))
 
 
-@response.request_get()
+@router.get("/me/")
 @auth_check.require_login
 def get_me(request):
     return response.success(value=get_user_payments(request.user))
 
 
-@response.request_post()
+@router.post("/markexamchecked/{filename}/")
 @auth_check.require_admin
-def mark_exam_checked(request, filename):
+def mark_exam_checked(request, filename: str):
     exam = get_object_or_404(Exam, filename=filename)
     if not exam.is_oral_transcript:
         return response.not_possible("Exam is not an oral transcript")

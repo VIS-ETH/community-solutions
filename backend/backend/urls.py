@@ -45,6 +45,7 @@ api.add_router("image/", "images.api.router")
 api.add_router("user/", "users.api.router")
 api.add_router("document/", "documents.api.router")
 api.add_router("scoreboard/", "scoreboard.api.router")
+api.add_router("payment/", "payments.api.router")
 
 urlpatterns = [
     path("", include("health.urls")),
@@ -58,7 +59,6 @@ urlpatterns = [
     path("api/filestore/", include("filestore.urls")),
     path("api/auth/", include("myauth.urls")),
     path("api/notification/", include("notifications.urls")),
-    path("api/payment/", include("payments.urls")),
     re_path(
         r"^static/(?P<path>.*)$",
         views.cached_serve,
