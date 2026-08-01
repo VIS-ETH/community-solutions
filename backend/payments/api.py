@@ -60,7 +60,7 @@ class UserPayments(Schema):
     payment_time: timezone.datetime
     check_time: timezone.datetime | None
     refund_time: timezone.datetime | None
-    valid_until: timezone.datetime | None
+    valid_until: timezone.datetime
     uploaded_filename: str | None
 
 
