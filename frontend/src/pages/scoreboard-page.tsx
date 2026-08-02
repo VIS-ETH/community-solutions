@@ -1,4 +1,4 @@
-import { useLocalStorageState, useRequest } from "ahooks";
+import { useLocalStorageState } from "ahooks";
 import {
   Anchor,
   Alert,
@@ -13,11 +13,10 @@ import {
 import React from "react";
 import { Link } from "react-router-dom";
 import LoadingOverlay from "../components/loading-overlay";
-import { fetchGet } from "../api/fetch-utils";
-import { UserInfo } from "../interfaces";
 import useTitle from "../hooks/useTitle";
 import { IconArrowsUpDown, IconChevronDown } from "@tabler/icons-react";
 import classes from "./scoreboard.module.css";
+import { useGetScoreboardTop } from "../api/hooks/scoreboard";
 
 type Mode =
   | "score"
@@ -26,10 +25,6 @@ type Mode =
   | "score_cuts"
   | "score_legacy"
   | "score_documents";
-const loadScoreboard = async (scoretype: Mode) => {
-  return (await fetchGet(`/api/scoreboard/top/${scoretype}/`))
-    .value as UserInfo[];
-};
 
 interface ThProps {
   children: React.ReactNode;
@@ -65,15 +60,22 @@ const Scoreboard: React.FC = () => {
     "scoreboard-mode",
     "score",
   );
-  const { error, loading, data } = useRequest(() => loadScoreboard(mode), {
-    refreshDeps: [mode],
-    cacheKey: `scoreboard-${mode}`,
-  });
+
+  const { isError, error, isPending, data } = useGetScoreboardTop(
+    mode,
+    {},
+    {
+      query: {
+        select: data => data.value,
+      },
+    },
+  );
+
   return (
     <Container size="xl">
       <h1>Scoreboard</h1>
-      {error && <Alert color="red">{error.message}</Alert>}
-      <LoadingOverlay visible={loading} />
+      {isError && <Alert color="red">{String(error)}</Alert>}
+      <LoadingOverlay visible={isPending} />
       <div className={classes.overflowScroll}>
         <Table highlightOnHover verticalSpacing="md" fz="md">
           <Table.Thead>

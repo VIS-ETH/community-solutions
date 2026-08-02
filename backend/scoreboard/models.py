@@ -14,6 +14,7 @@ class UserScore(models.Model):
     cuts = models.IntegerField()
     legacy = models.IntegerField()
     official = models.IntegerField()
+    score = models.IntegerField()
 
     class Meta:
         managed = False

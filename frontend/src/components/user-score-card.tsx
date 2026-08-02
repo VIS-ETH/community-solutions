@@ -10,7 +10,6 @@ import {
 import React from "react";
 import { logout } from "../api/fetch-utils";
 import { useSetUser, useUser } from "../auth";
-import { UserInfo } from "../interfaces";
 import {
   IconChevronUp,
   IconFile,
@@ -22,11 +21,12 @@ import {
   IconTrophy,
   TablerIcon,
 } from "@tabler/icons-react";
+import { UserInfoResponse } from "../api/model";
 
 interface ScoreCardProps {
-  userInfo: UserInfo | undefined;
+  userInfo: UserInfoResponse | undefined;
   title: string;
-  key_: keyof UserInfo;
+  key_: keyof UserInfoResponse;
   Icon: TablerIcon;
 }
 
@@ -59,7 +59,7 @@ const ScoreCard: React.FC<ScoreCardProps> = ({
 };
 
 interface RankCardProps {
-  userInfo: UserInfo | undefined;
+  userInfo: UserInfoResponse | undefined;
   Icon: TablerIcon;
 }
 
@@ -90,7 +90,7 @@ const RankCard: React.FC<RankCardProps> = ({ userInfo, Icon }) => {
 
 interface UserScoreCardProps {
   username?: string;
-  userInfo?: UserInfo;
+  userInfo?: UserInfoResponse;
   isMyself: boolean;
 }
 

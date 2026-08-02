@@ -7,7 +7,6 @@ import {
 } from "@mantine/core";
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-import { useUserInfo } from "../api/hooks";
 import { useUser } from "../auth";
 import UserAnswers from "../components/user-answers";
 import UserComments from "../components/user-comments";
@@ -18,21 +17,30 @@ import UserPayments from "../components/user-payments";
 import UserScoreCard from "../components/user-score-card";
 import useTitle from "../hooks/useTitle";
 import NotFoundPage from "./not-found-page";
+import { useGetUserScores } from "../api/hooks/scoreboard";
 
 const UserPage: React.FC = () => {
   const user = useUser()!;
   const { username = user.username } = useParams() as { username?: string };
   useTitle(username);
   const isMyself = user.username === username;
-  const [error, loading, userInfo] = useUserInfo(username);
+  const {
+    isError,
+    isPending,
+    data: userInfo,
+  } = useGetUserScores(username, {
+    query: {
+      select: data => data.value,
+      retry: false, // immediately fail if errored
+    },
+  });
+
   const [activeTab, setActiveTab] = useState<string | null>("overview");
 
   // Assume any error is because of 404
   // Other error from not being logged in shouldn't happen
   // as we can't get here (this component) without being logged in
-  const isNotFound = !loading && !!error;
-
-  if (isNotFound) {
+  if (isError) {
     return <NotFoundPage />;
   }
 
@@ -43,9 +51,8 @@ const UserPage: React.FC = () => {
         isMyself={isMyself}
         userInfo={userInfo}
       />
-      {error && <Alert color="red">{error.toString()}</Alert>}
       <Tabs value={activeTab} onChange={setActiveTab} pos="relative" my="xl">
-        <LoadingOverlay visible={loading} />
+        <LoadingOverlay visible={isPending} />
         <Tabs.List grow>
           <Tabs.Tab value="overview">Overview</Tabs.Tab>
           <Tabs.Tab value="answers">Answers</Tabs.Tab>

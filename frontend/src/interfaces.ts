@@ -262,20 +262,6 @@ export interface NotificationInfo {
   read: boolean;
 }
 
-export interface UserInfo {
-  username: string;
-  displayName: string;
-  rank: number;
-  total_users: number;
-  score: number;
-  score_answers: number;
-  score_comments: number;
-  score_cuts: number;
-  score_legacy: number;
-  score_official: number;
-  score_documents: number;
-}
-
 export interface PaymentInfo {
   oid: string;
   active: boolean;

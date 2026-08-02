@@ -2,14 +2,14 @@ import React from "react";
 import { Alert, Loader } from "@mantine/core";
 import Grid from "../components/grid";
 import { useUser } from "../auth";
-import { UserInfo } from "../interfaces";
 import DocumentCard from "./document-card";
 import type { DocumentSchema } from "../api/model/documentSchema";
 import { useListDocuments } from "../api/hooks/documents";
+import { UserInfoResponse } from "../api/model";
 
 interface UserDocumentsProps {
   username: string;
-  userInfo?: UserInfo;
+  userInfo?: UserInfoResponse;
 }
 const UserDocuments: React.FC<UserDocumentsProps> = ({
   username,
