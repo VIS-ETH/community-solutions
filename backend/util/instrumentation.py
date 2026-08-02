@@ -4,7 +4,7 @@ import pyroscope
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.django import DjangoInstrumentor
-from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
+from opentelemetry.instrumentation.psycopg import PsycopgInstrumentor
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -30,7 +30,7 @@ def initialize():
         if pyroscope_endpoint:
             provider.add_span_processor(PyroscopeSpanProcessor())
 
-        Psycopg2Instrumentor().instrument()
+        PsycopgInstrumentor().instrument()
 
     if pyroscope_endpoint:
         pyroscope.configure(
