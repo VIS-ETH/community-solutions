@@ -20,7 +20,7 @@ def _patch_headers(request, **kwargs):
     request split in 2 steps: first with just the headers (incl. "Expect"). And
     upon receiving 100 Continue from the server, then the actual file body.
 
-    But somewhere in the chain of Ceph/RGW/MinIO, the response to the first
+    But somewhere in the chain of Ceph-RGW/MinIO/Rclone, the response to the first
     request is not 100 Continue, which causes boto3 to wait forever to send the
     second part.
 
@@ -33,12 +33,7 @@ def _patch_headers(request, **kwargs):
 
 
 if "SIP_S3_FILES_HOST" in os.environ:
-    endpoint = (
-        ("https://" if os.environ["SIP_S3_FILES_USE_SSL"] == "true" else "http://")
-        + os.environ["SIP_S3_FILES_HOST"]
-        + ":"
-        + os.environ["SIP_S3_FILES_PORT"]
-    )
+    endpoint = settings.S3_ENDPOINT_URL
     options = {
         "endpoint_url": endpoint,
         "aws_access_key_id": os.environ["SIP_S3_FILES_ACCESS_KEY"],

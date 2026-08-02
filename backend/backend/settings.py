@@ -206,8 +206,11 @@ if DEBUG:
 else:
     allowed_script_sources = [f"https://{host}/static/" for host in REAL_ALLOWED_HOSTS]
 
-s3_host = os.environ.get("SIP_S3_FILES_HOST", "s3")
-s3_port = os.environ.get("SIP_S3_FILES_PORT", "9000")
+S3_ENDPOINT_URL = "http{}://{}:{}".format(
+    ("s" if os.environ.get("SIP_S3_FILES_USE_SSL", "true") == "true" else ""),
+    os.environ.get("SIP_S3_FILES_HOST", "s3"),
+    os.environ.get("SIP_S3_FILES_PORT", "9000"),
+)
 
 CONTENT_SECURITY_POLICY = {
     "DIRECTIVES": {
@@ -229,7 +232,7 @@ CONTENT_SECURITY_POLICY = {
             "'self'",
             "https://static.vseth.ethz.ch",
             "https://auth.vseth.ethz.ch",
-            ("http://" if DEBUG else "https://") + s3_host + ":" + s3_port,
+            S3_ENDPOINT_URL,
         ]
         + ([FARO_URL] if FARO_URL else []),
         "img-src": [
