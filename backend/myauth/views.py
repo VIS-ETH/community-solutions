@@ -155,7 +155,7 @@ def set_token_cookies(response: HttpResponse, token_response):
         "access_token",
         access_token,
         httponly=True,
-        samesite="Strict",
+        samesite="Strict" if settings.SECURE else "Lax",
         secure=settings.SECURE,
     )
 
@@ -167,7 +167,7 @@ def set_token_cookies(response: HttpResponse, token_response):
             "refresh_token",
             refresh_token,
             httponly=True,
-            samesite="Strict",
+            samesite="Strict" if settings.SECURE else "Lax",
             secure=settings.SECURE,
         )
 
@@ -182,7 +182,7 @@ def set_token_cookies(response: HttpResponse, token_response):
             "refresh_expires",
             refresh_expires.timestamp(),
             httponly=False,  # Client side JS will need to read it
-            samesite="Strict",
+            samesite="Strict" if settings.SECURE else "Lax",
             secure=settings.SECURE,
         )
 
@@ -191,7 +191,11 @@ def set_token_cookies(response: HttpResponse, token_response):
     if user_id_token and "id_token" in token_response:
         id_token: str = token_response["id_token"]
         response.set_cookie(
-            "id_token", id_token, httponly=True, samesite="Lax", secure=settings.SECURE
+            "id_token",
+            id_token,
+            httponly=True,
+            samesite="Strict" if settings.SECURE else "Lax",
+            secure=settings.SECURE,
         )
 
 

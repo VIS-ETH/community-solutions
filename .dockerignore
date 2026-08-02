@@ -1,4 +1,29 @@
-frontend/node_modules
 **/.venv
 **/venv
-frontend/build
+**/.env.*
+
+**/.pre-commit-config.yaml
+**/.gitignore
+
+# Backend
+/backend/static
+
+# Frontend
+/frontend/.yarn
+/frontend/build
+/frontend/node_modules
+!/frontend/.env.production
+
+# Top-level
+/mise.toml
+/docker-compose*.ya?ml
+/renovate.json
+/sip.yml
+/LICENSE
+/README.md
+/.gitpod.yml
+/.gitlab-ci.yml
+/.gitlab
+/data
+/docs
+/util

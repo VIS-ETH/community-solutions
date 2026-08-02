@@ -52,15 +52,6 @@ distributor:
           endpoint: "tempo:4317"
         http:
           endpoint: "tempo:4318"
-    opencensus:
-      endpoint: "tempo:55678"
-
-ingester:
-  max_block_duration: 5m # cut the headblock when this much time passes. this is being set for demo purposes and should probably be left alone normally
-
-compactor:
-  compaction:
-    block_retention: 720h # overall Tempo trace retention. set for demo purposes
 
 metrics_generator:
   registry:
@@ -72,12 +63,6 @@ metrics_generator:
     remote_write:
       - url: http://prometheus:9090/api/v1/write
         send_exemplars: true
-  traces_storage:
-    path: /var/tempo/generator/traces
-  processor:
-    local_blocks:
-      filter_server_spans: false
-      flush_to_storage: true
 
 storage:
   trace:
@@ -93,5 +78,5 @@ overrides:
       dimensions:
         service.name: ""
     metrics_generator:
-      processors: [service-graphs, span-metrics, local-blocks] # enables metrics generator
+      processors: [service-graphs, span-metrics] # enables metrics generator
       generate_native_histograms: both

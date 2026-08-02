@@ -136,6 +136,9 @@ If you want to additionally run the _frontend_ in docker-compose, add the `--pro
 docker compose --profile frontend up
 # or if you ONLY want the frontend without backend:
 # docker compose up react-frontend postgres rclone rclone-create-bucket
+
+# Alternatively, run a prod-like setup where the backend serves the frontend file. This will run the exact container used in prod!
+docker compose -f dockker-compose.yml -f configs/docker-compose.prod.yml up
 ```
 
 If you are too lazy to type it every time, create a `.env` file in this directory and add the line `COMPOSE_PROFILES=frontend`.
@@ -220,16 +223,16 @@ This will result in a null pointer exception. It's best to simply stop the front
 
 Sometimes, it is helpful to have just a little bit more data at disposal, to monitor applications or to debug performance issues.
 We provide a "simple" setup that automatically gathers all information (traces, metrics & logs) for local setup, including Grafana.
-Interesting Grafana dashboard should also be shipped in `./contrib` to allow fairly easy deployments of such advanced features.
+Interesting Grafana dashboard should also be shipped in `./configs` to allow fairly easy deployments of such advanced features.
 
 To try, run
 
 ```bash
 # For running frontend in docker:
-docker compose -f docker-compose.yml -f docker-compose.observability.yml --profile frontend up --build
+docker compose -f docker-compose.yml -f configs/docker-compose.observability.yml --profile frontend up --build
 
 # For running frontend locally:
-docker compose -f docker-compose.yml -f docker-compose.observability.yml up --build
+docker compose -f docker-compose.yml -f configs/docker-compose.observability.yml up --build
 yarn start-with-faro
 ```
 
@@ -299,7 +302,7 @@ make sure you're on the latest commit of the branch with `git pull`.
 
 # The important bits
 
-The pipeline is managed by [Preview Deployment Manager](https://gitlab.ethz.ch/vseth/0403-isg/sip-sip-apps/pdep). It uses Webhooks to build and deploy upon merge requests. PDep interacts with TeamCity, and schedules the actual jobs on there. As CIT / CAT member you should be able to see the TeamCity project and see pipeline status & logs as well as re-run it. It sometimes happens that the pipeline fails because of Out-Of-Memory issues, you can usually just restart it and run again if that is the case.
+The pipeline is managed by the GitLab CI and [ArgoCD](https://argocd.vis.ethz.ch). Upon updates on merge requests, ArgoCD will take action via the Pull-Request generator. Any merge request labelled with `~preview` will result in a deployment. The current status of such deployments will be given by comments on the merge requests posted by`sys-vis-gitlab`. Any CAT/CIT member should be able to see the corresponding app on ArgoCD and determine failure reasons.
 
 # License
 

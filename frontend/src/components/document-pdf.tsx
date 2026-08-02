@@ -61,9 +61,12 @@ const DocumentPdf: React.FC<DocumentPdfProps> = ({ url }) => {
   // not return a continuous range of page numbers.
   const inViewChangeListeners = useMemo(
     () =>
-      Object.fromEntries(getPages(renderer).map(pageNumber =>
-        [pageNumber, (v: boolean) => inViewChange(pageNumber, v)],
-      )),
+      Object.fromEntries(
+        getPages(renderer).map(pageNumber => [
+          pageNumber,
+          (v: boolean) => inViewChange(pageNumber, v),
+        ]),
+      ),
     [renderer],
   );
 
@@ -102,7 +105,7 @@ const DocumentPdf: React.FC<DocumentPdfProps> = ({ url }) => {
         maxWidth={maxWidth}
         setMaxWidth={setMaxWidth}
         inViewPages={inViewPages}
-        />
+      />
     </>
   );
 };

@@ -13,7 +13,7 @@ services:
       - "9000:9000"
     volumes:
       - ./data/s3:/data
-      - ./util/rclone.conf:/config/rclone/rclone.conf
+      - ./configs/rclone.conf:/config/rclone/rclone.conf
     command: serve s3 local:/data --addr 0.0.0.0:9000 --allow-origin '*'
     healthcheck:
       test: ["CMD", "rclone", "version"]
@@ -27,9 +27,9 @@ services:
   postgres:
     image: postgres:16
     environment:
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
     volumes:
       - ./data/sql:/var/lib/postgresql/data
     ports:
@@ -39,8 +39,8 @@ services:
       interval: 1s
       timeout: 1s
       retries: 50
+
   community-solutions:
-    platform: linux/amd64 # Required since vseth base image is only available in amd64
     build:
       target: backend-hotreload
       args:
@@ -60,6 +60,11 @@ services:
       - "8081:8081"
     env_file:
       - backend/.env.development
+    healthcheck:
+      interval: 1s
+      timeout: 1s
+      retries: 60
+      test: ["CMD", "curl", "-f", "-s", "http://localhost:8081/health"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -80,9 +85,14 @@ services:
           target: /app/src
         - action: rebuild
           path: frontend/package.json
+    depends_on:
+      community-solutions:
+        condition: service_healthy
     ports:
       - "3000:3000"
     extra_hosts:
       - "rclone:127.0.0.1"
+    env_file:
+      - ./frontend/.env.development
     environment:
-      - BACKEND_HOST=community-solutions
+      BACKEND_HOST: community-solutions

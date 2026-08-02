@@ -48,7 +48,8 @@ const FAQEntryComponent: React.FC<Props> = ({
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [undoStack, setUndoStack] = useState<UndoStack>({ prev: [], next: [] });
-  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } = usePendingImages();
+  const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
+    usePendingImages();
   const startEditing = useCallback(() => {
     setQuestion(entry.question);
     setAnswer(entry.answer);
@@ -91,7 +92,9 @@ const FAQEntryComponent: React.FC<Props> = ({
             onChange={setAnswer}
             undoStack={undoStack}
             setUndoStack={setUndoStack}
-            preview={value => <MarkdownText value={value} pendingImages={pendingObjectUrls} />}
+            preview={value => (
+              <MarkdownText value={value} pendingImages={pendingObjectUrls} />
+            )}
           />
         </Suspense>
       ) : (

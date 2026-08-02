@@ -83,9 +83,7 @@ export function getMetaCategoriesForCategory(
   return metaCategories
     .map(meta1 => ({
       ...meta1,
-      meta2: meta1.meta2.filter(
-        meta2 => meta2.categories.includes(category),
-      ),
+      meta2: meta1.meta2.filter(meta2 => meta2.categories.includes(category)),
     }))
     .filter(meta1 => meta1.meta2.length > 0);
 }

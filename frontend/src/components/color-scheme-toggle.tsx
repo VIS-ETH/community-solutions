@@ -11,17 +11,43 @@ const ColorSchemeToggle = () => {
   const { colorScheme, setColorScheme } = useMantineColorScheme();
   return (
     <Group justify="center">
-      <HoverCard shadow="md" withArrow openDelay={100} closeDelay={100} disabled={colorScheme == "auto"}>
+      <HoverCard
+        shadow="md"
+        withArrow
+        openDelay={100}
+        closeDelay={100}
+        disabled={colorScheme == "auto"}
+      >
         <HoverCard.Target>
           <Group>
-            <Button darkHidden variant="transparent" leftSection={<IconMoon />} onClick={() => { setColorScheme("dark") }} />
-            <Button lightHidden variant="transparent" leftSection={<IconSun />} onClick={() => { setColorScheme("light") }} />
+            <Button
+              darkHidden
+              variant="transparent"
+              leftSection={<IconMoon />}
+              onClick={() => {
+                setColorScheme("dark");
+              }}
+            />
+            <Button
+              lightHidden
+              variant="transparent"
+              leftSection={<IconSun />}
+              onClick={() => {
+                setColorScheme("light");
+              }}
+            />
           </Group>
         </HoverCard.Target>
         <HoverCard.Dropdown>
           <Group>
             <Text>Follow system theme: </Text>
-            <Button variant="transparent" leftSection={<IconSunMoon />} onClick={() => { setColorScheme("auto") }} />
+            <Button
+              variant="transparent"
+              leftSection={<IconSunMoon />}
+              onClick={() => {
+                setColorScheme("auto");
+              }}
+            />
           </Group>
         </HoverCard.Dropdown>
       </HoverCard>

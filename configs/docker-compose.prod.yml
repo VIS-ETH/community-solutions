@@ -1,0 +1,26 @@
+# This is NOT meant to be immediately deployed to prod
+# It exists to mimmick the actual prod-deployment for local
+# testing and debugging. It runs the same final image
+# than prod, but configurations are not safe for production.
+# Neither are the deployments for used services (S3, DB, ...)
+
+services:
+  community-solutions: !override
+    build:
+      args:
+        git_branch: <docker>
+        git_commit: <compose>
+    container_name: community-solutions
+    ports:
+      - "8080:8080"
+    env_file:
+      - backend/.env.development
+      - path: ./.env.prod
+        required: false
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rclone:
+        condition: service_healthy
+
+  react-frontend: !reset
