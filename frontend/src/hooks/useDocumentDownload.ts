@@ -22,7 +22,10 @@ export const useDocumentDownload = (doc: DocumentSchema | undefined) => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const files = doc.files!;
 
-      if (files.length === 0) return;
+      if (files.length === 0) {
+        setIsLoading(false);
+        return;
+      }
       if (files.length === 1) {
         download(`/api/document/file/${files[0].filename}`);
         setIsLoading(false);
