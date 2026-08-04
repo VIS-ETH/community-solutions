@@ -60,7 +60,7 @@ stages:
     POSTGRES_USER: testuser
     POSTGRES_PASSWORD: testpw
   services:
-    - name: postgres:16
+    - name: postgres:18
       alias: postgres
       command: ["postgres"]
       variables:
