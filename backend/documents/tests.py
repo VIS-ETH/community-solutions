@@ -45,7 +45,7 @@ class TestDocumentTransfer(ComsolTestDocumentData):
         for user in self.users:
             NotificationSetting(
                 user=MyUser.objects.get(username=user["username"]),
-                type=NotificationType.DOCUMENT_TRANSFER.value,
+                type=NotificationType.DOCUMENT_TRANSFER,
                 enabled=True,
             ).save()
 
@@ -70,7 +70,7 @@ class TestDocumentTransfer(ComsolTestDocumentData):
 
         notification = Notification.objects.filter(
             receiver__username=target_username,
-            type=NotificationType.DOCUMENT_TRANSFER.value,
+            type=NotificationType.DOCUMENT_TRANSFER,
         ).get()
         self.assertEqual(notification.sender.id, document.author.id)
         self.assertTrue(
@@ -213,7 +213,7 @@ class TestDocumentTransfer(ComsolTestDocumentData):
         self.assertEqual(document.pending_transfer_user, None)
 
         notification = Notification.objects.filter(
-            receiver=original_owner, type=NotificationType.DOCUMENT_TRANSFER.value
+            receiver=original_owner, type=NotificationType.DOCUMENT_TRANSFER
         ).get()
         self.assertEqual(notification.sender.id, transfer_target.id)
         self.assertTrue(
@@ -300,7 +300,7 @@ class TestDocumentTransfer(ComsolTestDocumentData):
         self.assertEqual(document.pending_transfer_user, None)
 
         notification = Notification.objects.filter(
-            receiver=original_owner, type=NotificationType.DOCUMENT_TRANSFER.value
+            receiver=original_owner, type=NotificationType.DOCUMENT_TRANSFER
         ).get()
         self.assertEqual(notification.sender.id, transfer_target.id)
         self.assertTrue(

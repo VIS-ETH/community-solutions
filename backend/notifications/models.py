@@ -4,7 +4,7 @@ from django.db import models
 from django.utils import timezone
 
 
-class NotificationType(enum.Enum):
+class NotificationType(enum.IntEnum):
     NEW_COMMENT_TO_ANSWER = 1
     NEW_COMMENT_TO_COMMENT = 2
     NEW_ANSWER_TO_ANSWER = 3
