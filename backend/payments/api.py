@@ -19,7 +19,7 @@ class PaymentRequest(Schema):
 @router.post(
     "/pay/",
     response={
-        204: None,
+        200: None,
         # Unauthenticated
         401: response.ErrorSchema,
         # Unauthorised
@@ -33,13 +33,13 @@ def pay(request, data: Form[PaymentRequest]):
     user = get_object_or_404(MyUser, username=data.username)
     payment = Payment(user=user)
     payment.save()
-    return 204, None
+    return response.success()
 
 
 @router.post(
     "/remove/{oid}/",
     response={
-        204: None,
+        200: None,
         # Unauthenticated
         401: response.ErrorSchema,
         # Unauthorised
@@ -52,13 +52,13 @@ def pay(request, data: Form[PaymentRequest]):
 def remove(request, oid: int):
     payment = get_object_or_404(Payment, pk=oid)
     payment.delete()
-    return 204, None
+    return response.success()
 
 
 @router.post(
     "/refund/{oid}/",
     response={
-        204: None,
+        200: None,
         # Not Possible
         400: response.ErrorSchema,
         # Unauthenticated
@@ -76,7 +76,7 @@ def refund(request, oid: int):
         return response.not_possible("Already refundend")
     payment.refund_time = timezone.now()
     payment.save()
-    return 204, None
+    return response.success()
 
 
 class PaymentInfo(Schema):
@@ -133,7 +133,7 @@ def query(request, username: str):
 @router.post(
     "/markexamchecked/{filename}/",
     response={
-        204: None,
+        200: None,
         400: response.ErrorSchema,
         # Unauthenticated
         401: response.ErrorSchema,
@@ -163,4 +163,4 @@ def mark_exam_checked(request, filename: str):
         payment[0].uploaded_transcript = exam
         payment[0].save()
 
-    return 204, None
+    return response.success()
