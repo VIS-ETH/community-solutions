@@ -96,7 +96,7 @@ const DocumentCommentComponent = ({
 
   const flaggedLoading =
     setCommentFlagged.isPending || resetCommentFlagged.isPending;
-  const isOwnComment = comment.authorId === username;
+  const isOwnComment = comment.author.username === username;
 
   return (
     <div id={String(comment.oid)}>
@@ -139,12 +139,15 @@ const DocumentCommentComponent = ({
           <Flex py="sm" px="md" justify="space-between" align="center">
             <div>
               <Flex align="center">
-                <Anchor component={Link} to={`/user/${comment.authorId}`}>
+                <Anchor
+                  component={Link}
+                  to={`/user/${comment.author.username}`}
+                >
                   <Text fw={700} component="span">
-                    {comment.authorDisplayName}
+                    {comment.author.display_name}
                   </Text>
                   <Text ml="0.25em" c="dimmed" component="span">
-                    @{comment.authorId}
+                    @{comment.author.username}
                   </Text>
                 </Anchor>
                 <Text component="span" mx={6} c="dimmed">

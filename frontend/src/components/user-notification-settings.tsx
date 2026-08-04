@@ -1,57 +1,75 @@
 import { Alert, Checkbox, Stack } from "@mantine/core";
 import React from "react";
 import {
-  useEnabledNotifications,
-  useSetEnabledNotifications,
-} from "../api/hooks";
+  useEnableNotification,
+  useGetEnabledNotifications,
+} from "../api/hooks/notifications";
 
 const UserNotificationsSettings: React.FC = () => {
-  const [enabledError, enabledLoading, enabled, reloadEnabled] =
-    useEnabledNotifications(true);
-  const [setEnabledError, setEnabledLoading, setEnabled] =
-    useSetEnabledNotifications(reloadEnabled);
-  const error = enabledError ?? setEnabledError;
-  const checkboxLoading = enabledLoading || setEnabledLoading;
+  const enabled = useGetEnabledNotifications({
+    query: {
+      select: data => new Set(data.value),
+    },
+  });
+  const setEnabled = useEnableNotification({
+    mutation: {
+      onSuccess() {
+        void enabled.refetch();
+      },
+    },
+  });
+
+  function handleSetEnabled(type: number, enabled: boolean) {
+    setEnabled.mutate({
+      data: {
+        type,
+        enabled,
+      },
+    });
+  }
+
+  const error = enabled.error ?? setEnabled.error;
+  const checkboxLoading = enabled.isLoading || setEnabled.isPending;
   return (
     <>
       <h3>Notifications</h3>
-      {error && <Alert color="red">{error.toString()}</Alert>}
+      {error && <Alert color="red">{error as unknown as string}</Alert>}
       <Stack gap="sm">
         <Checkbox
           label="Comment to my answer"
-          checked={enabled ? enabled.has(1) : false}
+          checked={enabled.data?.has(1)}
           disabled={checkboxLoading}
-          onChange={e => setEnabled(1, e.currentTarget.checked)}
+          onChange={e => handleSetEnabled(1, e.currentTarget.checked)}
         />
         <Checkbox
           label="Comment to my comment"
-          checked={enabled ? enabled.has(2) : false}
+          checked={enabled.data?.has(2)}
           disabled={checkboxLoading}
-          onChange={e => setEnabled(2, e.currentTarget.checked)}
+          onChange={e => handleSetEnabled(2, e.currentTarget.checked)}
         />
         <Checkbox
           label="Other answer to same question"
-          checked={enabled ? enabled.has(3) : false}
+          checked={enabled.data?.has(3)}
           disabled={checkboxLoading}
-          onChange={e => setEnabled(3, e.currentTarget.checked)}
+          onChange={e => handleSetEnabled(3, e.currentTarget.checked)}
         />
         <Checkbox
           label="Comment to my document"
-          checked={enabled ? enabled.has(4) : false}
+          checked={enabled.data?.has(4)}
           disabled={checkboxLoading}
-          onChange={e => setEnabled(4, e.currentTarget.checked)}
+          onChange={e => handleSetEnabled(4, e.currentTarget.checked)}
         />
         <Checkbox
           label="Admin comments on my feedback"
-          checked={enabled ? enabled.has(5) : false}
+          checked={enabled.data?.has(5)}
           disabled={checkboxLoading}
-          onChange={e => setEnabled(5, e.currentTarget.checked)}
+          onChange={e => handleSetEnabled(5, e.currentTarget.checked)}
         />
         <Checkbox
           label="New document transfer or document transfer accepted"
-          checked={enabled ? enabled.has(6) : false}
+          checked={enabled.data?.has(6)}
           disabled={checkboxLoading}
-          onChange={e => setEnabled(6, e.currentTarget.checked)}
+          onChange={e => handleSetEnabled(6, e.currentTarget.checked)}
         />
       </Stack>
     </>

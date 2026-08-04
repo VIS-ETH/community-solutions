@@ -34,7 +34,7 @@ class TestNotificationSettings(ComsolTest):
 
 class TestNotifications(ComsolTest):
     def test_notification_lifecycle(self):
-        res = self.get("/api/notification/unread/")["value"]
+        res = self.get("/api/notification/all/?unread=true")["value"]
         self.assertEqual(len(res), 0)
         res = self.get("/api/notification/all/")["value"]
         self.assertEqual(len(res), 0)
@@ -50,7 +50,7 @@ class TestNotifications(ComsolTest):
         )
         notification.save()
 
-        res1 = self.get("/api/notification/unread/")["value"]
+        res1 = self.get("/api/notification/all/?unread=true")["value"]
         self.assertEqual(len(res1), 1)
         res2 = self.get("/api/notification/all/")["value"]
         self.assertEqual(len(res2), 1)
@@ -60,9 +60,13 @@ class TestNotifications(ComsolTest):
         res = self.get("/api/notification/unreadcount/")["value"]
         self.assertEqual(res, 1)
 
-        self.post(f"/api/notification/setread/{notification.id}/", {"read": "true"})
+        self.post(
+            f"/api/notification/setread/{notification.id}/",
+            {"read": True},
+            test_get=False,
+        )
 
-        res = self.get("/api/notification/unread/")["value"]
+        res = self.get("/api/notification/all/?unread=true")["value"]
         self.assertEqual(len(res), 0)
         res = self.get("/api/notification/all/")["value"]
         self.assertEqual(len(res), 1)
