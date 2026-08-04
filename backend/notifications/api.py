@@ -12,7 +12,7 @@ from util.schemas import ValueWrapped
 
 
 class NotificationEnableRequest(Schema):
-    type: int
+    type: NotificationType
     enabled: bool
 
 
@@ -25,7 +25,7 @@ class NotificationResponse(Schema):
     receiver: UserSchema
     sender: UserSchema
     time: datetime.datetime
-    type: int
+    type: NotificationType
     title: str
     message: str
     link: str
@@ -65,8 +65,6 @@ def getenabled(request):
 )
 @auth_check.require_login
 def setenabled(request, body: Form[NotificationEnableRequest]):
-    if body.type < 1 or body.type > len(NotificationType.__members__):
-        return response.not_possible("Invalid Type")
     setting, _ = NotificationSetting.objects.get_or_create(
         user=request.user, type=body.type
     )

@@ -4,6 +4,7 @@ import {
   useEnableNotification,
   useGetEnabledNotifications,
 } from "../api/hooks/notifications";
+import type { EnableNotificationBodyType } from "../api/model";
 
 const UserNotificationsSettings: React.FC = () => {
   const enabled = useGetEnabledNotifications({
@@ -19,7 +20,10 @@ const UserNotificationsSettings: React.FC = () => {
     },
   });
 
-  function handleSetEnabled(type: number, enabled: boolean) {
+  function handleSetEnabled(
+    type: EnableNotificationBodyType,
+    enabled: boolean,
+  ) {
     setEnabled.mutate({
       data: {
         type,
