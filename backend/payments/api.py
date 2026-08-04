@@ -17,31 +17,56 @@ class PaymentRequest(Schema):
 
 
 @router.post(
-    "/pay/", response={200: None, 400: response.ErrorSchema}, operation_id="pay"
+    "/pay/",
+    response={
+        204: None,
+        # Unauthenticated
+        401: response.ErrorSchema,
+        # Unauthorised
+        403: response.ErrorSchema,
+        404: response.ErrorSchema,
+    },
+    operation_id="pay",
 )
 @auth_check.require_admin
 def pay(request, data: Form[PaymentRequest]):
     user = get_object_or_404(MyUser, username=data.username)
     payment = Payment(user=user)
     payment.save()
-    return response.success()
+    return 204, None
 
 
 @router.post(
     "/remove/{oid}/",
-    response={200: None, 400: response.ErrorSchema},
+    response={
+        204: None,
+        # Unauthenticated
+        401: response.ErrorSchema,
+        # Unauthorised
+        403: response.ErrorSchema,
+        404: response.ErrorSchema,
+    },
     operation_id="removePayment",
 )
 @auth_check.require_admin
 def remove(request, oid: int):
     payment = get_object_or_404(Payment, pk=oid)
     payment.delete()
-    return response.success()
+    return 204, None
 
 
 @router.post(
     "/refund/{oid}/",
-    response={200: None, 400: response.ErrorSchema},
+    response={
+        204: None,
+        # Not Possible
+        400: response.ErrorSchema,
+        # Unauthenticated
+        401: response.ErrorSchema,
+        # Unauthorised
+        403: response.ErrorSchema,
+        404: response.ErrorSchema,
+    },
     operation_id="refundPayment",
 )
 @auth_check.require_admin
@@ -51,7 +76,7 @@ def refund(request, oid: int):
         return response.not_possible("Already refundend")
     payment.refund_time = timezone.now()
     payment.save()
-    return response.success()
+    return 204, None
 
 
 class PaymentInfo(Schema):
@@ -89,8 +114,9 @@ def get_user_payments(user):
     "/query/{username}/",
     response={
         200: ValueWrapped[list[PaymentInfo]],
+        # Unauthorised
+        403: response.ErrorSchema,
         404: response.ErrorSchema,
-        400: response.ErrorSchema,
     },
     operation_id="getPayments",
 )
@@ -106,7 +132,15 @@ def query(request, username: str):
 
 @router.post(
     "/markexamchecked/{filename}/",
-    response={200: None, 400: response.ErrorSchema},
+    response={
+        204: None,
+        400: response.ErrorSchema,
+        # Unauthenticated
+        401: response.ErrorSchema,
+        # Unauthorised
+        403: response.ErrorSchema,
+        404: response.ErrorSchema,
+    },
     operation_id="markExamChecked",
 )
 @auth_check.require_admin
@@ -128,4 +162,5 @@ def mark_exam_checked(request, filename: str):
         payment[0].check_time = timezone.now()
         payment[0].uploaded_transcript = exam
         payment[0].save()
-    return response.success()
+
+    return 204, None

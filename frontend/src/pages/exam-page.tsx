@@ -34,7 +34,6 @@ import {
   loadCuts,
   loadExamMetaData,
   loadSplitRenderer,
-  markAsChecked,
   useMarkExamUserSolved,
   useUnmarkExamUserSolved,
 } from "../api/hooks";
@@ -75,6 +74,7 @@ import {
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
+import { useMarkExamChecked } from "../api/hooks/payments";
 
 const addCut = async (
   filename: string,
@@ -117,13 +117,14 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
   goToEditPage,
 }) => {
   const computedColorScheme = useComputedColorScheme();
-  const { run: runMarkChecked } = useRequest(markAsChecked, {
-    manual: true,
-    onSuccess() {
-      mutateMetaData(metaData => ({
-        ...metaData,
-        oral_transcript_checked: true,
-      }));
+  const markExamChecked = useMarkExamChecked({
+    mutation: {
+      onSuccess() {
+        mutateMetaData(metaData => ({
+          ...metaData,
+          oral_transcript_checked: true,
+        }));
+      },
     },
   });
   const user = useUser()!;
@@ -309,7 +310,11 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
                       color="gray"
                       tooltip="Mark as checked"
                       icon={<IconFileCheck />}
-                      onClick={() => runMarkChecked(metaData.filename)}
+                      onClick={() =>
+                        markExamChecked.mutate({
+                          filename: metaData.filename,
+                        })
+                      }
                     />
                   )}
                 <IconButton

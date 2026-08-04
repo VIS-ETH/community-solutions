@@ -47,7 +47,7 @@ const UserPayments: React.FC<UserPaymentsProps> = ({ username }) => {
   const [openPayment, setOpenPayment] = useState<number | null>(null);
   return (
     <div>
-      {error && <Alert color="red">{error.err}</Alert>}
+      {error && <Alert color="red">{error as unknown as string}</Alert>}
       <h3>Paid Oral Exams</h3>
       {payments && (payments.length > 0 || isAdmin) && (
         <>
