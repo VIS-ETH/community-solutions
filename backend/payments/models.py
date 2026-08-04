@@ -28,6 +28,7 @@ class Payment(models.Model):
 
     def valid_until(self):
         then = self.payment_time
+        # Find earliest March or October 1st after the payment time
         resetdates = [
             datetime(year, month, 1, tzinfo=then.tzinfo)
             for year in [then.year, then.year + 1]
@@ -36,4 +37,6 @@ class Payment(models.Model):
         for reset in resetdates:
             if reset > then:
                 return reset
-        return None
+
+        # Should never happen logically
+        raise Exception("No reset date found after payment time")

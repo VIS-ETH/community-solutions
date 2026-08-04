@@ -262,16 +262,6 @@ export interface NotificationInfo {
   read: boolean;
 }
 
-export interface PaymentInfo {
-  oid: string;
-  active: boolean;
-  payment_time: string;
-  uploaded_filename: string | null;
-  check_time: string | null;
-  refund_time: string | null;
-  valid_until: string;
-}
-
 export interface FAQEntry {
   oid: string;
   question: string;
