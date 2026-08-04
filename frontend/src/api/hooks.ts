@@ -9,7 +9,6 @@ import {
   CutVersions,
   ExamMetaData,
   MetaCategory,
-  NotificationInfo,
   ServerCutResponse,
   SingleComment,
   SearchResponse,
@@ -24,72 +23,6 @@ const RAPID_SUCCESSIVE_REQUESTS_DEDUPE_INTERVAL = 500; // milliseconds
 
 export declare type Mutate<R> = (x: R | undefined | ((data: R) => R)) => void;
 
-const loadEnabledNotifications = async (isMyself: boolean) => {
-  if (isMyself) {
-    return new Set<number>(
-      (await fetchGet(`/api/notification/getenabled/`)).value,
-    );
-  } else {
-    return undefined;
-  }
-};
-export const useEnabledNotifications = (isMyself: boolean) => {
-  const { error, loading, data, run } = useRequest(
-    () => loadEnabledNotifications(isMyself),
-    {
-      refreshDeps: [isMyself],
-      cacheKey: "enabled-notifications",
-    },
-  );
-  return [error, loading, data, run] as const;
-};
-const setEnabledNotifications = async (type: number, enabled: boolean) => {
-  await fetchPost(`/api/notification/setenabled/`, {
-    type,
-    enabled,
-  });
-};
-export const useSetEnabledNotifications = (cb: () => void) => {
-  const { error, loading, run } = useRequest(setEnabledNotifications, {
-    manual: true,
-    onSuccess: cb,
-  });
-  return [error, loading, run] as const;
-};
-const loadNotifications = async (mode: "all" | "unread") => {
-  if (mode === "all") {
-    return (await fetchGet("/api/notification/all/"))
-      .value as NotificationInfo[];
-  } else {
-    return (await fetchGet("/api/notification/unread/"))
-      .value as NotificationInfo[];
-  }
-};
-export const useNotifications = (mode: "all" | "unread") => {
-  const { error, loading, data, run } = useRequest(
-    () => loadNotifications(mode),
-    {
-      refreshDeps: [mode],
-      cacheKey: `notifications-${mode}`,
-    },
-  );
-  return [error, loading, data, run] as const;
-};
-const markAllRead = async (...ids: string[]) => {
-  return Promise.all(
-    ids.map(oid =>
-      fetchPost(`/api/notification/setread/${oid}/`, {
-        read: true,
-      }),
-    ),
-  );
-};
-export const useMarkAllAsRead = () => {
-  const { error, loading, run } = useRequest(markAllRead, {
-    manual: true,
-  });
-  return [error, loading, run] as const;
-};
 const loadUserAnswers = async (username: string, page: number = -1) => {
   const pageStr = page === -1 ? "" : `${page}/`;
   return (await fetchGet(`/api/exam/listbyuser/${username}/${pageStr}`))

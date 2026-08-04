@@ -1,26 +1,54 @@
 import { Button, Alert, Loader } from "@mantine/core";
-import React, { useState } from "react";
-import { useNotifications } from "../api/hooks";
+import React, { useEffect, useState } from "react";
 import NotificationComponent from "./notification";
+import {
+  useGetAllNotifications,
+  useMarkAllNotificationsAsRead,
+} from "../api/hooks/notifications";
 
 const UserNotifications: React.FC = () => {
-  const [showRead, setShowRead] = useState(false);
-  const [notificationsError, notificationsLoading, notifications] =
-    useNotifications(showRead ? "all" : "unread");
-  const error = notificationsError;
+  const [showUnread, setShowUnread] = useState(true);
+
+  const {
+    data: notifications,
+    error,
+    isLoading,
+  } = useGetAllNotifications(
+    {
+      unread: showUnread,
+    },
+    {
+      query: {
+        select: data => data.value,
+      },
+    },
+  );
+
+  const markAllNotificationsAsRead = useMarkAllNotificationsAsRead();
+
+  useEffect(() => {
+    if (
+      notifications &&
+      notifications.length > 0 &&
+      markAllNotificationsAsRead.isIdle
+    ) {
+      void markAllNotificationsAsRead.mutate();
+    }
+  }, [markAllNotificationsAsRead, notifications]);
+
   return (
     <div>
       <h3>Notifications</h3>
-      {error && <Alert color="red">{error.toString()}</Alert>}
-      <Button mb="sm" onClick={() => setShowRead(prev => !prev)}>
-        {showRead ? "Show unread" : "Show all"}
+      {error && <Alert color="red">{error as unknown as string}</Alert>}
+      <Button mb="sm" onClick={() => setShowUnread(prev => !prev)}>
+        {showUnread ? "Show all" : "Show unread"}
       </Button>
-      {(!notifications || notifications.length === 0) && (
+      {!isLoading && notifications?.length === 0 && (
         <Alert my="sm" color="gray">
           No notifications
         </Alert>
       )}
-      {notificationsLoading && <Loader />}
+      {isLoading && <Loader />}
       {notifications?.map(notification => (
         <NotificationComponent
           notification={notification}

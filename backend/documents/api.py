@@ -22,7 +22,6 @@ from documents.models import (
     generate_api_key,
 )
 from myauth import auth_check
-from myauth.models import get_my_user
 from notifications import notification_util
 from users.api import UserSchema
 from util import s3_util
@@ -39,8 +38,7 @@ class DocumentTypeListSchema(ValueWrapped[list[str]]):
 class DocumentCommentSchema(Schema):
     oid: int
     text: str
-    authorId: str
-    authorDisplayName: str
+    author: UserSchema
     canEdit: bool
     time: datetime.datetime
     edittime: datetime.datetime
@@ -177,8 +175,7 @@ def make_comment_response(comment, request):
     return DocumentCommentSchema(
         oid=comment.pk,
         text=comment.text,
-        authorId=comment.author.username,
-        authorDisplayName=get_my_user(comment.author).displayname(),
+        author=comment.author,
         canEdit=comment.current_user_can_edit(request),
         time=comment.time,
         edittime=comment.edittime,
