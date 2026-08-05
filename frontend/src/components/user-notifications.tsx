@@ -32,7 +32,7 @@ const UserNotifications: React.FC = () => {
       notifications.length > 0 &&
       markAllNotificationsAsRead.isIdle
     ) {
-      void markAllNotificationsAsRead.mutate();
+      markAllNotificationsAsRead.mutate();
     }
   }, [markAllNotificationsAsRead, notifications]);
 
