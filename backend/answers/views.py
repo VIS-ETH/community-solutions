@@ -167,11 +167,12 @@ def exam_set_metadata(request, filename, exam):
 def claim_exam(request, filename, exam):
     add_claim = request.POST["claim"] != "false"
     if add_claim:
-        if exam.import_claim and exam.import_claim != request.user:
-            if timezone.now() - exam.import_claim_time < timedelta(hours=4):
-                return response.not_possible(
-                    "Exam is already claimed by different user"
-                )
+        if (
+            exam.import_claim
+            and exam.import_claim != request.user
+            and timezone.now() - exam.import_claim_time < timedelta(hours=4)
+        ):
+            return response.not_possible("Exam is already claimed by different user")
         exam.import_claim = request.user
         exam.import_claim_time = timezone.now()
     else:

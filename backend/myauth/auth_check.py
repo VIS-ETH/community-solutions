@@ -14,9 +14,7 @@ def check_api_key(request):
 def user_authenticated(request):
     if request.user is not None:
         return True
-    if check_api_key(request):
-        return True
-    return False
+    return check_api_key(request)
 
 
 def has_admin_rights(request):

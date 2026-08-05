@@ -18,10 +18,9 @@ def db_profiling_middleware(get_response):
                 len(connection.queries),
             )
 
-            if settings.DEBUG:
-                if len(connection.queries) > 20:
-                    for query in connection.queries[:20]:
-                        logging.info(query)
+            if settings.DEBUG and len(connection.queries) > 20:
+                for query in connection.queries[:20]:
+                    logging.info(query)
 
         return response
 

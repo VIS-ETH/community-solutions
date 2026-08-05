@@ -19,7 +19,6 @@ class FeedbackSchema(Schema):
 def submit(request, data: Form[FeedbackSchema]):
     feedback = Feedback(author=request.user, text=data.text)
     feedback.save()
-    return None
 
 
 class FeedbackOut(ModelSchema):
@@ -94,15 +93,16 @@ def replies(request, feedbackid: int, data: Form[FeedbackReplySchema]):
         from notifications.notification_util import new_feedback_reply
 
         new_feedback_reply(request.user, feedback)
-    return None
 
 
 @router.post("/flags/{feedbackid}/", operation_id="setFeedbackFlags")
 @auth_check.require_admin
 def flags(request, feedbackid: int, data: Form[FeedbackFlagsSchema]):
     feedback = get_object_or_404(Feedback, pk=feedbackid)
-    for key in data.__fields__.keys():
-        if data.__dict__[key] is not None:
-            setattr(feedback, key, data.__dict__[key])
+
+    if data.read is not None:
+        feedback.read = data.read
+    if data.done is not None:
+        feedback.done = data.done
+
     feedback.save()
-    return None

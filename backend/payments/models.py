@@ -21,10 +21,8 @@ class Payment(models.Model):
             for year in [now.year - 1, now.year]
             for month in [3, 10]
         ]
-        for reset in resetdates:
-            if now > reset > then:
-                return False
-        return True
+
+        return not any(now > reset > then for reset in resetdates)
 
     def valid_until(self):
         then = self.payment_time

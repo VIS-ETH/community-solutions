@@ -71,7 +71,7 @@ class SetDocumentCommentMarkedAsAiSchema(Schema):
 
 
 class MoveDocumentFileSchema(Schema):
-    direction: Literal["down"] | Literal["up"]
+    direction: Literal["down", "up"]
 
 
 class DocumentCommentWrappedSchema(ValueWrapped[DocumentCommentSchema]):

@@ -67,7 +67,7 @@ def add_auth(request: HttpRequest):
     if "Authorization" in headers:
         auth = headers["Authorization"]
         if not auth.startswith("Bearer "):
-            return None
+            return
         # auth.split(" ") is guaranteed to have at least two elements because
         # auth starts with "Bearer "
         encoded = auth.split(" ")[1]
@@ -161,7 +161,6 @@ def add_auth(request: HttpRequest):
                     ]:
                         setting = NotificationSetting(user=user, type=type_.value)
                         setting.save()
-    return None
 
 
 def AuthenticationMiddleware(get_response):
