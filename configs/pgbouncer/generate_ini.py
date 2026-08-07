@@ -29,4 +29,3 @@ ini = ini.strip()
 
 with open("/dev/shm/pgbouncer.ini", "w") as ini_file:
     ini_file.write(ini)
-

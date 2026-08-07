@@ -20,7 +20,7 @@ from util import response
 """
 Search function that uses the full text search capabilities to search for a given query in
 the collection of exams, comments and answers. To make full text search performant the full
-text search vector is stored in the db. When one of the fields from which the ts_vector is 
+text search vector is stored in the db. When one of the fields from which the ts_vector is
 derived is updated the vector is automatically updated using the trigger. During the search
 process itself a GIN (Generailzed Inverted Index) is used to find matching model instances.
 Postgresql also provides us with two rank functions so that the documents can be sorted by
@@ -31,7 +31,7 @@ how relevant they are. Django uses `ts_rank` by default which as documented does
 (https://www.postgresql.org/docs/9.1/textsearch-controls.html)
 
 Once we have the matching model instances we also want to highlight the matches so that a
-user can see whether something is really the document they were looking for. PSQL gives us 
+user can see whether something is really the document they were looking for. PSQL gives us
 `ts_headline` which by default surrounds matches with <b>match</b>. Because we would like to
 render to HTML on the client we parse the result of ts_headline again and instead of inserting
 <b> we insert random strings so that it becomes highly unlikely that the user can accidentally
@@ -268,8 +268,8 @@ def search_exams(
         .only("page_number", "exam_id")
     )
 
-    examScore = dict()
-    examPages = dict()
+    examScore = {}
+    examPages = {}
     for exam in exams:
         examScore[exam.id] = exam.rank
         examPages[exam.id] = []

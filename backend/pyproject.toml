@@ -26,7 +26,10 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["ruff==0.15.22", "tblib>=3.2.2"]
+dev = [
+    "ruff==0.16.1",
+    "tblib>=3.2.2",
+]
 
 [tool.ruff]
 line-length = 88
@@ -34,5 +37,5 @@ exclude = ["migrations"]
 force-exclude = true
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "UP"]
+select = ["E", "F", "I", "B", "UP", "C4", "ICN", "SIM"]
 ignore = ["E501"]

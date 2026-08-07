@@ -35,7 +35,7 @@ def add_cut(request, filename, exam):
         author=request.user,
         page_num=int(request.POST["pageNum"]),
         rel_height=float(request.POST["relHeight"]),
-        name=request.POST["name"] if "name" in request.POST else "",
+        name=request.POST.get("name", ""),
         hidden=request.POST["hidden"] == "true" if "hidden" in request.POST else False,
         has_answers=request.POST["has_answers"] == "true"
         if "has_answers" in request.POST

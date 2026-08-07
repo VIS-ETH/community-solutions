@@ -244,7 +244,7 @@ class Command(BaseCommand):
                     author=author,
                     text=[
                         "This is a test answer.\n\nIt has multiple lines.",
-                        "This is maths: $\pi = 3$\n\nHowever, it is wrong.",
+                        "This is maths: $\\pi = 3$\n\nHowever, it is wrong.",
                         (
                             f"This is an image: ![Testimage]({owned_image.filename})"
                             if owned_image
@@ -483,7 +483,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options.get("skip_if_exists"):
             # Assume if users okay, all testdata is okay
-            usernames = set(u[2] for u in users)
+            usernames = {u[2] for u in users}
             if MyUser.objects.filter(username__in=usernames).count() == len(users):
                 self.stdout.write("All test users already exist. Skipping creation.")
                 return

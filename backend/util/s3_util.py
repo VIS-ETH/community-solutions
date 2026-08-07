@@ -52,8 +52,7 @@ if "SIP_S3_FILES_HOST" in os.environ:
 
 def save_uploaded_file_to_disk(dest: str, uploaded_file: UploadedFile):
     with open(dest, "wb+") as destination:
-        for chunk in uploaded_file.chunks():
-            destination.write(chunk)
+        destination.writelines(uploaded_file.chunks())
 
 
 def save_uploaded_file_to_s3(

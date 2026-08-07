@@ -40,7 +40,7 @@ def start_job(nethz, password, exam, pdf_path):
 def _prepare_username(nethz):
     """
     Appends a suffix to the nethz account required by samba.
-    e.g. hansli -> d\hansli
+    e.g. hansli -> d\\hansli
     """
 
     return f"d\\{nethz}"
