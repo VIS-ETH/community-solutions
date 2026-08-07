@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useUserAnswers } from "../api/hooks";
 import AnswerComponent from "./answer";
 import { Alert, Loader } from "@mantine/core";
 import classes from "./user-answers.module.css";
+import { useListAnswersByUser } from "../api/hooks/answers";
 // `transform: translateX(0)` fixes an issue on webkit browsers
 // where relative positioned elements aren't displayed in containers
 // with multiple columns. This is a quick-fix as pointed out on the
@@ -20,7 +20,22 @@ interface UserAnswersProps {
 
 const UserAnswers: React.FC<UserAnswersProps> = ({ username }) => {
   const [page, setPage] = useState(0); // to indicate what page of answers should be loaded
-  const [error, loading, data, reload] = useUserAnswers(username, -1);
+  const {
+    error,
+    isLoading: loading,
+    data,
+    refetch,
+  } = useListAnswersByUser(
+    username,
+    {
+      page: -1,
+    },
+    {
+      query: {
+        select: data => data.value,
+      },
+    },
+  );
   const [answers, setAnswers] = useState(data);
   const [lastElement, setLastElement] = useState<HTMLDivElement | null>(null);
 
@@ -61,7 +76,7 @@ const UserAnswers: React.FC<UserAnswersProps> = ({ username }) => {
 
   return (
     <>
-      {error && <Alert color="red">{error.message}</Alert>}
+      {error && <Alert color="red">{error as unknown as string}</Alert>}
       {(!answers || answers.length === 0) && !loading && (
         <Alert color="gray">No answers</Alert>
       )}
@@ -72,7 +87,7 @@ const UserAnswers: React.FC<UserAnswersProps> = ({ username }) => {
               hasId={false}
               answer={answer}
               answerKind={answer.kind}
-              onSectionChanged={reload}
+              onSectionChanged={() => void refetch()}
             />
           </div>
         ))}

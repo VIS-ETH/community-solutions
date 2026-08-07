@@ -67,17 +67,17 @@ class TestExistingAnswer(ComsolTestExamData):
         self.assertEqual(answer.marked_as_ai.count(), 0)
         self.post(
             f"/api/exam/setanswermarkedasai/{answer.id}/",
-            {"marked_as_ai": False},
+            {"markedAsAi": False},
         )
         self.post(
             f"/api/exam/setanswermarkedasai/{answer.id}/",
-            {"marked_as_ai": True},
+            {"markedAsAi": True},
         )
         answer.refresh_from_db()
         self.assertEqual(answer.marked_as_ai.count(), 1)
         self.post(
             f"/api/exam/setanswermarkedasai/{answer.id}/",
-            {"marked_as_ai": False},
+            {"markedAsAi": False},
         )
         answer.refresh_from_db()
         self.assertEqual(answer.marked_as_ai.count(), 0)

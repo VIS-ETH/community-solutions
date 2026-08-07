@@ -6,7 +6,7 @@ import {
   MetaCategoryWithCategories,
   ExamSelectedForDownload,
 } from "../interfaces";
-import { fetchGet } from "../api/fetch-utils";
+import { getExamPdfUrl } from "../api/hooks/answers";
 import { downloadZipFile, type ZipFileItem } from "./download-zip-file.js";
 
 export function filterMatches(filter: string, name: string): boolean {
@@ -108,10 +108,8 @@ export const dlSelectedExams = async (
 ) => {
   const zipFileItems = selectedExams.map(
     async (exam): Promise<ZipFileItem | undefined> => {
-      const responseUrl = await fetchGet(
-        `/api/exam/pdf/exam/${exam.filename}/`,
-      );
-      const responseFile = fetch(responseUrl.value).then(r => r.arrayBuffer());
+      const { value } = await getExamPdfUrl(exam.filename);
+      const responseFile = fetch(value.url).then(r => r.arrayBuffer());
 
       return {
         displayName: exam.displayname,

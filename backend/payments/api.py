@@ -7,7 +7,7 @@ from myauth import auth_check
 from myauth.models import MyUser
 from payments.models import Payment
 from util import response
-from util.schemas import ValueWrapped
+from util.schemas import ErrorSchema, ValueWrapped
 
 router = Router(tags=["Payments"])
 
@@ -21,10 +21,10 @@ class PaymentRequest(Schema):
     response={
         200: None,
         # Unauthenticated
-        401: response.ErrorSchema,
+        401: ErrorSchema,
         # Unauthorised
-        403: response.ErrorSchema,
-        404: response.ErrorSchema,
+        403: ErrorSchema,
+        404: ErrorSchema,
     },
     operation_id="pay",
 )
@@ -41,10 +41,10 @@ def pay(request, data: Form[PaymentRequest]):
     response={
         200: None,
         # Unauthenticated
-        401: response.ErrorSchema,
+        401: ErrorSchema,
         # Unauthorised
-        403: response.ErrorSchema,
-        404: response.ErrorSchema,
+        403: ErrorSchema,
+        404: ErrorSchema,
     },
     operation_id="removePayment",
 )
@@ -60,12 +60,12 @@ def remove(request, oid: int):
     response={
         200: None,
         # Not Possible
-        400: response.ErrorSchema,
+        400: ErrorSchema,
         # Unauthenticated
-        401: response.ErrorSchema,
+        401: ErrorSchema,
         # Unauthorised
-        403: response.ErrorSchema,
-        404: response.ErrorSchema,
+        403: ErrorSchema,
+        404: ErrorSchema,
     },
     operation_id="refundPayment",
 )
@@ -115,8 +115,8 @@ def get_user_payments(user):
     response={
         200: ValueWrapped[list[PaymentInfo]],
         # Unauthorised
-        403: response.ErrorSchema,
-        404: response.ErrorSchema,
+        403: ErrorSchema,
+        404: ErrorSchema,
     },
     operation_id="getPayments",
 )
@@ -134,12 +134,12 @@ def query(request, username: str):
     "/markexamchecked/{filename}/",
     response={
         200: None,
-        400: response.ErrorSchema,
+        400: ErrorSchema,
         # Unauthenticated
-        401: response.ErrorSchema,
+        401: ErrorSchema,
         # Unauthorised
-        403: response.ErrorSchema,
-        404: response.ErrorSchema,
+        403: ErrorSchema,
+        404: ErrorSchema,
     },
     operation_id="markExamChecked",
 )

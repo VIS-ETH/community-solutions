@@ -10,7 +10,7 @@ import useAlmostInViewport from "../hooks/useAlmostInViewport";
 import useDpr from "../hooks/useDpr";
 import PDF from "./pdf-renderer";
 import { PdfCanvasReference } from "./reference-counting";
-import { CutUpdate } from "../interfaces";
+import type { EditCutBody } from "../api/model";
 import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import classes from "./pdf-section-canvas.module.css";
 import { clsx } from "clsx";
@@ -80,7 +80,7 @@ const usePdf = (
 };
 
 interface Props {
-  oid?: string;
+  oid?: number;
   page: number;
   start: number;
   end: number;
@@ -93,8 +93,8 @@ interface Props {
   snap?: boolean;
   displayHideShowButtons?: boolean;
   onSectionHiddenChange?: (
-    section: string | [number, number],
-    update: Partial<CutUpdate>,
+    section: number | [number, number],
+    update: EditCutBody,
   ) => void;
 }
 const PdfSectionCanvas: React.FC<Props> = React.memo(

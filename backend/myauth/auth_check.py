@@ -103,7 +103,9 @@ def require_exam_admin(f):
         exam = get_object_or_404(Exam, filename=kwargs["filename"])
         if not has_admin_rights_for_exam(request, exam):
             return response.not_allowed()
-        return f(request, *args, exam=exam, **kwargs)
+
+        request.exam = exam
+        return f(request, *args, **kwargs)
 
     return wrapper
 

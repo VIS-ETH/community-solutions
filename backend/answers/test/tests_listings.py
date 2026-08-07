@@ -29,7 +29,7 @@ class TestListings(ComsolTestExamsData):
         self.assertEqual(len(res), 1)
 
         # Test hidden exams do show up if you explicitly request it
-        res = self.get("/api/exam/listimportexams/?includehidden=true")["value"]
+        res = self.get("/api/exam/listimportexams/?includeHidden=true")["value"]
         self.assertEqual(len(res), 2)
 
     def test_list_payment_check(self):
