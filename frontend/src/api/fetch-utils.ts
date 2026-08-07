@@ -242,8 +242,3 @@ export function download(url: string, name?: string) {
     document.body.removeChild(a);
   }, 0);
 }
-
-export async function downloadIndirect(url: string) {
-  const { value: signedUrl } = await fetchGet(url);
-  download(signedUrl);
-}

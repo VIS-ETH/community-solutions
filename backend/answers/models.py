@@ -61,7 +61,7 @@ class Exam(ExportModelOperationsMixin("exam"), models.Model):
             return True
         if not self.public:
             return False
-        if self.needs_payment and not request.user.has_payed():
+        if self.needs_payment and not request.user.has_paid():
             return False
         if (
             self.oral_transcript_uploader is not None
@@ -131,7 +131,7 @@ def generate_long_id():
 
 
 class Answer(ExportModelOperationsMixin("answer"), models.Model):
-    class Kind(models.TextChoices):
+    class AnswerKind(models.TextChoices):
         PERSONAL = "personal"
         LEGACY = "legacy"
         OFFICIAL = "official"
@@ -150,7 +150,9 @@ class Answer(ExportModelOperationsMixin("answer"), models.Model):
     marked_as_ai = models.ManyToManyField(
         "auth.User", related_name="markedasai_answer_set"
     )
-    kind = models.CharField(max_length=16, choices=Kind.choices, default=Kind.PERSONAL)
+    kind = models.CharField(
+        max_length=16, choices=AnswerKind.choices, default=AnswerKind.PERSONAL
+    )
     long_id = models.CharField(max_length=256, default=generate_long_id, unique=True)
 
     search_vector = SearchVectorField()

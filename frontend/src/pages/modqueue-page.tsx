@@ -1,4 +1,3 @@
-import { useRequest } from "ahooks";
 import {
   Anchor,
   Badge,
@@ -10,55 +9,46 @@ import {
 } from "@mantine/core";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchGet } from "../api/fetch-utils";
-import { removeExam } from "../api/hooks";
+import {
+  useListImportExams,
+  useListPaymentCheckExams,
+  useRemoveExam,
+} from "../api/hooks/answers";
+import type { ListImportExamsSchema } from "../api/model";
 import ClaimButton from "../components/claim-button";
 import IconButton from "../components/icon-button";
 import LoadingOverlay from "../components/loading-overlay";
 import useRemoveConfirm from "../hooks/useRemoveConfirm";
-import { CategoryExam, CategoryPaymentExam } from "../interfaces";
 import useTitle from "../hooks/useTitle";
 import { IconTrash } from "@tabler/icons-react";
-
-const loadExams = async (includeHidden: boolean) => {
-  return (
-    await fetchGet(
-      `/api/exam/listimportexams/${includeHidden ? "?includehidden=true" : ""}`,
-    )
-  ).value as CategoryExam[];
-};
-const loadPaymentExams = async () => {
-  return (await fetchGet("/api/exam/listpaymentcheckexams/"))
-    .value as CategoryPaymentExam[];
-};
 
 const ModQueue: React.FC = () => {
   useTitle("Import Queue");
   const [includeHidden, setIncludeHidden] = useState(false);
   const {
     error: examsError,
-    loading: examsLoading,
+    isFetching: examsLoading,
     data: exams,
-    run: reloadExams,
-  } = useRequest(() => loadExams(includeHidden), {
-    refreshDeps: [includeHidden],
-  });
+    refetch: reloadExams,
+  } = useListImportExams(
+    { includeHidden },
+    { query: { select: data => data.value } },
+  );
   const [removeConfirm, modals] = useRemoveConfirm();
-  const { run: runRemoveExam } = useRequest(removeExam, {
-    manual: true,
-    onSuccess: reloadExams,
+  const { mutate: runRemoveExam } = useRemoveExam({
+    mutation: { onSuccess: () => void reloadExams() },
   });
-  const handleRemoveClick = (exam: CategoryExam) => {
+  const handleRemoveClick = (exam: ListImportExamsSchema) => {
     removeConfirm(
       `Remove the exam named ${exam.displayname}? This will remove all answers and can not be undone!`,
-      () => runRemoveExam(exam.filename),
+      () => runRemoveExam({ filename: exam.filename }),
     );
   };
   const {
     error: payError,
-    loading: payLoading,
+    isFetching: payLoading,
     data: paymentExams,
-  } = useRequest(loadPaymentExams);
+  } = useListPaymentCheckExams({ query: { select: data => data.value } });
 
   const error = examsError ?? payError;
 
@@ -83,16 +73,18 @@ const ModQueue: React.FC = () => {
               <tbody>
                 {paymentExams.map(exam => (
                   <tr key={exam.filename}>
-                    <Table.Td>{exam.category_displayname}</Table.Td>
+                    <Table.Td>{exam.categoryDisplayname}</Table.Td>
                     <Table.Td>
                       <Link to={`/exams/${exam.filename}`} target="_blank">
                         {exam.displayname}
                       </Link>
                     </Table.Td>
                     <Table.Td>
-                      <Link to={`/user/${exam.payment_uploader}`}>
-                        {exam.payment_uploader_displayname}
-                      </Link>
+                      {exam.paymentUploader && (
+                        <Link to={`/user/${exam.paymentUploader.username}`}>
+                          {exam.paymentUploader.display_name}
+                        </Link>
+                      )}
                     </Table.Td>
                   </tr>
                 ))}
@@ -104,7 +96,7 @@ const ModQueue: React.FC = () => {
       <Title my="sm" order={2}>
         Import Queue
       </Title>
-      {error && <div>{error.message}</div>}
+      {error && <div>{error as unknown as string}</div>}
       <div>
         <LoadingOverlay visible={examsLoading} />
         <Table fz="md">
@@ -118,9 +110,9 @@ const ModQueue: React.FC = () => {
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {exams?.map((exam: CategoryExam) => (
+            {exams?.map(exam => (
               <Table.Tr key={exam.filename}>
-                <Table.Td>{exam.category_displayname}</Table.Td>
+                <Table.Td>{exam.categoryDisplayname}</Table.Td>
                 <Table.Td>
                   <Group>
                     <Anchor
@@ -137,11 +129,19 @@ const ModQueue: React.FC = () => {
                   </Group>
                 </Table.Td>
                 <Table.Td>
-                  {exam.finished_cuts ? "All done" : "Needs Cuts"}
+                  {exam.finishedCuts ? "All done" : "Needs Cuts"}
                 </Table.Td>
                 <Table.Td>
-                  {!exam.finished_cuts && (
-                    <ClaimButton exam={exam} reloadExams={reloadExams} />
+                  {!exam.finishedCuts && (
+                    <ClaimButton
+                      filename={exam.filename}
+                      claimedByUsername={exam.importClaim?.username ?? null}
+                      claimedByDisplayname={
+                        exam.importClaim?.display_name ?? null
+                      }
+                      claimTime={exam.importClaimTime}
+                      reloadExams={() => void reloadExams()}
+                    />
                   )}
                 </Table.Td>
                 <Table.Td>

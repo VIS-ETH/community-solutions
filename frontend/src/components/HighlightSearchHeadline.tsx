@@ -1,7 +1,7 @@
-import { HighlightedMatch } from "../interfaces";
+import { HighlightedMatchSchema } from "../api/model";
 
 export const HighlightedContent: React.FC<{
-  content: HighlightedMatch;
+  content: HighlightedMatchSchema;
   level?: number;
 }> = ({ content, level = 0 }) => {
   if (typeof content === "string") {

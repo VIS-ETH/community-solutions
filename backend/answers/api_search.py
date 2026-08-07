@@ -2,20 +2,26 @@ import logging
 import random
 import re
 import time
+from typing import Literal
 
 from django.conf import settings
 from django.contrib.postgres.search import (
     SearchQuery,
     SearchRank,
 )
-from django.db.models import Case, F, Func, Q, TextField, When
+from django.db.models import F, Func, Q, TextField
 from django.db.models import Value as V
 from django.db.models.functions import Concat
+from ninja import Field, Form, Router, Schema
+from pydantic import RootModel
 
 from answers.models import Answer, Comment, Exam, ExamPage
 from myauth import auth_check
 from myauth.auth_check import has_admin_rights
-from util import response
+from users.api import UserSchema
+from util.schemas import ErrorSchema, ValueWrapped
+
+router = Router(tags=["Answers"])
 
 """
 Search function that uses the full text search capabilities to search for a given query in
@@ -177,7 +183,7 @@ def headline(
 
 def search_exams(
     term,
-    has_payed,
+    has_paid,
     is_admin,
     category_filter,
     user_admin_categories,
@@ -191,7 +197,7 @@ def search_exams(
     fragment_delimeter = generate_boundary()
 
     can_view = Q(public=True) | Q(category__in=user_admin_categories)
-    if not has_payed:
+    if not has_paid:
         can_view = can_view & Q(needs_payment=False)
 
     exams = (
@@ -248,7 +254,7 @@ def search_exams(
     if category_filter:
         # Filter by slug
         exams = exams.filter(category__slug=category_filter)
-    exams = exams.only("filename")[:amount]
+    exams = exams.only("filename", "displayname")[:amount]
 
     exam_pages_query = (
         ExamPage.objects.filter(
@@ -289,12 +295,13 @@ def search_exams(
     return [
         {
             "type": "exam",
+            "displayname": exam.displayname,
             "filename": exam.filename,
             "headline": parse_headline(
                 exam.headline, start_boundary, end_boundary, fragment_delimeter
             ),
-            "category_displayname": exam.category_displayname,
-            "category_slug": exam.category_slug,
+            "categoryDisplayname": exam.category_displayname,
+            "categorySlug": exam.category_slug,
             "rank": examScore[exam.id],
             "pages": examPages[exam.id],
         }
@@ -303,7 +310,7 @@ def search_exams(
 
 
 def search_answers(
-    term, has_payed, is_admin, category_filter, user_admin_categories, amount
+    term, has_paid, is_admin, category_filter, user_admin_categories, amount
 ):
     query = SearchQuery(term)
 
@@ -314,7 +321,7 @@ def search_answers(
     answer_section_exam_can_view = Q(answer_section__exam__public=True) | Q(
         answer_section__exam__category__in=user_admin_categories
     )
-    if not has_payed:
+    if not has_paid:
         answer_section_exam_can_view = answer_section_exam_can_view & Q(
             answer_section__exam__needs_payment=False
         )
@@ -328,14 +335,6 @@ def search_answers(
         answers.filter(search_vector=term)
         .annotate(
             rank=SearchRank(F("search_vector"), query),
-            author_username=F("author__username"),
-            author_displayname=Case(
-                When(
-                    Q(author__first_name__isnull=True),
-                    "author__last_name",
-                ),
-                default=Concat("author__first_name", V(" "), "author__last_name"),
-            ),
             highlighted_words=headline(
                 F("text"), query, start_boundary, end_boundary, fragment_delimeter, 1, 2
             ),
@@ -346,40 +345,41 @@ def search_answers(
             category_displayname=F("answer_section__exam__category__displayname"),
             category_slug=F("answer_section__exam__category__slug"),
         )
-        .values(
-            "author_username",
-            "author_displayname",
-            "text",
-            "highlighted_words",
-            "rank",
-            "long_id",
-            # Exam
-            "exam_displayname",
-            "filename",
-            # Category
-            "category_displayname",
-            "category_slug",
-        )[:amount]
+        .select_related("author")[:amount]
     )
-    for answer in answers:
-        answer["highlighted_words"] = list(
-            flatten(
-                map(
-                    flatten_and_filter,
-                    parse_headline(
-                        answer["highlighted_words"],
-                        start_boundary,
-                        end_boundary,
-                        fragment_delimeter,
-                    ),
+    return [
+        {
+            "type": "answer",
+            "author": answer.author,
+            "text": answer.text,
+            "highlightedWords": list(
+                flatten(
+                    map(
+                        flatten_and_filter,
+                        parse_headline(
+                            answer.highlighted_words,
+                            start_boundary,
+                            end_boundary,
+                            fragment_delimeter,
+                        ),
+                    )
                 )
-            )
-        )
-    return answers
+            ),
+            "rank": answer.rank,
+            "longId": answer.long_id,
+            # Exam
+            "examDisplayname": answer.exam_displayname,
+            "filename": answer.filename,
+            # Category
+            "categoryDisplayname": answer.category_displayname,
+            "categorySlug": answer.category_slug,
+        }
+        for answer in answers
+    ]
 
 
 def search_comments(
-    term, has_payed, is_admin, category_filter, user_admin_categories, amount
+    term, has_paid, is_admin, category_filter, user_admin_categories, amount
 ):
     query = SearchQuery(term)
 
@@ -390,7 +390,7 @@ def search_comments(
     answer_answer_section_exam_can_view = Q(
         answer__answer_section__exam__public=True
     ) | Q(answer__answer_section__exam__category__in=user_admin_categories)
-    if not has_payed:
+    if not has_paid:
         answer_answer_section_exam_can_view = answer_answer_section_exam_can_view & Q(
             answer__answer_section__exam__needs_payment=False
         )
@@ -406,14 +406,6 @@ def search_comments(
         comments.filter(search_vector=term)
         .annotate(
             rank=SearchRank(F("search_vector"), query),
-            author_username=F("author__username"),
-            author_displayname=Case(
-                When(
-                    Q(author__first_name__isnull=True),
-                    "author__last_name",
-                ),
-                default=Concat("author__first_name", V(" "), "author__last_name"),
-            ),
             highlighted_words=headline(
                 F("text"), query, start_boundary, end_boundary, fragment_delimeter, 1, 2
             ),
@@ -428,70 +420,147 @@ def search_comments(
             ),
             category_slug=F("answer__answer_section__exam__category__slug"),
         )
-        .values(
-            "author_username",
-            "author_displayname",
-            "text",
-            "highlighted_words",
-            "rank",
-            "long_id",
-            # Answer
-            "answer_long_id",
-            # Exam
-            "exam_displayname",
-            "filename",
-            # Category
-            "category_displayname",
-            "category_slug",
-        )[:amount]
+        .select_related("author")[:amount]
     )
-    for comment in comments:
-        comment["highlighted_words"] = list(
-            flatten(
-                map(
-                    flatten_and_filter,
-                    parse_headline(
-                        comment["highlighted_words"],
-                        start_boundary,
-                        end_boundary,
-                        fragment_delimeter,
-                    ),
+    return [
+        {
+            "type": "comment",
+            "author": comment.author,
+            "text": comment.text,
+            "highlightedWords": list(
+                flatten(
+                    map(
+                        flatten_and_filter,
+                        parse_headline(
+                            comment.highlighted_words,
+                            start_boundary,
+                            end_boundary,
+                            fragment_delimeter,
+                        ),
+                    )
                 )
-            )
-        )
-    return comments
+            ),
+            "rank": comment.rank,
+            "longId": comment.long_id,
+            # Answer
+            "answerLongId": comment.answer_long_id,
+            # Exam
+            "examDisplayname": comment.exam_displayname,
+            "filename": comment.filename,
+            # Category
+            "categoryDisplayname": comment.category_displayname,
+            "categorySlug": comment.category_slug,
+        }
+        for comment in comments
+    ]
 
 
-@response.request_post("term")
-@auth_check.require_login
-def search(request):
-    term = request.POST["term"]
-    amount = min(request.POST.get("amount", 15), 30)
-    include_exams = request.POST.get("include_exams", "true") == "true"
-    include_answers = request.POST.get("include_answers", "true") == "true"
-    include_comments = request.POST.get("include_comments", "true") == "true"
-
-    # Whether include_exams should search and return the exam's category name
-    # too. Has no effect is include_exams is false. Is also much slower if set
+class SearchRequestBody(Schema):
+    term: str
+    amount: int = Field(default=15, ge=1, le=30)
+    includeExams: bool = True
+    includeAnswers: bool = True
+    includeComments: bool = True
+    # Whether includeExams should search and return the exam's category name
+    # too. Has no effect is includeExams is false. Is also much slower if set
     # to true since we have to do a full-text-search on concatednated columns at
     # runtime instead of using pre-calculated vectors.
-    exams_with_category_name = (
-        request.POST.get("exams_with_category_name", "false") == "true"
-    )
+    examsWithCategoryName: bool = False
 
     # Category slug to limit results to (ID is more efficient, but current
     # client side has no access to ID and uses slugs for everything)
-    category_filter = request.POST.get("category", "")
+    category: str = Field(default="", max_length=256)
+
+
+class HighlightedMatchSchema(RootModel):
+    root: str | list["HighlightedMatchSchema"]
+
+
+class PageSchema(RootModel):
+    root: tuple[int, float, list[HighlightedMatchSchema]]
+
+
+class ExamSearchResult(Schema):
+    type: Literal["exam"]
+    rank: float
+
+    headline: list[HighlightedMatchSchema]
+
+    pages: list[PageSchema]
+
+    displayname: str
+    filename: str
+    categoryDisplayname: str
+    categorySlug: str
+
+
+class AnswerSearchResult(Schema):
+    type: Literal["answer"]
+    rank: float
+
+    text: str
+    highlightedWords: list[str]
+    author: UserSchema
+    longId: str
+
+    examDisplayname: str
+    filename: str
+
+    categoryDisplayname: str
+    categorySlug: str
+
+
+class CommentSearchResult(Schema):
+    type: Literal["comment"]
+    rank: float
+
+    text: str
+    highlightedWords: list[str]
+    author: UserSchema
+    longId: str
+
+    answerLongId: str
+
+    examDisplayname: str
+    filename: str
+
+    categoryDisplayname: str
+    categorySlug: str
+
+
+class SearchResult(RootModel):
+    root: list[ExamSearchResult | AnswerSearchResult | CommentSearchResult]
+
+
+@router.post(
+    "/search/",
+    response={
+        200: ValueWrapped[SearchResult],
+        401: ErrorSchema,
+    },
+    operation_id="search",
+)
+@auth_check.require_login
+def search(request, data: Form[SearchRequestBody]):
+    term = data.term
+    amount = data.amount
+    include_exams = data.includeExams
+    include_answers = data.includeAnswers
+    include_comments = data.includeComments
+
+    exams_with_category_name = data.examsWithCategoryName
+
+    category_filter = data.category
 
     user = request.user
     user_admin_categories = user.category_admin_set.values_list("id", flat=True)
-    has_payed = user.has_payed()
+    has_paid = user.has_paid()
     is_admin = has_admin_rights(request)
     exams_start = time.time()
     exams = (
         search_exams(
             term,
-            has_payed,
+            has_paid,
             is_admin,
             category_filter,
             user_admin_categories,
@@ -504,7 +573,7 @@ def search(request):
     answers_start = time.time()
     answers = (
         search_answers(
-            term, has_payed, is_admin, category_filter, user_admin_categories, amount
+            term, has_paid, is_admin, category_filter, user_admin_categories, amount
         )
         if include_answers
         else []
@@ -512,23 +581,13 @@ def search(request):
     comments_start = time.time()
     comments = (
         search_comments(
-            term, has_payed, is_admin, category_filter, user_admin_categories, amount
+            term, has_paid, is_admin, category_filter, user_admin_categories, amount
         )
         if include_comments
         else []
     )
     start_merge = time.time()
-    res = []
-    for exam in exams:
-        exam["type"] = "exam"
-        res.append(exam)
-    for answer in answers:
-        answer["type"] = "answer"
-        res.append(answer)
-    for comment in comments:
-        comment["type"] = "comment"
-        res.append(comment)
-    res = sorted(res, key=lambda x: -x["rank"])
+    res = sorted([*exams, *answers, *comments], key=lambda x: -x["rank"])
     end = time.time()
     if settings.DEBUG:
         logger.info(
@@ -537,4 +596,7 @@ def search(request):
         logger.info(
             f"Time spent: exams: {(answers_start - exams_start) * 1000} ms, answers: {(comments_start - answers_start) * 1000} ms, comments: {(start_merge - comments_start) * 1000} ms, sorting: {(end - start_merge) * 1000} ms"
         )
-    return response.success(value=res)
+
+    return {
+        "value": res,
+    }

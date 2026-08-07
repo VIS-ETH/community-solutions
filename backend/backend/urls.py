@@ -47,6 +47,7 @@ api.add_router("document/", "documents.api.router")
 api.add_router("scoreboard/", "scoreboard.api.router")
 api.add_router("payment/", "payments.api.router")
 api.add_router("notification/", "notifications.api.router")
+api.add_router("exam/", "answers.api.router")
 
 urlpatterns = [
     path("", include("health.urls")),
@@ -54,7 +55,6 @@ urlpatterns = [
     # Any endpoints defined by Ninja
     path("api/", api.urls),
     # Any endpoints defined by the old style of Django views
-    path("api/exam/", include("answers.urls")),
     path("api/faq/", include("faq.urls")),
     path("api/category/", include("categories.urls")),
     path("api/filestore/", include("filestore.urls")),

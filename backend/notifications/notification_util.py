@@ -75,7 +75,7 @@ def send_feedback_notification(sender, receiver, type_, title, message, feedback
 
 
 def new_comment_to_answer(answer, new_comment):
-    if answer.kind != Answer.Kind.PERSONAL:
+    if answer.kind != Answer.AnswerKind.PERSONAL:
         return
     send_notification(
         new_comment.author,
@@ -107,7 +107,7 @@ def new_comment_to_comment(answer, new_comment):
 
 
 def _new_answer_to_answer(old_answer, new_answer):
-    if old_answer.kind != Answer.Kind.PERSONAL:
+    if old_answer.kind != Answer.AnswerKind.PERSONAL:
         return
     send_notification(
         new_answer.author,
@@ -121,7 +121,7 @@ def _new_answer_to_answer(old_answer, new_answer):
 
 def new_answer_to_answer(new_answer):
     for other_answer in Answer.objects.filter(
-        answer_section=new_answer.answer_section, kind=Answer.Kind.PERSONAL
+        answer_section=new_answer.answer_section, kind=Answer.AnswerKind.PERSONAL
     ):
         if other_answer != new_answer:
             _new_answer_to_answer(other_answer, new_answer)
