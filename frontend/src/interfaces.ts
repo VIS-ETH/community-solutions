@@ -1,8 +1,24 @@
+import { AnswerSectionSchema } from "./api/model";
+
 export type Section = AnswerSection | PdfSection;
 
 export enum SectionKind {
   Answer,
   Pdf,
+}
+
+export type AnswerSection = AnswerSectionSchema & {
+  kind: SectionKind.Answer;
+  cutHidden: boolean;
+};
+
+export interface PdfSection {
+  key: string | number;
+  cutOid?: number;
+  kind: SectionKind.Pdf;
+  start: CutPosition;
+  end: CutPosition;
+  hidden: boolean;
 }
 
 export interface FlaggedStatus {
@@ -12,119 +28,9 @@ export interface FlaggedStatus {
   flagType: boolean; // true if this is a comment false if it is an answer
 }
 
-export enum AnswerKind {
-  Personal = "personal",
-  Legacy = "legacy",
-  Official = "official",
-}
-
-export interface AnswerSection {
-  oid: string; // unique id within answer sections
-  kind: SectionKind.Answer;
-  answers: Answer[];
-  allow_new_answer: boolean; // whether the current user can add an answer
-  allow_new_legacy_answer: boolean; // whether a legacy answer can be posted
-  allow_new_official_answer: boolean; // whether an official answer can be posted
-  cutHidden: boolean;
-  has_answers: boolean;
-  hidden: boolean; // whether the element is currently hidden
-  cutVersion: number; // version of the answer section, should reload if changed
-  name: string;
-}
-
-export interface Answer {
-  oid: string; // unique id within answers
-  longId: string; // long unique id
-  upvotes: number; // number upvotes minus number of downvotes
-  expertvotes: number; // number of experts who upvoted
-  authorId: string; // username
-  authorDisplayName: string; // display name of author
-  canEdit: boolean; // whether the current user can edit the answer
-  isAuthor: boolean; // whether the current user is the author of the answer
-  isUpvoted: boolean; // whether the current user upvoted the answer
-  isDownvoted: boolean; // whether the current user downvoted the answer
-  isExpertVoted: boolean; // whether the current user expert upvoted the answer
-  isFlagged: boolean; // whether the current user flagged the answer
-  flaggedCount: number; // number of flaggings
-  isMarkedAsAi: boolean; // whether the current user marked the answer as AI-generated
-  markedAsAiCount: number; // number of markings as AI-generated
-  comments: Comment[];
-  text: string;
-  time: string; // ISO 8601, creation time
-  edittime: string; // ISO 8601, last edit time
-  filename: string; // filename of the corresponding exam
-  sectionId: string; // id of section containing answer
-  kind: AnswerKind; // whether this is a personal, legacy or official answer
-  divRef?: HTMLDivElement; // root div element for scroll jumping
-}
-
-export interface Comment {
-  oid: string; // unique id within comments
-  longId: string; // long unique id
-  text: string;
-  authorId: string; // username
-  authorDisplayName: string; // display name of author
-  canEdit: boolean; // whether the current user can edit the comment
-  time: string; // ISO 8601, creation time
-  isFlagged: boolean; // whether the current user flagged the comment
-  flaggedCount: number; // number of flaggings
-  isMarkedAsAi: boolean; // whether the current user marked the comment as AI-generated
-  markedAsAiCount: number; // number of markings as AI-generated
-  edittime: string; // ISO 8601, last edit time
-}
-
-export interface SingleComment {
-  oid: string; // unique id within comments
-  longId: string; // long unique id
-  text: string;
-  authorId: string; // username
-  answerId: string;
-  authorDisplayName: string; // display name of author
-  time: string; // ISO 8601, creation time
-  edittime: string; // ISO 8601, last edit time
-
-  exam_displayname: string;
-  filename: string;
-
-  category_displayname: string;
-  category_slug: string;
-
-  isFlagged: boolean; // whether the current user flagged the answer
-  flaggedCount: number; // number of flaggings
-  isMarkedAsAi: boolean; // whether the current user marked the answer as AI-generated
-  markedAsAiCount: number; // number of markings as AI-generated
-}
-
-export interface PdfSection {
-  key: string | number;
-  cutOid?: string;
-  kind: SectionKind.Pdf;
-  start: CutPosition;
-  end: CutPosition;
-  hidden: boolean;
-}
-
-export interface CutUpdate {
-  filename: string;
-  pageNum: number;
-  relHeight: number;
-  name: string;
-  hidden: boolean;
-  has_answers: boolean;
-}
-
 export interface CutPosition {
   page: number; // the first page is 1
   position: number;
-}
-
-export interface ServerCutPosition {
-  relHeight: number;
-  oid: string;
-  cutVersion: number;
-  name: string;
-  hidden: boolean;
-  has_answers: boolean;
 }
 
 export interface Attachment {
@@ -212,38 +118,6 @@ export interface CategoryMetaData {
 export type CategoryMetaDataAny =
   CategoryMetaData | CategoryMetaDataOverview | CategoryMetaDataMinimal;
 
-export interface ExamMetaData {
-  canEdit: boolean;
-  isExpert: boolean;
-  canView: boolean;
-  hasPayed: boolean;
-  filename: string;
-  displayname: string;
-  category: string;
-  category_displayname: string;
-  examtype: string;
-  master_solution: string;
-  resolve_alias: string;
-  remark: string;
-  public: boolean;
-  finished_cuts: boolean;
-  needs_payment: boolean;
-  is_printonly: boolean;
-  has_solution: boolean;
-  solution_printonly: boolean;
-  is_oral_transcript: boolean;
-  oral_transcript_checked: boolean;
-  dark_mode_warning: boolean;
-  count_cuts: number;
-  count_answered: number;
-  attachments: Attachment[];
-  user_solved: boolean;
-
-  exam_file?: string;
-  solution_file?: string;
-  printonly_file?: string;
-}
-
 export interface ExamSelectedForDownload {
   filename: string;
   displayname: string;
@@ -269,9 +143,6 @@ export interface FAQEntry {
   order: number;
 }
 
-export type CutVersions = Record<string, number>;
-export type ServerCutResponse = Record<string, ServerCutPosition[]>;
-
 export enum EditMode {
   None,
   Add,
@@ -280,61 +151,4 @@ export enum EditMode {
 export type EditState =
   | { mode: EditMode.None }
   | { mode: EditMode.Add; snap: boolean }
-  | { mode: EditMode.Move; cut: string; snap: boolean };
-
-// Search endpoint
-
-export type HighlightedMatch = string | HighlightedMatch[];
-export type HighlightedMatches = HighlightedMatch[];
-export type Page = [number, number, HighlightedMatches];
-export interface ExamSearchResult {
-  type: "exam";
-  rank: number;
-
-  headline: HighlightedMatches;
-
-  pages: Page[];
-
-  displayname: string;
-  filename: string;
-
-  category_displayname: string;
-  category_slug: string;
-}
-export interface AnswerSearchResult {
-  type: "answer";
-  rank: number;
-
-  text: string;
-  highlighted_words: string[];
-  author_username: string;
-  author_displayname: string;
-  long_id: string;
-
-  exam_displayname: string;
-  filename: string;
-
-  category_displayname: string;
-  category_slug: string;
-}
-export interface CommentSearchResult {
-  type: "comment";
-  rank: number;
-
-  text: string;
-  highlighted_words: string[];
-  author_username: string;
-  author_displayname: string;
-  long_id: string;
-
-  answer_long_id: string;
-
-  exam_displayname: string;
-  filename: string;
-
-  category_displayname: string;
-  category_slug: string;
-}
-export type SearchResult =
-  ExamSearchResult | AnswerSearchResult | CommentSearchResult;
-export type SearchResponse = SearchResult[];
+  | { mode: EditMode.Move; cut: number; snap: boolean };

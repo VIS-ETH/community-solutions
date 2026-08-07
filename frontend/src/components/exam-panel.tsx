@@ -8,7 +8,8 @@ import {
   Group,
 } from "@mantine/core";
 import React, { useCallback } from "react";
-import { EditMode, EditState, ExamMetaData } from "../interfaces";
+import { EditMode, EditState } from "../interfaces";
+import type { ExamMetadataSchema } from "../api/model";
 import PDF from "../pdf/pdf-renderer";
 import serverData from "../utils/server-data";
 import IconButton from "./icon-button";
@@ -21,10 +22,9 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import ClaimButton from "./claim-button";
-import { useRequest } from "ahooks";
 import { useUser } from "../auth";
 import { hasValidClaim } from "../utils/exam-utils";
-import { loadExamAdminStatus } from "../api/hooks";
+import { useGetExamAdminStatus } from "../api/hooks/answers";
 
 export interface DisplayOptions {
   displayHiddenPdfSections: boolean;
@@ -36,7 +36,7 @@ export interface DisplayOptions {
 interface ExamPanelProps {
   isOpen: boolean;
   toggle: () => void;
-  metaData: ExamMetaData;
+  metaData: ExamMetadataSchema;
   renderer?: PDF;
   inViewPages?: Set<number>;
   visiblePages?: Set<number>;
@@ -86,7 +86,7 @@ const ExamPanel: React.FC<ExamPanelProps> = ({
   const reportProblem = useCallback(() => {
     const subject = encodeURIComponent("Community Solutions: Feedback");
     const body = encodeURIComponent(
-      `Concerning the exam '${metaData.displayname}' of the course '${metaData.category_displayname}' ...`,
+      `Concerning the exam '${metaData.displayname}' of the course '${metaData.categoryDisplayname}' ...`,
     );
     window.location.href = `mailto:${serverData.email_address}?subject=${subject}&body=${body}`;
   }, [metaData]);
@@ -99,12 +99,10 @@ const ExamPanel: React.FC<ExamPanelProps> = ({
   const {
     error: examError,
     data: exam,
-    run: reloadExam,
-  } = useRequest(() =>
-    user?.isAdmin
-      ? loadExamAdminStatus(metaData.filename)
-      : Promise.resolve(undefined),
-  );
+    refetch: reloadExam,
+  } = useGetExamAdminStatus(metaData.filename, {
+    query: { enabled: user?.isAdmin ?? false, select: data => data.value },
+  });
 
   return (
     <PdfPanelBase
@@ -112,7 +110,7 @@ const ExamPanel: React.FC<ExamPanelProps> = ({
       toggle={toggle}
       renderer={renderer}
       title={metaData.displayname}
-      subtitle={metaData.category_displayname}
+      subtitle={metaData.categoryDisplayname}
       inViewPages={inViewPages}
       visiblePages={visiblePages}
       maxWidth={maxWidth}
@@ -145,14 +143,19 @@ const ExamPanel: React.FC<ExamPanelProps> = ({
       {canEdit && (
         <>
           {examError && (
-            <Text>Could not load admin info: {examError.message}</Text>
+            <Text>
+              Could not load admin info: {examError as unknown as string}
+            </Text>
           )}
           {exam && (
             <>
               <Title order={6}>Edit Mode</Title>
               <Group>
-                {hasValidClaim(exam) &&
-                  exam.import_claim === user?.username && (
+                {hasValidClaim(
+                  exam.importClaim?.username,
+                  exam.importClaimTime,
+                ) &&
+                  exam.importClaim?.username === user?.username && (
                     <>
                       {editState.mode !== EditMode.Add && (
                         <Button
@@ -179,13 +182,19 @@ const ExamPanel: React.FC<ExamPanelProps> = ({
                       )}
                     </>
                   )}
-                <ClaimButton exam={exam} reloadExams={reloadExam} />
+                <ClaimButton
+                  filename={exam.filename}
+                  claimedByUsername={exam.importClaim?.username ?? null}
+                  claimedByDisplayname={exam.importClaim?.display_name ?? null}
+                  claimTime={exam.importClaimTime ?? null}
+                  reloadExams={() => void reloadExam()}
+                />
               </Group>
             </>
           )}
           {exam &&
-            hasValidClaim(exam) &&
-            exam.import_claim === user?.username &&
+            hasValidClaim(exam.importClaim?.username, exam.importClaimTime) &&
+            exam.importClaim?.username === user?.username &&
             editState.mode !== EditMode.None && (
               <div>
                 <Checkbox

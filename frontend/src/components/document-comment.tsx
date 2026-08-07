@@ -34,10 +34,10 @@ import TimeText from "./time-text";
 import { copy } from "../utils/clipboard";
 import {
   useDeleteDocumentComment,
-  useResetCommentMarkedAsAi,
-  useResetFlaggedComment,
-  useSetCommentMarkedAsAi,
-  useSetFlaggedComment,
+  useResetDocumentCommentFlagged,
+  useResetDocumentCommentMarkedAsAi,
+  useSetDocumentCommentFlagged,
+  useSetDocumentCommentMarkedAsAi,
   useUpdateDocumentComment,
 } from "../api/hooks/documents";
 import type { DocumentCommentSchema } from "../api/model/documentCommentSchema";
@@ -89,10 +89,13 @@ const DocumentCommentComponent = ({
     usePendingImages();
   const toggle = () => setHasDraft(e => !e);
 
-  const setCommentFlagged = useSetFlaggedComment(hooksOptionsRefetch);
-  const setCommentMarkedAsAi = useSetCommentMarkedAsAi(hooksOptionsRefetch);
-  const resetCommentFlagged = useResetFlaggedComment(hooksOptionsRefetch);
-  const resetCommentMarkedAsAi = useResetCommentMarkedAsAi(hooksOptionsRefetch);
+  const setCommentFlagged = useSetDocumentCommentFlagged(hooksOptionsRefetch);
+  const setCommentMarkedAsAi =
+    useSetDocumentCommentMarkedAsAi(hooksOptionsRefetch);
+  const resetCommentFlagged =
+    useResetDocumentCommentFlagged(hooksOptionsRefetch);
+  const resetCommentMarkedAsAi =
+    useResetDocumentCommentMarkedAsAi(hooksOptionsRefetch);
 
   const flaggedLoading =
     setCommentFlagged.isPending || resetCommentFlagged.isPending;

@@ -1,18 +1,19 @@
 import { differenceInSeconds } from "date-fns";
 import React, { lazy, Suspense, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { addNewComment, removeComment, updateComment } from "../api/comment";
 import {
-  useMutation,
-  useResetExamCommentFlaggedVote,
-  useResetExamCommentMarkedAsAi,
-  useSetExamCommentFlagged,
-  useSetExamCommentMarkedAsAi,
-} from "../api/hooks";
+  useAddComment,
+  useRemoveComment,
+  useResetCommentFlagged,
+  useResetCommentMarkedAsAi,
+  useSetCommentFlagged,
+  useSetCommentMarkedAsAi,
+  useUpdateComment,
+} from "../api/hooks/answers";
+import { AnswerSchema, AnswerSectionSchema, CommentSchema } from "../api/model";
 import { usePendingImages } from "./Editor/pending-images";
 import { useUser } from "../auth";
 import useRemoveConfirm from "../hooks/useRemoveConfirm";
-import { Answer, AnswerSection, Comment } from "../interfaces";
 import { UndoStack } from "./Editor/utils/undo-stack";
 import CodeBlock from "./code-block";
 import MarkdownText from "./markdown-text";
@@ -49,9 +50,9 @@ import { saveDraftToStorage, readDraftFromStorage } from "../utils/drafts";
 const Editor = lazy(() => import("./Editor"));
 
 interface Props {
-  answer: Answer;
-  comment?: Comment;
-  onSectionChanged: (newSection: AnswerSection) => void;
+  answer: AnswerSchema;
+  comment?: CommentSchema;
+  onSectionChanged: (newSection: AnswerSectionSchema) => void;
   onDelete?: () => void;
 }
 const CommentComponent: React.FC<Props> = ({
@@ -62,14 +63,20 @@ const CommentComponent: React.FC<Props> = ({
 }) => {
   const draftKey = comment?.oid ?? answer.oid;
 
-  const [setFlaggedLoading, setExamCommentFlagged] =
-    useSetExamCommentFlagged(onSectionChanged);
-  const [resetFlaggedLoading, resetExamCommentFlagged] =
-    useResetExamCommentFlaggedVote(onSectionChanged);
-  const [, setExamCommentMarkedAsAi] =
-    useSetExamCommentMarkedAsAi(onSectionChanged);
-  const [, resetExamCommentMarkedAsAi] =
-    useResetExamCommentMarkedAsAi(onSectionChanged);
+  const onSectionMutated = {
+    mutation: {
+      onSuccess: ({ value }: { value: AnswerSectionSchema }) =>
+        onSectionChanged(value),
+    },
+  };
+  const { isPending: setFlaggedLoading, mutate: setExamCommentFlagged } =
+    useSetCommentFlagged(onSectionMutated);
+  const { isPending: resetFlaggedLoading, mutate: resetExamCommentFlagged } =
+    useResetCommentFlagged(onSectionMutated);
+  const { mutate: setExamCommentMarkedAsAi } =
+    useSetCommentMarkedAsAi(onSectionMutated);
+  const { mutate: resetExamCommentMarkedAsAi } =
+    useResetCommentMarkedAsAi(onSectionMutated);
   const [viewSource, { toggle: toggleViewSource }] = useDisclosure();
   const { isAdmin, username } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
@@ -80,20 +87,27 @@ const CommentComponent: React.FC<Props> = ({
   const [undoStack, setUndoStack] = useState<UndoStack>({ prev: [], next: [] });
   const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
     usePendingImages();
-  const [addNewLoading, runAddNewComment] = useMutation(addNewComment, res => {
-    if (onDelete) onDelete();
-    onSectionChanged(res);
-    saveDraftToStorage(draftKey, "", false);
+  const { isPending: addNewLoading, mutate: runAddNewComment } = useAddComment({
+    mutation: {
+      onSuccess: ({ value }) => {
+        if (onDelete) onDelete();
+        onSectionChanged(value);
+        saveDraftToStorage(draftKey, "", false);
+      },
+    },
   });
-  const [updateLoading, runUpdateComment] = useMutation(updateComment, res => {
-    setEditing(false);
-    onSectionChanged(res);
-    saveDraftToStorage(draftKey, "", false);
-  });
-  const [removeLoading, runRemoveComment] = useMutation(
-    removeComment,
-    onSectionChanged,
-  );
+  const { isPending: updateLoading, mutate: runUpdateComment } =
+    useUpdateComment({
+      mutation: {
+        onSuccess: ({ value }) => {
+          setEditing(false);
+          onSectionChanged(value);
+          saveDraftToStorage(draftKey, "", false);
+        },
+      },
+    });
+  const { isPending: removeLoading, mutate: runRemoveComment } =
+    useRemoveComment(onSectionMutated);
   const loading = addNewLoading || updateLoading || removeLoading;
   const languages = useOfficialSolutionLanguage();
 
@@ -107,9 +121,9 @@ const CommentComponent: React.FC<Props> = ({
   const onSave = async () => {
     const finalText = await flushPendingImages(draftText);
     if (comment === undefined) {
-      void runAddNewComment(answer.oid, finalText);
+      runAddNewComment({ oid: answer.oid, data: { text: finalText } });
     } else {
-      void runUpdateComment(comment.oid, finalText);
+      runUpdateComment({ oid: comment.oid, data: { text: finalText } });
     }
   };
   const onCancel = () => {
@@ -128,12 +142,12 @@ const CommentComponent: React.FC<Props> = ({
   const remove = () => {
     if (comment)
       removeConfirm("Remove comment?", () => {
-        runRemoveComment(comment.oid);
+        runRemoveComment({ oid: comment.oid });
         saveDraftToStorage(draftKey, "", false);
       });
   };
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
-  const isOwnComment = comment?.authorId === username;
+  const isOwnComment = comment?.author.username === username;
 
   return (
     <Paper
@@ -149,13 +163,13 @@ const CommentComponent: React.FC<Props> = ({
         <div>
           <Anchor
             component={Link}
-            to={`/user/${comment?.authorId ?? username}`}
+            to={`/user/${comment?.author.username ?? username}`}
           >
             <Text fw={700} component="span">
-              {comment?.authorDisplayName ?? "(Draft)"}
+              {comment?.author.display_name ?? "(Draft)"}
             </Text>
             <Text ml="0.25em" c="dimmed" component="span">
-              @{comment?.authorId ?? username}
+              @{comment?.author.username ?? username}
             </Text>
           </Anchor>
           <Text component="span" mx={6} c="dimmed">
@@ -190,7 +204,11 @@ const CommentComponent: React.FC<Props> = ({
               onToggle={
                 isOwnComment
                   ? undefined
-                  : () => setExamCommentFlagged(comment.oid, !comment.isFlagged)
+                  : () =>
+                      setExamCommentFlagged({
+                        oid: comment.oid,
+                        data: { flagged: !comment.isFlagged },
+                      })
               }
             />
           )}
@@ -208,7 +226,10 @@ const CommentComponent: React.FC<Props> = ({
                       <Menu.Item
                         leftSection={<IconRobot />}
                         onClick={() =>
-                          setExamCommentMarkedAsAi(comment.oid, true)
+                          setExamCommentMarkedAsAi({
+                            oid: comment.oid,
+                            data: { markedAsAi: true },
+                          })
                         }
                       >
                         Mark as AI-generated
@@ -217,7 +238,10 @@ const CommentComponent: React.FC<Props> = ({
                       <Menu.Item
                         leftSection={<IconRobotOff />}
                         onClick={() =>
-                          setExamCommentMarkedAsAi(comment.oid, false)
+                          setExamCommentMarkedAsAi({
+                            oid: comment.oid,
+                            data: { markedAsAi: false },
+                          })
                         }
                       >
                         Remove AI-generated mark
@@ -226,7 +250,12 @@ const CommentComponent: React.FC<Props> = ({
                     {comment.flaggedCount === 0 && (
                       <Menu.Item
                         leftSection={<IconFlag />}
-                        onClick={() => setExamCommentFlagged(comment.oid, true)}
+                        onClick={() =>
+                          setExamCommentFlagged({
+                            oid: comment.oid,
+                            data: { flagged: true },
+                          })
+                        }
                       >
                         Flag as Inappropriate
                       </Menu.Item>
@@ -246,7 +275,9 @@ const CommentComponent: React.FC<Props> = ({
                 {isAdmin && comment.markedAsAiCount > 0 && (
                   <Menu.Item
                     leftSection={<IconRobotOff />}
-                    onClick={() => resetExamCommentMarkedAsAi(comment.oid)}
+                    onClick={() =>
+                      resetExamCommentMarkedAsAi({ oid: comment.oid })
+                    }
                   >
                     Remove all AI-generated marks
                   </Menu.Item>
@@ -254,7 +285,9 @@ const CommentComponent: React.FC<Props> = ({
                 {isAdmin && comment.flaggedCount > 0 && (
                   <Menu.Item
                     leftSection={<IconFlag />}
-                    onClick={() => resetExamCommentFlagged(comment.oid)}
+                    onClick={() =>
+                      resetExamCommentFlagged({ oid: comment.oid })
+                    }
                   >
                     Remove all inappropriate flags
                   </Menu.Item>

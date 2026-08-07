@@ -26,8 +26,8 @@ from myauth.models import get_my_user
 from notifications import notification_util
 from users.api import UserSchema
 from util import s3_util
-from util.response import ErrorSchema, not_allowed, not_possible
-from util.schemas import ValueWrapped
+from util.response import not_allowed, not_possible
+from util.schemas import ErrorSchema, ValueWrapped
 
 router = Router(tags=["Documents"])
 
@@ -818,7 +818,7 @@ def delete_document_file(request, username: str, slug: str, id: int):
 @router.post(
     "/setflaggedcomment/{id}",
     response={200: DocumentCommentWrappedSchema, 400: ErrorSchema},
-    operation_id="setFlaggedComment",
+    operation_id="setDocumentCommentFlagged",
 )
 @auth_check.require_login
 def set_flagged_comment(
@@ -844,7 +844,7 @@ def set_flagged_comment(
 @router.post(
     "/setmarkedasaicomment/{id}",
     response={200: DocumentCommentWrappedSchema, 400: ErrorSchema},
-    operation_id="setCommentMarkedAsAi",
+    operation_id="setDocumentCommentMarkedAsAi",
 )
 @auth_check.require_login
 def set_marked_as_ai(
@@ -870,7 +870,7 @@ def set_marked_as_ai(
 @router.post(
     "/resetflaggedcomment/{id}",
     response={200: DocumentCommentWrappedSchema},
-    operation_id="resetFlaggedComment",
+    operation_id="resetDocumentCommentFlagged",
 )
 @auth_check.require_admin
 def reset_flagged_comment(request, id: int):
@@ -885,7 +885,7 @@ def reset_flagged_comment(request, id: int):
 @router.post(
     "/resetmarkedasaicomment/{id}",
     response={200: DocumentCommentWrappedSchema},
-    operation_id="resetCommentMarkedAsAi",
+    operation_id="resetDocumentCommentMarkedAsAi",
 )
 @auth_check.require_admin
 def reset_comment_marked_as_ai(request, id: int):

@@ -10,11 +10,11 @@ type StorageDraft = Record<
 >;
 
 export function saveDraftToStorage(
-  oId: string | undefined,
+  oid: string | number | undefined,
   newValue: string,
   isAnswer: boolean,
 ) {
-  if (oId === undefined) {
+  if (oid === undefined) {
     return;
   }
   const part = isAnswer ? "answers" : "comments";
@@ -25,10 +25,10 @@ export function saveDraftToStorage(
   const now = new Date();
   const currentTimeStamp = now.getTime();
   if (newValue.length === 0) {
-    const { [oId]: _, ...remaining } = draftPartJSON;
+    const { [oid]: _, ...remaining } = draftPartJSON;
     draftJSON[part] = remaining;
   } else {
-    draftPartJSON[oId] = {
+    draftPartJSON[oid] = {
       draft: newValue,
       draftTime: currentTimeStamp,
     };
@@ -37,17 +37,17 @@ export function saveDraftToStorage(
 }
 
 export function readDraftFromStorage(
-  oId: string | undefined,
+  oid: string | number | undefined,
   isAnswer: boolean,
 ): string {
-  if (oId === undefined) {
+  if (oid === undefined) {
     return "";
   }
   const part = isAnswer ? "answers" : "comments";
   const partFromLocalStorage =
     localStorage.getItem(draftPartKey) ?? '{"answers": {},"comments": {}}';
   const draftJSON = JSON.parse(partFromLocalStorage)[part] as StorageDraft;
-  const text = draftJSON[oId]?.draft ?? "";
+  const text = draftJSON[oid]?.draft ?? "";
   return text;
 }
 

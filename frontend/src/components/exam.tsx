@@ -1,26 +1,22 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
-  ExamMetaData,
   Section,
   SectionKind,
   EditMode,
   EditState,
-  CutVersions,
   PdfSection,
-  CutUpdate,
 } from "../interfaces";
 import AnswerSectionComponent from "./answer-section";
 import PdfSectionCanvas from "../pdf/pdf-section-canvas";
-import { useRequest } from "ahooks";
-import { loadCutVersions } from "../api/hooks";
+import { getAnswer, useGetCutVersions } from "../api/hooks/answers";
+import type { EditCutBody, ExamMetadataSchema } from "../api/model";
 import PDF from "../pdf/pdf-renderer";
-import { fetchGet } from "../api/fetch-utils";
 import { getAnswerSectionId } from "../utils/exam-utils";
 import { useLocation } from "react-router-dom";
 import { useScrollToPermalink } from "../hooks/useScrollToPermalink";
 
 interface Props {
-  metaData: ExamMetaData;
+  metaData: ExamMetadataSchema;
   sections: Section[];
   width: number;
   editState: EditState;
@@ -28,20 +24,20 @@ interface Props {
   reloadCuts: () => void;
   renderer: PDF;
   onUpdateCut: (
-    section: string | [number, number],
-    update: Partial<CutUpdate>,
+    section: number | [number, number],
+    update: EditCutBody,
   ) => Promise<void>;
   onAddCut: (filename: string, page: number, height: number) => void;
-  onMoveCut: (cut: string, update: Partial<CutUpdate>) => void;
+  onMoveCut: (cut: number, update: EditCutBody) => void;
   inViewChangeListener: (section: PdfSection, v: boolean) => void;
   displayHiddenPdfSections?: boolean;
   displayHiddenAnswerSections?: boolean;
   displayHideShowButtons?: boolean;
   displayEmptyCutLabels?: boolean;
 
-  expandedSections: Set<string>;
-  onExpandSections: (...sections: string[]) => void;
-  onCollapseSections: (...sections: string[]) => void;
+  expandedSections: Set<number>;
+  onExpandSections: (...sections: number[]) => void;
+  onCollapseSections: (...sections: number[]) => void;
 }
 function notUndefined<T>(value: T | undefined): value is T {
   return value !== undefined;
@@ -94,7 +90,6 @@ const Exam: React.FC<Props> = React.memo(
             onAddCut(metaData.filename, section.start.page, height);
           } else if (editState.mode === EditMode.Move) {
             onMoveCut(editState.cut, {
-              filename: metaData.filename,
               pageNum: section.start.page,
               relHeight: height,
             });
@@ -104,13 +99,14 @@ const Exam: React.FC<Props> = React.memo(
       [editState, metaData.filename, onAddCut, onMoveCut],
     );
 
-    const [cutVersions, setCutVersions] = useState<CutVersions>({});
-    useRequest(() => loadCutVersions(metaData.filename), {
-      pollingInterval: 60_000,
-      onSuccess: response => {
-        setCutVersions(oldVersions => ({ ...oldVersions, ...response }));
-      },
+    const [cutVersions, setCutVersions] = useState<Record<string, number>>({});
+    const { data: loadedCutVersions } = useGetCutVersions(metaData.filename, {
+      query: { refetchInterval: 60_000, select: data => data.value },
     });
+    useEffect(() => {
+      if (loadedCutVersions === undefined) return;
+      setCutVersions(oldVersions => ({ ...oldVersions, ...loadedCutVersions }));
+    }, [loadedCutVersions]);
     const snap =
       editState.mode === EditMode.Add || editState.mode === EditMode.Move
         ? editState.snap
@@ -144,11 +140,10 @@ const Exam: React.FC<Props> = React.memo(
         // automatically scroll there.
         if (document.getElementById(answerId)) return;
 
-        fetchGet(`/api/exam/answer/${answerId}/`)
+        getAnswer(answerId)
           .then(res => {
             if (cancelled) return;
-            const sectionId = res.value.sectionId;
-            onExpandSections(sectionId);
+            onExpandSections(res.value.sectionId);
           })
           .catch(() => {});
       }
@@ -185,7 +180,7 @@ const Exam: React.FC<Props> = React.memo(
       <>
         {sections.map(section => {
           if (section.kind === SectionKind.Answer) {
-            if (displayHiddenAnswerSections || section.has_answers) {
+            if (displayHiddenAnswerSections || section.hasAnswers) {
               return (
                 <AnswerSectionComponent
                   displayEmptyCutLabels={displayEmptyCutLabels}
@@ -204,11 +199,11 @@ const Exam: React.FC<Props> = React.memo(
                   }
                   onHasAnswersChange={() =>
                     onUpdateCut(section.oid, {
-                      has_answers: !section.has_answers,
+                      hasAnswers: !section.hasAnswers,
                     })
                   }
                   hidden={!expandedSections.has(section.oid)}
-                  has_answers={section.has_answers}
+                  has_answers={section.hasAnswers}
                   cutVersion={cutVersions[section.oid] || section.cutVersion}
                   setCutVersion={newVersion =>
                     setCutVersions(oldVersions => ({

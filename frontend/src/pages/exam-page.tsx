@@ -29,14 +29,25 @@ import {
   useParams,
 } from "react-router-dom";
 import { loadSections } from "../api/exam-loader";
-import { fetchPost } from "../api/fetch-utils";
+import { loadSplitRenderer } from "../api/hooks";
 import {
-  loadCuts,
-  loadExamMetaData,
-  loadSplitRenderer,
-  useMarkExamUserSolved,
-  useUnmarkExamUserSolved,
-} from "../api/hooks";
+  getGetCutsQueryKey,
+  getGetExamMetadataQueryKey,
+  useAddCut,
+  useEditCut,
+  useGetCuts,
+  useGetExamMetadata,
+  useRemoveAnswerUserSolved,
+  useSetAnswerUserSolved,
+} from "../api/hooks/answers";
+import type {
+  CutPageSchema,
+  EditCutBody,
+  ExamMetadataSchema,
+  ValueWrappedDictIntListCutPageSchema,
+  ValueWrappedExamMetadataSchema,
+} from "../api/model";
+import { useQueryClient } from "@tanstack/react-query";
 import { UserContext, useUser } from "../auth";
 import Exam from "../components/exam";
 import ExamMetadataEditor from "../components/exam-metadata-editor";
@@ -53,14 +64,11 @@ import {
   RecentExam,
 } from "../utils/recently-viewed-exams";
 import {
-  CutUpdate,
   EditMode,
   EditState,
-  ExamMetaData,
   PdfSection,
   Section,
   SectionKind,
-  ServerCutResponse,
 } from "../interfaces";
 import PDF from "../pdf/pdf-renderer";
 import { getAnswerSectionId } from "../utils/exam-utils";
@@ -76,34 +84,22 @@ import { useDisclosure } from "@mantine/hooks";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
 import { useMarkExamChecked } from "../api/hooks/payments";
 
-const addCut = async (
-  filename: string,
-  pageNum: number,
-  relHeight: number,
-  hidden = false,
-  has_answers = true,
-) => {
-  await fetchPost(`/api/exam/addcut/${filename}/`, {
-    pageNum,
-    relHeight,
-    name: "",
-    hidden,
-    has_answers,
-  });
-};
+type ServerCutResponse = Record<string, CutPageSchema[]>;
 
-const updateCut = async (cut: string, update: Partial<CutUpdate>) => {
-  await fetchPost(`/api/exam/editcut/${cut}/`, update);
-};
+function omitNullish<T extends object>(update: T) {
+  return Object.fromEntries(
+    Object.entries(update).filter(([, value]) => value != null),
+  ) as { [K in keyof T]?: NonNullable<T[K]> };
+}
 
 interface ExamPageContentProps {
-  metaData: ExamMetaData;
+  metaData: ExamMetadataSchema;
   sections?: Section[];
   renderer?: PDF;
   reloadCuts: () => void;
   mutateCuts: (mutation: (old: ServerCutResponse) => ServerCutResponse) => void;
   mutateMetaData: (
-    x: ExamMetaData | undefined | ((data: ExamMetaData) => ExamMetaData),
+    x: ExamMetadataSchema | ((data: ExamMetadataSchema) => ExamMetadataSchema),
   ) => void;
   goToEditPage: () => void;
 }
@@ -117,73 +113,84 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
   goToEditPage,
 }) => {
   const computedColorScheme = useComputedColorScheme();
+  const { examFile, solutionFile } = metaData;
   const markExamChecked = useMarkExamChecked({
     mutation: {
       onSuccess() {
         mutateMetaData(metaData => ({
           ...metaData,
-          oral_transcript_checked: true,
+          oralTranscriptChecked: true,
         }));
       },
     },
   });
   const user = useUser()!;
-  const { run: runAddCut } = useRequest(addCut, {
-    manual: true,
-    onSuccess: reloadCuts,
+  const { mutateAsync: addCut } = useAddCut({
+    mutation: { onSuccess: reloadCuts },
   });
-  const { run: runMoveCut } = useRequest(updateCut, {
-    manual: true,
-    onSuccess: () => {
-      reloadCuts();
-      setEditState({ mode: EditMode.None });
+  const { mutateAsync: moveCut } = useEditCut({
+    mutation: {
+      onSuccess: () => {
+        reloadCuts();
+        setEditState({ mode: EditMode.None });
+      },
     },
   });
-  const [, runMarkExamUserSolved] = useMarkExamUserSolved(metaData.filename);
-  const [, runUnmarkExamUserSolved] = useUnmarkExamUserSolved(
-    metaData.filename,
-  );
-  const { run: runUpdate } = useRequest(updateCut, {
-    manual: true,
-    onSuccess: (_data, [oid, update]) => {
-      mutateCuts(oldCuts =>
-        Object.keys(oldCuts).reduce<ServerCutResponse>((result, key) => {
-          result[key] = oldCuts[key].map(cutPosition =>
-            cutPosition.oid === oid
-              ? { ...cutPosition, ...update }
-              : cutPosition,
-          );
-          return result;
-        }, {}),
-      );
-    },
-  });
-  const onSectionChange = useCallback(
-    async (section: string | [number, number], update: Partial<CutUpdate>) => {
-      if (Array.isArray(section)) {
-        await runAddCut(
-          metaData.filename,
-          section[0],
-          section[1],
-          update.hidden,
-          false,
+  const { mutateAsync: runMarkExamUserSolved } = useSetAnswerUserSolved();
+  const { mutateAsync: runUnmarkExamUserSolved } = useRemoveAnswerUserSolved();
+  const { mutateAsync: editCut } = useEditCut({
+    mutation: {
+      // Apply the edit locally rather than refetching every cut on the exam.
+      onSuccess: (_data, { oid, data: update }) => {
+        mutateCuts(oldCuts =>
+          Object.fromEntries(
+            Object.entries(oldCuts).map(([page, cuts]) => [
+              page,
+              cuts.map(cut =>
+                cut.oid === oid ? { ...cut, ...omitNullish(update) } : cut,
+              ),
+            ]),
+          ),
         );
+      },
+    },
+  });
+  const onAddCut = useCallback(
+    (filename: string, pageNum: number, relHeight: number) =>
+      void addCut({ filename, data: { pageNum, relHeight, hasAnswers: true } }),
+    [addCut],
+  );
+  const onMoveCut = useCallback(
+    (oid: number, data: EditCutBody) => void moveCut({ oid, data }),
+    [moveCut],
+  );
+  const onSectionChange = useCallback(
+    async (section: number | [number, number], update: EditCutBody) => {
+      if (Array.isArray(section)) {
+        await addCut({
+          filename: metaData.filename,
+          data: {
+            pageNum: section[0],
+            relHeight: section[1],
+            hidden: update.hidden ?? false,
+          },
+        });
       } else {
-        await runUpdate(section, update);
+        await editCut({ oid: section, data: update });
       }
     },
-    [runAddCut, metaData, runUpdate],
+    [addCut, metaData, editCut],
   );
   const toggleExamUserSolved: () => void = async () => {
-    let res: { user_solved: boolean };
-    if (metaData.user_solved) {
-      res = await runUnmarkExamUserSolved();
-    } else {
-      res = await runMarkExamUserSolved();
-    }
+    const { filename } = metaData;
+    const { value } = metaData.userSolved
+      ? await runUnmarkExamUserSolved({ filename })
+      : await runMarkExamUserSolved({ filename });
 
-    // eslint-disable-next-line react-hooks/immutability
-    metaData.user_solved = res.user_solved;
+    mutateMetaData(metaData => ({
+      ...metaData,
+      userSolved: value.userSolved,
+    }));
   };
 
   const sizeRef = useRef<HTMLDivElement>(null);
@@ -233,10 +240,10 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
     return s;
   }, [sections, displayOptions]);
 
-  const [expandedSections, expandSections, collapseSections] = useSet<string>();
+  const [expandedSections, expandSections, collapseSections] = useSet<number>();
   const answerSections = useMemo(() => {
     if (sections === undefined) return;
-    const answerSections: string[] = [];
+    const answerSections: number[] = [];
     for (const section of sections) {
       if (section.kind === SectionKind.Answer) {
         answerSections.push(section.oid);
@@ -286,26 +293,28 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
           <h1>{metaData.displayname}</h1>
           <Group>
             <IconButton
-              color={metaData.user_solved ? "grape" : "gray"}
+              color={metaData.userSolved ? "grape" : "gray"}
               icon={<IconCheck />}
               tooltip={
-                metaData.user_solved
+                metaData.userSolved
                   ? "Mark exam as unsolved"
                   : "Mark exam as solved"
               }
               onClick={toggleExamUserSolved}
             />
-            <IconButton
-              color="gray"
-              icon={<IconDownload />}
-              tooltip="Download"
-              onClick={() => open(metaData.exam_file, "_blank")}
-            />
+            {examFile && (
+              <IconButton
+                color="gray"
+                icon={<IconDownload />}
+                tooltip="Download"
+                onClick={() => open(examFile, "_blank")}
+              />
+            )}
             {user.isCategoryAdmin && (
               <>
                 {user.isAdmin &&
-                  metaData.is_oral_transcript &&
-                  !metaData.oral_transcript_checked && (
+                  metaData.isOralTranscript &&
+                  !metaData.oralTranscriptChecked && (
                     <IconButton
                       color="gray"
                       tooltip="Mark as checked"
@@ -327,7 +336,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
             )}
           </Group>
         </Flex>
-        {metaData.dark_mode_warning && computedColorScheme === "dark" && (
+        {metaData.darkModeWarning && computedColorScheme === "dark" && (
           <Alert color="yellow" title="Dark mode warning" mb="md">
             Images are inverted in dark mode. This exam is marked as
             particularly affected, so please switch to light mode for correct
@@ -338,7 +347,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
           {!metaData.canView && (
             <Grid.Col span={{ md: 6, lg: 4 }}>
               <Card m="xs">
-                {metaData.needs_payment && !metaData.hasPayed ? (
+                {metaData.needsPayment && !metaData.hasPaid ? (
                   <>
                     You have to pay a deposit in order to see oral exams. After
                     submitting a report of your own oral exam you can get your
@@ -350,7 +359,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
               </Card>
             </Grid.Col>
           )}
-          {metaData.is_printonly && (
+          {metaData.isPrintonly && (
             <Grid.Col span={{ md: 6, lg: 4 }}>
               <PrintExam
                 title="exam"
@@ -359,7 +368,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
               />
             </Grid.Col>
           )}
-          {metaData.has_solution && metaData.solution_printonly && (
+          {metaData.hasSolution && metaData.solutionPrintonly && (
             <Grid.Col span={{ md: 6, lg: 4 }}>
               <PrintExam
                 title="solution"
@@ -368,14 +377,14 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
               />
             </Grid.Col>
           )}
-          {metaData.master_solution && (
+          {metaData.masterSolution && (
             <Grid.Col span={{ md: 4, lg: 3 }}>
               <Button
                 fullWidth
                 color="gray"
                 component="a"
                 variant="light"
-                href={metaData.master_solution}
+                href={metaData.masterSolution}
                 target="_blank"
                 rel="noopener noreferrer"
                 leftSection={<IconLink />}
@@ -385,13 +394,13 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
             </Grid.Col>
           )}
 
-          {metaData.has_solution && !metaData.solution_printonly && (
+          {solutionFile && !metaData.solutionPrintonly && (
             <Grid.Col span={{ md: 4, lg: 3 }}>
               <Button
                 fullWidth
                 color="gray"
                 component="a"
-                href={metaData.solution_file}
+                href={solutionFile}
                 variant="light"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -438,8 +447,8 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
               reloadCuts={reloadCuts}
               renderer={renderer}
               onUpdateCut={onSectionChange}
-              onAddCut={runAddCut}
-              onMoveCut={runMoveCut}
+              onAddCut={onAddCut}
+              onMoveCut={onMoveCut}
               inViewChangeListener={inViewChangeListener}
               displayHiddenPdfSections={displayOptions.displayHiddenPdfSections}
               displayHiddenAnswerSections={
@@ -455,9 +464,9 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
 
           <Center>
             <Button
-              leftSection={metaData.user_solved && <IconCheck />}
+              leftSection={metaData.userSolved && <IconCheck />}
               onClick={toggleExamUserSolved}
-              color={metaData.user_solved ? "grape" : "gray"}
+              color={metaData.userSolved ? "grape" : "gray"}
             >
               Mark exam as solved
             </Button>
@@ -488,67 +497,84 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
 
 const ExamPage: React.FC = () => {
   const { filename } = useParams() as { filename: string };
+  const queryClient = useQueryClient();
   const {
-    error: metaDataError,
-    loading: metaDataLoading,
-    data: metaData,
-    mutate: setMetaData,
-  } = useRequest(() => loadExamMetaData(filename), {
-    cacheKey: `exam-metaData-${filename}`,
-    refreshDeps: [filename],
-  });
-  useTitle(metaData?.displayname ?? filename);
+    error: metadataError,
+    isLoading: metadataLoading,
+    data: metadata,
+  } = useGetExamMetadata(filename, { query: { select: data => data.value } });
+  const setMetadata = useCallback(
+    (
+      update:
+        ExamMetadataSchema | ((old: ExamMetadataSchema) => ExamMetadataSchema),
+    ) =>
+      queryClient.setQueryData(
+        getGetExamMetadataQueryKey(filename),
+        (old: ValueWrappedExamMetadataSchema | undefined) =>
+          old && {
+            value: typeof update === "function" ? update(old.value) : update,
+          },
+      ),
+    [queryClient, filename],
+  );
+  useTitle(metadata?.displayname ?? filename);
   useEffect(() => {
-    if (!metaData) return;
+    if (!metadata) return;
     try {
       const raw = localStorage.getItem(RECENT_EXAMS_KEY);
       const list: RecentExam[] = raw ? JSON.parse(raw) : [];
       const updated = pushRecentExam(list, {
-        filename: metaData.filename,
-        displayname: metaData.displayname,
-        category: metaData.category,
-        category_displayname: metaData.category_displayname,
+        filename: metadata.filename,
+        displayname: metadata.displayname,
+        category: metadata.category,
+        category_displayname: metadata.categoryDisplayname,
       });
       localStorage.setItem(RECENT_EXAMS_KEY, JSON.stringify(updated));
     } catch {
       // corrupted localStorage entry — silently ignore
     }
-  }, [metaData?.filename]);
+  }, [metadata?.filename]);
   useQuickSearchFilter(
-    metaData && {
-      slug: metaData.category,
-      displayname: metaData.category_displayname,
+    metadata && {
+      slug: metadata.category,
+      displayname: metadata.categoryDisplayname,
     },
   );
   const {
     error: cutsError,
-    loading: cutsLoading,
+    isLoading: cutsLoading,
     data: cuts,
-    run: reloadCuts,
-    mutate: mutateCuts,
-  } = useRequest(() => loadCuts(filename), {
-    cacheKey: `exam-cuts-${filename}`,
-    refreshDeps: [filename],
-  });
+    refetch,
+  } = useGetCuts(filename, { query: { select: data => data.value } });
+  const reloadCuts = useCallback(() => void refetch(), [refetch]);
+  const mutateCuts = useCallback(
+    (mutation: (old: ServerCutResponse) => ServerCutResponse) =>
+      queryClient.setQueryData(
+        getGetCutsQueryKey(filename),
+        (old: ValueWrappedDictIntListCutPageSchema | undefined) =>
+          old && { value: mutation(old.value) },
+      ),
+    [queryClient, filename],
+  );
   const {
     error: pdfError,
     loading: pdfLoading,
     data,
   } = useRequest(
     () => {
-      if (metaData === undefined) return Promise.resolve(undefined);
-      const examFile = metaData.exam_file;
-      if (examFile === undefined) return Promise.resolve(undefined);
+      if (metadata === undefined) return Promise.resolve(undefined);
+      const examFile = metadata.examFile;
+      if (examFile === null) return Promise.resolve(undefined);
       return loadSplitRenderer(examFile);
     },
-    { refreshDeps: [metaData === undefined, metaData?.exam_file] },
+    { refreshDeps: [metadata === undefined, metadata?.examFile] },
   );
   const [pdf, renderer] = !pdfLoading && data ? data : [];
   const sections = useMemo(
     () => (cuts && pdf ? loadSections(pdf.numPages, cuts) : undefined),
     [pdf, cuts],
   );
-  const error = metaDataError ?? cutsError ?? pdfError;
+  const error = metadataError ?? cutsError ?? pdfError;
   const user = useUser()!;
 
   const navigate = useNavigate();
@@ -564,12 +590,12 @@ const ExamPage: React.FC = () => {
             tt="uppercase"
             size="xs"
             component={Link}
-            to={`/category/${metaData ? metaData.category : ""}`}
+            to={`/category/${metadata ? metadata.category : ""}`}
           >
-            {metaData?.category_displayname}
+            {metadata?.categoryDisplayname}
           </Anchor>
           <Anchor tt="uppercase" size="xs">
-            {metaData?.displayname}
+            {metadata?.displayname}
           </Anchor>
         </Breadcrumbs>
       </Container>
@@ -579,24 +605,24 @@ const ExamPage: React.FC = () => {
             <Alert color="red">{error.toString()}</Alert>
           </Container>
         )}
-        {metaDataLoading && (
+        {metadataLoading && (
           <Container>
             <Loader />
           </Container>
         )}
-        {!metaDataLoading && metaData && (
+        {!metadataLoading && metadata && (
           <Routes>
             <Route
               path="edit"
               element={
-                !user.isAdmin && !metaData.canEdit ? (
+                !user.isAdmin && !metadata.canEdit ? (
                   <Navigate to="./.." replace />
                 ) : (
                   <Container size="xl">
                     <ExamMetadataEditor
-                      currentMetaData={metaData}
+                      currentMetaData={metadata}
                       closeEditPage={() => navigate("./..")}
-                      onMetaDataChange={setMetaData}
+                      onMetaDataChange={setMetadata}
                     />
                   </Container>
                 )
@@ -608,17 +634,17 @@ const ExamPage: React.FC = () => {
                 <UserContext.Provider
                   value={{
                     ...user,
-                    isExpert: user.isExpert ?? metaData.isExpert,
-                    isCategoryAdmin: user.isAdmin || metaData.canEdit,
+                    isExpert: user.isExpert ?? metadata.isExpert,
+                    isCategoryAdmin: user.isAdmin || metadata.canEdit,
                   }}
                 >
                   <ExamPageContent
-                    metaData={metaData}
+                    metaData={metadata}
                     sections={sections}
                     renderer={renderer}
                     reloadCuts={reloadCuts}
                     mutateCuts={mutateCuts}
-                    mutateMetaData={setMetaData}
+                    mutateMetaData={setMetadata}
                     goToEditPage={() => navigate("./edit")}
                   />
                 </UserContext.Provider>
@@ -627,7 +653,7 @@ const ExamPage: React.FC = () => {
             <Route path="*" element={<Navigate to="./.." replace />} />
           </Routes>
         )}
-        {(cutsLoading || pdfLoading) && !metaDataLoading && (
+        {(cutsLoading || pdfLoading) && !metadataLoading && (
           <Container>
             <Loader />
           </Container>

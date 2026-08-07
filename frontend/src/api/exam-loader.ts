@@ -1,13 +1,9 @@
-import {
-  PdfSection,
-  Section,
-  SectionKind,
-  ServerCutPosition,
-} from "../interfaces";
+import { CutPageSchema } from "./model";
+import { PdfSection, Section, SectionKind } from "../interfaces";
 
 function createPdfSection(
   key: string,
-  cutOid: string | undefined,
+  cutOid: number | undefined,
   page: number,
   start: number,
   end: number,
@@ -28,7 +24,7 @@ function createPdfSection(
     hidden,
   };
 }
-type ServerCutResponse = Record<string, ServerCutPosition[]>;
+type ServerCutResponse = Record<string, CutPageSchema[]>;
 
 export function loadSections(
   pageCount: number,
@@ -45,7 +41,7 @@ export function loadSections(
           oid,
           cutVersion,
           hidden,
-          has_answers,
+          hasAnswers,
         } = cut;
         if (position !== lastpos) {
           const key = `${akey}-${lastpos}-${position}`;
@@ -59,11 +55,11 @@ export function loadSections(
           oid,
           kind: SectionKind.Answer,
           answers: [],
-          allow_new_answer: true,
-          allow_new_legacy_answer: false,
-          allow_new_official_answer: false,
+          allowNewAnswer: true,
+          allowNewLegacyAnswer: false,
+          allowNewOfficialAnswer: false,
           hidden: true,
-          has_answers,
+          hasAnswers,
           cutHidden: hidden,
           cutVersion,
           name: cut.name,

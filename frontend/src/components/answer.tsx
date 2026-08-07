@@ -19,16 +19,16 @@ import { clsx } from "clsx";
 import { usePendingImages } from "./Editor/pending-images";
 import {
   useRemoveAnswer,
-  useResetAnswerFlaggedVote,
+  useResetAnswerFlagged,
   useResetAnswerMarkedAsAi,
+  useSetAnswer,
   useSetAnswerFlagged,
-  useSetAnswerMarkedAsAi,
+  useSetAnswerMarkedAsAI,
   useSetExpertVote,
-  useUpdateAnswer,
-} from "../api/hooks";
+} from "../api/hooks/answers";
+import { AnswerSchema, AnswerSectionSchema, AnswerKind } from "../api/model";
 import { useUser } from "../auth";
 import useRemoveConfirm from "../hooks/useRemoveConfirm";
-import { Answer, AnswerKind, AnswerSection } from "../interfaces";
 import { copy } from "../utils/clipboard";
 import CodeBlock from "./code-block";
 import CommentSectionComponent from "./comment-section";
@@ -73,9 +73,9 @@ const AnswerToolbar = (props: GroupProps) => (
 );
 
 interface Props {
-  section?: AnswerSection;
-  answer?: Answer;
-  onSectionChanged?: (newSection: AnswerSection) => void;
+  section?: AnswerSectionSchema;
+  answer?: AnswerSchema;
+  onSectionChanged?: (newSection: AnswerSectionSchema) => void;
   onDelete?: () => void;
   answerKind: AnswerKind;
   hasId?: boolean;
@@ -89,21 +89,33 @@ const AnswerComponent: React.FC<Props> = ({
   hasId = true,
 }) => {
   const [viewSource, { toggle: toggleViewSource }] = useDisclosure();
-  const [setFlaggedLoading, setAnswerFlagged] =
-    useSetAnswerFlagged(onSectionChanged);
-  const [resetFlaggedLoading, resetAnswerFlagged] =
-    useResetAnswerFlaggedVote(onSectionChanged);
-  const [, setAnswerMarkedAsAi] = useSetAnswerMarkedAsAi(onSectionChanged);
-  const [, resetAnswerMarkedAsAi] = useResetAnswerMarkedAsAi(onSectionChanged);
-  const [setExpertVoteLoading, setExpertVote] =
-    useSetExpertVote(onSectionChanged);
-  const removeAnswer = useRemoveAnswer(onSectionChanged);
+  const onSectionMutated = {
+    mutation: {
+      onSuccess: ({ value }: { value: AnswerSectionSchema }) =>
+        onSectionChanged?.(value),
+    },
+  };
+  const { isPending: setFlaggedLoading, mutate: setAnswerFlagged } =
+    useSetAnswerFlagged(onSectionMutated);
+  const { isPending: resetFlaggedLoading, mutate: resetAnswerFlagged } =
+    useResetAnswerFlagged(onSectionMutated);
+  const { mutate: setAnswerMarkedAsAi } =
+    useSetAnswerMarkedAsAI(onSectionMutated);
+  const { mutate: resetAnswerMarkedAsAi } =
+    useResetAnswerMarkedAsAi(onSectionMutated);
+  const { isPending: setExpertVoteLoading, mutate: setExpertVote } =
+    useSetExpertVote(onSectionMutated);
+  const { mutate: removeAnswer } = useRemoveAnswer(onSectionMutated);
   const answerId = section?.oid;
-  const [updating, update] = useUpdateAnswer(res => {
-    setEditing(false);
-    if (onSectionChanged) onSectionChanged(res);
-    if (answer === undefined && onDelete) onDelete();
-    saveDraftToStorage(answerId, "", true);
+  const { isPending: updating, mutate: update } = useSetAnswer({
+    mutation: {
+      onSuccess: ({ value }) => {
+        setEditing(false);
+        onSectionChanged?.(value);
+        if (answer === undefined && onDelete) onDelete();
+        saveDraftToStorage(answerId, "", true);
+      },
+    },
   });
   const { isAdmin, isExpert, username } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
@@ -131,10 +143,11 @@ const AnswerComponent: React.FC<Props> = ({
   const save = useCallback(async () => {
     if (!section) return;
     const finalText = await flushPendingImages(draftText);
-    void update(section.oid, finalText, answerKind);
+    update({ oid: section.oid, data: { text: finalText, kind: answerKind } });
   }, [section, draftText, update, answerKind, flushPendingImages]);
   const remove = useCallback(() => {
-    if (answer) removeConfirm("Remove answer?", () => removeAnswer(answer.oid));
+    if (answer)
+      removeConfirm("Remove answer?", () => removeAnswer({ oid: answer.oid }));
   }, [removeConfirm, removeAnswer, answer]);
   const [hasCommentDraft, setHasCommentDraft] = useState(false);
   const languages = useOfficialSolutionLanguage();
@@ -160,7 +173,7 @@ const AnswerComponent: React.FC<Props> = ({
         classNames={{
           root: clsx(
             classes.answerWrapperStyle,
-            answerKind === AnswerKind.Official &&
+            answerKind === AnswerKind.official &&
               classes.answerWrapperOfficialAnswer,
           ),
           section: classes.answerSectionStyle,
@@ -187,8 +200,8 @@ const AnswerComponent: React.FC<Props> = ({
                   </Link>
                 </Tooltip>
               )}
-              {answerKind != AnswerKind.Personal ? (
-                answerKind == AnswerKind.Legacy ? (
+              {answerKind != AnswerKind.personal ? (
+                answerKind == AnswerKind.legacy ? (
                   isDraft ? (
                     "Legacy (Draft)"
                   ) : (
@@ -202,13 +215,13 @@ const AnswerComponent: React.FC<Props> = ({
               ) : (
                 <Anchor
                   component={Link}
-                  to={`/user/${answer?.authorId ?? username}`}
+                  to={`/user/${answer?.author?.username ?? username}`}
                 >
                   <Text fw={700} component="span">
-                    {answer?.authorDisplayName ?? "(Draft)"}
+                    {answer?.author?.display_name ?? "(Draft)"}
                   </Text>
                   <Text ml="0.3em" c="dimmed" component="span">
-                    @{answer?.authorId ?? username}
+                    @{answer?.author?.username ?? username}
                   </Text>
                 </Anchor>
               )}
@@ -237,7 +250,7 @@ const AnswerComponent: React.FC<Props> = ({
             <Flex>
               <AnswerToolbar>
                 {answer &&
-                  (answer.expertvotes > 0 ||
+                  (answer.expertVotes > 0 ||
                     setExpertVoteLoading ||
                     isExpert) && (
                     <Paper shadow="xs">
@@ -252,10 +265,10 @@ const AnswerComponent: React.FC<Props> = ({
                         </TooltipButton>
                         <TooltipButton
                           miw={30}
-                          tooltip={`${answer.expertvotes} experts endorse this answer.`}
+                          tooltip={`${answer.expertVotes} experts endorse this answer.`}
                           loading={setExpertVoteLoading}
                         >
-                          {answer.expertvotes}
+                          {answer.expertVotes}
                         </TooltipButton>
                         {isExpert && (
                           <TooltipButton
@@ -268,7 +281,10 @@ const AnswerComponent: React.FC<Props> = ({
                             }
                             style={{ borderLeftWidth: 0 }}
                             onClick={() =>
-                              setExpertVote(answer.oid, !answer.isExpertVoted)
+                              setExpertVote({
+                                oid: answer.oid,
+                                data: { vote: !answer.isExpertVoted },
+                              })
                             }
                           >
                             {answer.isExpertVoted ? (
@@ -289,7 +305,11 @@ const AnswerComponent: React.FC<Props> = ({
                     onToggle={
                       isOwnAnswer
                         ? undefined
-                        : () => setAnswerFlagged(answer.oid, !answer.isFlagged)
+                        : () =>
+                            setAnswerFlagged({
+                              oid: answer.oid,
+                              data: { flagged: !answer.isFlagged },
+                            })
                     }
                   />
                 )}
@@ -399,14 +419,24 @@ const AnswerComponent: React.FC<Props> = ({
                       {!answer.isMarkedAsAi ? (
                         <Menu.Item
                           leftSection={<IconRobot />}
-                          onClick={() => setAnswerMarkedAsAi(answer.oid, true)}
+                          onClick={() =>
+                            setAnswerMarkedAsAi({
+                              oid: answer.oid,
+                              data: { markedAsAi: true },
+                            })
+                          }
                         >
                           Mark as AI-generated
                         </Menu.Item>
                       ) : (
                         <Menu.Item
                           leftSection={<IconRobotOff />}
-                          onClick={() => setAnswerMarkedAsAi(answer.oid, false)}
+                          onClick={() =>
+                            setAnswerMarkedAsAi({
+                              oid: answer.oid,
+                              data: { markedAsAi: false },
+                            })
+                          }
                         >
                           Remove AI-generated mark
                         </Menu.Item>
@@ -414,7 +444,12 @@ const AnswerComponent: React.FC<Props> = ({
                       {answer.flaggedCount === 0 && (
                         <Menu.Item
                           leftSection={<IconFlag />}
-                          onClick={() => setAnswerFlagged(answer.oid, true)}
+                          onClick={() =>
+                            setAnswerFlagged({
+                              oid: answer.oid,
+                              data: { flagged: true },
+                            })
+                          }
                         >
                           Flag as Inappropriate
                         </Menu.Item>
@@ -436,7 +471,9 @@ const AnswerComponent: React.FC<Props> = ({
                       {answer.markedAsAiCount > 0 && (
                         <Menu.Item
                           leftSection={<IconRobotOff />}
-                          onClick={() => resetAnswerMarkedAsAi(answer.oid)}
+                          onClick={() =>
+                            resetAnswerMarkedAsAi({ oid: answer.oid })
+                          }
                         >
                           Remove all AI-generated marks
                         </Menu.Item>
@@ -444,7 +481,9 @@ const AnswerComponent: React.FC<Props> = ({
                       {answer.flaggedCount > 0 && (
                         <Menu.Item
                           leftSection={<IconFlag />}
-                          onClick={() => resetAnswerFlagged(answer.oid)}
+                          onClick={() =>
+                            resetAnswerFlagged({ oid: answer.oid })
+                          }
                         >
                           Remove all inappropriate flags
                         </Menu.Item>

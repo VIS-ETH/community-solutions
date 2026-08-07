@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useUserComments } from "../api/hooks";
 import SingleCommentComponent from "./comment-single";
 import { Alert, Loader } from "@mantine/core";
 import classes from "./user-comments.module.css";
+import { useListCommentsByUser } from "../api/hooks/answers";
 
 // `transform: translateX(0)` fixes an issue on webkit browsers
 // where relative positioned elements aren't displayed in containers
@@ -21,7 +21,16 @@ interface UserCommentsProps {
 
 const UserComments: React.FC<UserCommentsProps> = ({ username }) => {
   const [page, setPage] = useState(0); // to indicate what page of answers should be loaded
-  const [error, loading, data, reload] = useUserComments(username, -1);
+  const {
+    error,
+    isLoading: loading,
+    data,
+    refetch: reload,
+  } = useListCommentsByUser(
+    username,
+    { page: -1 },
+    { query: { select: data => data.value } },
+  );
   const [comments, setComments] = useState(data);
   const [lastElement, setLastElement] = useState<HTMLDivElement | null>(null);
 
@@ -59,14 +68,17 @@ const UserComments: React.FC<UserCommentsProps> = ({ username }) => {
 
   return (
     <>
-      {error && <Alert color="red">{error.message}</Alert>}
+      {error && <Alert color="red">{error as unknown as string}</Alert>}
       {(!comments || comments.length === 0) && !loading && (
         <Alert color="gray">No comments</Alert>
       )}
       <div className={classes.column}>
         {comments?.slice(0, (page + 1) * PAGE_SIZE).map(comment => (
           <div key={comment.oid}>
-            <SingleCommentComponent comment={comment} reload={reload} />
+            <SingleCommentComponent
+              comment={comment}
+              reload={() => void reload()}
+            />
           </div>
         ))}
         <div

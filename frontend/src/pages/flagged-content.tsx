@@ -1,5 +1,4 @@
-import { useLocalStorageState, useRequest } from "ahooks";
-import { fetchGet } from "../api/fetch-utils";
+import { useLocalStorageState } from "ahooks";
 import {
   Anchor,
   Container,
@@ -12,17 +11,14 @@ import {
   Text,
 } from "@mantine/core";
 import { Link } from "react-router-dom";
-import { FlaggedStatus } from "../interfaces";
+import { useListFlagged } from "../api/hooks/answers";
+import type { ListFlaggedSchema } from "../api/model";
 import { useMemo } from "react";
 import useTitle from "../hooks/useTitle";
 
-const loadFlagged = async () => {
-  return (await fetchGet("/api/exam/listflagged/")).value as FlaggedStatus[];
-};
-
 interface FlaggedTableUserProps {
   author: string;
-  flaggedContent: FlaggedStatus[];
+  flaggedContent: ListFlaggedSchema[];
   count: number;
 }
 
@@ -81,7 +77,7 @@ const FlaggedTableUser: React.FC<FlaggedTableUserProps> = ({
 };
 
 interface FlaggedTableProps {
-  flaggedList: FlaggedStatus[];
+  flaggedList: ListFlaggedSchema[];
   typed: boolean; // True if the table includes types false if not
 }
 
@@ -114,10 +110,10 @@ const FlaggedTable: React.FC<FlaggedTableProps> = ({ flaggedList, typed }) => {
               <Anchor
                 c="blue"
                 component={Link}
-                to={`/user/${content.author}`}
+                to={`/user/${content.author.username}`}
                 target="_blank"
               >
-                {content.author}
+                {content.author.display_name}
               </Anchor>
             </Table.Td>
             {typed && (
@@ -134,9 +130,9 @@ const FlaggedTable: React.FC<FlaggedTableProps> = ({ flaggedList, typed }) => {
 const FlaggedContent: React.FC = () => {
   const {
     error: flaggedError,
-    loading: flaggedLoading,
+    isLoading: flaggedLoading,
     data: flaggedList,
-  } = useRequest(loadFlagged);
+  } = useListFlagged({ query: { select: data => data.value } });
 
   const [mode, setMode] = useLocalStorageState("flaggedMode", "noGrouping");
 
@@ -148,15 +144,15 @@ const FlaggedContent: React.FC = () => {
       const flaggedListNoGroup = [...flaggedList].sort(
         (a, b) => b.flaggedCount - a.flaggedCount,
       );
-      const byAuthor = new Map<string, [FlaggedStatus[], number]>();
+      const byAuthor = new Map<string, [ListFlaggedSchema[], number]>();
       const byType = {
-        comments: [] as FlaggedStatus[],
-        answers: [] as FlaggedStatus[],
+        comments: [] as ListFlaggedSchema[],
+        answers: [] as ListFlaggedSchema[],
       };
       flaggedListNoGroup.forEach(fs => {
-        const [list, count] = byAuthor.get(fs.author) ?? [[], 0];
+        const [list, count] = byAuthor.get(fs.author.username) ?? [[], 0];
         list.push(fs);
-        byAuthor.set(fs.author, [list, count + fs.flaggedCount]);
+        byAuthor.set(fs.author.username, [list, count + fs.flaggedCount]);
         if (fs.flagType) {
           byType.comments.push(fs);
         } else {

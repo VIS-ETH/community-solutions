@@ -1,35 +1,38 @@
-import { CategoryExam } from "../interfaces";
 import { useUser } from "../auth";
 import { claimExpiryRelative, hasValidClaim } from "../utils/exam-utils";
 import { Button, ButtonProps } from "@mantine/core";
 import React from "react";
-import { useRequest } from "ahooks";
 import TooltipButton from "./TooltipButton";
-import { claimExam } from "../api/hooks";
+import { useClaimExam } from "../api/hooks/answers";
 
 interface Props extends ButtonProps {
-  exam: CategoryExam;
+  filename: string;
+  claimedByUsername: string | null;
+  claimedByDisplayname: string | null;
+  claimTime: string | null;
   reloadExams: () => void;
 }
 const ClaimButton: React.FC<Props> = ({
-  exam,
+  filename,
+  claimedByUsername,
+  claimedByDisplayname,
+  claimTime,
   reloadExams,
   ...buttonProps
 }) => {
   const { username } = useUser()!;
-  const { loading, run: runSetClaim } = useRequest(claimExam, {
-    manual: true,
-    onSuccess: reloadExams,
+  const { isPending: loading, mutate: setClaim } = useClaimExam({
+    mutation: { onSuccess: reloadExams },
   });
-  return hasValidClaim(exam) ? (
-    exam.import_claim === username ? (
+  return hasValidClaim(claimedByUsername, claimTime) ? (
+    claimedByUsername === username ? (
       <Button
         size="sm"
         color="gray"
         variant="outline"
         onClick={e => {
           e.stopPropagation();
-          void runSetClaim(exam.filename, false);
+          setClaim({ filename, data: { claim: false } });
         }}
         disabled={loading}
         {...buttonProps}
@@ -40,11 +43,11 @@ const ClaimButton: React.FC<Props> = ({
       <TooltipButton
         size="sm"
         color="white"
-        tooltip={`Expires ${claimExpiryRelative(exam.import_claim_time)}`}
+        tooltip={`Expires ${claimExpiryRelative(claimTime)}`}
         disabled
         {...buttonProps}
       >
-        Claimed by {exam.import_claim_displayname}
+        Claimed by {claimedByDisplayname}
       </TooltipButton>
     )
   ) : (
@@ -53,7 +56,7 @@ const ClaimButton: React.FC<Props> = ({
       variant="filled"
       onClick={e => {
         e.stopPropagation();
-        void runSetClaim(exam.filename, true);
+        setClaim({ filename, data: { claim: true } });
       }}
       disabled={loading}
       {...buttonProps}
