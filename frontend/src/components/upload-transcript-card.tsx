@@ -12,8 +12,8 @@ import { IconCloudUpload, IconDownload } from "@tabler/icons-react";
 import { useRequest } from "ahooks";
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { uploadTranscript } from "../api/hooks";
 import { useListCategoriesOnlyPayment } from "../api/hooks/categories";
+import { useUploadTranscript } from "../api/hooks/answers";
 
 interface UploadTranscriptFormProps {
   category?: string;
@@ -34,11 +34,14 @@ export const UploadTranscriptForm: React.FC<UploadTranscriptFormProps> = ({
   });
   const {
     error: uploadError,
-    loading: uploadLoading,
-    run: upload,
-  } = useRequest(uploadTranscript, {
-    manual: true,
-    onSuccess: filename => void navigate(`/exams/${filename}`),
+    isPending: uploadLoading,
+    mutate: upload,
+  } = useUploadTranscript({
+    mutation: {
+      onSuccess({ value: filename }) {
+        void navigate(`/exams/${filename}`);
+      },
+    },
   });
   const [validationError, setValidationError] = useState<string | null>(null);
   const error =
@@ -62,7 +65,12 @@ export const UploadTranscriptForm: React.FC<UploadTranscriptFormProps> = ({
     const actualCategory = givenCategory ?? category;
     if (file && actualCategory) {
       setValidationError(null);
-      void upload(file, actualCategory);
+      upload({
+        data: {
+          category: actualCategory,
+          file,
+        },
+      });
     } else if (file === undefined) {
       setValidationError("No file selected");
     } else {

@@ -1,4 +1,3 @@
-import { useRequest } from "ahooks";
 import {
   Badge,
   Card,
@@ -22,10 +21,10 @@ import classes from "../utils/focus-outline.module.css";
 import ExamGrid from "./exam-grid";
 import { IconCheck, IconTrash } from "@tabler/icons-react";
 import {
-  markExamUserSolved,
-  removeExam,
-  unmarkExamUserSolved,
-} from "../api/hooks";
+  useRemoveAnswerUserSolved,
+  useRemoveExam,
+  useSetAnswerUserSolved,
+} from "../api/hooks/answers";
 
 interface ExamTypeCardProps {
   examtype: string;
@@ -55,10 +54,11 @@ const ExamTypeSection: React.FC<ExamTypeCardProps> = ({
     else onDeselect(...exams.map(exam => exam.filename));
   };
   const [removeConfirm, modals] = useRemoveConfirm();
-  const { run: runRemoveExam } = useRequest(removeExam, {
-    manual: true,
-    onSuccess: reload,
+  const { mutate: runRemoveExam } = useRemoveExam({
+    mutation: { onSuccess: reload },
   });
+  const { mutateAsync: markSolved } = useSetAnswerUserSolved();
+  const { mutateAsync: unmarkSolved } = useRemoveAnswerUserSolved();
   const handleRemoveClick = (
     e: React.MouseEvent<HTMLButtonElement>,
     exam: CategoryExam,
@@ -67,7 +67,7 @@ const ExamTypeSection: React.FC<ExamTypeCardProps> = ({
     e.preventDefault();
     removeConfirm(
       `Remove the exam named ${exam.displayname}? This will remove all answers and can not be undone!`,
-      () => runRemoveExam(exam.filename),
+      () => runRemoveExam({ filename: exam.filename }),
     );
   };
 
@@ -78,10 +78,11 @@ const ExamTypeSection: React.FC<ExamTypeCardProps> = ({
     event.stopPropagation();
     event.preventDefault();
 
+    const { filename } = exam;
     if (exam.user_solved) {
-      await unmarkExamUserSolved(exam.filename);
+      await unmarkSolved({ filename });
     } else {
-      await markExamUserSolved(exam.filename);
+      await markSolved({ filename });
     }
 
     reload();
@@ -187,7 +188,14 @@ const ExamTypeSection: React.FC<ExamTypeCardProps> = ({
                   </Flex>
                 </div>
                 {catAdmin && !exam.finished_cuts && (
-                  <ClaimButton exam={exam} reloadExams={reload} mt="sm" />
+                  <ClaimButton
+                    filename={exam.filename}
+                    claimedByUsername={exam.import_claim}
+                    claimedByDisplayname={exam.import_claim_displayname}
+                    claimTime={exam.import_claim_time}
+                    reloadExams={reload}
+                    mt="sm"
+                  />
                 )}
               </Grid.Col>
               <Grid.Col span="content">

@@ -15,15 +15,9 @@ import {
   Title,
 } from "@mantine/core";
 import React, { useEffect, useState } from "react";
-import {
-  downloadIndirect,
-  fetchGet,
-  fetchPost,
-  fetchPut,
-} from "../api/fetch-utils";
-import { loadExamTypes } from "../api/hooks";
+import { download, fetchPost, fetchPut } from "../api/fetch-utils";
 import useInitialState from "../hooks/useInitialState";
-import { Attachment, ExamMetaData } from "../interfaces";
+import { Attachment } from "../interfaces";
 import { createOptions, options } from "../utils/ts-utils";
 import AttachmentsEditor, { EditorAttachment } from "./attachments-editor";
 import FileInput from "./file-input";
@@ -31,29 +25,33 @@ import useForm from "../hooks/useForm";
 import { IconDeviceFloppy, IconX } from "@tabler/icons-react";
 import Creatable from "./creatable";
 import { useListCategoriesOnlyAdmin } from "../api/hooks/categories";
+import type { ExamMetadataSchema, SetExamMetadataBody } from "../api/model";
+import {
+  getPrintonlyPdfUrl,
+  getSolutionPdfUrl,
+  useListExamTypes,
+  removePrintonly,
+  removeSolution,
+  setExamMetadata,
+  uploadPrintonly,
+  uploadSolution,
+} from "../api/hooks/answers";
+
 const stringKeys = [
   "displayname",
   "category",
-  "examtype",
-  "master_solution",
-  "resolve_alias",
+  "examType",
+  "masterSolution",
+  "resolveAlias",
   "remark",
 ] as const;
 const booleanKeys = [
   "public",
-  "finished_cuts",
-  "needs_payment",
-  "solution_printonly",
-  "dark_mode_warning",
+  "finishedCuts",
+  "needsPayment",
+  "solutionPrintonly",
+  "darkModeWarning",
 ] as const;
-
-const setMetaData = async (
-  filename: string,
-  changes: Partial<ExamMetaData>,
-) => {
-  if (Object.keys(changes).length === 0) return;
-  await fetchPost(`/api/exam/setmetadata/${filename}/`, changes);
-};
 const addAttachment = async (exam: string, displayname: string, file: File) => {
   return (
     await fetchPost("/api/filestore/upload/", {
@@ -69,41 +67,37 @@ const editAttachment = async (filename: string, newdisplayname: string) => {
 const removeAttachment = async (filename: string) => {
   await fetchPost(`/api/filestore/remove/${filename}/`, {});
 };
-const setPrintOnly = async (filename: string, file: File) => {
-  await fetchPost(`/api/exam/upload/printonly/`, { file, filename });
-};
-const removePrintOnly = async (filename: string) => {
-  await fetchPost(`/api/exam/remove/printonly/${filename}/`, {});
-};
-const setSolution = async (filename: string, file: File) => {
-  await fetchPost(`/api/exam/upload/solution/`, { file, filename });
-};
-const removeSolution = async (filename: string) => {
-  await fetchPost(`/api/exam/remove/solution/${filename}/`, {});
-};
 
-export interface ExamMetaDataDraft extends Omit<ExamMetaData, "attachments"> {
+export interface ExamMetaDataDraft extends Omit<
+  ExamMetadataSchema,
+  "attachments"
+> {
   attachments: EditorAttachment[];
 }
 const applyChanges = async (
   filename: string,
-  oldMetaData: ExamMetaData,
+  oldMetaData: ExamMetadataSchema,
   newMetaData: ExamMetaDataDraft,
   printonly: File | true | undefined,
   masterSolution: File | true | undefined,
 ) => {
-  const metaDataDiff: Partial<ExamMetaData> = {};
+  const metaDataDiff: Partial<ExamMetadataSchema> = {};
+  const update: SetExamMetadataBody = {};
   for (const key of stringKeys) {
     if (oldMetaData[key] !== newMetaData[key]) {
       metaDataDiff[key] = newMetaData[key];
+      update[key] = newMetaData[key];
     }
   }
   for (const key of booleanKeys) {
     if (oldMetaData[key] !== newMetaData[key]) {
       metaDataDiff[key] = newMetaData[key];
+      update[key] = newMetaData[key];
     }
   }
-  await setMetaData(filename, metaDataDiff);
+  if (Object.keys(update).length > 0) {
+    await setExamMetadata(filename, update);
+  }
   const newAttachments: Attachment[] = [];
   for (const attachment of newMetaData.attachments) {
     if (attachment.filename instanceof File) {
@@ -137,42 +131,43 @@ const applyChanges = async (
     }
   }
 
-  if (printonly === undefined && oldMetaData.is_printonly) {
-    await removePrintOnly(filename);
-    metaDataDiff.is_printonly = false;
+  if (printonly === undefined && oldMetaData.isPrintonly) {
+    await removePrintonly(filename);
+    metaDataDiff.isPrintonly = false;
+    metaDataDiff.printonlyFile = null;
   } else if (printonly instanceof File) {
-    await setPrintOnly(filename, printonly);
-    metaDataDiff.is_printonly = true;
-  }
-  if (!oldMetaData.is_printonly && printonly instanceof File) {
-    const newUrl = await fetchGet(`/api/exam/pdf/printonly/${filename}/`);
-    metaDataDiff.printonly_file = newUrl.value;
+    const result = await uploadPrintonly({
+      file: printonly,
+      filename,
+    });
+    metaDataDiff.isPrintonly = true;
+    metaDataDiff.printonlyFile = result.value.url;
   }
 
-  if (masterSolution === undefined && oldMetaData.has_solution) {
+  if (masterSolution === undefined && oldMetaData.hasSolution) {
     await removeSolution(filename);
-    metaDataDiff.has_solution = false;
+    metaDataDiff.hasSolution = false;
   } else if (masterSolution instanceof File) {
-    await setSolution(filename, masterSolution);
-    metaDataDiff.has_solution = true;
-  }
-  if (!oldMetaData.has_solution && masterSolution instanceof File) {
-    const newUrl = await fetchGet(`/api/exam/pdf/solution/${filename}/`);
-    metaDataDiff.solution_file = newUrl.value;
+    const result = await uploadSolution({
+      file: masterSolution,
+      filename,
+    });
+    metaDataDiff.hasSolution = true;
+    metaDataDiff.solutionFile = result.value.url;
   }
 
   return {
     ...oldMetaData,
     ...metaDataDiff,
     attachments: newAttachments,
-    category_displayname: newMetaData.category_displayname,
+    categoryDisplayname: newMetaData.categoryDisplayname,
   };
 };
 
 interface Props {
-  currentMetaData: ExamMetaData;
+  currentMetaData: ExamMetadataSchema;
   closeEditPage: () => void;
-  onMetaDataChange: (newMetaData: ExamMetaData) => void;
+  onMetaDataChange: (newMetaData: ExamMetadataSchema) => void;
 }
 const ExamMetadataEditor: React.FC<Props> = ({
   currentMetaData,
@@ -184,7 +179,9 @@ const ExamMetadataEditor: React.FC<Props> = ({
       select: ({ value: data }) => data,
     },
   });
-  const { data: examTypes } = useRequest(loadExamTypes);
+  const { data: examTypes } = useListExamTypes({
+    query: { select: data => data.value },
+  });
   const categoryOptions =
     categories &&
     createOptions(
@@ -214,9 +211,9 @@ const ExamMetadataEditor: React.FC<Props> = ({
 
   const [printonlyFile, setPrintonlyFile] = useInitialState<
     File | true | undefined
-  >(currentMetaData.is_printonly ? true : undefined);
+  >(currentMetaData.isPrintonly ? true : undefined);
   const [masterFile, setMasterFile] = useInitialState<File | true | undefined>(
-    currentMetaData.has_solution ? true : undefined,
+    currentMetaData.hasSolution ? true : undefined,
   );
 
   const { registerInput, registerCheckbox, formState, setFormValue, onSubmit } =
@@ -230,7 +227,7 @@ const ExamMetadataEditor: React.FC<Props> = ({
           printonlyFile,
           masterFile,
         ),
-      ["category", "category_displayname", "examtype", "remark", "attachments"],
+      ["category", "categoryDisplayname", "examType", "remark", "attachments"],
     );
 
   return (
@@ -246,10 +243,7 @@ const ExamMetadataEditor: React.FC<Props> = ({
           <TextInput label="Display name" {...registerInput("displayname")} />
         </Grid.Col>
         <Grid.Col span={{ md: 6 }}>
-          <TextInput
-            label="Resolve Alias"
-            {...registerInput("resolve_alias")}
-          />
+          <TextInput label="Resolve Alias" {...registerInput("resolveAlias")} />
         </Grid.Col>
       </Grid>
       <Grid>
@@ -262,7 +256,7 @@ const ExamMetadataEditor: React.FC<Props> = ({
               const value = e.currentTarget.value;
               setFormValue("category", value as string);
               setFormValue(
-                "category_displayname",
+                "categoryDisplayname",
                 categoryOptions?.[value]?.label ?? value,
               );
             }}
@@ -279,8 +273,8 @@ const ExamMetadataEditor: React.FC<Props> = ({
               return query;
             }}
             data={examTypeOptions}
-            value={formState.examtype}
-            onChange={(value: string) => setFormValue("examtype", value)}
+            value={formState.examType}
+            onChange={(value: string) => setFormValue("examType", value)}
           />
         </Grid.Col>
       </Grid>
@@ -297,7 +291,7 @@ const ExamMetadataEditor: React.FC<Props> = ({
             name="check"
             id="needsPayment"
             label="Needs Payment"
-            {...registerCheckbox("needs_payment")}
+            {...registerCheckbox("needsPayment")}
           />
         </Grid.Col>
       </Grid>
@@ -306,7 +300,7 @@ const ExamMetadataEditor: React.FC<Props> = ({
           <Checkbox
             name="check"
             label="Finished Cuts"
-            {...registerCheckbox("finished_cuts")}
+            {...registerCheckbox("finishedCuts")}
           />
         </Grid.Col>
         <Grid.Col span={{ md: 6 }}>
@@ -314,7 +308,7 @@ const ExamMetadataEditor: React.FC<Props> = ({
             name="check"
             id="darkModeWarning"
             label="Warn users against using dark mode with this exam"
-            {...registerCheckbox("dark_mode_warning")}
+            {...registerCheckbox("darkModeWarning")}
           />
         </Grid.Col>
       </Grid>
@@ -322,7 +316,7 @@ const ExamMetadataEditor: React.FC<Props> = ({
         <Grid.Col span={{ md: 6 }}>
           <TextInput
             type="url"
-            {...registerInput("master_solution")}
+            {...registerInput("masterSolution")}
             label="Master Solution (extern)"
           />
         </Grid.Col>
@@ -335,8 +329,8 @@ const ExamMetadataEditor: React.FC<Props> = ({
               <Button
                 size="sm"
                 onClick={() =>
-                  downloadIndirect(
-                    `/api/exam/pdf/printonly/${currentMetaData.filename}/`,
+                  void getPrintonlyPdfUrl(currentMetaData.filename).then(
+                    ({ value }) => download(value.url, value.displayName),
                   )
                 }
               >
@@ -358,8 +352,8 @@ const ExamMetadataEditor: React.FC<Props> = ({
               <Button
                 size="sm"
                 onClick={() =>
-                  downloadIndirect(
-                    `/api/exam/pdf/solution/${currentMetaData.filename}/`,
+                  void getSolutionPdfUrl(currentMetaData.filename).then(
+                    ({ value }) => download(value.url, value.displayName),
                   )
                 }
               >

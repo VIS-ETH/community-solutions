@@ -12,8 +12,8 @@ import { IconCloudUpload } from "@tabler/icons-react";
 import { useRequest } from "ahooks";
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { uploadPdf } from "../api/hooks";
 import { useListCategoriesOnlyAdmin } from "../api/hooks/categories";
+import { useUploadExamPdf } from "../api/hooks/answers";
 
 interface UploadPdfFormProps {
   category?: string;
@@ -35,11 +35,12 @@ export const UploadPdfForm: React.FC<UploadPdfFormProps> = ({
   });
   const {
     error: uploadError,
-    loading: uploadLoading,
-    run: upload,
-  } = useRequest(uploadPdf, {
-    manual: true,
-    onSuccess: filename => void navigate(`/exams/${filename}`),
+    isPending: uploadLoading,
+    mutate: upload,
+  } = useUploadExamPdf({
+    mutation: {
+      onSuccess: ({ value: filename }) => void navigate(`/exams/${filename}`),
+    },
   });
   const [validationError, setValidationError] = useState("");
   const error = categoriesError ?? uploadError ?? validationError;
@@ -60,7 +61,7 @@ export const UploadPdfForm: React.FC<UploadPdfFormProps> = ({
 
     const actualCategory = givenCategory ?? category;
     if (file && actualCategory) {
-      void upload(file, displayname, actualCategory);
+      upload({ data: { file, displayname, category: actualCategory } });
     } else if (file === undefined) {
       setValidationError("No file selected");
     } else {

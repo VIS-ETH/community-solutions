@@ -2,14 +2,14 @@ import { Button, Flex, Paper, Stack } from "@mantine/core";
 import classes from "./comment-section.module.css";
 import { IconMessageCirclePlus } from "@tabler/icons-react";
 import React, { useState } from "react";
-import { Answer, AnswerSection } from "../interfaces";
+import { AnswerSchema, AnswerSectionSchema } from "../api/model";
 import CommentComponent from "./comment";
 import { useLocation } from "react-router-dom";
 
 interface Props {
   hasDraft: boolean;
-  answer: Answer;
-  onSectionChanged: (newSection: AnswerSection) => void;
+  answer: AnswerSchema;
+  onSectionChanged: (newSection: AnswerSectionSchema) => void;
   // Called when the user click on the reply button at the bottom of the comment section.
   // Note: This is not the same as the comment button in the answer itself,
   // although the behaviour may be identical depending on what the callback does.
