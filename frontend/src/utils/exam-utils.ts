@@ -1,9 +1,11 @@
 import { differenceInHours, formatRelative, parseISO } from "date-fns";
-import { CategoryExam } from "../interfaces";
 
-export const hasValidClaim = (exam: CategoryExam) => {
-  if (exam.import_claim !== null && exam.import_claim_time !== null) {
-    if (differenceInHours(new Date(), parseISO(exam.import_claim_time)) < 4) {
+export const hasValidClaim = (
+  claimedBy: string | null | undefined,
+  claimTime: string | null | undefined,
+) => {
+  if (claimedBy && claimTime) {
+    if (differenceInHours(new Date(), parseISO(claimTime)) < 4) {
       return true;
     }
   }
@@ -16,7 +18,7 @@ export const claimExpiryRelative = (import_claim_time: string | null) => {
   }
 };
 
-export const getAnswerSectionId = (sectionId: string, cutName: string) => {
+export const getAnswerSectionId = (sectionId: number, cutName: string) => {
   const nameParts = cutName.split(" > ");
   return `${sectionId}-${nameParts.join("-")}`;
 };

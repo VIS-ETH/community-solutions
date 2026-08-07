@@ -3,8 +3,7 @@ import { getDocument } from "../pdf/pdfjs";
 import React, { memo, useMemo, useRef, useEffect, useState } from "react";
 import { ComponentRenderer } from "./markdown-text";
 import { Tooltip } from "@mantine/core";
-import { fetchGet } from "../api/fetch-utils";
-import { useRequest } from "ahooks";
+import { useGetExamPdfUrl, useGetSolutionPdfUrl } from "../api/hooks/answers";
 
 interface PProps {
   url: string;
@@ -18,40 +17,28 @@ interface PProps {
 const DEFAULT_WIDTH = 500;
 
 /**
- * Fetches the actual PDF URL from the API based on the url type (solution/exam/document).
- * Uses useRequest with caching to prevent duplicate network requests on re-renders.
+ * Resolves a `<type>/<filename>` reference to the signed PDF URL it points at.
+ * Documents are not implemented yet.
  */
 export function usePdfUrl(url: string): {
   loading: boolean;
   url: string | undefined;
   display_name: string | undefined;
 } {
-  const fetchPdfUrl = async () => {
-    const parts = url.split("/");
-    const type = parts[0]?.toLowerCase();
-    const filename = parts[1];
-
-    switch (type) {
-      case "solution":
-        return fetchGet(`/api/exam/pdf/solution/${filename}/`);
-      case "exam":
-        return fetchGet(`/api/exam/pdf/exam/${filename}/`);
-      case "document":
-        return null; // Not yet implemented
-      default:
-        return null;
-    }
-  };
-
-  const { loading, data } = useRequest(fetchPdfUrl, {
-    cacheKey: `pdf-url-${url}`,
-    refreshDeps: [url],
+  const [type, filename] = url.split("/");
+  const kind = type?.toLowerCase();
+  const solution = useGetSolutionPdfUrl(filename, {
+    query: { enabled: kind === "solution", select: data => data.value },
   });
+  const exam = useGetExamPdfUrl(filename, {
+    query: { enabled: kind === "exam", select: data => data.value },
+  });
+  const { isLoading, data } = kind === "solution" ? solution : exam;
 
   return {
-    loading,
-    url: data?.value,
-    display_name: data?.display_name,
+    loading: isLoading,
+    url: data?.url,
+    display_name: data?.displayName,
   };
 }
 

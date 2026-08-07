@@ -1,5 +1,6 @@
-import { CategoryMetaDataMinimal, SearchResult } from "../interfaces";
+import { CategoryMetaDataMinimal } from "../interfaces";
 import { SearchResult as LocalSearchResult } from "../hooks/useSearch";
+import type { SearchResult } from "../api/model";
 
 export const highlight = (text: string, indexArray: number[]) => {
   const res = [];
@@ -30,7 +31,7 @@ export const highlight = (text: string, indexArray: number[]) => {
 export const itemToPath = (
   item:
     | LocalSearchResult<CategoryMetaDataMinimal>
-    | SearchResult
+    | SearchResult[number]
     | { searchQuery: string },
 ) => {
   if ("slug" in item) {
@@ -42,8 +43,8 @@ export const itemToPath = (
   } else if (item.type === "exam") {
     return `/exams/${item.filename}`;
   } else if (item.type === "answer") {
-    return `/exams/${item.filename}?answer=${item.long_id}`;
+    return `/exams/${item.filename}?answer=${item.longId}`;
   } else {
-    return `/exams/${item.filename}?comment=${item.long_id}&answer=${item.answer_long_id}`;
+    return `/exams/${item.filename}?comment=${item.longId}&answer=${item.answerLongId}`;
   }
 };

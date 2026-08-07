@@ -254,7 +254,7 @@ class ComsolTestExamData(ComsolTest):
                     answer_section=section,
                     author=MyUser.objects.get(username=self.users[0]["username"]),
                     text=f"Legacy Answer {section.id}",
-                    kind=Answer.Kind.LEGACY,
+                    kind=Answer.AnswerKind.LEGACY,
                 )
             )
         for answer in self.answers:

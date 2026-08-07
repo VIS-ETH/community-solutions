@@ -16,13 +16,14 @@ class TestCuts(ComsolTestExamData):
         self.post(
             f"/api/exam/addcut/{self.exam.filename}/",
             {"pageNum": 1, "relHeight": 0.4, "name": "Test"},
+            as_json=False,
         )
         self.assertEqual(AnswerSection.objects.count(), 5)
 
     def test_removing_cut(self):
         self.assertEqual(AnswerSection.objects.count(), 4)
         cut = self.sections[0]
-        self.post(f"/api/exam/removecut/{cut.id}/", {})
+        self.post(f"/api/exam/removecut/{cut.id}/", {}, as_json=False)
         self.assertEqual(AnswerSection.objects.count(), 3)
 
     def test_edit_cut(self):
@@ -37,6 +38,7 @@ class TestCuts(ComsolTestExamData):
                 "pageNum": 42,
                 "relHeight": 0.42,
             },
+            as_json=False,
         )
         cut.refresh_from_db()
         self.assertEqual(cut.name, "Test Name > 42")
@@ -49,6 +51,7 @@ class TestCuts(ComsolTestExamData):
                 "pageNum": pageNum,
                 "relHeight": relHeight,
             },
+            as_json=False,
         )
         cut.refresh_from_db()
         self.assertEqual(cut.name, name)
