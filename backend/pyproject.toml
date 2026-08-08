@@ -27,7 +27,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "ruff==0.16.1",
+    "ruff==0.16.2",
     "tblib>=3.2.2",
 ]
 
