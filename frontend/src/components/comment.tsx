@@ -44,7 +44,12 @@ import MarkedAsAiBadge from "./MarkedAsAiBadge";
 import { useDisclosure } from "@mantine/hooks";
 import TimeText from "./time-text";
 import { copy } from "../utils/clipboard";
-import { saveDraftToStorage, readDraftFromStorage } from "../utils/drafts";
+import {
+  saveDraftToStorage,
+  readDraftFromStorage,
+  clearDraftFromStorage,
+  clearExpiredDrafts,
+} from "../utils/drafts";
 
 const Editor = lazy(() => import("./Editor"));
 
@@ -74,8 +79,8 @@ const CommentComponent: React.FC<Props> = ({
   const { isAdmin, username } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
   const [editing, setEditing] = useState(false);
-  const [draftText, setDraftText] = useState(() =>
-    readDraftFromStorage(draftKey, false),
+  const [draftText, setDraftText] = useState(
+    () => readDraftFromStorage(draftKey, "comment") ?? "",
   );
   const [undoStack, setUndoStack] = useState<UndoStack>({ prev: [], next: [] });
   const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
@@ -83,12 +88,12 @@ const CommentComponent: React.FC<Props> = ({
   const [addNewLoading, runAddNewComment] = useMutation(addNewComment, res => {
     if (onDelete) onDelete();
     onSectionChanged(res);
-    saveDraftToStorage(draftKey, "", false);
+    clearDraftFromStorage(draftKey, "comment");
   });
   const [updateLoading, runUpdateComment] = useMutation(updateComment, res => {
     setEditing(false);
     onSectionChanged(res);
-    saveDraftToStorage(draftKey, "", false);
+    clearDraftFromStorage(draftKey, "comment");
   });
   const [removeLoading, runRemoveComment] = useMutation(
     removeComment,
@@ -98,10 +103,11 @@ const CommentComponent: React.FC<Props> = ({
   const languages = useOfficialSolutionLanguage();
 
   useEffect(() => {
+    clearExpiredDrafts();
     // On first render it is already set as a default value.
     // This only reruns if the comment id changes
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDraftText(readDraftFromStorage(draftKey, false));
+    setDraftText(readDraftFromStorage(draftKey, "comment") ?? "");
   }, [draftKey, setDraftText]);
 
   const onSave = async () => {
@@ -113,7 +119,7 @@ const CommentComponent: React.FC<Props> = ({
     }
   };
   const onCancel = () => {
-    saveDraftToStorage(draftKey, "", false);
+    clearDraftFromStorage(draftKey, "comment");
     if (comment === undefined) {
       if (onDelete) onDelete();
     } else {
@@ -122,14 +128,14 @@ const CommentComponent: React.FC<Props> = ({
   };
   const startEditing = () => {
     if (comment === undefined) return;
-    setDraftText(readDraftFromStorage(comment.oid, false) || comment.text);
+    setDraftText(readDraftFromStorage(comment.oid, "comment") || comment.text);
     setEditing(true);
   };
   const remove = () => {
     if (comment)
       removeConfirm("Remove comment?", () => {
         runRemoveComment(comment.oid);
-        saveDraftToStorage(draftKey, "", false);
+        clearDraftFromStorage(draftKey, "comment");
       });
   };
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
@@ -288,7 +294,7 @@ const CommentComponent: React.FC<Props> = ({
             value={draftText}
             onChange={newValue => {
               setDraftText(newValue);
-              saveDraftToStorage(draftKey, newValue, false);
+              saveDraftToStorage(draftKey, newValue, "comment");
             }}
             imageHandler={deferredImageHandler}
             preview={value => (

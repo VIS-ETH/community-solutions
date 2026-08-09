@@ -7,6 +7,7 @@ import {
   LoadingOverlay,
   Title,
 } from "@mantine/core";
+import { useLocalStorage } from "@mantine/hooks";
 import React from "react";
 import { logout } from "../api/fetch-utils";
 import { useSetUser, useUser } from "../auth";
@@ -101,6 +102,13 @@ const UserScoreCard: React.FC<UserScoreCardProps> = ({
 }) => {
   const setUser = useSetUser();
   const user = useUser()!;
+  const [simulateNonAdmin, setSimulateNonAdmin, clearSimulateNonAdmin] =
+    useLocalStorage<boolean>({
+      key: "simulate_nonadmin",
+      getInitialValueInEffect: false,
+      sync: false,
+    });
+
   return (
     <>
       <Group justify="space-between" my="lg">
@@ -108,13 +116,13 @@ const UserScoreCard: React.FC<UserScoreCardProps> = ({
 
         {isMyself && (
           <Group>
-            {(user.isAdmin || localStorage.getItem("simulate_nonadmin")) && (
+            {(user.isAdmin || simulateNonAdmin) && (
               <Button
                 onClick={() => {
                   if (user.isAdmin) {
-                    localStorage.setItem("simulate_nonadmin", "true");
+                    setSimulateNonAdmin(true);
                   } else {
-                    localStorage.removeItem("simulate_nonadmin");
+                    clearSimulateNonAdmin();
                   }
                   setUser(undefined);
                 }}

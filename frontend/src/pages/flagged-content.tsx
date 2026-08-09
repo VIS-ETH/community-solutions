@@ -1,4 +1,4 @@
-import { useLocalStorageState, useRequest } from "ahooks";
+import { useRequest } from "ahooks";
 import { fetchGet } from "../api/fetch-utils";
 import {
   Anchor,
@@ -11,6 +11,7 @@ import {
   Title,
   Text,
 } from "@mantine/core";
+import { useLocalStorage } from "@mantine/hooks";
 import { Link } from "react-router-dom";
 import { FlaggedStatus } from "../interfaces";
 import { useMemo } from "react";
@@ -138,7 +139,12 @@ const FlaggedContent: React.FC = () => {
     data: flaggedList,
   } = useRequest(loadFlagged);
 
-  const [mode, setMode] = useLocalStorageState("flaggedMode", "noGrouping");
+  const [mode, setMode] = useLocalStorage({
+    key: "flaggedMode",
+    defaultValue: "noGrouping",
+    getInitialValueInEffect: false,
+    sync: false,
+  });
 
   const [flaggedListNoGroup, flaggedListByAuthor, flaggedListByType] =
     useMemo(() => {
