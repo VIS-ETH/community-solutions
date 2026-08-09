@@ -1,4 +1,3 @@
-import { useLocalStorageState } from "ahooks";
 import {
   Alert,
   Anchor,
@@ -13,12 +12,12 @@ import {
   Title,
   Loader,
 } from "@mantine/core";
+import { useDisclosure, useLocalStorage } from "@mantine/hooks";
 import React, { useEffect, useState } from "react";
 import { useUser } from "../auth";
 import FeedbackEntryComponent from "../components/feedback-entry";
 import useTitle from "../hooks/useTitle";
 import serverData from "../utils/server-data";
-import { useDisclosure } from "@mantine/hooks";
 import CollapseWrapper from "../components/collapse-wrapper";
 import { parseISO, isValid } from "date-fns";
 import { submitFeedback, useListFeedback } from "../api/hooks/feedback";
@@ -158,10 +157,12 @@ const FeedbackReader: React.FC = () => {
 };
 
 const FeedbackAdminView: React.FC = () => {
-  const [mode, setMode] = useLocalStorageState<string | null>(
-    "feedback-admin-mode",
-    "read",
-  );
+  const [mode, setMode] = useLocalStorage<string | null>({
+    key: "feedback-admin-mode",
+    defaultValue: "read",
+    getInitialValueInEffect: false,
+    sync: false,
+  });
   return (
     <Container size="xl">
       <Title order={2}>Feedback</Title>

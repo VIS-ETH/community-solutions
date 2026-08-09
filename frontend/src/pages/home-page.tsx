@@ -12,7 +12,8 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { useLocalStorageState, useRequest } from "ahooks";
+import { useDisclosure, useLocalStorage } from "@mantine/hooks";
+import { useRequest } from "ahooks";
 import React, { useCallback, useMemo, useState } from "react";
 import { fetchGet, fetchPost } from "../api/fetch-utils";
 import { loadMetaCategories } from "../api/hooks";
@@ -26,7 +27,6 @@ import useTitle from "../hooks/useTitle";
 import { CategoryMetaData, MetaCategory } from "../interfaces";
 import CourseCategoriesPanel from "../components/course-categories-panel";
 import { IconFilter, IconPlus } from "@tabler/icons-react";
-import { useDisclosure } from "@mantine/hooks";
 import { EditMeta1, EditMeta2 } from "../components/edit-meta-categories";
 import CollapseWrapper from "../components/collapse-wrapper";
 import { clsx } from "clsx";
@@ -161,19 +161,31 @@ const HomePage: React.FC = () => {
 };
 export const CategoryList: React.FC = () => {
   const { isAdmin } = useUser()!;
-  const [mode, setMode] = useLocalStorageState("mode", "alphabetical");
-  const [collapsedCategories, setCollapsedCategories] = useLocalStorageState<
+  const [mode, setMode] = useLocalStorage({
+    key: "mode",
+    defaultValue: "alphabetical",
+    getInitialValueInEffect: false,
+    sync: false,
+  });
+  const [collapsedCategories, setCollapsedCategories] = useLocalStorage<
     string[]
-  >("collapsedCategories", []);
+  >({
+    key: "collapsedCategories",
+    defaultValue: [],
+    getInitialValueInEffect: false,
+    sync: false,
+  });
   const [filter, setFilter] = useState("");
 
   // Check for local storage cache of category data and use that as a backup
   // while the actual request is loading
   const [localStorageCategoryData, setLocalStorageCategoryData] =
-    useLocalStorageState<[CategoryMetaData[]?, MetaCategory[]?]>(
-      "category-data",
-      [undefined, undefined],
-    );
+    useLocalStorage<[CategoryMetaData[]?, MetaCategory[]?]>({
+      key: "category-data",
+      defaultValue: [undefined, undefined],
+      getInitialValueInEffect: false,
+      sync: false,
+    });
 
   // Run the promise to get the various category data
   const { data, error, loading, run } = useRequest(loadCategoryData, {

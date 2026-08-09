@@ -1,77 +1,128 @@
-const draftPartKey = "draft-ans/com-json";
-const lifeSpan = 1000 * 60 * 60 * 24 * 30; // 1 Month
+const draftsKey = "draft-ans/com-json";
+const cacheDuration = 1000 * 60 * 60 * 24 * 30; // 1 Month
 
-type StorageDraft = Record<
-  string,
-  {
-    draftTime: number;
-    draft: string;
-  }
->;
+interface DraftItem {
+  draftTime: number;
+  draft: string;
+}
 
-export function saveDraftToStorage(
-  oId: string | undefined,
-  newValue: string,
-  isAnswer: boolean,
-) {
-  if (oId === undefined) {
-    return;
+interface StorageDraft {
+  answers: Record<string, DraftItem>;
+  comments: Record<string, DraftItem>;
+}
+
+function filterStale(draft: StorageDraft): StorageDraft {
+  const now = Date.now();
+  for (const key of ["answers", "comments"] as const) {
+    // Filter expired items
+    let entries = Object.entries(draft[key]).filter(
+      ([_, draftItem]) => draftItem.draftTime + cacheDuration >= now,
+    );
+
+    // Limit to at most 30 most recent drafts per type
+    entries = entries
+      .toSorted((a, b) => b[1].draftTime - a[1].draftTime)
+      .slice(0, 30);
+
+    draft[key] = Object.fromEntries(entries);
   }
-  const part = isAnswer ? "answers" : "comments";
-  const partFromLocalStorage =
-    localStorage.getItem(draftPartKey) ?? '{"answers": {},"comments": {}}';
-  const draftJSON = JSON.parse(partFromLocalStorage);
-  const draftPartJSON = draftJSON[part] as StorageDraft;
-  const now = new Date();
-  const currentTimeStamp = now.getTime();
-  if (newValue.length === 0) {
-    const { [oId]: _, ...remaining } = draftPartJSON;
-    draftJSON[part] = remaining;
-  } else {
-    draftPartJSON[oId] = {
-      draft: newValue,
-      draftTime: currentTimeStamp,
+
+  return draft;
+}
+
+function readStorage(): StorageDraft {
+  let raw: string | null = null;
+  try {
+    raw = localStorage.getItem(draftsKey);
+  } catch {
+    // safari private mode, quota exceeded, something else
+  }
+
+  if (!raw) {
+    return {
+      answers: {},
+      comments: {},
     };
   }
-  localStorage.setItem(draftPartKey, JSON.stringify(draftJSON));
+
+  const parsed = JSON.parse(raw) as StorageDraft;
+  return filterStale(parsed);
+}
+
+function writeStorage(drafts: StorageDraft) {
+  drafts = filterStale(drafts);
+
+  try {
+    localStorage.setItem(draftsKey, JSON.stringify(drafts));
+  } catch {
+    // oh well
+  }
+}
+
+export function saveDraftToStorage(
+  oid: string | undefined,
+  newValue: string,
+  type: "answer" | "comment",
+) {
+  if (oid === undefined) return;
+
+  if (newValue === "") {
+    clearDraftFromStorage(oid, type);
+    return;
+  }
+
+  const drafts = readStorage();
+
+  if (type === "answer") {
+    drafts.answers[oid] = {
+      draft: newValue,
+      draftTime: Date.now(),
+    };
+  } else {
+    drafts.comments[oid] = {
+      draft: newValue,
+      draftTime: Date.now(),
+    };
+  }
+
+  writeStorage(drafts);
+}
+
+export function clearDraftFromStorage(
+  oid: string | undefined,
+  type: "answer" | "comment",
+) {
+  if (oid === undefined) return;
+
+  const drafts = readStorage();
+  if (type === "answer") {
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+    delete drafts.answers[oid];
+  } else {
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+    delete drafts.comments[oid];
+  }
+
+  writeStorage(drafts);
 }
 
 export function readDraftFromStorage(
-  oId: string | undefined,
-  isAnswer: boolean,
-): string {
-  if (oId === undefined) {
-    return "";
+  oid: string | undefined,
+  type: "answer" | "comment",
+): string | undefined {
+  if (oid === undefined) return;
+
+  const drafts = readStorage();
+  if (type === "answer") {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    return drafts.answers[oid]?.draft;
   }
-  const part = isAnswer ? "answers" : "comments";
-  const partFromLocalStorage =
-    localStorage.getItem(draftPartKey) ?? '{"answers": {},"comments": {}}';
-  const draftJSON = JSON.parse(partFromLocalStorage)[part] as StorageDraft;
-  const text = draftJSON[oId]?.draft ?? "";
-  return text;
+
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  return drafts.comments[oid]?.draft;
 }
 
 export function clearExpiredDrafts() {
-  const partFromLocalStorage =
-    localStorage.getItem(draftPartKey) ?? '{"answers": {},"comments": {}}';
-  const draftAnswersJSON = JSON.parse(partFromLocalStorage)[
-    "answers"
-  ] as StorageDraft;
-  const draftCommentsJSON = JSON.parse(partFromLocalStorage)[
-    "comments"
-  ] as StorageDraft;
-  const now = new Date();
-  const currentTimeStamp = now.getTime();
-  // Answers
-  Object.entries(draftAnswersJSON).forEach(([answerId, element]) => {
-    if (element.draftTime + lifeSpan < currentTimeStamp) {
-      saveDraftToStorage(answerId, "", true);
-    }
-  });
-  // Comments
-  Object.entries(draftCommentsJSON).forEach(([answerId, element]) => {
-    if (element.draftTime + lifeSpan < currentTimeStamp) {
-      saveDraftToStorage(answerId, "", false);
-    }
-  });
+  // readStorage filters expired draft items
+  writeStorage(readStorage());
 }

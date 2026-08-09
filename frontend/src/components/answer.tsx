@@ -63,6 +63,7 @@ import TimeText from "./time-text";
 import {
   saveDraftToStorage,
   readDraftFromStorage,
+  clearDraftFromStorage,
   clearExpiredDrafts,
 } from "../utils/drafts";
 
@@ -103,7 +104,7 @@ const AnswerComponent: React.FC<Props> = ({
     setEditing(false);
     if (onSectionChanged) onSectionChanged(res);
     if (answer === undefined && onDelete) onDelete();
-    saveDraftToStorage(answerId, "", true);
+    clearDraftFromStorage(answerId, "answer");
   });
   const { isAdmin, isExpert, username } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
@@ -114,7 +115,7 @@ const AnswerComponent: React.FC<Props> = ({
   const { deferredImageHandler, flushPendingImages, pendingObjectUrls } =
     usePendingImages();
   const startEdit = useCallback(() => {
-    const possibleAnswer = readDraftFromStorage(answerId, true);
+    const possibleAnswer = readDraftFromStorage(answerId, "answer");
     if (possibleAnswer) {
       setDraftText(possibleAnswer);
     } else {
@@ -126,7 +127,7 @@ const AnswerComponent: React.FC<Props> = ({
   const onCancel = useCallback(() => {
     setEditing(false);
     if (answer === undefined && onDelete) onDelete();
-    saveDraftToStorage(answerId, "", true);
+    clearDraftFromStorage(answerId, "answer");
   }, [onDelete, answer]);
   const save = useCallback(async () => {
     if (!section) return;
@@ -143,8 +144,8 @@ const AnswerComponent: React.FC<Props> = ({
 
   useEffect(() => {
     clearExpiredDrafts();
-    setDraftText(readDraftFromStorage(answerId, true));
-  }, []);
+    setDraftText(readDraftFromStorage(answerId, "answer") ?? "");
+  }, [answerId]);
 
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
   const canEdit = section && onSectionChanged && answer?.canEdit;
@@ -315,7 +316,7 @@ const AnswerComponent: React.FC<Props> = ({
                   value={draftText}
                   onChange={newValue => {
                     setDraftText(newValue);
-                    saveDraftToStorage(answerId, newValue, true);
+                    saveDraftToStorage(answerId, newValue, "answer");
                   }}
                   imageHandler={deferredImageHandler}
                   preview={value => (

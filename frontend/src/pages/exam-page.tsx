@@ -1,4 +1,4 @@
-import { useLocalStorageState, useRequest, useSize } from "ahooks";
+import { useRequest, useSize } from "ahooks";
 import {
   Card,
   Breadcrumbs,
@@ -13,6 +13,7 @@ import {
   useComputedColorScheme,
   Center,
 } from "@mantine/core";
+import { useDisclosure, useLocalStorage } from "@mantine/hooks";
 import React, {
   useCallback,
   useEffect,
@@ -72,7 +73,6 @@ import {
   IconFileCheck,
   IconLink,
 } from "@tabler/icons-react";
-import { useDisclosure } from "@mantine/hooks";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
 import { useMarkExamChecked } from "../api/hooks/payments";
 
@@ -188,7 +188,12 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
 
   const sizeRef = useRef<HTMLDivElement>(null);
   const size = useSize(sizeRef);
-  const [maxWidth, setMaxWidth] = useLocalStorageState("max-width", 1000);
+  const [maxWidth, setMaxWidth] = useLocalStorage({
+    key: "max-width",
+    defaultValue: 1000,
+    getInitialValueInEffect: false,
+    sync: false,
+  });
 
   const [inViewSplits, addInViewSplit, removeInViewSplit] =
     useSet<PdfSection>();
@@ -497,19 +502,22 @@ const ExamPage: React.FC = () => {
     cacheKey: `exam-metaData-${filename}`,
     refreshDeps: [filename],
   });
+  const [recentExams, setRecentExams] = useLocalStorage<readonly RecentExam[]>({
+    key: RECENT_EXAMS_KEY,
+    defaultValue: [],
+    getInitialValueInEffect: false,
+  });
   useTitle(metaData?.displayname ?? filename);
   useEffect(() => {
     if (!metaData) return;
     try {
-      const raw = localStorage.getItem(RECENT_EXAMS_KEY);
-      const list: RecentExam[] = raw ? JSON.parse(raw) : [];
-      const updated = pushRecentExam(list, {
+      const updated = pushRecentExam(recentExams, {
         filename: metaData.filename,
         displayname: metaData.displayname,
         category: metaData.category,
         category_displayname: metaData.category_displayname,
       });
-      localStorage.setItem(RECENT_EXAMS_KEY, JSON.stringify(updated));
+      setRecentExams(updated);
     } catch {
       // corrupted localStorage entry — silently ignore
     }

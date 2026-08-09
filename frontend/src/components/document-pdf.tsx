@@ -1,5 +1,6 @@
-import { useLocalStorageState, useRequest, useSize } from "ahooks";
+import { useRequest, useSize } from "ahooks";
 import { Container } from "@mantine/core";
+import { useLocalStorage } from "@mantine/hooks";
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 import React, { useCallback, useMemo, useRef } from "react";
 import { getHeaders } from "../api/fetch-utils";
@@ -44,7 +45,12 @@ const DocumentPdf: React.FC<DocumentPdfProps> = ({ url }) => {
   const size = useSize(sizeRef);
   const renderer = data ? data[1] : undefined;
 
-  const [maxWidth, setMaxWidth] = useLocalStorageState("max-width", 1000);
+  const [maxWidth, setMaxWidth] = useLocalStorage({
+    key: "max-width",
+    defaultValue: 1000,
+    getInitialValueInEffect: false,
+    sync: false,
+  });
   const [panelIsOpen, togglePanel] = useToggle();
 
   // Set of pages that are currently in view

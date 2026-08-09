@@ -1,4 +1,3 @@
-import { useLocalStorageState } from "ahooks";
 import {
   Anchor,
   Alert,
@@ -10,6 +9,7 @@ import {
   Text,
   rem,
 } from "@mantine/core";
+import { useLocalStorage } from "@mantine/hooks";
 import React from "react";
 import { Link } from "react-router-dom";
 import LoadingOverlay from "../components/loading-overlay";
@@ -56,10 +56,12 @@ function Th({ children, sorted, onSort }: ThProps) {
 
 const Scoreboard: React.FC = () => {
   useTitle("Scoreboard");
-  const [mode, setMode] = useLocalStorageState<Mode>(
-    "scoreboard-mode",
-    "score",
-  );
+  const [mode, setMode] = useLocalStorage<Mode>({
+    key: "scoreboard-mode",
+    defaultValue: "score",
+    getInitialValueInEffect: false,
+    sync: false,
+  });
 
   const { isError, error, isPending, data } = useGetScoreboardTop(
     mode,
