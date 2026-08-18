@@ -15,6 +15,7 @@ import hashlib
 import os
 import sys
 from base64 import b64encode
+from string import ascii_letters, digits
 from urllib.parse import urlsplit
 
 import yaml
@@ -50,12 +51,8 @@ COMSOL_FILESTORE_DIR = "files/"
 COMSOL_EXAM_ALLOWED_EXTENSIONS = {"pdf"}
 COMSOL_IMAGE_ALLOWED_EXTENSIONS = {"jfif", "jpg", "jpeg", "png", "svg", "gif", "webp"}
 COMSOL_FILESTORE_ALLOWED_EXTENSIONS = {"pdf", "zip", "tar.gz", "tar.xz"}
-COMSOL_CATEGORY_SLUG_CHARS = (
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-)
-COMSOL_DOCUMENT_SLUG_CHARS = (
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-"
-)
+COMSOL_CATEGORY_SLUG_CHARS = ascii_letters + digits
+COMSOL_DOCUMENT_SLUG_CHARS = ascii_letters + digits + "-"
 
 # Script setting `window.configOptions`; external URL or a file in BRANDING_DIR served at /branding/.
 BRANDING_DIR = os.environ.get("BRANDING_DIR", "") or os.path.join(BASE_DIR, "branding")
@@ -294,6 +291,7 @@ INSTALLED_APPS = [
     "frontend.apps.FrontendConfig",
     "health.apps.HealthConfig",
     "images.apps.ImagesConfig",
+    "mandates.apps.MandatesConfig",
     "myauth.apps.MyAuthConfig",
     "util.apps.UtilConfig",
     "notifications.apps.NotificationsConfig",

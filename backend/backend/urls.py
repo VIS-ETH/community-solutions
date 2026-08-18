@@ -53,6 +53,7 @@ api.add_router("exam/", "answers.api.router")
 api.add_router("faq/", "faq.api.router")
 api.add_router("auth/", "myauth.api.router")
 api.add_router("filestore/", "filestore.api.router")
+api.add_router("mandates/", "mandates.api.router")
 
 if DEBUG:
     api.add_router("debug/", "testing.api.router")
