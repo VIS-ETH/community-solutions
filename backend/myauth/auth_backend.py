@@ -11,6 +11,7 @@ from jwcrypto.jwk import JWKSet
 from jwcrypto.jws import InvalidJWSObject, InvalidJWSOperation, InvalidJWSSignature
 from jwcrypto.jwt import JWT, JWTMissingKey
 
+from mandates.models import Mandate
 from myauth.models import MyUser, Profile
 from notifications.models import NotificationSetting, NotificationType
 from util.func_cache import cache
@@ -105,6 +106,8 @@ def add_auth(request: HttpRequest):
         preferred_username = claims["preferred_username"]
         if preferred_username in settings.BANNED_USERS:
             raise PermissionDenied("User is banned")
+        if Mandate.user_has_any_overdue_mandates(preferred_username):
+            raise PermissionDenied("User has overdue mandates")
         home_organization = claims["home_organization"]
         if (
             settings.ALLOWED_HOMEORGS

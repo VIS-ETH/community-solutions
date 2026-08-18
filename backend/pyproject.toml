@@ -26,10 +26,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = [
-    "ruff==0.16.2",
-    "tblib>=3.2.2",
-]
+dev = ["ruff==0.16.2", "tblib>=3.2.2", "django-stubs==6.1.0"]
 
 [tool.ruff]
 line-length = 88

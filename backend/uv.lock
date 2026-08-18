@@ -168,6 +168,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "django-stubs" },
     { name = "ruff" },
     { name = "tblib" },
 ]
@@ -198,8 +199,9 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "ruff", specifier = "==0.16.2" },
-    { name = "tblib", specifier = ">=3.2.2" },
+     { name = "django-stubs", specifier = "==6.1.0" },
+     { name = "ruff", specifier = "==0.16.2" },
+   { name = "tblib", specifier = ">=3.2.2" },
 ]
 
 [[package]]
@@ -330,6 +332,34 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/98/f4/cb39ddd2a41e07a274c4e162c076e906ae232d63b66bbabdea0300878877/django_prometheus-2.4.1.tar.gz", hash = "sha256:073628243d2a6de6a8a8c20e5b512872dfb85d66e1b60b28bcf1eca0155dad95", size = 24464, upload-time = "2025-06-25T15:45:37.149Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/01/50/9c5e022fa92574e5d20606687f15a2aa255e10512a17d11a8216fa117f72/django_prometheus-2.4.1-py2.py3-none-any.whl", hash = "sha256:7fe5af7f7c9ad9cd8a429fe0f3f1bf651f0e244f77162147869eab7ec09cc5e7", size = 29541, upload-time = "2025-06-25T15:45:35.433Z" },
+]
+
+[[package]]
+name = "django-stubs"
+version = "6.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+    { name = "django-stubs-ext" },
+    { name = "types-pyyaml" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/65/34/e9f03764b32f56c02168814385ddc6d0e49a7b3e4381e8e3f6f5f34f39ff/django_stubs-6.1.0.tar.gz", hash = "sha256:b6aecc5c738a103135f76ba160a6f75e3b27dcf0200c64d7226018cdbc2340dd", size = 293018, upload-time = "2026-08-12T10:55:28.817Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a8/cf/064d7c48642309f3397b17ff14f3159c5225eb9321185a10039c0e846848/django_stubs-6.1.0-py3-none-any.whl", hash = "sha256:63b23ccca2616d464ed7e37d1ce44960315cb3cecab75b23c928467ef125e560", size = 557040, upload-time = "2026-08-12T10:55:26.959Z" },
+]
+
+[[package]]
+name = "django-stubs-ext"
+version = "6.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e6/40/75dd6650c5fc345b9edaebe42085811096e31a502fdbe17a52ffb9640d03/django_stubs_ext-6.1.0.tar.gz", hash = "sha256:d5635a481f5bdf2e04d533a8b602d3b9a28f073deffc85b83048dd20032e4d20", size = 6848, upload-time = "2026-08-12T10:54:44.47Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ed/41/10b8d576651af4f1dc6bdfb0d8a203e8b3a55d60ae36ba305d0edcdb594f/django_stubs_ext-6.1.0-py3-none-any.whl", hash = "sha256:57273506823274700a707c8f404dfb52a12c4554daf1468dfb2bff857bb22074", size = 10404, upload-time = "2026-08-12T10:54:42.979Z" },
 ]
 
 [[package]]
@@ -1117,6 +1147,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f4/8a/14c15ae154895cc131174f858c707790d416c444fc69f93918adfd8c4c0b/tblib-3.2.2.tar.gz", hash = "sha256:e9a652692d91bf4f743d4a15bc174c0b76afc750fe8c7b6d195cc1c1d6d2ccec", size = 35046, upload-time = "2025-11-12T12:21:16.572Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/02/be/5d2d47b1fb58943194fb59dcf222f7c4e35122ec0ffe8c36e18b5d728f0b/tblib-3.2.2-py3-none-any.whl", hash = "sha256:26bdccf339bcce6a88b2b5432c988b266ebbe63a4e593f6b578b1d2e723d2b76", size = 12893, upload-time = "2025-11-12T12:21:14.407Z" },
+]
+
+[[package]]
+name = "types-pyyaml"
+version = "6.0.12.20260815"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9f/72/b56089aeee6c496d969bac42376bedb6e3eeab4682e1018fa3137122f94b/types_pyyaml-6.0.12.20260815.tar.gz", hash = "sha256:28764110c9cf35846e733da32d8d734df7473c5dde9ef67c3b7332ec0e819858", size = 18545, upload-time = "2026-08-15T02:41:51.532Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/08/52/eefeba09be4ef2a1eb989eb92934561e8e502a6ee3c32654996e4be7e399/types_pyyaml-6.0.12.20260815-py3-none-any.whl", hash = "sha256:6f332212b7e191f3afd5016a713c510b6340593b7ebec573c7d5d20aa5386d3b", size = 21148, upload-time = "2026-08-15T02:41:50.555Z" },
 ]
 
 [[package]]

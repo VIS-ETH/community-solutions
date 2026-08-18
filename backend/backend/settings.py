@@ -15,6 +15,7 @@ import hashlib
 import os
 import sys
 from base64 import b64encode
+from string import ascii_letters, digits
 
 import yaml
 from jwcrypto.jwk import JWK, JWKSet
@@ -48,12 +49,8 @@ COMSOL_FILESTORE_DIR = "files/"
 COMSOL_EXAM_ALLOWED_EXTENSIONS = {"pdf"}
 COMSOL_IMAGE_ALLOWED_EXTENSIONS = {"jfif", "jpg", "jpeg", "png", "svg", "gif", "webp"}
 COMSOL_FILESTORE_ALLOWED_EXTENSIONS = {"pdf", "zip", "tar.gz", "tar.xz"}
-COMSOL_CATEGORY_SLUG_CHARS = (
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-)
-COMSOL_DOCUMENT_SLUG_CHARS = (
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-"
-)
+COMSOL_CATEGORY_SLUG_CHARS = digits
+COMSOL_DOCUMENT_SLUG_CHARS = ascii_letters + digits + "-"
 
 COMSOL_FRONTEND_GLOB_ID = os.environ.get("FRONTEND_GLOB_ID", "") or "vseth-1116-vis"
 
@@ -263,6 +260,7 @@ INSTALLED_APPS = [
     "frontend.apps.FrontendConfig",
     "health.apps.HealthConfig",
     "images.apps.ImagesConfig",
+    "mandates.apps.MandatesConfig",
     "myauth.apps.MyAuthConfig",
     "util.apps.UtilConfig",
     "notifications.apps.NotificationsConfig",

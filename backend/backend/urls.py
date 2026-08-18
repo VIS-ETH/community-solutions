@@ -46,6 +46,7 @@ api.add_router("user/", "users.api.router")
 api.add_router("document/", "documents.api.router")
 api.add_router("scoreboard/", "scoreboard.api.router")
 api.add_router("payment/", "payments.api.router")
+api.add_router("mandates/", "mandates.api.router")
 
 urlpatterns = [
     path("", include("health.urls")),
