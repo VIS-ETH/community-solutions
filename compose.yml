@@ -31,7 +31,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_DB: postgres
     volumes:
-      - ./data/sql:/var/lib/postgresql/data
+      - ./data/sql:/var/lib/postgresql
     ports:
       - "5432:5432"
     healthcheck:
