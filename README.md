@@ -138,7 +138,7 @@ docker compose --profile frontend up
 # docker compose up react-frontend postgres rclone create-data-dirs
 
 # Alternatively, run a prod-like setup where the backend serves the frontend file. This will run the exact container used in prod!
-docker compose -f dockker-compose.yml -f configs/docker-compose.prod.yml up
+docker compose -f compose.yml -f configs/docker-compose.prod.yml up
 ```
 
 If you are too lazy to type it every time, create a `.env` file in this directory and add the line `COMPOSE_PROFILES=frontend`.
@@ -245,9 +245,9 @@ To try, run
 ```bash
 # Run one of the following stacks in docker:
 ## For running frontend in docker, too:
-docker compose -f docker-compose.yml -f configs/docker-compose.observability.yml --profile frontend up --build
+docker compose -f compose.yml -f configs/docker-compose.observability.yml --profile frontend up --build
 ## For running frontend locally (easier to debug):
-docker compose -f docker-compose.yml -f configs/docker-compose.observability.yml up --build
+docker compose -f compose.yml -f configs/docker-compose.observability.yml up --build
 yarn start-with-faro
 ```
 
