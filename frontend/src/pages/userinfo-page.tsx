@@ -14,6 +14,7 @@ import UserNotifications from "../components/user-notifications";
 import UserNotificationsSettings from "../components/user-notification-settings";
 import UserDocuments from "../components/user-documents";
 import UserPayments from "../components/user-payments";
+import UserMandates from "../components/user-mandates";
 import UserScoreCard from "../components/user-score-card";
 import useTitle from "../hooks/useTitle";
 import NotFoundPage from "./not-found-page";
@@ -67,6 +68,7 @@ const UserPage: React.FC = () => {
             )}
             {isMyself && <UserNotifications />}
             {(isMyself || user.isAdmin) && <UserPayments username={username} />}
+            {(isMyself || user.isAdmin) && <UserMandates username={username} />}
           </SimpleGrid>
         </Tabs.Panel>
         <Tabs.Panel value="answers" pt="sm">
