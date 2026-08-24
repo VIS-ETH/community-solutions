@@ -1,13 +1,4 @@
-import {
-  Alert,
-  Button,
-  Card,
-  FileInput,
-  Select,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Alert, Anchor, Button, Card, FileInput, Select, Stack, Text, Title } from "@mantine/core";
 import { IconCloudUpload, IconDownload } from "@tabler/icons-react";
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -45,7 +36,7 @@ export const UploadTranscriptForm: React.FC<UploadTranscriptFormProps> = ({
 
   const options = useMemo(
     () =>
-      categories?.map(category => ({
+      categories?.map((category) => ({
         value: category.slug,
         label: category.displayname,
       })) ?? [],
@@ -75,12 +66,22 @@ export const UploadTranscriptForm: React.FC<UploadTranscriptFormProps> = ({
 
   return (
     <Stack mt="sm">
-      <Text>Please use the following template:</Text>
+      <Text>
+        Please use one of the following templates. You can use{" "}
+        <Anchor href="https://overleaf.com">Overleaf</Anchor> or the{" "}
+        <Anchor href="https://typst.app">Typst webapp</Anchor> to edit the documents easily.
+      </Text>
+      <Button
+        leftSection={<IconDownload />}
+        onClick={() => window.open("/static/transcript_template.typ")}
+      >
+        Download (recommended) Typst template
+      </Button>
       <Button
         leftSection={<IconDownload />}
         onClick={() => window.open("/static/transcript_template.tex")}
       >
-        Download template
+        Download Latex template
       </Button>
       <form onSubmit={onSubmit}>
         <Stack>
@@ -100,9 +101,7 @@ export const UploadTranscriptForm: React.FC<UploadTranscriptFormProps> = ({
               data={options}
               searchable
               nothingFoundMessage="No category found"
-              onChange={(value: string | null) =>
-                value != null && setCategory(value)
-              }
+              onChange={(value: string | null) => value != null && setCategory(value)}
             />
           )}
           <Button type="submit" loading={loading}>
