@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from typing import Literal
 
 from django.contrib.auth.models import User
 from django.db import transaction
@@ -7,7 +8,7 @@ from django.utils import timezone
 from ninja import Form, Query, Router, Schema
 
 from categories.models import Category
-from mandates.models import Mandate
+from mandates.models import MANDATE_REJECTION_GRACE_PERIOD, Mandate
 from myauth.models import get_my_user
 from util.response import ErrorSchema
 from util.schemas import ValueWrapped
@@ -29,7 +30,9 @@ class MandateSchema(Schema):
     due_date: date
     fulfilled_at: datetime | None
     checked_at: datetime | None
-    rejected: bool | None
+    checked_state: Literal["accepted", "rejected", "excused"] | None
+
+    grace_until: datetime | None
 
     uploaded_transcript: str | None
     uploaded_transcript_display_name: str | None
@@ -65,7 +68,14 @@ def mandate_to_schema_resp(mandate: Mandate) -> MandateSchema:
         due_date=mandate.due_date.isoformat(),
         fulfilled_at=mandate.fulfilled_time,
         checked_at=mandate.checked_time,
-        rejected=mandate.rejected or None,
+        checked_state=mandate.checked_state or None,
+        grace_until=None
+        if not mandate.is_unhandled_overdue()
+        else (
+            mandate.checked_time + MANDATE_REJECTION_GRACE_PERIOD
+            if mandate.checked_time is not None
+            else mandate.due_date
+        ),
         uploaded_transcript=mandate.uploaded_transcript.filename
         if mandate.uploaded_transcript
         else None,
