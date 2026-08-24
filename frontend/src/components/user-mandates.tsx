@@ -1,12 +1,5 @@
-import {
-  parseISO,
-  isBefore,
-  addWeeks,
-  lightFormat,
-  differenceInCalendarDays,
-  isAfter,
-} from "date-fns";
-import { ActionIcon, Alert, Anchor, Button, Divider, List, ListItem, Modal } from "@mantine/core";
+import { parseISO, lightFormat, differenceInCalendarDays, isAfter } from "date-fns";
+import { Alert, Anchor, Button, Divider, List, ListItem, Modal } from "@mantine/core";
 import { useCreateMandate, useListMandates } from "../api/hooks/mandates";
 import { useUser } from "../auth";
 import { MandateSchema } from "../api/model";
@@ -62,12 +55,8 @@ const UserMandatesProps: React.FC<UserMandatesProps> = (userProps) => {
       onSuccess: async () => reloadMandates(),
     },
   });
-  const {
-    error: categoriesError,
-    data: categories,
-    refresh: reloadCategories,
-  } = useRequest(loadCategories);
-  const error = mandatesError;
+  const { error: categoriesError, data: categories } = useRequest(loadCategories);
+  const error = mandatesError || addError || categoriesError;
   const [addMandateModalIsOpen, { open: openAddMandateModal, close: closeAddMandateModal }] =
     useDisclosure();
 
