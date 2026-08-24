@@ -14,6 +14,7 @@ from documents.models import Document, DocumentFile, DocumentType
 from feedback.models import Feedback
 from filestore.models import Attachment
 from images.models import Image
+from mandates.models import Mandate
 from myauth.models import MyUser
 from notifications.models import Notification, NotificationType
 from payments.models import Payment
@@ -391,6 +392,60 @@ class Command(BaseCommand):
                     answer=answers[(user.id + i) % len(answers)],
                 ).save()
 
+    def create_mandates(self):
+        self.stdout.write("Creating mandates")
+        for user in MyUser.objects.all():
+            user_id = user.id
+            if user_id % 19 == 2:
+                continue
+
+            for category in Category.objects.all():
+                category_id = category.id
+                added_id = user_id + category_id
+                if added_id % 17 > 15:
+                    continue
+
+                now = timezone.now().astimezone(
+                    timezone.get_current_timezone()
+                )
+                created_time = now - timedelta(days=(added_id % 11) * 6) # around 2 months interval
+                due_date = created_time + timedelta(days=(added_id % 13) * 2 * 3) # around 3 month interval
+
+                fulfilled_time = (
+                    None
+                    if added_id % 19 <= 3
+                    else created_time + timedelta(days=(added_id % 7) * 4) # immediately after up to 4 weeks after creation
+                )
+                if fulfilled_time:
+                    fulfilled_time = min(fulfilled_time, now)
+
+                checked_time = (
+                    None
+                    if added_id % 9 <= 3 or not fulfilled_time
+                    else min(now, fulfilled_time + timedelta(days=(added_id % 5)))
+                )
+
+                state = None
+                match added_id % 4:
+                    case 0:
+                        break
+                    case 1:
+                        state = Mandate.CheckedState.ACCEPTED
+                    case 2:
+                        state = Mandate.CheckedState.REJECTED
+                    case 3:
+                        state = Mandate.CheckedState.EXCUSED
+
+                Mandate.objects.create(
+                    user=user,
+                    category=category,
+                    due_date=due_date,
+                    created_time=created_time,
+                    fulfilled_time=fulfilled_time,
+                    checked_time=checked_time,
+                    checked_state=None if not checked_time else state,
+                )
+
     def create_payments(self):
         self.stdout.write("Create payments")
         categories = Category.objects.all()
@@ -493,6 +548,7 @@ class Command(BaseCommand):
         self.create_images()
         self.create_meta_categories()
         self.create_categories()
+        self.create_mandates()
         self.create_exam_types()
         self.create_exams()
         self.create_answer_sections()
