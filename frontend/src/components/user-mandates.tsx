@@ -26,7 +26,11 @@ const getMandateStatusType = (mandate: MandateSchema): MandateStatusType => {
   if (["accepted", "excused"].includes(mandate.checked_state ?? ""))
     return MandateStatusType.ARCHIVED;
 
-  if (!isAfter(new Date(), parseISO(mandate.due_date))) return MandateStatusType.OPEN_ONGOING;
+  if (!isAfter(new Date(), parseISO(mandate.due_date))) {
+    return mandate.checked_state === "rejected"
+      ? MandateStatusType.REJECTED_GRACE
+      : MandateStatusType.OPEN_ONGOING;
+  }
 
   if (
     mandate.checked_state === "rejected" &&
