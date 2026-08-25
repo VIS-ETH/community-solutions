@@ -146,7 +146,7 @@ const UserMandatesProps: React.FC<UserMandatesProps> = (userProps) => {
           {categories &&
             categories.map((cat) => {
               return (
-                <ListItem>
+                <ListItem key={cat.slug}>
                   <Button
                     onClick={() => {
                       add({
@@ -158,7 +158,6 @@ const UserMandatesProps: React.FC<UserMandatesProps> = (userProps) => {
                       closeAddMandateModal();
                     }}
                     variant="subtle"
-                    key={cat.slug}
                   >
                     {cat.displayname}
                   </Button>
