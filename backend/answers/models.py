@@ -7,6 +7,7 @@ from django.db.models import Exists, OuterRef
 from django.utils import timezone
 from django_prometheus.models import ExportModelOperationsMixin
 
+from mandates.models import Mandate
 from myauth import auth_check
 from util.models import CommentMixin
 
@@ -61,8 +62,15 @@ class Exam(ExportModelOperationsMixin("exam"), models.Model):
             return True
         if not self.public:
             return False
-        if self.needs_payment and not request.user.has_payed():
-            return False
+        if self.needs_payment:
+            if Mandate.objects.filter(
+                user=request.user,
+                category=self.category,
+                due_date__gte=timezone.now(),
+            ).exists():
+                return True
+            if not request.user.has_payed():
+                return False
         if (
             self.oral_transcript_uploader is not None
             and self.oral_transcript_uploader.pk == request.user.pk

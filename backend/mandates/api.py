@@ -120,9 +120,9 @@ def _next_max_due_date():
 )
 @auth_check.require_login
 def create_mandate(request, data: Form[CreateMandateSchema]):
-    if (
-        not auth_check.has_admin_rights(request)
-        and request.user.username != data.username
+    if not auth_check.has_admin_rights(request) and data.username not in (
+        None,
+        request.user.username,
     ):
         return response.not_allowed()
     user = (
@@ -180,9 +180,9 @@ def get_mandates(request, filters: Query[Filters]):
         if filters.checked_state
         else {}
     )
-    mandates = Mandate.objects.filter(**db_filters).prefetch_related(
+    mandates = Mandate.objects.prefetch_related(
         "category", "user", "uploaded_transcript"
-    )
+    ).filter(**db_filters)
     return {"value": [mandate_to_schema_resp(mandate) for mandate in mandates]}
 
 

@@ -442,7 +442,7 @@ class Command(BaseCommand):
                         state = Mandate.CheckedState.EXCUSED
 
                 e = None
-                if checked_time and state == Mandate.CheckedState.ACCEPTED:
+                if fulfilled_time:
                     filename = s3_util.generate_filename(
                         8, settings.COMSOL_EXAM_DIR, ".pdf"
                     )
@@ -464,6 +464,13 @@ class Command(BaseCommand):
                         is_oral_transcript=True,
                         oral_transcript_uploader=user,
                     )
+                    e.save()
+
+                if checked_time and state == Mandate.CheckedState.ACCEPTED:
+                    assert fulfilled_time
+                    assert e
+                    e.public = True
+                    e.oral_transcript_checked = True
                     e.save()
 
                 Mandate.objects.create(
