@@ -70,6 +70,11 @@ class Mandate(ExportModelOperationsMixin("mandate"), models.Model):
                 condition=Q(checked_time__isnull=True, checked_state__isnull=True)
                 | Q(checked_time__isnull=False, checked_state__isnull=False),
             ),
+            CheckConstraint(
+                name="mandate_accepted_requires_transcript",
+                condition=~Q(checked_state="accepted")
+                | Q(uploaded_transcript__isnull=False),
+            ),
         ]
 
     def is_unhandled_overdue(self):
