@@ -131,6 +131,10 @@ def create_mandate(request, data: Form[CreateMandateSchema]):
         else get_object_or_404(User, username=data.username)
     )
     category = get_object_or_404(Category, slug=data.category)
+    if not category.has_payments:
+        return response.not_possible(
+            "Cannot create mandate for a category without payments"
+        )
     unhandled_exists = Mandate.objects.filter(
         Q(user=user)
         & Q(category=category)
