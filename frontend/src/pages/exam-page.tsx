@@ -345,9 +345,15 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
               <Card m="xs">
                 {metaData.needs_payment && !metaData.hasPayed ? (
                   <>
-                    You have to pay a deposit in order to see oral exams. After
-                    submitting a report of your own oral exam you can get your
-                    deposit back.
+                    You have to accept a mandate to upload your own transcript
+                    before you can view this exam. You can do so{" "}
+                    <Anchor
+                      component={Link}
+                      to={`/category/${metaData.category}`}
+                    >
+                      here
+                    </Anchor>
+                    .
                   </>
                 ) : (
                   <>You can not view this exam at this time.</>

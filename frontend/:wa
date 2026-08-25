@@ -17,19 +17,8 @@ import {
   ButtonGroup,
 } from "@mantine/core";
 import React, { useCallback, useMemo, useState } from "react";
-import {
-  Link,
-  Navigate,
-  Route,
-  Routes,
-  useNavigate,
-  useParams,
-} from "react-router-dom";
-import {
-  loadCategoryMetaData,
-  loadMetaCategories,
-  useRemoveCategory,
-} from "../api/hooks";
+import { Link, Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
+import { loadCategoryMetaData, loadMetaCategories, useRemoveCategory } from "../api/hooks";
 import { UserContext, useUser } from "../auth";
 import CategoryMetaDataEditor from "../components/category-metadata-editor";
 import ExamList from "../components/exam-list";
@@ -70,15 +59,13 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
   const [removeConfirm, modals] = useRemoveConfirm();
   const onRemove = useCallback(
     () =>
-      removeConfirm(
-        `Do you really want to remove the category "${metaData.displayname}"?`,
-        () => remove(metaData.slug),
+      removeConfirm(`Do you really want to remove the category "${metaData.displayname}"?`, () =>
+        remove(metaData.slug),
       ),
     [removeConfirm, remove, metaData],
   );
   const offeredIn = useMemo(
-    () =>
-      data ? getMetaCategoriesForCategory(data, metaData.slug) : undefined,
+    () => (data ? getMetaCategoriesForCategory(data, metaData.slug) : undefined),
     [data, metaData],
   );
   const user = useUser()!;
@@ -89,22 +76,15 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
     },
     [run, onMetaDataChange],
   );
-  const [showUploadModal, setShowUploadModal] = useState<
-    false | "exam" | "transcript"
-  >(false);
-  const [
-    showMandateAcceptModal,
-    { open: openMandateAcceptModal, close: closeMandateAcceptModal },
-  ] = useDisclosure(false);
-  const { loading: creatingMandate, run: runCreateMandate } = useRequest(
-    createMandate,
-    {
-      manual: true,
-      onSuccess: () => {
-        closeMandateAcceptModal();
-      },
+  const [showUploadModal, setShowUploadModal] = useState<false | "exam" | "transcript">(false);
+  const [showMandateAcceptModal, { open: openMandateAcceptModal, close: closeMandateAcceptModal }] =
+    useDisclosure(false);
+  const { loading: creatingMandate, run: runCreateMandate } = useRequest(createMandate, {
+    manual: true,
+    onSuccess: () => {
+      closeMandateAcceptModal();
     },
-  );
+  });
 
   return (
     <>
@@ -113,22 +93,20 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
         onClose={closeMandateAcceptModal}
         title="Mandate Acceptance"
       >
-        We require you to accept the terms of oral exam contributions before
-        proceeding. By accepting, you agree to actively contribute to Community
-        Solutions and adhere to the guidelines provided. Please read the terms
-        carefully before accepting.
-        <br />A transcript of your oral exam <strong>MUST</strong> be uploaded
-        to Community Solutions. If you do not upload a transcript, your{" "}
-        <strong>access</strong> to all exams <strong>will be blocked</strong>.
+        We require you to accept the terms of oral exam contributions before proceeding. By
+        accepting, you agree to actively contribute to Community Solutions and adhere to the
+        guidelines provided. Please read the terms carefully before accepting.
         <br />
-        You will have time to upload the transcript until the end of the exam
-        sessions.
+        A transcript of your oral exam <strong>MUST</strong> be uploaded to Community Solutions. If
+        you do not upload a transcript, your <strong>access</strong> to all exams{" "}
+        <strong>will be blocked</strong>.
         <br />
-        You <strong>CANNOT CANCEL</strong> this on your own, and will need to
-        explain and show your situation to a Community Solutions administrator.
+        You will have time to upload the transcript until the end of the exam sessions.
         <br />
-        For any questions or concerns, please contact the administrators of
-        Community Solutions.
+        You <strong>CANNOT CANCEL</strong> this on your own, and will need to explain and show your
+        situation to a Community Solutions administrator.
+        <br />
+        For any questions or concerns, please contact the administrators of Community Solutions.
         <Group justify="right" mt="md">
           <Button mt="md" onClick={closeMandateAcceptModal}>
             Dismiss
@@ -153,12 +131,7 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
         <Anchor tt="uppercase" size="xs" component={Link} to="/">
           Home
         </Anchor>
-        <Anchor
-          tt="uppercase"
-          size="xs"
-          component={Link}
-          to={`/category/${metaData.slug}`}
-        >
+        <Anchor tt="uppercase" size="xs" component={Link} to={`/category/${metaData.slug}`}>
           {metaData.displayname}
         </Anchor>
       </Breadcrumbs>
@@ -176,8 +149,8 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                     void navigate("./..");
                   }}
                   currentMetaData={metaData}
-                  offeredIn={offeredIn.flatMap(b =>
-                    b.meta2.map(d => [b.displayname, d.displayname] as const),
+                  offeredIn={offeredIn.flatMap((b) =>
+                    b.meta2.map((d) => [b.displayname, d.displayname] as const),
                   )}
                 />
               )
@@ -188,11 +161,7 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
           path="/"
           element={
             <>
-              <Flex
-                direction={{ base: "column", sm: "row" }}
-                justify="space-between"
-                mb="sm"
-              >
+              <Flex direction={{ base: "column", sm: "row" }} justify="space-between" mb="sm">
                 <Title order={1} my="md">
                   {metaData.displayname}
                 </Title>
@@ -226,11 +195,7 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                     >
                       Upload Exam
                     </Button>
-                    <Button
-                      leftSection={<IconEdit />}
-                      component={Link}
-                      to="./edit"
-                    >
+                    <Button leftSection={<IconEdit />} component={Link} to="./edit">
                       Edit
                     </Button>
                     <Button
@@ -269,9 +234,7 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                     </Anchor>
                   </Grid.Col>
                 )}
-                {metaData.remark && (
-                  <Grid.Col>Remark: {metaData.remark}</Grid.Col>
-                )}
+                {metaData.remark && <Grid.Col>Remark: {metaData.remark}</Grid.Col>}
               </Grid>
               {(offeredIn === undefined || offeredIn.length > 0) && (
                 <Box mb="sm">
@@ -280,11 +243,9 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                     <Loader />
                   ) : (
                     <List>
-                      {offeredIn?.map(meta1 =>
-                        meta1.meta2.map(meta2 => (
-                          <List.Item
-                            key={meta1.displayname + meta2.displayname}
-                          >
+                      {offeredIn?.map((meta1) =>
+                        meta1.meta2.map((meta2) => (
+                          <List.Item key={meta1.displayname + meta2.displayname}>
                             {meta2.displayname} in {meta1.displayname}
                           </List.Item>
                         )),
@@ -296,26 +257,19 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
               <Grid my="sm">
                 {metaData.experts.includes(user.username) && (
                   <Grid.Col span="auto">
-                    <Alert
-                      color="yellow"
-                      title="Category expert"
-                      icon={<IconStar />}
-                    >
-                      You are an expert for this category. You can endorse
-                      correct answers, which will be visible to other users.
+                    <Alert color="yellow" title="Category expert" icon={<IconStar />}>
+                      You are an expert for this category. You can endorse correct answers, which
+                      will be visible to other users.
                     </Alert>
                   </Grid.Col>
                 )}
                 {metaData.has_payments && (
                   <Grid.Col span="auto">
                     <Alert color="gray" icon={<IconInfoCircle />}>
-                      As oral exams are crowdsourced, more so than other types
-                      of exams, they require active contribution to Community
-                      Solutions. You must explicitly agree to these terms before
-                      continuing.{" "}
-                      <Button onClick={openMandateAcceptModal}>
-                        Accept terms
-                      </Button>
+                      As oral exams are crowdsourced, more so than other types of exams, they
+                      require active contribution to Community Solutions. You must explicitly agree
+                      to these terms before continuing.{" "}
+                      <Button onClick={openMandateAcceptModal}>Accept terms</Button>
                     </Alert>
                   </Grid.Col>
                 )}
@@ -327,8 +281,7 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                       title="Category admin"
                       icon={<IconUserStar />}
                     >
-                      You can edit exams in this category. Please do so
-                      responsibly.
+                      You can edit exams in this category. Please do so responsibly.
                     </Alert>
                   </Grid.Col>
                 )}
@@ -343,7 +296,7 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                     Attachments
                   </Title>
                   <List>
-                    {metaData.attachments.map(att => (
+                    {metaData.attachments.map((att) => (
                       <List.Item key={att.filename}>
                         <Anchor
                           href={`/api/filestore/get/${att.filename}/`}
@@ -364,15 +317,9 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                   onClose={() => {
                     setShowUploadModal(false);
                   }}
-                  title={
-                    showUploadModal === "exam"
-                      ? "Upload Exam"
-                      : "Upload Transcript"
-                  }
+                  title={showUploadModal === "exam" ? "Upload Exam" : "Upload Transcript"}
                 >
-                  {showUploadModal === "exam" && (
-                    <UploadPdfForm category={metaData.slug} />
-                  )}
+                  {showUploadModal === "exam" && <UploadPdfForm category={metaData.slug} />}
                   {showUploadModal === "transcript" && (
                     <UploadTranscriptForm category={metaData.slug} />
                   )}
@@ -389,13 +336,10 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
 
 const CategoryPage: React.FC = () => {
   const { slug } = useParams() as { slug: string };
-  const { data, loading, error, mutate } = useRequest(
-    () => loadCategoryMetaData(slug),
-    {
-      cacheKey: `category-${slug}`,
-      refreshDeps: [slug],
-    },
-  );
+  const { data, loading, error, mutate } = useRequest(() => loadCategoryMetaData(slug), {
+    cacheKey: `category-${slug}`,
+    refreshDeps: [slug],
+  });
   const navigate = useNavigate();
   const onMetaDataChange = useCallback(
     (newMetaData: CategoryMetaData) => {
@@ -407,9 +351,7 @@ const CategoryPage: React.FC = () => {
     [mutate, navigate, slug],
   );
   useTitle(data?.displayname ?? slug);
-  useQuickSearchFilter(
-    data && { slug: data.slug, displayname: data.displayname },
-  );
+  useQuickSearchFilter(data && { slug: data.slug, displayname: data.displayname });
   const user = useUser();
   return (
     <Container
@@ -426,16 +368,13 @@ const CategoryPage: React.FC = () => {
           value={
             user
               ? {
-                  ...user,
-                  isCategoryAdmin: user.isAdmin || data.catadmin,
-                }
+                ...user,
+                isCategoryAdmin: user.isAdmin || data.catadmin,
+              }
               : undefined
           }
         >
-          <CategoryPageContent
-            metaData={data}
-            onMetaDataChange={onMetaDataChange}
-          />
+          <CategoryPageContent metaData={data} onMetaDataChange={onMetaDataChange} />
         </UserContext.Provider>
       )}
     </Container>

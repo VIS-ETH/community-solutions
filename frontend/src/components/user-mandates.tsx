@@ -89,17 +89,14 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
     getMandateStatusType(mandate),
   );
 
-  const renderMandates = (
-    statusType: MandateStatusType,
-    mandates: MandateSchema[],
-  ) => {
+  const renderMandates = (mandates: MandateSchema[]) => {
     return (
       <List>
         {mandates.map(mandate => {
           return (
             <ListItem key={mandate.id}>
               Mandate on category{" "}
-              <Anchor component={Link} to={`category/${mandate.category}`}>
+              <Anchor component={Link} to={`/category/${mandate.category}`}>
                 {mandate.category_display_name}
               </Anchor>
               : signed up for on{" "}
@@ -113,7 +110,33 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
                 GlobalConsts.dateFNSFormatStringDate,
               )}
               <br />
+              {mandate.checked_state === "excused" && (
+                <>The mandate was excused by an administrator.</>
+              )}
+              {mandate.checked_state === "accepted" && (
+                <>
+                  The mandate was accepted by an administrator on{" "}
+                  {lightFormat(
+                    mandate.checked_at!,
+                    GlobalConsts.dateFNSFormatString,
+                  )}
+                  , which the user uploaded on
+                  {lightFormat(
+                    mandate.fulfilled_at!,
+                    GlobalConsts.dateFNSFormatString,
+                  )}
+                  . The document is found at:{" "}
+                  <Anchor
+                    component={Link}
+                    to={`/exams/${mandate.uploaded_transcript}`}
+                  >
+                    {mandate.uploaded_transcript_display_name}
+                  </Anchor>
+                  .
+                </>
+              )}
               {mandate.fulfilled_at == null &&
+                mandate.checked_state !== "excused" &&
                 (isAfter(new Date(), parseISO(mandate.due_date)) ? (
                   <>
                     Mandate not fulfilled and deadline exceeded by over{" "}
@@ -132,9 +155,7 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
                     days left to fulfill.
                   </>
                 ))}
-              {statusType === MandateStatusType.REJECTED_OVERDUE ? (
-                <>The mandate was last rejected on</>
-              ) : (
+              {mandate.checked_state === "rejected" && (
                 <>
                   The mandate was last rejected on{" "}
                   {lightFormat(
@@ -225,10 +246,7 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
             date.
           </Alert>
 
-          {renderMandates(
-            MandateStatusType.OPEN_ONGOING,
-            groupedMandates[MandateStatusType.OPEN_ONGOING]!,
-          )}
+          {renderMandates(groupedMandates[MandateStatusType.OPEN_ONGOING]!)}
         </div>
       )}
 
@@ -245,10 +263,7 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
             <strong>account blockage</strong>.
           </Alert>
 
-          {renderMandates(
-            MandateStatusType.REJECTED_GRACE,
-            groupedMandates[MandateStatusType.REJECTED_GRACE]!,
-          )}
+          {renderMandates(groupedMandates[MandateStatusType.REJECTED_GRACE]!)}
         </div>
       )}
 
@@ -265,10 +280,7 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
             any access to Community Solutions.
           </Alert>
 
-          {renderMandates(
-            MandateStatusType.REJECTED_OVERDUE,
-            groupedMandates[MandateStatusType.REJECTED_OVERDUE]!,
-          )}
+          {renderMandates(groupedMandates[MandateStatusType.REJECTED_OVERDUE]!)}
         </div>
       )}
 
@@ -285,10 +297,7 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
             preventing any access to Community Solutions.
           </Alert>
 
-          {renderMandates(
-            MandateStatusType.OPEN_OVERDUE,
-            groupedMandates[MandateStatusType.OPEN_OVERDUE]!,
-          )}
+          {renderMandates(groupedMandates[MandateStatusType.OPEN_OVERDUE]!)}
         </div>
       )}
 
@@ -304,10 +313,7 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
             These mandates are archived and do not require any further action.
           </Alert>
 
-          {renderMandates(
-            MandateStatusType.ARCHIVED,
-            groupedMandates[MandateStatusType.ARCHIVED]!,
-          )}
+          {renderMandates(groupedMandates[MandateStatusType.ARCHIVED]!)}
         </div>
       )}
     </div>
