@@ -1,8 +1,10 @@
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from ninja import Form, Router, Schema
 
 from answers.models import Exam
+from mandates.models import Mandate
 from myauth import auth_check
 from myauth.models import MyUser
 from payments.models import Payment
@@ -158,9 +160,23 @@ def mark_exam_checked(request, filename: str):
         for x in Payment.objects.filter(user=exam.oral_transcript_uploader)
         if x.valid() and not x.check_time
     ]
+
     if payment:
         payment[0].check_time = timezone.now()
         payment[0].uploaded_transcript = exam
         payment[0].save()
+
+    mandate = Mandate.objects.filter(
+        Q(user=exam.oral_transcript_uploader)
+        & ~Q(checked_state=Mandate.CheckedState.ACCEPTED)
+        & ~Q(checked_state=Mandate.CheckedState.EXCUSED)
+        & Q(fulfilled_at__isnull=False)
+    ).first()
+
+    if mandate:
+        mandate.checked_state = Mandate.CheckedState.ACCEPTED
+        mandate.edited_time = timezone.now()
+        mandate.uploaded_transcript = exam
+        mandate.save()
 
     return response.success()
