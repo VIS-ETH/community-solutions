@@ -389,9 +389,9 @@ const CategoryPage: React.FC = () => {
           value={
             user
               ? {
-                ...user,
-                isCategoryAdmin: user.isAdmin || data.catadmin,
-              }
+                  ...user,
+                  isCategoryAdmin: user.isAdmin || data.catadmin,
+                }
               : undefined
           }
         >

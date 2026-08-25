@@ -1,5 +1,18 @@
-import { parseISO, lightFormat, differenceInCalendarDays, isAfter } from "date-fns";
-import { Alert, Anchor, Button, Divider, List, ListItem, Modal } from "@mantine/core";
+import {
+  parseISO,
+  lightFormat,
+  differenceInCalendarDays,
+  isAfter,
+} from "date-fns";
+import {
+  Alert,
+  Anchor,
+  Button,
+  Divider,
+  List,
+  ListItem,
+  Modal,
+} from "@mantine/core";
 import { useCreateMandate, useListMandates } from "../api/hooks/mandates";
 import { useUser } from "../auth";
 import { MandateSchema } from "../api/model";
@@ -39,12 +52,13 @@ const getMandateStatusType = (mandate: MandateSchema): MandateStatusType => {
   )
     return MandateStatusType.REJECTED_GRACE;
 
-  if (mandate.checked_state === "rejected") return MandateStatusType.REJECTED_OVERDUE;
+  if (mandate.checked_state === "rejected")
+    return MandateStatusType.REJECTED_OVERDUE;
 
   return MandateStatusType.OPEN_OVERDUE;
 };
 
-const UserMandatesProps: React.FC<UserMandatesProps> = (userProps) => {
+const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
   const user = useUser()!;
   const isAdmin = user.isAdmin;
   const {
@@ -59,42 +73,63 @@ const UserMandatesProps: React.FC<UserMandatesProps> = (userProps) => {
       onSuccess: async () => reloadMandates(),
     },
   });
-  const { error: categoriesError, data: categories } = useRequest(loadCategories);
+  const { error: categoriesError, data: categories } =
+    useRequest(loadCategories);
   const error = mandatesError || addError || categoriesError;
-  const [addMandateModalIsOpen, { open: openAddMandateModal, close: closeAddMandateModal }] =
-    useDisclosure();
+  const [
+    addMandateModalIsOpen,
+    { open: openAddMandateModal, close: closeAddMandateModal },
+  ] = useDisclosure();
 
   if (!isAdmin && userProps.username !== user.username) {
     throw new Error("You are not authorized to view this user's mandates.");
   }
 
-  const groupedMandates = Object.groupBy(mandates?.value ?? [], (mandate) =>
+  const groupedMandates = Object.groupBy(mandates?.value ?? [], mandate =>
     getMandateStatusType(mandate),
   );
 
-  const renderMandates = (statusType: MandateStatusType, mandates: MandateSchema[]) => {
+  const renderMandates = (
+    statusType: MandateStatusType,
+    mandates: MandateSchema[],
+  ) => {
     return (
       <List>
-        {mandates.map((mandate) => {
+        {mandates.map(mandate => {
           return (
             <ListItem key={mandate.id}>
               Mandate on category{" "}
               <Anchor component={Link} to={`category/${mandate.category}`}>
                 {mandate.category_display_name}
               </Anchor>
-              : signed up for on {lightFormat(mandate.created_at, GlobalConsts.dateFNSFormatString)}
-              , due on {lightFormat(mandate.due_date, GlobalConsts.dateFNSFormatStringDate)}
+              : signed up for on{" "}
+              {lightFormat(
+                mandate.created_at,
+                GlobalConsts.dateFNSFormatString,
+              )}
+              , due on{" "}
+              {lightFormat(
+                mandate.due_date,
+                GlobalConsts.dateFNSFormatStringDate,
+              )}
               <br />
               {mandate.fulfilled_at == null &&
                 (isAfter(new Date(), parseISO(mandate.due_date)) ? (
                   <>
                     Mandate not fulfilled and deadline exceeded by over{" "}
-                    {differenceInCalendarDays(new Date(), parseISO(mandate.due_date))} days!
+                    {differenceInCalendarDays(
+                      new Date(),
+                      parseISO(mandate.due_date),
+                    )}{" "}
+                    days!
                   </>
                 ) : (
                   <>
-                    {differenceInCalendarDays(parseISO(mandate.due_date), new Date())} days left to
-                    fulfill.
+                    {differenceInCalendarDays(
+                      parseISO(mandate.due_date),
+                      new Date(),
+                    )}{" "}
+                    days left to fulfill.
                   </>
                 ))}
               {statusType === MandateStatusType.REJECTED_OVERDUE ? (
@@ -102,11 +137,21 @@ const UserMandatesProps: React.FC<UserMandatesProps> = (userProps) => {
               ) : (
                 <>
                   The mandate was last rejected on{" "}
-                  {lightFormat(mandate.checked_at!, GlobalConsts.dateFNSFormatString)}, after being
-                  fulfilled on the{" "}
-                  {lightFormat(mandate.fulfilled_at!, GlobalConsts.dateFNSFormatString)}. It needs
-                  to be amended until{" "}
-                  {lightFormat(mandate.grace_until!, GlobalConsts.dateFNSFormatString)}.<br />
+                  {lightFormat(
+                    mandate.checked_at!,
+                    GlobalConsts.dateFNSFormatString,
+                  )}
+                  , after being fulfilled on the{" "}
+                  {lightFormat(
+                    mandate.fulfilled_at!,
+                    GlobalConsts.dateFNSFormatString,
+                  )}
+                  . It needs to be amended until{" "}
+                  {lightFormat(
+                    mandate.grace_until!,
+                    GlobalConsts.dateFNSFormatString,
+                  )}
+                  .<br />
                 </>
               )}
             </ListItem>
@@ -132,19 +177,18 @@ const UserMandatesProps: React.FC<UserMandatesProps> = (userProps) => {
         title={<h3>Add mandate for category</h3>}
       >
         Select a category to add a mandate. An added mandate will require you to{" "}
-        <strong>actively contribute</strong> in order for Community Solutions as a whole (all
-        solutions + exams and other documents) to remain accessible.
+        <strong>actively contribute</strong> in order for Community Solutions as
+        a whole (all solutions + exams and other documents) to remain
+        accessible.
         <br />
-        In particular, failure to fulfill a mandate will result in your <strong>
-          account
-        </strong>{" "}
-        being <strong>blocked</strong> and you will not be able to access any solutions or exams
-        until the mandate is fulfilled.
+        In particular, failure to fulfill a mandate will result in your{" "}
+        <strong>account</strong> being <strong>blocked</strong> and you will not
+        be able to access any solutions or exams until the mandate is fulfilled.
         <Divider my="md" />
         Select the category:
         <List>
           {categories &&
-            categories.map((cat) => {
+            categories.map(cat => {
               return (
                 <ListItem key={cat.slug}>
                   <Button
@@ -170,10 +214,15 @@ const UserMandatesProps: React.FC<UserMandatesProps> = (userProps) => {
       {MandateStatusType.OPEN_ONGOING in groupedMandates && (
         <div>
           <h4>Open &amp; ongoing</h4>
-          <Alert color="green" variant="light" icon={<IconInfoCircle size={16} />}>
-            These mandates are currently open and ongoing. During this period, the user has access
-            to Community Solutions including the mandated categories and is expected to fulfill the
-            mandate before its due date.
+          <Alert
+            color="green"
+            variant="light"
+            icon={<IconInfoCircle size={16} />}
+          >
+            These mandates are currently open and ongoing. During this period,
+            the user has access to Community Solutions including the mandated
+            categories and is expected to fulfill the mandate before its due
+            date.
           </Alert>
 
           {renderMandates(
@@ -186,9 +235,14 @@ const UserMandatesProps: React.FC<UserMandatesProps> = (userProps) => {
       {MandateStatusType.REJECTED_GRACE in groupedMandates && (
         <div>
           <h4>Rejected &amp; Grace period</h4>
-          <Alert color="orange" variant="light" icon={<IconInfoCircle size={16} />}>
-            These mandates have been rejected and are in a grace period. The user must fulfill these
-            mandates to avoid <strong>account blockage</strong>.
+          <Alert
+            color="orange"
+            variant="light"
+            icon={<IconInfoCircle size={16} />}
+          >
+            These mandates have been rejected and are in a grace period. The
+            user must fulfill these mandates to avoid{" "}
+            <strong>account blockage</strong>.
           </Alert>
 
           {renderMandates(
@@ -201,10 +255,14 @@ const UserMandatesProps: React.FC<UserMandatesProps> = (userProps) => {
       {MandateStatusType.REJECTED_OVERDUE in groupedMandates && (
         <div>
           <h4>Rejected &amp; Overdue</h4>
-          <Alert color="red" variant="filled" icon={<IconAlertCircle size={16} />}>
-            These mandates have been rejected and have exceeded a grace period. They are{" "}
-            <strong>blocking the user's account</strong> and preventing any access to Community
-            Solutions.
+          <Alert
+            color="red"
+            variant="filled"
+            icon={<IconAlertCircle size={16} />}
+          >
+            These mandates have been rejected and have exceeded a grace period.
+            They are <strong>blocking the user's account</strong> and preventing
+            any access to Community Solutions.
           </Alert>
 
           {renderMandates(
@@ -217,10 +275,14 @@ const UserMandatesProps: React.FC<UserMandatesProps> = (userProps) => {
       {MandateStatusType.OPEN_OVERDUE in groupedMandates && (
         <div>
           <h4>Open &amp; Overdue</h4>
-          <Alert color="red" variant="filled" icon={<IconAlertCircle size={16} />}>
+          <Alert
+            color="red"
+            variant="filled"
+            icon={<IconAlertCircle size={16} />}
+          >
             <strong>Immediate attention required:</strong>
-            These mandates are <strong>blocking the user's account</strong> and preventing any
-            access to Community Solutions.
+            These mandates are <strong>blocking the user's account</strong> and
+            preventing any access to Community Solutions.
           </Alert>
 
           {renderMandates(
@@ -233,12 +295,19 @@ const UserMandatesProps: React.FC<UserMandatesProps> = (userProps) => {
       {MandateStatusType.ARCHIVED in groupedMandates && (
         <div>
           <h4>Archived</h4>
-          <Alert color="green" variant="outline" icon={<IconInfoCircle size={16} />}>
-            The following mandates have been fulfilled, checked, and accepted. These mandates are
-            archived and do not require any further action.
+          <Alert
+            color="green"
+            variant="outline"
+            icon={<IconInfoCircle size={16} />}
+          >
+            The following mandates have been fulfilled, checked, and accepted.
+            These mandates are archived and do not require any further action.
           </Alert>
 
-          {renderMandates(MandateStatusType.ARCHIVED, groupedMandates[MandateStatusType.ARCHIVED]!)}
+          {renderMandates(
+            MandateStatusType.ARCHIVED,
+            groupedMandates[MandateStatusType.ARCHIVED]!,
+          )}
         </div>
       )}
     </div>
