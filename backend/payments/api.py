@@ -170,7 +170,7 @@ def mark_exam_checked(request, filename: str):
         Q(user=exam.oral_transcript_uploader)
         & ~Q(checked_state=Mandate.CheckedState.ACCEPTED)
         & ~Q(checked_state=Mandate.CheckedState.EXCUSED)
-        & Q(fulfilled_at__isnull=False)
+        & Q(fulfilled_time__isnull=False)
     ).first()
 
     if mandate:
