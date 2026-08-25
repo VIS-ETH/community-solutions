@@ -16,7 +16,7 @@
 
 # Top-level
 /mise.toml
-/docker-compose*.ya?ml
+/(docker-)?compose*.ya?ml
 /renovate.json
 /sip.yml
 /LICENSE

@@ -180,7 +180,7 @@ def get_mandates(request, filters: Query[Filters]):
         if filters.checked_state
         else {}
     )
-    mandates = Mandate.objects.prefetch_related(
+    mandates = Mandate.objects.select_related(
         "category", "user", "uploaded_transcript"
     ).filter(**db_filters)
     return {"value": [mandate_to_schema_resp(mandate) for mandate in mandates]}
@@ -261,7 +261,7 @@ def delete_mandate(request, mandate_id: str):
         403: ErrorSchema,
         404: ErrorSchema,
     },
-    operation_id="fulfillMandate",
+    operation_id="checkMandate",
 )
 @auth_check.require_login
 def check_mandate(request, mandate_id: str, data: Form[CheckMandateSchema]):
