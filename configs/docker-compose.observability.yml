@@ -9,11 +9,8 @@ services:
       - FRONTEND_FARO_URL=http://localhost:12347/collect
 
   react-frontend:
-    extends:
-      file: docker-compose.yml
-      service: react-frontend
     environment:
-      - VITE_FARO_DISABLE=false
+      VITE_FARO_DISABLE: false
 
   prometheus:
     image: prom/prometheus:latest

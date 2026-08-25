@@ -58,9 +58,9 @@ class TestMandate(ComsolTest):
         self.assertEqual(len(res), 1)
         self.assertTrue(res[0]["fulfilled_at"])
 
-    # def test_refund_twice(self):
-    #    self.post(f"/api/payment/refund/{self.payment.id}/", {})
-    #    self.post(f"/api/payment/refund/{self.payment.id}/", {}, status_code=400)
+    # def test_fulfill_twice(self):
+    #   self.post(f"/api/payment/refund/{self.payment.id}/", {})
+    #   self.post(f"/api/payment/refund/{self.payment.id}/", {}, status_code=400)
 
     # def test_payment_active(self):
     #    res = self.get("/api/payment/query/test/")["value"]
