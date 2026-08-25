@@ -13,6 +13,7 @@ import {
   Title,
   Loader,
   Modal,
+  ButtonGroup,
 } from "@mantine/core";
 import React, { useCallback, useMemo, useState } from "react";
 import {
@@ -31,7 +32,6 @@ import DocumentList from "../components/document-list";
 import useRemoveConfirm from "../hooks/useRemoveConfirm";
 import useTitle from "../hooks/useTitle";
 import { getMetaCategoriesForCategory } from "../utils/category-utils";
-import serverData from "../utils/server-data";
 import {
   IconChevronRight,
   IconEdit,
@@ -44,6 +44,8 @@ import {
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
 import { UploadPdfForm } from "../components/upload-pdf-card";
 import { UploadTranscriptForm } from "../components/upload-transcript-card.js";
+import { useDisclosure } from "@mantine/hooks";
+import { createMandate } from "../api/hooks/mandates";
 import {
   getGetCategoryMetadataQueryKey,
   getListCategoryExamsQueryKey,
@@ -110,9 +112,62 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
   const [showUploadModal, setShowUploadModal] = useState<
     false | "exam" | "transcript"
   >(false);
+  const [
+    showMandateAcceptModal,
+    { open: openMandateAcceptModal, close: closeMandateAcceptModal },
+  ] = useDisclosure(false);
+  const { loading: creatingMandate, run: runCreateMandate } = useRequest(
+    createMandate,
+    {
+      manual: true,
+      onSuccess: () => {
+        closeMandateAcceptModal();
+      },
+    },
+  );
 
   return (
     <>
+      <Modal
+        opened={showMandateAcceptModal}
+        onClose={closeMandateAcceptModal}
+        title="Mandate Acceptance"
+      >
+        We require you to accept the terms of oral exam contributions before
+        proceeding. By accepting, you agree to actively contribute to Community
+        Solutions and adhere to the guidelines provided. Please read the terms
+        carefully before accepting.
+        <br />A transcript of your oral exam <strong>MUST</strong> be uploaded
+        to Community Solutions. If you do not upload a transcript, your{" "}
+        <strong>access</strong> to all exams <strong>will be blocked</strong>.
+        <br />
+        You will have time to upload the transcript until the end of the exam
+        sessions.
+        <br />
+        You <strong>CANNOT CANCEL</strong> this on your own, and will need to
+        explain and show your situation to a Community Solutions administrator.
+        <br />
+        For any questions or concerns, please contact the administrators of
+        Community Solutions.
+        <Group justify="right" mt="md">
+          <Button mt="md" onClick={closeMandateAcceptModal}>
+            Dismiss
+          </Button>
+          <Button
+            mt="md"
+            variant="light"
+            color="red"
+            loading={creatingMandate}
+            onClick={() =>
+              runCreateMandate({
+                category: metaData.slug,
+              })
+            }
+          >
+            Accept
+          </Button>
+        </Group>
+      </Modal>
       {modals}
       <Breadcrumbs separator={<IconChevronRight />}>
         <Anchor tt="uppercase" size="xs" component={Link} to="/">
@@ -275,16 +330,13 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                 {metaData.has_payments && (
                   <Grid.Col span="auto">
                     <Alert color="gray" icon={<IconInfoCircle />}>
-                      You have to pay a deposit in order to see oral exams.
-                      {serverData.unlock_deposit_notice ? (
-                        <>
-                          <br />
-                          {serverData.unlock_deposit_notice}
-                        </>
-                      ) : null}
-                      <br />
-                      After submitting a report of your own oral exam you can
-                      get your deposit back.
+                      As oral exams are crowdsourced, more so than other types
+                      of exams, they require active contribution to Community
+                      Solutions. You must explicitly agree to these terms before
+                      continuing.{" "}
+                      <Button onClick={openMandateAcceptModal}>
+                        Accept terms
+                      </Button>
                     </Alert>
                   </Grid.Col>
                 )}
