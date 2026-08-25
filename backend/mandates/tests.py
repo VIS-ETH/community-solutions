@@ -11,6 +11,7 @@ class TestMandate(ComsolTest):
 
         self.category = Category(
             displayname="Test Category",
+            has_payments=True,
             slug="TestCategory",
         )
         self.category.save()

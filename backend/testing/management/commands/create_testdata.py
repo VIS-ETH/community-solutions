@@ -405,16 +405,21 @@ class Command(BaseCommand):
                 if added_id % 17 > 15:
                     continue
 
-                now = timezone.now().astimezone(
-                    timezone.get_current_timezone()
-                )
-                created_time = now - timedelta(days=(added_id % 11) * 6) # around 2 months interval
-                due_date = created_time + timedelta(days=(added_id % 13) * 2 * 3) # around 3 month interval
+                now = timezone.now().astimezone(timezone.get_current_timezone())
+                created_time = now - timedelta(
+                    days=(added_id % 11) * 6
+                )  # around 2 months interval
+                due_date = created_time + timedelta(
+                    days=(added_id % 13) * 2 * 3
+                )  # around 3 month interval
 
                 fulfilled_time = (
                     None
                     if added_id % 19 <= 3
-                    else created_time + timedelta(days=(added_id % 7) * 4) # immediately after up to 4 weeks after creation
+                    else created_time
+                    + timedelta(
+                        days=(added_id % 7) * 4
+                    )  # immediately after up to 4 weeks after creation
                 )
                 if fulfilled_time:
                     fulfilled_time = min(fulfilled_time, now)
@@ -436,6 +441,31 @@ class Command(BaseCommand):
                     case 3:
                         state = Mandate.CheckedState.EXCUSED
 
+                e = None
+                if checked_time and state == Mandate.CheckedState.ACCEPTED:
+                    filename = s3_util.generate_filename(
+                        8, settings.COMSOL_EXAM_DIR, ".pdf"
+                    )
+                    s3_util.save_file_to_s3(
+                        settings.COMSOL_EXAM_DIR,
+                        filename,
+                        f"{settings.COMSOL_ASSETS_FOLDER}/exam10.pdf",
+                    )
+                    exam_type = ExamType.objects.get(displayname="Transcripts")
+                    e = Exam(
+                        filename=filename,
+                        displayname=f"Transcript by {user.displayname()}",
+                        exam_type=exam_type,
+                        category=category,
+                        resolve_alias="resolve_" + filename,
+                        public=False,
+                        finished_cuts=False,
+                        needs_payment=True,
+                        is_oral_transcript=True,
+                        oral_transcript_uploader=user,
+                    )
+                    e.save()
+
                 Mandate.objects.create(
                     user=user,
                     category=category,
@@ -444,6 +474,7 @@ class Command(BaseCommand):
                     fulfilled_time=fulfilled_time,
                     checked_time=checked_time,
                     checked_state=None if not checked_time else state,
+                    uploaded_transcript=e,
                 )
 
     def create_payments(self):
@@ -548,8 +579,8 @@ class Command(BaseCommand):
         self.create_images()
         self.create_meta_categories()
         self.create_categories()
-        self.create_mandates()
         self.create_exam_types()
+        self.create_mandates()
         self.create_exams()
         self.create_answer_sections()
         self.create_answers()

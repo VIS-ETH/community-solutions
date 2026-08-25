@@ -35,7 +35,7 @@ class MandateSchema(Schema):
     checked_at: datetime | None
     checked_state: Literal["accepted", "rejected", "excused"] | None
 
-    grace_until: datetime | None
+    grace_until: date | None
 
     uploaded_transcript: str | None
     uploaded_transcript_display_name: str | None
@@ -78,7 +78,7 @@ def mandate_to_schema_resp(mandate: Mandate) -> MandateSchema:
         checked_at=mandate.checked_time,
         checked_state=mandate.checked_state or None,
         grace_until=max(
-            mandate.checked_time + MANDATE_REJECTION_GRACE_PERIOD,
+            (mandate.checked_time + MANDATE_REJECTION_GRACE_PERIOD).date(),
             mandate.due_date,
         )
         if mandate.checked_state == "rejected" and mandate.checked_time
