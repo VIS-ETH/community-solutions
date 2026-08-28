@@ -249,19 +249,6 @@ export interface ExamSelectedForDownload {
   displayname: string;
 }
 
-export interface NotificationInfo {
-  oid: string;
-  receiver: string;
-  type: number;
-  time: string;
-  sender: string;
-  senderDisplayName: string;
-  title: string;
-  message: string;
-  link: string;
-  read: boolean;
-}
-
 export interface FAQEntry {
   oid: string;
   question: string;

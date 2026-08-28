@@ -1,6 +1,5 @@
 import {
   ActionIcon,
-  Alert,
   Anchor,
   Badge,
   Card,
@@ -10,27 +9,19 @@ import {
 } from "@mantine/core";
 import { lightFormat, parseISO } from "date-fns";
 import * as React from "react";
-import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useMarkAllAsRead } from "../api/hooks";
 import GlobalConsts from "../globalconsts";
-import { NotificationInfo } from "../interfaces";
 import MarkdownText from "./markdown-text";
 import { IconLink } from "@tabler/icons-react";
+import type { NotificationResponse } from "../api/model";
+
 interface Props {
-  notification: NotificationInfo;
+  notification: NotificationResponse;
 }
 
 const NotificationComponent: React.FC<Props> = ({ notification }) => {
-  const [error, , markAllAsRead] = useMarkAllAsRead();
-  useEffect(() => {
-    if (!notification.read) void markAllAsRead(notification.oid);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [notification.oid, notification.read]);
-
   return (
     <div>
-      {error && <Alert color="red">{error.message}</Alert>}
       <Card withBorder shadow="md" my="sm">
         <Card.Section p="md" mb="md" withBorder>
           <Group justify="space-between">
@@ -41,8 +32,11 @@ const NotificationComponent: React.FC<Props> = ({ notification }) => {
                 </Anchor>
               </Title>
               <Group gap={0}>
-                <Anchor component={Link} to={`/user/${notification.sender}`}>
-                  {notification.senderDisplayName}
+                <Anchor
+                  component={Link}
+                  to={`/user/${notification.sender.username}`}
+                >
+                  {notification.sender.display_name}
                 </Anchor>
                 <Text mx={6} component="span">
                   •
