@@ -3,26 +3,26 @@ name = "community-solutions"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
-  "beautifulsoup4==4.9.3",
-  "boto3==1.42.97",
+  "beautifulsoup4==4.15.0",
+  "boto3==1.43.87",
   "django==5.2.17",
   "django-csp==4.0",
   "django-ninja>=1.5.3",
-  "django-probes==1.7.0",
-  "django-prometheus==2.4.1",
-  "gevent==26.7.0",
-  "gunicorn==26.0.0",
-  "jwcrypto==1.4.2",
-  "opentelemetry-exporter-otlp==1.36.0",
+  "django-probes==1.8.0",
+  "django-prometheus==2.5.0",
+  "gevent==26.8.0",
+  "gunicorn==26.2.0",
+  "jwcrypto==1.6.0",
+  "opentelemetry-exporter-otlp==1.44.0",
   "opentelemetry-instrumentation-django==0.57b0",
   "opentelemetry-instrumentation-psycopg>=0.57b0",
-  "opentelemetry-sdk==1.36.0",
+  "opentelemetry-sdk==1.44.0",
   "psycopg[binary]>=3.3.4",
   "pypdfium2>=5.5.0",
   "pyroscope-io==0.8.16; sys_platform != 'win32'",
   "pyroscope-otel==0.4.1 ; sys_platform != 'win32'",
   "pyyaml==6.0.3",
-  "requests==2.25.1",
+  "requests==2.34.2",
 ]
 
 [dependency-groups]
