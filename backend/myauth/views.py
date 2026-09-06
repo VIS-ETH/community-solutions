@@ -203,6 +203,13 @@ def callback(request: HttpRequest):
     if request.method != "GET":
         return HttpResponseNotAllowed(["GET"])
 
+    # E.g. https://exams.vis.ethz.ch/api/auth/callback?error=invalid_scope&error_description=Invalid+scopes:+profile+openid+badscope
+    error = request.GET.get("error")
+    error_desc = request.GET.get("error_description", "")
+
+    if error:
+        return HttpResponseBadRequest(f"{error}: {error_desc}")
+
     code = request.GET.get("code")
     state = request.GET.get("state")
     nonce_cookie = request.COOKIES.get("nonce")
