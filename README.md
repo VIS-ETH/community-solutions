@@ -230,10 +230,6 @@ To try, run
 ```bash
 # For running frontend in docker:
 docker compose -f docker-compose.yml -f configs/docker-compose.observability.yml --profile frontend up --build
-
-# For running frontend locally:
-docker compose -f docker-compose.yml -f configs/docker-compose.observability.yml up --build
-yarn start-with-faro
 ```
 
 Now you can access:

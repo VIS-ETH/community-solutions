@@ -13,7 +13,7 @@ services:
       file: docker-compose.yml
       service: react-frontend
     environment:
-      - VITE_FARO_DISABLE=false
+      - VITE_FARO_DISABLE=true
 
   prometheus:
     image: prom/prometheus:latest
