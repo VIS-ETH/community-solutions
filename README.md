@@ -228,6 +228,9 @@ Interesting Grafana dashboard should also be shipped in `./configs` to allow fai
 To try, run
 
 ```bash
+# Create bind-mount directories before starting:
+mkdir -p data/sql data/s3/community-solutions data/grafana data/prometheus
+
 # For running frontend in docker:
 docker compose -f docker-compose.yml -f configs/docker-compose.observability.yml --profile frontend up --build
 ```
