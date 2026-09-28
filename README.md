@@ -48,7 +48,7 @@ This will start up required services, like a local postgres and rclone S3 server
 The first time around this can take a while to start up.
 
 ```sh
-docker compose up postgres rclone rclone-create-bucket
+docker compose up postgres rclone create-data-dirs
 ```
 
 Key things to look for:
@@ -135,7 +135,7 @@ If you want to additionally run the _frontend_ in docker-compose, add the `--pro
 ```sh
 docker compose --profile frontend up
 # or if you ONLY want the frontend without backend:
-# docker compose up react-frontend postgres rclone rclone-create-bucket
+# docker compose up react-frontend postgres rclone create-data-dirs
 
 # Alternatively, run a prod-like setup where the backend serves the frontend file. This will run the exact container used in prod!
 docker compose -f dockker-compose.yml -f configs/docker-compose.prod.yml up
@@ -228,11 +228,12 @@ Interesting Grafana dashboard should also be shipped in `./configs` to allow fai
 To try, run
 
 ```bash
-# Create bind-mount directories before starting:
-mkdir -p data/sql data/s3/community-solutions data/grafana data/prometheus
-
-# For running frontend in docker:
+# Run one of the following stacks in docker:
+## For running frontend in docker, too:
 docker compose -f docker-compose.yml -f configs/docker-compose.observability.yml --profile frontend up --build
+## For running frontend locally (easier to debug):
+docker compose -f docker-compose.yml -f configs/docker-compose.observability.yml up --build
+yarn start-with-faro
 ```
 
 Now you can access:

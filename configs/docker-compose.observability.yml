@@ -13,7 +13,7 @@ services:
       file: docker-compose.yml
       service: react-frontend
     environment:
-      - VITE_FARO_DISABLE=true
+      - VITE_FARO_DISABLE=false
 
   prometheus:
     image: prom/prometheus:latest
@@ -28,6 +28,9 @@ services:
     ports:
       - 9090:9090
     user: ":"
+    depends_on:
+      create-data-dirs:
+        condition: service_completed_successfully
 
   grafana:
     image: grafana/grafana:latest
@@ -38,6 +41,9 @@ services:
       - ./configs/local-observability/grafana:/etc/grafana/provisioning
       - ./configs/dashboards:/etc/grafana/dashboardFiles
     user: ":"
+    depends_on:
+      create-data-dirs:
+        condition: service_completed_successfully
 
   alloy:
     image: grafana/alloy:latest
