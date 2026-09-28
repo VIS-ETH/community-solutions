@@ -12,5 +12,15 @@ datasources:
     editable: false
     jsonData:
       httpMethod: GET
+      tracesToLogsV2:
+        datasourceUid: "loki"
+        spanStartTimeShift: "-5m"
+        spanEndTimeShift: "5m"
+        filterByTraceID: true
+        filterBySpanID: true
+      tracesToMetrics:
+        datasourceUid: "prometheus"
+      tracesToProfiles:
+        datasourceUid: "pyroscope"
       serviceMap:
         datasourceUid: "prometheus"
