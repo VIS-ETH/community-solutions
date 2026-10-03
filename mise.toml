@@ -1,8 +1,8 @@
 [tools]
-node = "24.14.1"
-prek = "0.3.13"
-uv = "0.10.12"
-yarn = "4.14.1"
+node = "24.21.0"
+prek = "0.5.4"
+uv = "0.12.22"
+yarn = "4.18.1"
 
 [env]
 _.file = "backend/.env.development"
