@@ -69,11 +69,9 @@ stages:
       alias: rclone
       entrypoint: [""]
       command:
-        - sh
-        - -c
-        - |
-          mkdir -p /data/s3/community-solutions && \
-          rclone serve s3 /data --addr 0.0.0.0:9000 --allow-origin '*' --auth-key $RCLONE_ACCESS_KEY,$RCLONE_SECRET_KEY
+        - "sh"
+        - "-c"
+        - "mkdir -p /data/community-solutions && exec rclone serve s3 /data --addr 0.0.0.0:9000 --allow-origin '*' --auth-key rclone,rclone123"
   image: ghcr.io/astral-sh/uv:python3.12-trixie-slim
   before_script:
     - set -euo pipefail
