@@ -54,8 +54,8 @@ stages:
       changes:
         - backend/**/*
   variables:
-    MINIO_ACCESS_KEY: minio
-    MINIO_SECRET_KEY: minio123
+    RCLONE_ACCESS_KEY: rclone
+    RCLONE_SECRET_KEY: rclone123
     POSTGRES_DB: testdb
     POSTGRES_USER: testuser
     POSTGRES_PASSWORD: testpw
@@ -65,9 +65,15 @@ stages:
       command: ["postgres"]
       variables:
         POSTGRES_HOST_AUTH_METHOD: trust
-    - name: minio/minio:RELEASE.2023-10-25T06-33-25Z
-      alias: minio
-      command: ["server", "/minio"]
+    - name: rclone/rclone:1.75.2
+      alias: rclone
+      entrypoint: [""]
+      command:
+        - sh
+        - c
+        - |
+          mkdir -p /tmp/rclone/community-solutions && \
+          serve s3 local:/tmp/rclone --addr 0.0.0.0:9000 --allow-origin '*' --auth-key $RCLONE_ACCESS_KEY,$RCLONE_SECRET_KEY
   image: ghcr.io/astral-sh/uv:python3.12-trixie-slim
   before_script:
     - set -euo pipefail
@@ -75,13 +81,7 @@ stages:
     - apt-get update
     - apt-get install -y curl
 
-    # Install mc so that we can create the community-solutions bucket in minio
-    - curl -L https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o mc
-    - chmod +x ./mc
-    - ./mc alias set myminio http://minio:9000 $MINIO_ACCESS_KEY $MINIO_SECRET_KEY
-    - ./mc mb myminio/community-solutions
-
-    # Install poppler to get pdftotext binary
+    # Install poppler to get pdftops binary
     - apt-get install -y poppler-utils
     - cd backend
     - uv sync
@@ -100,12 +100,12 @@ stages:
     - export SIP_POSTGRES_DB_NAME=$POSTGRES_DB
     - export SIP_POSTGRES_DB_USER=$POSTGRES_USER
     - export SIP_POSTGRES_DB_PW=$POSTGRES_PASSWORD
-    - export SIP_POSTGRES_DB_SERVER=localhost
+    - export SIP_POSTGRES_DB_SERVER=postgres
     - export SIP_POSTGRES_DB_PORT=5432
-    - export SIP_S3_FILES_HOST=localhost
+    - export SIP_S3_FILES_HOST=rclone
     - export SIP_S3_FILES_PORT=9000
-    - export SIP_S3_FILES_ACCESS_KEY=$MINIO_ACCESS_KEY
-    - export SIP_S3_FILES_SECRET_KEY=$MINIO_SECRET_KEY
+    - export SIP_S3_FILES_ACCESS_KEY=$RCLONE_ACCESS_KEY
+    - export SIP_S3_FILES_SECRET_KEY=$RCLONE_SECRET_KEY
     - export SIP_S3_FILES_BUCKET=community-solutions
     - export SIP_S3_FILES_USE_SSL=false
     - uv run manage.py test --parallel # parallel speeds up by approx 4x.
