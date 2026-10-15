@@ -72,8 +72,8 @@ stages:
         - sh
         - -c
         - |
-          mkdir -p /tmp/rclone/community-solutions && \
-          rclone serve s3 local:/tmp/rclone --addr 0.0.0.0:9000 --allow-origin '*' --auth-key $RCLONE_ACCESS_KEY,$RCLONE_SECRET_KEY
+          mkdir -p /data/s3/community-solutions && \
+          rclone serve s3 /data --addr 0.0.0.0:9000 --allow-origin '*' --auth-key $RCLONE_ACCESS_KEY,$RCLONE_SECRET_KEY
   image: ghcr.io/astral-sh/uv:python3.12-trixie-slim
   before_script:
     - set -euo pipefail
