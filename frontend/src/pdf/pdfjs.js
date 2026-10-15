@@ -16,10 +16,20 @@ const loadPdfJsModule = () => {
   return pdfjsModulePromise;
 };
 
+const wasmUrl =
+  typeof document !== "undefined"
+    ? new URL(`${import.meta.env.BASE_URL}static/pdfjs/wasm/`, document.baseURI)
+        .href
+    : undefined;
+
 // Wrapper around pdfjs-dist's getDocument function that dynamically imports
 // pdfjs as necessary.
-export const getDocument = params => {
-  return {
-    promise: loadPdfJsModule().then(pdfjs => pdfjs.getDocument(params).promise),
-  };
-};
+export const getDocument = params => ({
+  promise: loadPdfJsModule().then(
+    pdfjs =>
+      pdfjs.getDocument({
+        wasmUrl,
+        ...params,
+      }).promise,
+  ),
+});

@@ -13,12 +13,10 @@ import PdfPanelBase from "./pdf-panel-base";
 import useSet from "../hooks/useSet";
 
 const loadDocumentRenderer = async (url: string) => {
-  const pdf = await new Promise<PDFDocumentProxy>((resolve, reject) =>
-    getDocument({
-      httpHeaders: getHeaders(),
-      url,
-    }).promise.then(resolve, reject),
-  );
+  const pdf = (await getDocument({
+    httpHeaders: getHeaders(),
+    url,
+  }).promise) satisfies PDFDocumentProxy;
   const renderer = new PDF(pdf);
   return [pdf, renderer] as const;
 };
