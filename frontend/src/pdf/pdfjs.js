@@ -18,7 +18,8 @@ const loadPdfJsModule = () => {
 
 const wasmUrl =
   typeof document !== "undefined"
-    ? new URL(`${import.meta.env.BASE_URL}pdfjs/wasm/`, document.baseURI).href
+    ? new URL(`${import.meta.env.BASE_URL}static/pdfjs/wasm/`, document.baseURI)
+        .href
     : undefined;
 
 // Wrapper around pdfjs-dist's getDocument function that dynamically imports

@@ -23,7 +23,7 @@ export default defineConfig({
       targets: [
         {
           src: normalizePath(path.join(pdfjsDistDir, "wasm/*")),
-          dest: "pdfjs/wasm",
+          dest: "static/pdfjs/wasm",
           rename: {
             stripBase: true,
           },
