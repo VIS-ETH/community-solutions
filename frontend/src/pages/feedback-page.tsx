@@ -100,7 +100,7 @@ const FeedbackReader: React.FC = () => {
             <FeedbackEntryComponent
               entry={fb}
               entryChanged={() => {
-                feedbacks.refetch();
+                void feedbacks.refetch();
               }}
             />
           </Grid.Col>
@@ -109,22 +109,22 @@ const FeedbackReader: React.FC = () => {
     );
   };
 
-  feedbacks.data?.value
-    .map(fb => {
-      const date = parseISO(fb.time);
-      return {
-        ...fb,
-        date: isValid(date) ? date : new Date(0),
-      };
-    })
-    .sort((a, b) => b.date.getTime() - a.date.getTime());
+  const sorted =
+    feedbacks.data?.value
+      .map(fb => {
+        const date = parseISO(fb.time);
+        return {
+          ...fb,
+          date: isValid(date) ? date : new Date(0),
+        };
+      })
+      .toSorted((a, b) => b.date.getTime() - a.date.getTime()) ?? [];
 
   const categorized = {
-    waiting_action:
-      feedbacks.data?.value.filter(fb => !fb.read && !fb.done) ?? [],
-    read_and_done: feedbacks.data?.value.filter(fb => fb.read && fb.done) ?? [],
-    done: feedbacks.data?.value.filter(fb => !fb.read && fb.done) ?? [],
-    read: feedbacks.data?.value.filter(fb => fb.read && !fb.done) ?? [],
+    waiting_action: sorted.filter(fb => !fb.read && !fb.done),
+    read_and_done: sorted.filter(fb => fb.read && fb.done),
+    done: sorted.filter(fb => !fb.read && fb.done),
+    read: sorted.filter(fb => fb.read && !fb.done),
   };
 
   return (
