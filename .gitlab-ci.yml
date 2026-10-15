@@ -54,6 +54,7 @@ stages:
       changes:
         - backend/**/*
   variables:
+    CI_DEBUG_SERVICES: "true"
     RCLONE_ACCESS_KEY: rclone
     RCLONE_SECRET_KEY: rclone123
     POSTGRES_DB: testdb
@@ -67,11 +68,13 @@ stages:
         POSTGRES_HOST_AUTH_METHOD: trust
     - name: rclone/rclone:1.75.2
       alias: rclone
-      entrypoint: [""]
       command:
-        - "sh"
-        - "-c"
-        - "mkdir -p /data/community-solutions && exec rclone serve s3 /data --addr 0.0.0.0:9000 --allow-origin '*' --auth-key rclone,rclone123"
+        - serve
+        - s3
+        - /data
+        - --addr=0.0.0.0:9000
+        - --allow-origin=*
+        - --auth-key=rclone,rclone123"
   image: ghcr.io/astral-sh/uv:python3.12-trixie-slim
   before_script:
     - set -euo pipefail
@@ -106,6 +109,7 @@ stages:
     - export SIP_S3_FILES_SECRET_KEY=$RCLONE_SECRET_KEY
     - export SIP_S3_FILES_BUCKET=community-solutions
     - export SIP_S3_FILES_USE_SSL=false
+    - uv run python -c "import boto3; boto3.client('s3', endpoint_url='http://rclone:9000', aws_access_key_id='rclone', aws_secret_access_key='rclone123').create_bucket(Bucket='community-solutions')"
     - uv run manage.py test --parallel # parallel speeds up by approx 4x.
   after_script:
     - cd backend
