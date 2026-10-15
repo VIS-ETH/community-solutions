@@ -70,10 +70,10 @@ stages:
       entrypoint: [""]
       command:
         - sh
-        - c
+        - -c
         - |
           mkdir -p /tmp/rclone/community-solutions && \
-          serve s3 local:/tmp/rclone --addr 0.0.0.0:9000 --allow-origin '*' --auth-key $RCLONE_ACCESS_KEY,$RCLONE_SECRET_KEY
+          rclone serve s3 local:/tmp/rclone --addr 0.0.0.0:9000 --allow-origin '*' --auth-key $RCLONE_ACCESS_KEY,$RCLONE_SECRET_KEY
   image: ghcr.io/astral-sh/uv:python3.12-trixie-slim
   before_script:
     - set -euo pipefail
