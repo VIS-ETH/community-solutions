@@ -9,26 +9,24 @@ from answers.models import (
 logger = logging.getLogger(__name__)
 
 
-def get_page_text(path_to_pdf, page):
-    with pdfium.PdfDocument(path_to_pdf) as pdf:
-        if page > len(pdf):
-            logger.warning(
-                f"Page number out of range when reading PDF text: {path_to_pdf} page {page}"
-            )
-            return ""
+def _get_page_text(pdf, path_to_pdf, page):
+    if page > len(pdf):
+        logger.warning(
+            f"Page number out of range when reading PDF text: {path_to_pdf} page {page}"
+        )
+        return ""
 
-        if page == 0:
-            # Have a way to extract text from the entire PDF
-            return "\n".join(
-                page.get_textpage().get_text_bounded().replace("\r\n", "\n")
-                for page in pdf
-            )
+    if page == 0:
+        # Have a way to extract text from the entire PDF
+        return "\n".join(
+            page.get_textpage().get_text_bounded().replace("\r\n", "\n") for page in pdf
+        )
 
-        page = pdf[page - 1]
+    page = pdf[page - 1]
 
-        # PDFium generates text with \r\n line breaks, but we want to use \n for
-        # consistency with pdftotext and general text handling in Python
-        return page.get_textpage().get_text_bounded().replace("\r\n", "\n")
+    # PDFium generates text with \r\n line breaks, but we want to use \n for
+    # consistency with pdftotext and general text handling in Python
+    return page.get_textpage().get_text_bounded().replace("\r\n", "\n")
 
 
 def analyze_pdf(
@@ -38,19 +36,24 @@ def analyze_pdf(
 ):
     try:
         ExamPage.objects.filter(exam=exam).delete()
+
+        exam_pages = []
         with pdfium.PdfDocument(path_to_pdf) as pdf:
             for page_number in range(1, len(pdf) + 1):
                 page = pdf[page_number - 1]
                 w, h = page.get_size()
-                page_text = get_page_text(path_to_pdf, page_number)
-                exam_page = ExamPage(
-                    exam=exam,
-                    page_number=page_number,
-                    width=w,
-                    height=h,
-                    text=page_text,
+                page_text = _get_page_text(pdf, path_to_pdf, page_number)
+                exam_pages.append(
+                    ExamPage(
+                        exam=exam,
+                        page_number=page_number,
+                        width=w,
+                        height=h,
+                        text=page_text,
+                    )
                 )
-                exam_page.save()
+
+        ExamPage.objects.bulk_create(exam_pages)
 
         return True
     except (FileNotFoundError, pdfium.PdfiumError):

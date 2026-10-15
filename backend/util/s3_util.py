@@ -71,6 +71,15 @@ def save_uploaded_file_to_s3(
         )
 
 
+def save_to_s3(
+    directory: str,
+    filename: str,
+    body: bytes,
+    content_type: str = "application/octet-stream",
+):
+    s3_bucket.put_object(Body=body, Key=directory + filename, ContentType=content_type)
+
+
 def save_file_to_s3(
     directory: str,
     filename: str,
