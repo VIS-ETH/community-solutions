@@ -24,6 +24,7 @@ import { UndoStack } from "./Editor/utils/undo-stack";
 import IconButton from "./icon-button";
 import MarkdownText from "./markdown-text";
 import {
+  IconCloudUpload,
   IconDeviceFloppy,
   IconPlus,
   IconReload,
@@ -122,18 +123,27 @@ const DocumentSettings: React.FC<Props> = ({ document, refetch }) => {
   const [transferUser, setTransferUser] = useState<UserSchema | null>();
 
   const [
-    addModalIsOpen,
-    { toggle: toggleAddModalIsOpen, open: openAddModal, close: closeAddModal },
+    uploadModalIsOpen,
+    { open: openUploadModal, close: closeUploadModal },
   ] = useDisclosure();
+
+  const [
+    createMarkdownModalIsOpen,
+    { open: openCreateMarkdownModal, close: closeCreateMarkdownModal },
+] = useDisclosure();
 
   return (
     <>
-      <Modal title="Add File" opened={addModalIsOpen} onClose={closeAddModal}>
+      <Modal title="Upload File" opened={uploadModalIsOpen} onClose={closeUploadModal}>
         <CreateDocumentFileModal
-          onClose={openAddModal}
+          onClose={closeUploadModal}
           document={document}
           refetch={refetch}
         />
+      </Modal>
+
+      <Modal title="Create File" opened={createMarkdownModalIsOpen} onClose={closeCreateMarkdownModal} >
+        <Text> The Markdown creation form will go here.</Text>
       </Modal>
       {document.can_edit && (
         <Stack>
@@ -273,9 +283,13 @@ const DocumentSettings: React.FC<Props> = ({ document, refetch }) => {
             />
           ))}
       </List>
-      <Flex justify="end">
-        <Button leftSection={<IconPlus />} onClick={toggleAddModalIsOpen}>
-          Add
+      <Flex justify="end" gap="sm" wrap="wrap">
+        <Button leftSection={<IconCloudUpload />} onClick={openUploadModal}>
+          Upload Files
+        </Button>
+
+        <Button leftSection={<IconPlus />} onClick={openCreateMarkdownModal}>
+          Create Markdown File
         </Button>
       </Flex>
       {document.can_delete && (
