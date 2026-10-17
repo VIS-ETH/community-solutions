@@ -19,7 +19,9 @@ const CreateDocumentFileModal: React.FC<Props> = ({
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
-  const { mutateAsync, isError, error } = useCreateDocumentFile();
+  const { mutateAsync, isError, error } = useCreateDocumentFile<
+    string | Error
+  >();
 
   function handleFilesSelected(selectedFiles: File[]): void {
     setFiles(prevFiles => [...prevFiles, ...selectedFiles]);
@@ -70,7 +72,12 @@ const CreateDocumentFileModal: React.FC<Props> = ({
   return (
     <>
       <Stack>
-        {isError && <Alert color="red">{error as unknown as string}</Alert>}
+        {isError && (
+          <Alert color="red">
+            {" "}
+            {error instanceof Error ? error.message : error}{" "}
+          </Alert>
+        )}
         <FileButton
           multiple
           disabled={isUploading}
@@ -89,7 +96,7 @@ const CreateDocumentFileModal: React.FC<Props> = ({
         {files.length > 0 && (
           <Stack gap="xs">
             <Text size="sm" fw={500}>
-              Selected files ({files.length})
+              Selected files: {files.length}
             </Text>
 
             {files.map((file, index) => (

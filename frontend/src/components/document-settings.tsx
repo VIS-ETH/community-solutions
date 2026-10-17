@@ -19,6 +19,7 @@ import { usePendingImages } from "./Editor/pending-images";
 import { loadAllCategories } from "../api/hooks";
 import { createOptions, options } from "../utils/ts-utils";
 import CreateDocumentFileModal from "./create-document-file-modal";
+import CreateMarkdownFileModal from "./create-markdown-file-modal";
 import DocumentFileItem from "./document-file-item";
 import { UndoStack } from "./Editor/utils/undo-stack";
 import IconButton from "./icon-button";
@@ -130,11 +131,15 @@ const DocumentSettings: React.FC<Props> = ({ document, refetch }) => {
   const [
     createMarkdownModalIsOpen,
     { open: openCreateMarkdownModal, close: closeCreateMarkdownModal },
-] = useDisclosure();
+  ] = useDisclosure();
 
   return (
     <>
-      <Modal title="Upload File" opened={uploadModalIsOpen} onClose={closeUploadModal}>
+      <Modal
+        title="Upload File"
+        opened={uploadModalIsOpen}
+        onClose={closeUploadModal}
+      >
         <CreateDocumentFileModal
           onClose={closeUploadModal}
           document={document}
@@ -142,8 +147,16 @@ const DocumentSettings: React.FC<Props> = ({ document, refetch }) => {
         />
       </Modal>
 
-      <Modal title="Create File" opened={createMarkdownModalIsOpen} onClose={closeCreateMarkdownModal} >
-        <Text> The Markdown creation form will go here.</Text>
+      <Modal
+        title="Create File"
+        opened={createMarkdownModalIsOpen}
+        onClose={closeCreateMarkdownModal}
+      >
+        <CreateMarkdownFileModal
+          document={document}
+          onClose={closeCreateMarkdownModal}
+          refetch={refetch}
+        />
       </Modal>
       {document.can_edit && (
         <Stack>
