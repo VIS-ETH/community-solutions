@@ -1,7 +1,7 @@
-import { Alert, Button, FileInput, Stack, TextInput } from "@mantine/core";
+import { Alert, Button, FileButton, Stack, Text } from "@mantine/core";
 import * as React from "react";
 import { useState } from "react";
-import { IconCloudUpload, IconPlus } from "@tabler/icons-react";
+import { IconCloudUpload } from "@tabler/icons-react";
 import { useCreateDocumentFile } from "../api/hooks/documents";
 import type { DocumentSchema } from "../api/model/documentSchema";
 
@@ -16,60 +16,98 @@ const CreateDocumentFileModal: React.FC<Props> = ({
   document,
   refetch,
 }) => {
-  const [displayName, setDisplayName] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const { mutate, isError, error, isPending } = useCreateDocumentFile({
-    mutation: {
-      onSuccess() {
-        onClose();
-        refetch();
-        setDisplayName("");
-        setFile(null);
-      },
-    },
-  });
+  const { mutateAsync, isError, error } = useCreateDocumentFile();
+
+  function handleFilesSelected(selectedFiles: File[]): void {
+    setFiles(prevFiles => [...prevFiles, ...selectedFiles]);
+  }
+
+  async function handleUpload(): Promise<void> {
+    if (files.length === 0 || isUploading) {
+      return;
+    }
+
+    setIsUploading(true);
+    let uploadedCount = 0;
+
+    try {
+      // reversing the array to optimize filtering state at every iteration, state updates when the upload finishes
+      const fileQueue = [...files].reverse();
+      while (fileQueue.length > 0) {
+        const curFile = fileQueue.pop();
+
+        if (curFile === undefined) {
+          break;
+        }
+
+        await mutateAsync({
+          username: document.author.username,
+          slug: document.slug,
+          data: {
+            display_name: curFile.name,
+            file: curFile,
+          },
+        });
+
+        uploadedCount += 1;
+      }
+
+      onClose();
+    } catch {
+      // The existing Alert displays the mutation error.
+    } finally {
+      if (uploadedCount > 0) {
+        setFiles(previousFiles => previousFiles.slice(uploadedCount));
+      }
+      refetch();
+      setIsUploading(false);
+    }
+  }
 
   return (
     <>
       <Stack>
         {isError && <Alert color="red">{error as unknown as string}</Alert>}
-        <TextInput
-          label="Display Name"
-          value={displayName}
-          onChange={e => setDisplayName(e.currentTarget.value)}
-        />
-        <FileInput
-          label="File"
-          placeholder="Click here to pick file..."
-          leftSection={<IconCloudUpload />}
-          value={file}
-          onChange={setFile}
-        />
-        <div>
-          If you don't select any file we will create an empty markdown file for
-          you that you can edit afterwards.
-        </div>
+        <FileButton
+          multiple
+          disabled={isUploading}
+          onChange={handleFilesSelected}
+        >
+          {buttonProps => (
+            <Button
+              {...buttonProps}
+              disabled={isUploading}
+              leftSection={<IconCloudUpload />}
+            >
+              Choose files
+            </Button>
+          )}
+        </FileButton>
+        {files.length > 0 && (
+          <Stack gap="xs">
+            <Text size="sm" fw={500}>
+              Selected files ({files.length})
+            </Text>
+
+            {files.map((file, index) => (
+              <Text key={`${file.name}-${index}`} size="sm" truncate="end">
+                {file.name}
+              </Text>
+            ))}
+          </Stack>
+        )}
         <Button
-          loading={isPending}
-          leftSection={<IconPlus />}
-          disabled={isPending || displayName.trim() === ""}
+          loading={isUploading}
+          leftSection={<IconCloudUpload />}
+          disabled={isUploading || files.length === 0}
           onClick={() => {
-            mutate({
-              username: document.author.username,
-              slug: document.slug,
-              data: {
-                display_name: displayName.trim(),
-                file:
-                  file ??
-                  new File([], "document.md", {
-                    type: "text/markdown",
-                  }),
-              },
-            });
+            void handleUpload();
           }}
         >
-          Add
+          Upload
         </Button>
       </Stack>
     </>
