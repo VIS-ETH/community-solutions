@@ -13,7 +13,9 @@ from util.schemas import ValueWrapped
 router = Router(tags=["Categories"])
 
 
-@router.get("list/", response={200: ValueWrapped[list[str]]})
+@router.get(
+    "list/", response={200: ValueWrapped[list[str]]}, operation_id="listCategories"
+)
 def list_categories(request):
     return {
         "value": list(
@@ -35,7 +37,9 @@ class ListCategoriesWithMetaResponse(Schema):
 
 
 @router.get(
-    "listwithmeta/", response={200: ValueWrapped[list[ListCategoriesWithMetaResponse]]}
+    "listwithmeta/",
+    response={200: ValueWrapped[list[ListCategoriesWithMetaResponse]]},
+    operation_id="listCategoriesWithMeta",
 )
 def list_categories_with_meta(request):
     pinned_subquery = CategoryUserPinned.objects.filter(
@@ -69,7 +73,9 @@ class ListCategoriesBasicResponse(Schema):
 
 
 @router.get(
-    "listonlyadmin/", response={200: ValueWrapped[list[ListCategoriesBasicResponse]]}
+    "listonlyadmin/",
+    response={200: ValueWrapped[list[ListCategoriesBasicResponse]]},
+    operation_id="listCategoriesOnlyAdmin",
 )
 @auth_check.require_login
 def list_categories_only_admin(request):
@@ -86,7 +92,9 @@ def list_categories_only_admin(request):
 
 
 @router.get(
-    "listonlypayment/", response={200: ValueWrapped[list[ListCategoriesBasicResponse]]}
+    "listonlypayment/",
+    response={200: ValueWrapped[list[ListCategoriesBasicResponse]]},
+    operation_id="listCategoriesOnlyPayment",
 )
 @auth_check.require_login
 def list_categories_only_payment(request):
@@ -100,7 +108,7 @@ def list_categories_only_payment(request):
     return {"value": res}
 
 
-@router.post("add/", response={200: ValueWrapped[str]})
+@router.post("add/", response={200: ValueWrapped[str]}, operation_id="addCategory")
 @auth_check.require_admin
 def add_category(request, category: Form[str]):
     slug = create_category_slug(category)
@@ -141,7 +149,7 @@ def create_category_slug(category, ignored_pk=None):
     return slug
 
 
-@router.post("remove/", response={200: None})
+@router.post("remove/", response={200: None}, operation_id="removeCategory")
 @auth_check.require_admin
 def remove_category(request, slug: Form[str]):
     cat = get_object_or_404(Category, slug=slug)
@@ -173,7 +181,11 @@ class ListExamsResponse(Schema):
     user_solved: bool
 
 
-@router.get("listexams/{slug}/", response={200: ValueWrapped[list[ListExamsResponse]]})
+@router.get(
+    "listexams/{slug}/",
+    response={200: ValueWrapped[list[ListExamsResponse]]},
+    operation_id="listExams",
+)
 def list_exams(request, slug):
     cat = get_object_or_404(Category, slug=slug)
 
@@ -280,7 +292,11 @@ def get_category_data(request, cat) -> CategoryData:
     return res
 
 
-@router.get("metadata/{slug}/", response={200: ValueWrapped[CategoryData]})
+@router.get(
+    "metadata/{slug}/",
+    response={200: ValueWrapped[CategoryData]},
+    operation_id="getCategoryMetadata",
+)
 @auth_check.require_login
 def get_metadata(request, slug: str):
     cat = get_object_or_404(Category, slug=slug)
@@ -298,7 +314,11 @@ class SetMetadataRequest(Schema):
     more_exams_link: str | None = None
 
 
-@router.post("setmetadata/{slug}/", response={200: ValueWrapped[CategoryData]})
+@router.post(
+    "setmetadata/{slug}/",
+    response={200: ValueWrapped[CategoryData]},
+    operation_id="setCategoryMetadata",
+)
 @auth_check.require_admin
 def set_metadata(
     request,
@@ -331,7 +351,9 @@ def set_metadata(
     return {"value": res}
 
 
-@router.post("addusertoset/{slug}/", response={204: None})
+@router.post(
+    "addusertoset/{slug}/", response={204: None}, operation_id="addUserToCategorySet"
+)
 @auth_check.require_admin
 def add_user_to_set(request, slug: str, key: Form[str], user: Form[str]):
     cat = get_object_or_404(Category, slug=slug)
@@ -349,7 +371,11 @@ def add_user_to_set(request, slug: str, key: Form[str], user: Form[str]):
     return response.success()
 
 
-@router.post("removeuserfromset/{slug}/", response={204: None})
+@router.post(
+    "removeuserfromset/{slug}/",
+    response={204: None},
+    operation_id="removeUserFromCategorySet",
+)
 @auth_check.require_admin
 def remove_user_from_set(request, slug: str, key: Form[str], user: Form[str]):
     cat = get_object_or_404(Category, slug=slug)
@@ -378,7 +404,9 @@ class Meta1CategoryResponse(Schema):
 
 
 @router.get(
-    "listmetacategories/", response={200: ValueWrapped[list[Meta1CategoryResponse]]}
+    "listmetacategories/",
+    response={200: ValueWrapped[list[Meta1CategoryResponse]]},
+    operation_id="listMetaCategories",
 )
 def list_metacategories(request):
     categories = (
@@ -415,7 +443,7 @@ def list_metacategories(request):
     return {"value": res}
 
 
-@router.post("addmetacategory/", response={204: None})
+@router.post("addmetacategory/", response={204: None}, operation_id="addMetaCategory")
 @auth_check.require_admin
 def add_metacategory(request, meta1: Form[str], meta2: Form[str], category: Form[str]):
     cat = get_object_or_404(Category, slug=category)
@@ -426,7 +454,9 @@ def add_metacategory(request, meta1: Form[str], meta2: Form[str], category: Form
     return response.success()
 
 
-@router.post("removemetacategory/", response={204: None})
+@router.post(
+    "removemetacategory/", response={204: None}, operation_id="removeMetaCategory"
+)
 @auth_check.require_admin
 def remove_metacategory(
     request, meta1: Form[str], meta2: Form[str], category: Form[str]
@@ -442,7 +472,7 @@ def remove_metacategory(
     return response.success()
 
 
-@router.post("deletemeta1/", response={204: None})
+@router.post("deletemeta1/", response={204: None}, operation_id="deleteMetaCategory1")
 @auth_check.require_admin
 def delete_meta1(request, meta1: Form[str]):
     meta1 = get_object_or_404(MetaCategory, displayname=meta1, parent=None)
@@ -450,7 +480,7 @@ def delete_meta1(request, meta1: Form[str]):
     return response.success()
 
 
-@router.post("deletemeta2/", response={204: None})
+@router.post("deletemeta2/", response={204: None}, operation_id="deleteMetaCategory2")
 @auth_check.require_admin
 def delete_meta2(request, meta1: Form[str], meta2: Form[str]):
     meta1 = get_object_or_404(MetaCategory, displayname=meta1, parent=None)
@@ -459,7 +489,7 @@ def delete_meta2(request, meta1: Form[str], meta2: Form[str]):
     return response.success()
 
 
-@router.post("editmeta1/", response={204: None})
+@router.post("editmeta1/", response={204: None}, operation_id="editMetaCategory1")
 @auth_check.require_admin
 def edit_meta1(request, oldmeta1: Form[str], newmeta1: Form[str]):
     if MetaCategory.objects.filter(displayname=newmeta1, parent=None).exists():
@@ -470,7 +500,7 @@ def edit_meta1(request, oldmeta1: Form[str], newmeta1: Form[str]):
     return response.success()
 
 
-@router.post("editmeta2/", response={204: None})
+@router.post("editmeta2/", response={204: None}, operation_id="editMetaCategory2")
 @auth_check.require_admin
 def edit_meta2(
     request,
@@ -497,7 +527,9 @@ def edit_meta2(
     return response.success()
 
 
-@router.post("setmetacategoryorder/", response={204: None})
+@router.post(
+    "setmetacategoryorder/", response={204: None}, operation_id="setMetaCategoryOrder"
+)
 @auth_check.require_admin
 def set_metacategory_order(
     request, meta1: Form[str], order: Form[int], meta2: Form[str | None] = None
@@ -517,7 +549,11 @@ class CategoryUserPinnedResponse(Schema):
     category_pinned: bool
 
 
-@router.put("{slug}/pinned/", response={200: CategoryUserPinnedResponse})
+@router.put(
+    "{slug}/pinned/",
+    response={200: CategoryUserPinnedResponse},
+    operation_id="setCategoryPin",
+)
 @auth_check.require_login
 def set_category_pin(request, slug: str):
     category = get_object_or_404(Category, slug=slug)
@@ -528,7 +564,11 @@ def set_category_pin(request, slug: str):
     return {"category_pinned": pinned}
 
 
-@router.get("{slug}/pinned/", response={200: CategoryUserPinnedResponse})
+@router.get(
+    "{slug}/pinned/",
+    response={200: CategoryUserPinnedResponse},
+    operation_id="getCategoryPin",
+)
 @auth_check.require_login
 def get_category_pin(request, slug: str):
     category = get_object_or_404(Category, slug=slug)
@@ -538,7 +578,11 @@ def get_category_pin(request, slug: str):
     return {"category_pinned": pinned}
 
 
-@router.delete("{slug}/pinned/", response={200: CategoryUserPinnedResponse})
+@router.delete(
+    "{slug}/pinned/",
+    response={200: CategoryUserPinnedResponse},
+    operation_id="deleteCategoryPin",
+)
 @auth_check.require_login
 def delete_category_pin(request, slug: str):
     category = get_object_or_404(Category, slug=slug)
