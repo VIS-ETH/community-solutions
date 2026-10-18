@@ -9,7 +9,7 @@ import {
   Paper,
 } from "@mantine/core";
 import * as React from "react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { IconCloudUpload, IconX, IconFile } from "@tabler/icons-react";
 import { useCreateDocumentFile } from "../api/hooks/documents";
 import type { DocumentSchema } from "../api/model/documentSchema";
@@ -28,12 +28,16 @@ const CreateDocumentFileModal: React.FC<Props> = ({
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
+  // added to clear browser input when a file is deleted from the pending list
+  const resetFileInput = useRef<(() => void) | null>(null);
+
   const { mutateAsync, isError, error } = useCreateDocumentFile<
     string | Error
   >();
 
   function handleFilesSelected(selectedFiles: File[]): void {
     setFiles(prevFiles => [...prevFiles, ...selectedFiles]);
+    resetFileInput.current?.();
   }
 
   function handleDrop(event: React.DragEvent<HTMLDivElement>): void {
@@ -122,6 +126,7 @@ const CreateDocumentFileModal: React.FC<Props> = ({
         )}
         <FileButton
           multiple
+          resetRef={resetFileInput}
           disabled={isUploading}
           onChange={handleFilesSelected}
         >

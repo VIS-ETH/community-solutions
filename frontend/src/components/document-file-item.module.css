@@ -1,0 +1,22 @@
+.replacementDropZone {
+  padding: var(--mantine-spacing-md);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+}
+
+.replacementDescription {
+  margin-bottom: var(--mantine-spacing-sm);
+  font-size: var(--mantine-font-size-sm);
+}
+
+.replacementError {
+  margin-top: var(--mantine-spacing-sm);
+}
+
+.modalTitle {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

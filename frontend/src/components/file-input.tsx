@@ -32,6 +32,7 @@ const FileInput: React.FC<FileInputProps> = ({ value, onChange, ...props }) => {
       placeholder="Choose File"
       value={value ?? null}
       accept={props.accept}
+      disabled={props.disabled}
       ref={fileInputRef}
       onChange={v => onChange(v ?? undefined)}
       valueComponent={({ value }) =>

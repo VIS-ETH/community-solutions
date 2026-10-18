@@ -8,9 +8,14 @@ import {
   Modal,
   TextInput,
   Title,
+  Alert,
+  Paper,
+  Text,
+  ActionIcon,
+  FileButton,
+  Stack,
 } from "@mantine/core";
-import React, { useCallback, useState } from "react";
-import FileInput from "./file-input";
+import React, { useCallback, useState, useRef } from "react";
 import IconButton from "./icon-button";
 import {
   IconChevronDown,
@@ -19,6 +24,8 @@ import {
   IconEdit,
   IconKey,
   IconTrash,
+  IconFile,
+  IconX,
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -28,7 +35,8 @@ import {
 } from "../api/hooks/documents";
 import type { DocumentSchema } from "../api/model/documentSchema";
 import type { DocumentFileSchema } from "../api/model/documentFileSchema";
-
+import classes from "./document-file-item.module.css";
+import uploadClasses from "./create-document-file-modal.module.css";
 interface Props {
   max_order: number;
   document: DocumentSchema;
@@ -44,6 +52,9 @@ const DocumentFileItem: React.FC<Props> = ({
 }) => {
   const [displayName, setDisplayName] = useState<string | undefined>();
   const [replaceFile, setFile] = useState<File | undefined>(undefined);
+  const [replacementError, setReplacementError] = useState<string | null>(null);
+
+  const resetFileInput = useRef<(() => void) | null>(null);
 
   const moveFile = useMoveDocumentFile({
     mutation: {
@@ -99,6 +110,7 @@ const DocumentFileItem: React.FC<Props> = ({
         refetch();
 
         closeEditModal();
+        setReplacementError(null);
       },
     },
   });
@@ -117,29 +129,145 @@ const DocumentFileItem: React.FC<Props> = ({
     [document.author, document.slug, file.oid, updateDocumentFile],
   );
 
+  function handleReplacementDrop(event: React.DragEvent<HTMLDivElement>): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (updateDocumentFile.isPending) {
+      return;
+    }
+
+    const droppedFiles = Array.from(event.dataTransfer.files);
+
+    if (droppedFiles.length === 0) {
+      return;
+    }
+
+    if (droppedFiles.length !== 1) {
+      setReplacementError(
+        "Drop exactly one file to replace this document file.",
+      );
+      return;
+    }
+
+    // already checking array length === 1
+    const replacement = droppedFiles[0];
+
+    setFile(replacement);
+    setReplacementError(null);
+  }
+
+  function handleReplacementDragOver(
+    event: React.DragEvent<HTMLDivElement>,
+  ): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    event.dataTransfer.dropEffect = updateDocumentFile.isPending
+      ? "none"
+      : "copy";
+  }
+
+  function handleReplacementSelected(selectedFile: File | undefined): void {
+    if (updateDocumentFile.isPending) {
+      return;
+    }
+
+    setFile(selectedFile);
+    resetFileInput.current?.();
+    setReplacementError(null);
+  }
+
   return (
     <>
       <Modal
+        classNames={{ title: classes.modalTitle }}
         title={`Edit ${file.display_name}`}
         onClose={closeEditModal}
         opened={editIsOpen}
       >
         <Modal.Body>
-          <TextInput
-            label="Display Name"
-            value={displayName ?? file.display_name}
-            onChange={e => setDisplayName(e.currentTarget.value)}
-          />
-          <label>Replace File</label>
-          <FileInput value={replaceFile} onChange={setFile} />
-          <Button
-            disabled={displayName?.trim() === ""}
-            onClick={() => handleUpdateFile(displayName?.trim(), replaceFile)}
-            leftSection={<IconDeviceFloppy />}
-            loading={updateDocumentFile.isPending}
+          <Stack
+            onDragOver={handleReplacementDragOver}
+            onDrop={handleReplacementDrop}
           >
-            Save
-          </Button>
+            <TextInput
+              label="Display Name"
+              value={displayName ?? file.display_name}
+              onChange={e => setDisplayName(e.currentTarget.value)}
+            />
+
+            {replaceFile === undefined && (
+              <Paper className={uploadClasses.dropZone}>
+                <IconFile size={40} stroke={1.5} aria-hidden="true" />
+                <Text className={classes.replacementDescription}>
+                  Drop one replacement file here, or choose one
+                </Text>
+              </Paper>
+            )}
+
+            {replaceFile !== undefined && (
+              <Group gap="xs" wrap="nowrap">
+                <Text
+                  size="sm"
+                  truncate="end"
+                  flex={1}
+                  miw={0}
+                  title={replaceFile.name}
+                >
+                  {replaceFile.name}
+                </Text>
+
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="sm"
+                  aria-label={`Remove ${replaceFile.name} as the replacement`}
+                  disabled={updateDocumentFile.isPending}
+                  onClick={() => handleReplacementSelected(undefined)}
+                >
+                  <IconX size={16} />
+                </ActionIcon>
+              </Group>
+            )}
+
+            {replacementError && (
+              <Alert color="red" className={classes.replacementError}>
+                {replacementError}
+              </Alert>
+            )}
+
+            <Group justify="space-between">
+              <FileButton
+                resetRef={resetFileInput}
+                disabled={updateDocumentFile.isPending}
+                onChange={selectedFile =>
+                  handleReplacementSelected(selectedFile ?? undefined)
+                }
+              >
+                {buttonProps => (
+                  <Button
+                    {...buttonProps}
+                    disabled={updateDocumentFile.isPending}
+                    leftSection={<IconFile size={18} />}
+                  >
+                    Choose files
+                  </Button>
+                )}
+              </FileButton>
+
+              <Button
+                disabled={displayName?.trim() === ""}
+                onClick={() =>
+                  handleUpdateFile(displayName?.trim(), replaceFile)
+                }
+                leftSection={<IconDeviceFloppy />}
+                loading={updateDocumentFile.isPending}
+              >
+                Save
+              </Button>
+            </Group>
+          </Stack>
         </Modal.Body>
       </Modal>
       <Modal
