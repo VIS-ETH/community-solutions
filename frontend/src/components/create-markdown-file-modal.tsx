@@ -1,7 +1,16 @@
-import { Alert, Button, Stack, TextInput, Popover, Text } from "@mantine/core";
+import {
+  Alert,
+  Button,
+  Stack,
+  TextInput,
+  Popover,
+  Text,
+  ActionIcon,
+  Group,
+} from "@mantine/core";
 import * as React from "react";
 import { useState } from "react";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconX } from "@tabler/icons-react";
 import { useCreateDocumentFile } from "../api/hooks/documents";
 import type { DocumentSchema } from "../api/model/documentSchema";
 
@@ -41,6 +50,15 @@ const CreateMarkdownFileModal: React.FC<Props> = ({
     setFiles(previousFiles => [...previousFiles, newFile]);
     setDisplayName("");
     setNamePopoverIsOpen(false);
+  }
+
+  function handleRemoveFile(indexToRemove: number): void {
+    if (isCreating) {
+      return;
+    }
+    setFiles(previousFiles =>
+      previousFiles.filter((_, index) => index !== indexToRemove),
+    );
   }
 
   async function handleCreate(): Promise<void> {
@@ -136,9 +154,22 @@ const CreateMarkdownFileModal: React.FC<Props> = ({
           </Text>
 
           {files.map((file, index) => (
-            <Text key={`${file.name}-${index}`} size="sm" truncate="end">
-              {file.name}
-            </Text>
+            <Group key={`${file.name}-${index}`} gap="xs" wrap="nowrap">
+              <Text size="sm" truncate="end" flex={1} miw={0} title={file.name}>
+                {file.name}
+              </Text>
+
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="sm"
+                aria-label={`Remove ${file.name} from the pending list`}
+                disabled={isCreating}
+                onClick={() => handleRemoveFile(index)}
+              >
+                <IconX size={16} />
+              </ActionIcon>
+            </Group>
           ))}
         </Stack>
       )}

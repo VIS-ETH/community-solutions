@@ -1,7 +1,15 @@
-import { Alert, Button, FileButton, Stack, Text } from "@mantine/core";
+import {
+  Alert,
+  Button,
+  FileButton,
+  Stack,
+  Text,
+  ActionIcon,
+  Group,
+} from "@mantine/core";
 import * as React from "react";
 import { useState } from "react";
-import { IconCloudUpload } from "@tabler/icons-react";
+import { IconCloudUpload, IconX } from "@tabler/icons-react";
 import { useCreateDocumentFile } from "../api/hooks/documents";
 import type { DocumentSchema } from "../api/model/documentSchema";
 
@@ -25,6 +33,15 @@ const CreateDocumentFileModal: React.FC<Props> = ({
 
   function handleFilesSelected(selectedFiles: File[]): void {
     setFiles(prevFiles => [...prevFiles, ...selectedFiles]);
+  }
+
+  function handleRemoveFile(indexToRemove: number): void {
+    if (isUploading) {
+      return;
+    }
+    setFiles(previousFiles =>
+      previousFiles.filter((_, index) => index !== indexToRemove),
+    );
   }
 
   async function handleUpload(): Promise<void> {
@@ -100,9 +117,28 @@ const CreateDocumentFileModal: React.FC<Props> = ({
             </Text>
 
             {files.map((file, index) => (
-              <Text key={`${file.name}-${index}`} size="sm" truncate="end">
-                {file.name}
-              </Text>
+              <Group key={`${file.name}-${index}`} gap="xs" wrap="nowrap">
+                <Text
+                  size="sm"
+                  truncate="end"
+                  flex={1}
+                  miw={0}
+                  title={file.name}
+                >
+                  {file.name}
+                </Text>
+
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="sm"
+                  aria-label={`Remove ${file.name} from the pending list`}
+                  disabled={isUploading}
+                  onClick={() => handleRemoveFile(index)}
+                >
+                  <IconX size={16} />
+                </ActionIcon>
+              </Group>
             ))}
           </Stack>
         )}
