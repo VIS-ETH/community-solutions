@@ -6,13 +6,14 @@ import {
   Text,
   ActionIcon,
   Group,
+  Paper,
 } from "@mantine/core";
 import * as React from "react";
 import { useState } from "react";
-import { IconCloudUpload, IconX } from "@tabler/icons-react";
+import { IconCloudUpload, IconX, IconFile } from "@tabler/icons-react";
 import { useCreateDocumentFile } from "../api/hooks/documents";
 import type { DocumentSchema } from "../api/model/documentSchema";
-
+import classes from "./create-document-file-modal.module.css";
 interface Props {
   document: DocumentSchema;
   onClose: () => void;
@@ -33,6 +34,30 @@ const CreateDocumentFileModal: React.FC<Props> = ({
 
   function handleFilesSelected(selectedFiles: File[]): void {
     setFiles(prevFiles => [...prevFiles, ...selectedFiles]);
+  }
+
+  function handleDrop(event: React.DragEvent<HTMLDivElement>): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isUploading) {
+      return;
+    }
+
+    const droppedFiles = Array.from(event.dataTransfer.files);
+
+    if (droppedFiles.length === 0) {
+      return;
+    }
+
+    handleFilesSelected(droppedFiles);
+  }
+
+  function handleDragOver(event: React.DragEvent<HTMLDivElement>): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    event.dataTransfer.dropEffect = isUploading ? "none" : "copy";
   }
 
   function handleRemoveFile(indexToRemove: number): void {
@@ -88,7 +113,7 @@ const CreateDocumentFileModal: React.FC<Props> = ({
 
   return (
     <>
-      <Stack>
+      <Stack onDragOver={handleDragOver} onDrop={handleDrop}>
         {isError && (
           <Alert color="red">
             {" "}
@@ -104,12 +129,26 @@ const CreateDocumentFileModal: React.FC<Props> = ({
             <Button
               {...buttonProps}
               disabled={isUploading}
-              leftSection={<IconCloudUpload />}
+              leftSection={<IconFile size={18} />}
             >
               Choose files
             </Button>
           )}
         </FileButton>
+
+        {files.length === 0 && (
+          <Paper className={classes.dropZone} p="md" radius="md">
+            <IconCloudUpload size={40} stroke={1.5} aria-hidden="true" />
+            <Text size="sm" ta="center">
+              Drop files here, or use Choose files.
+            </Text>
+          </Paper>
+        )}
+        {files.length !== 0 && (
+          <Text size="xs" c="dimmed">
+            Drop more files into this dialog, or use Choose files.
+          </Text>
+        )}
         {files.length > 0 && (
           <Stack gap="xs">
             <Text size="sm" fw={500}>
