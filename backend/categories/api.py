@@ -1,27 +1,42 @@
 from django.conf import settings
 from django.db.models import Exists, OuterRef
-from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
+from ninja import Form, Router, Schema
 
 from answers.models import ExamUserSolved
 from categories.models import Category, CategoryUserPinned, MetaCategory
 from myauth import auth_check
 from myauth.models import MyUser, get_my_user
 from util import response
+from util.schemas import ValueWrapped
+
+router = Router(tags=["Categories"])
 
 
-@response.request_get()
+@router.get("list/", response={200: ValueWrapped[list[str]]})
 def list_categories(request):
-    return response.success(
-        value=list(
+    return {
+        "value": list(
             Category.objects.order_by("displayname").values_list(
                 "displayname", flat=True
             )
         )
-    )
+    }
 
 
-@response.request_get()
+class ListCategoriesWithMetaResponse(Schema):
+    displayname: str
+    slug: str
+    documentcount: int
+    examcountpublic: int
+    examcountanswered: int
+    answerprogress: float
+    pinned: bool
+
+
+@router.get(
+    "listwithmeta/", response={200: ValueWrapped[list[ListCategoriesWithMetaResponse]]}
+)
 def list_categories_with_meta(request):
     pinned_subquery = CategoryUserPinned.objects.filter(
         user=request.user,
@@ -45,10 +60,17 @@ def list_categories_with_meta(request):
         }
         for cat in categories
     ]
-    return response.success(value=res)
+    return {"value": res}
 
 
-@response.request_get()
+class ListCategoriesBasicResponse(Schema):
+    displayname: str
+    slug: str
+
+
+@router.get(
+    "listonlyadmin/", response={200: ValueWrapped[list[ListCategoriesBasicResponse]]}
+)
 @auth_check.require_login
 def list_categories_only_admin(request):
     categories = Category.objects.order_by("displayname").all()
@@ -60,10 +82,12 @@ def list_categories_only_admin(request):
         for cat in categories
         if auth_check.has_admin_rights_for_category(request, cat)
     ]
-    return response.success(value=res)
+    return {"value": res}
 
 
-@response.request_get()
+@router.get(
+    "listonlypayment/", response={200: ValueWrapped[list[ListCategoriesBasicResponse]]}
+)
 @auth_check.require_login
 def list_categories_only_payment(request):
     res = [
@@ -73,19 +97,19 @@ def list_categories_only_payment(request):
         }
         for cat in Category.objects.filter(has_payments=True).order_by("displayname")
     ]
-    return response.success(value=res)
+    return {"value": res}
 
 
-@response.request_post("category")
+@router.post("add/", response={200: ValueWrapped[str]})
 @auth_check.require_admin
-def add_category(request):
-    slug = create_category_slug(request.POST["category"])
+def add_category(request, category: Form[str]):
+    slug = create_category_slug(category)
     cat = Category(
-        displayname=request.POST["category"],
+        displayname=category,
         slug=slug,
     )
     cat.save()
-    return response.success(slug=slug)
+    return {"value": slug}
 
 
 def create_category_slug(category, ignored_pk=None):
@@ -117,10 +141,10 @@ def create_category_slug(category, ignored_pk=None):
     return slug
 
 
-@response.request_post("slug")
+@router.post("remove/", response={200: None})
 @auth_check.require_admin
-def remove_category(request):
-    cat = get_object_or_404(Category, slug=request.POST["slug"])
+def remove_category(request, slug: Form[str]):
+    cat = get_object_or_404(Category, slug=slug)
     if cat.slug == "default":
         return response.not_possible("Can not delete default category")
     cat.exam_set.update(category=Category.objects.get(slug="default"))
@@ -129,8 +153,27 @@ def remove_category(request):
     return response.success()
 
 
-@response.request_get()
-@auth_check.require_login
+class ListExamsResponse(Schema):
+    displayname: str
+    filename: str
+    category_displayname: str
+    needs_payment: bool
+    examtype: str | None
+    remark: str | None
+    import_claim: str | None
+    import_claim_displayname: str | None
+    import_claim_time: str | None
+    public: bool
+    has_solution: bool
+    is_printonly: bool
+    finished_cuts: bool
+    canView: bool
+    count_cuts: int
+    count_answered: int
+    user_solved: bool
+
+
+@router.get("listexams/{slug}/", response={200: ValueWrapped[list[ListExamsResponse]]})
 def list_exams(request, slug):
     cat = get_object_or_404(Category, slug=slug)
 
@@ -178,10 +221,26 @@ def list_exams(request, slug):
     )
     for ex in res:
         del ex["sort-key"]
-    return response.success(value=res)
+    return {"value": res}
 
 
-def get_category_data(request, cat):
+class CategoryData(Schema):
+    displayname: str
+    slug: str
+    admins: list[str]
+    experts: list[str]
+    semester: str | None
+    form: str | None
+    permission: str | None
+    remark: str | None
+    has_payments: bool
+    catadmin: bool
+    more_exams_link: str | None
+    pinned: bool
+    attachments: list[dict[str, str]]
+
+
+def get_category_data(request, cat) -> CategoryData:
     pinned = CategoryUserPinned.objects.filter(
         user=request.user,
         category=cat,
@@ -221,55 +280,67 @@ def get_category_data(request, cat):
     return res
 
 
-@response.request_get()
+@router.get("metadata/{slug}/", response={200: ValueWrapped[CategoryData]})
 @auth_check.require_login
-def get_metadata(request, slug):
+def get_metadata(request, slug: str):
     cat = get_object_or_404(Category, slug=slug)
     res = get_category_data(request, cat)
-    return response.success(value=res)
+    return {"value": res}
 
 
-@response.request_post(
-    "displayname",
-    "semester",
-    "form",
-    "permission",
-    "remark",
-    "has_payments",
-    "more_exams_link",
-    optional=True,
-)
+class SetMetadataRequest(Schema):
+    displayname: str | None = None
+    semester: str | None = None
+    form: str | None = None
+    permission: str | None = None
+    remark: str | None = None
+    has_payments: bool | None = None
+    more_exams_link: str | None = None
+
+
+@router.post("setmetadata/{slug}/", response={200: ValueWrapped[CategoryData]})
 @auth_check.require_admin
-def set_metadata(request, slug):
+def set_metadata(
+    request,
+    slug: str,
+    data: Form[SetMetadataRequest],
+):
     cat = get_object_or_404(Category, slug=slug)
-    if "displayname" in request.POST:
+    if data.displayname is not None:
         if cat.slug == "default":
             return response.not_possible("Can not rename default category")
         # prevent whitespaced or empty displaynames
-        if request.POST["displayname"].strip() == "":
+        if data.displayname.strip() == "":
             return response.not_possible("Invalid displayname")
-        cat.displayname = request.POST["displayname"]
+        cat.displayname = data.displayname
         cat.slug = create_category_slug(cat.displayname, cat.pk)
-    for key in ["semester", "form", "permission", "remark", "more_exams_link"]:
-        if key in request.POST:
-            setattr(cat, key, request.POST[key])
-    if "has_payments" in request.POST:
-        cat.has_payments = request.POST["has_payments"] != "false"
+    if data.semester is not None:
+        cat.semester = data.semester
+    if data.form is not None:
+        cat.form = data.form
+    if data.permission is not None:
+        cat.permission = data.permission
+    if data.remark is not None:
+        cat.remark = data.remark
+    if data.has_payments is not None:
+        cat.has_payments = data.has_payments
+    if data.more_exams_link is not None:
+        cat.more_exams_link = data.more_exams_link
     cat.save()
     res = get_category_data(request, cat)
-    return response.success(value=res)
+    return {"value": res}
 
 
-@response.request_post("key", "user")
+@router.post("addusertoset/{slug}/", response={204: None})
 @auth_check.require_admin
-def add_user_to_set(request, slug):
+def add_user_to_set(request, slug: str, key: Form[str], user: Form[str]):
     cat = get_object_or_404(Category, slug=slug)
-    user = get_object_or_404(MyUser, username=request.POST["user"])
-    if request.POST["key"] == "admins":
+    user = get_object_or_404(MyUser, username=user)
+    if key == "admins":
         if not cat.admins.filter(pk=user.pk).exists():
             cat.admins.add(user)
             cat.save()
-    elif request.POST["key"] == "experts":
+    elif key == "experts":
         if not cat.experts.filter(pk=user.pk).exists():
             cat.experts.add(user)
             cat.save()
@@ -278,16 +349,16 @@ def add_user_to_set(request, slug):
     return response.success()
 
 
-@response.request_post("key", "user")
+@router.post("removeuserfromset/{slug}/", response={204: None})
 @auth_check.require_admin
-def remove_user_from_set(request, slug):
+def remove_user_from_set(request, slug: str, key: Form[str], user: Form[str]):
     cat = get_object_or_404(Category, slug=slug)
-    user = get_object_or_404(MyUser, username=request.POST["user"])
-    if request.POST["key"] == "admins":
+    user = get_object_or_404(MyUser, username=user)
+    if key == "admins":
         if cat.admins.filter(pk=user.pk).exists():
             cat.admins.remove(user)
             cat.save()
-    elif request.POST["key"] == "experts":
+    elif key == "experts":
         if cat.experts.filter(pk=user.pk).exists():
             cat.experts.remove(user)
             cat.save()
@@ -296,7 +367,19 @@ def remove_user_from_set(request, slug):
     return response.success()
 
 
-@response.request_get()
+class Meta2CategoryResponse(Schema):
+    displayname: str
+    categories: list[str]
+
+
+class Meta1CategoryResponse(Schema):
+    displayname: str
+    meta2: list[Meta2CategoryResponse]
+
+
+@router.get(
+    "listmetacategories/", response={200: ValueWrapped[list[Meta1CategoryResponse]]}
+)
 def list_metacategories(request):
     categories = (
         MetaCategory.objects.select_related("parent")
@@ -329,34 +412,28 @@ def list_metacategories(request):
                 ],
             }
         )
-    return response.success(value=res)
+    return {"value": res}
 
 
-@response.request_post("meta1", "meta2", "category")
+@router.post("addmetacategory/", response={204: None})
 @auth_check.require_admin
-def add_metacategory(request):
-    cat = get_object_or_404(Category, slug=request.POST["category"])
-    meta1, _ = MetaCategory.objects.get_or_create(
-        displayname=request.POST["meta1"], parent=None
-    )
-    meta2, _ = MetaCategory.objects.get_or_create(
-        displayname=request.POST["meta2"], parent=meta1
-    )
+def add_metacategory(request, meta1: Form[str], meta2: Form[str], category: Form[str]):
+    cat = get_object_or_404(Category, slug=category)
+    meta1, _ = MetaCategory.objects.get_or_create(displayname=meta1, parent=None)
+    meta2, _ = MetaCategory.objects.get_or_create(displayname=meta2, parent=meta1)
     if not meta2.category_set.filter(pk=cat.pk).exists():
         meta2.category_set.add(cat)
     return response.success()
 
 
-@response.request_post("meta1", "meta2", "category")
+@router.post("removemetacategory/", response={204: None})
 @auth_check.require_admin
-def remove_metacategory(request):
-    cat = get_object_or_404(Category, slug=request.POST["category"])
-    meta1 = get_object_or_404(
-        MetaCategory, displayname=request.POST["meta1"], parent=None
-    )
-    meta2 = get_object_or_404(
-        MetaCategory, displayname=request.POST["meta2"], parent=meta1
-    )
+def remove_metacategory(
+    request, meta1: Form[str], meta2: Form[str], category: Form[str]
+):
+    cat = get_object_or_404(Category, slug=category)
+    meta1 = get_object_or_404(MetaCategory, displayname=meta1, parent=None)
+    meta2 = get_object_or_404(MetaCategory, displayname=meta2, parent=meta1)
     meta2.category_set.remove(cat)
     if not meta2.category_set.exists():
         meta2.delete()
@@ -365,106 +442,106 @@ def remove_metacategory(request):
     return response.success()
 
 
-@response.request_post("meta1")
+@router.post("deletemeta1/", response={204: None})
 @auth_check.require_admin
-def delete_meta1(request):
-    meta1 = get_object_or_404(
-        MetaCategory, displayname=request.POST["meta1"], parent=None
-    )
+def delete_meta1(request, meta1: Form[str]):
+    meta1 = get_object_or_404(MetaCategory, displayname=meta1, parent=None)
     meta1.delete()
     return response.success()
 
 
-@response.request_post("meta1", "meta2")
+@router.post("deletemeta2/", response={204: None})
 @auth_check.require_admin
-def delete_meta2(request):
-    meta1 = get_object_or_404(
-        MetaCategory, displayname=request.POST["meta1"], parent=None
-    )
-    meta2 = get_object_or_404(
-        MetaCategory, displayname=request.POST["meta2"], parent=meta1
-    )
+def delete_meta2(request, meta1: Form[str], meta2: Form[str]):
+    meta1 = get_object_or_404(MetaCategory, displayname=meta1, parent=None)
+    meta2 = get_object_or_404(MetaCategory, displayname=meta2, parent=meta1)
     meta2.delete()
     return response.success()
 
 
-@response.request_post("oldmeta1", "newmeta1")
+@router.post("editmeta1/", response={204: None})
 @auth_check.require_admin
-def edit_meta1(request):
-    if MetaCategory.objects.filter(
-        displayname=request.POST["newmeta1"], parent=None
-    ).exists():
+def edit_meta1(request, oldmeta1: Form[str], newmeta1: Form[str]):
+    if MetaCategory.objects.filter(displayname=newmeta1, parent=None).exists():
         return response.not_possible("This meta category already exists.")
-    meta1 = get_object_or_404(
-        MetaCategory, displayname=request.POST["oldmeta1"], parent=None
-    )
-    meta1.displayname = request.POST["newmeta1"]
+    meta1 = get_object_or_404(MetaCategory, displayname=oldmeta1, parent=None)
+    meta1.displayname = newmeta1
     meta1.save()
     return response.success()
 
 
-@response.request_post("oldmeta2", "newmeta2", "meta1", "newmeta1")
+@router.post("editmeta2/", response={204: None})
 @auth_check.require_admin
-def edit_meta2(request):
-    oldmeta1 = get_object_or_404(
-        MetaCategory, displayname=request.POST["meta1"], parent=None
-    )
-    if request.POST["meta1"] != request.POST["newmeta1"]:
+def edit_meta2(
+    request,
+    meta1: Form[str],
+    newmeta1: Form[str],
+    oldmeta2: Form[str],
+    newmeta2: Form[str],
+):
+    oldmeta1 = get_object_or_404(MetaCategory, displayname=meta1, parent=None)
+    if meta1 != newmeta1:
         newmeta1, _ = MetaCategory.objects.get_or_create(
-            displayname=request.POST["newmeta1"], parent=None
+            displayname=newmeta1, parent=None
         )
     else:
         newmeta1 = oldmeta1
-    if MetaCategory.objects.filter(
-        displayname=request.POST["newmeta2"], parent=newmeta1
-    ).exists():
+    if MetaCategory.objects.filter(displayname=newmeta2, parent=newmeta1).exists():
         return response.not_possible("This meta category already exists.")
-    meta2 = get_object_or_404(
-        MetaCategory, displayname=request.POST["oldmeta2"], parent=oldmeta1
-    )
+    meta2 = get_object_or_404(MetaCategory, displayname=oldmeta2, parent=oldmeta1)
     meta2.parent = newmeta1
-    meta2.displayname = request.POST["newmeta2"]
+    meta2.displayname = newmeta2
     meta2.save()
     if not oldmeta1.metacategory_set.exists():
         oldmeta1.delete()
     return response.success()
 
 
-@response.request_post("meta1", "order")
-@response.request_post("meta2", optional=True)
+@router.post("setmetacategoryorder/", response={204: None})
 @auth_check.require_admin
-def set_metacategory_order(request):
-    meta1 = get_object_or_404(
-        MetaCategory, displayname=request.POST["meta1"], parent=None
-    )
-    if "meta2" in request.POST:
-        meta2 = get_object_or_404(
-            MetaCategory, displayname=request.POST["meta2"], parent=meta1
-        )
-        meta2.order = int(request.POST["order"])
+def set_metacategory_order(
+    request, meta1: Form[str], order: Form[int], meta2: Form[str | None] = None
+):
+    meta1 = get_object_or_404(MetaCategory, displayname=meta1, parent=None)
+    if meta2 is not None:
+        meta2 = get_object_or_404(MetaCategory, displayname=meta2, parent=meta1)
+        meta2.order = int(order)
         meta2.save()
     else:
-        meta1.order = int(request.POST["order"])
+        meta1.order = int(order)
         meta1.save()
     return response.success()
 
 
-@response.request_method(["DELETE", "PUT", "GET"])()
+class CategoryUserPinnedResponse(Schema):
+    category_pinned: bool
+
+
+@router.put("{slug}/pinned/", response={200: CategoryUserPinnedResponse})
 @auth_check.require_login
-def category_user_pinned(request, slug: str):
+def set_category_pin(request, slug: str):
     category = get_object_or_404(Category, slug=slug)
+    CategoryUserPinned.objects.update_or_create(
+        user=request.user, category=category, defaults={}
+    )
+    pinned = True
+    return {"category_pinned": pinned}
 
-    if request.method == "DELETE":
-        CategoryUserPinned.objects.filter(user=request.user, category=category).delete()
-        pinned = False
-    elif request.method == "PUT":
-        CategoryUserPinned.objects.update_or_create(
-            user=request.user, category=category, defaults={}
-        )
-        pinned = True
-    else:
-        pinned = CategoryUserPinned.objects.filter(
-            user=request.user, category=category
-        ).exists()
 
-    return JsonResponse({"category_pinned": pinned})
+@router.get("{slug}/pinned/", response={200: CategoryUserPinnedResponse})
+@auth_check.require_login
+def get_category_pin(request, slug: str):
+    category = get_object_or_404(Category, slug=slug)
+    pinned = CategoryUserPinned.objects.filter(
+        user=request.user, category=category
+    ).exists()
+    return {"category_pinned": pinned}
+
+
+@router.delete("{slug}/pinned/", response={200: CategoryUserPinnedResponse})
+@auth_check.require_login
+def delete_category_pin(request, slug: str):
+    category = get_object_or_404(Category, slug=slug)
+    CategoryUserPinned.objects.filter(user=request.user, category=category).delete()
+    pinned = False
+    return {"category_pinned": pinned}

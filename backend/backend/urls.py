@@ -40,6 +40,7 @@ def restrict_proxied(f):
 # Gradually migrate to using Django-Ninja for all APIs so we can get automatic
 # documentation generation and type-validated API inputs.
 api = NinjaAPI()
+api.add_router("category/", "categories.api.router")
 api.add_router("feedback/", "feedback.api.router")
 api.add_router("image/", "images.api.router")
 api.add_router("user/", "users.api.router")
@@ -56,7 +57,6 @@ urlpatterns = [
     # Any endpoints defined by the old style of Django views
     path("api/exam/", include("answers.urls")),
     path("api/faq/", include("faq.urls")),
-    path("api/category/", include("categories.urls")),
     path("api/filestore/", include("filestore.urls")),
     path("api/auth/", include("myauth.urls")),
     re_path(
