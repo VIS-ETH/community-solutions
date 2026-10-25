@@ -15,7 +15,7 @@ import {
 import { useDisclosure, useLocalStorage } from "@mantine/hooks";
 import { useRequest } from "ahooks";
 import React, { useCallback, useMemo, useState } from "react";
-import { fetchGet, fetchPost } from "../api/fetch-utils";
+import { fetchPost } from "../api/fetch-utils";
 import { loadMetaCategories } from "../api/hooks";
 import { useUser } from "../auth";
 import CategoryCard from "../components/category-card";
@@ -24,7 +24,7 @@ import Grid from "../components/grid";
 import ContentContainer from "../components/secondary-container";
 import useSearch from "../hooks/useSearch";
 import useTitle from "../hooks/useTitle";
-import { CategoryMetaData, MetaCategory } from "../interfaces";
+import { MetaCategory } from "../interfaces";
 import CourseCategoriesPanel from "../components/course-categories-panel";
 import { IconFilter, IconPlus } from "@tabler/icons-react";
 import { EditMeta1, EditMeta2 } from "../components/edit-meta-categories";
@@ -32,12 +32,14 @@ import CollapseWrapper from "../components/collapse-wrapper";
 import { clsx } from "clsx";
 import classes from "../utils/focus-outline.module.css";
 import { slugify } from "../utils/slugify";
+import { listCategoriesWithMeta } from "../api/hooks/categories";
+import { ListCategoriesWithMetaResponse } from "../api/model";
 
-const displayNameGetter = (data: CategoryMetaData) => data.displayname;
+const displayNameGetter = (data: ListCategoriesWithMetaResponse) =>
+  data.displayname;
 
 const loadCategories = async () => {
-  return (await fetchGet("/api/category/listwithmeta/"))
-    .value as CategoryMetaData[];
+  return (await listCategoriesWithMeta()).value;
 };
 const loadCategoryData = async () => {
   const [categories, metaCategories] = await Promise.all([
@@ -54,15 +56,18 @@ const addCategory = async (category: string) => {
 };
 
 const mapToCategories = (
-  categories: CategoryMetaData[],
+  categories: ListCategoriesWithMetaResponse[],
   meta1: MetaCategory[],
 ) => {
-  const categoryMap = new Map<string, CategoryMetaData>();
-  const assignedCategories = new WeakSet<CategoryMetaData>();
+  const categoryMap = new Map<string, ListCategoriesWithMetaResponse>();
+  const assignedCategories = new WeakSet<ListCategoriesWithMetaResponse>();
   for (const category of categories) categoryMap.set(category.slug, category);
-  const meta1Map = new Map<string, [string, CategoryMetaData[]][]>();
+  const meta1Map = new Map<
+    string,
+    [string, ListCategoriesWithMetaResponse[]][]
+  >();
   for (const { displayname: meta1display, meta2 } of meta1) {
-    const meta2Map = new Map<string, CategoryMetaData[]>();
+    const meta2Map = new Map<string, ListCategoriesWithMetaResponse[]>();
     for (const {
       displayname: meta2display,
       categories: categoryNames,
@@ -180,7 +185,7 @@ export const CategoryList: React.FC = () => {
   // Check for local storage cache of category data and use that as a backup
   // while the actual request is loading
   const [localStorageCategoryData, setLocalStorageCategoryData] =
-    useLocalStorage<[CategoryMetaData[]?, MetaCategory[]?]>({
+    useLocalStorage<[ListCategoriesWithMetaResponse[]?, MetaCategory[]?]>({
       key: "category-data",
       defaultValue: [undefined, undefined],
       getInitialValueInEffect: false,
@@ -197,7 +202,7 @@ export const CategoryList: React.FC = () => {
       // our website won't break -- it's just a cache to speed up perceived load.
       setLocalStorageCategoryData(
         // onSuccess gives us a readonly array, so cast it to a mutable array
-        data as [CategoryMetaData[], MetaCategory[]],
+        data as [ListCategoriesWithMetaResponse[], MetaCategory[]],
       );
     },
   });

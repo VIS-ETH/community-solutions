@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
 import { Text, Title } from "@mantine/core";
 import Panel from "./panel-left";
-import { CategoryMetaData } from "../interfaces";
 import { slugify } from "../utils/slugify";
+import { ListCategoriesWithMetaResponse } from "../api/model";
 
 export interface DisplayOptions {
   displayHiddenPdfSections: boolean;
@@ -15,8 +15,9 @@ interface CourseCategoriesPanelProps {
   mode: string;
   isOpen: boolean;
   toggle: () => void;
-  metaList: [string, [string, CategoryMetaData[]][]][] | undefined;
-  categories: readonly CategoryMetaData[];
+  metaList:
+    [string, [string, ListCategoriesWithMetaResponse[]][]][] | undefined;
+  categories: readonly ListCategoriesWithMetaResponse[];
 }
 const CourseCategoriesPanel: React.FC<CourseCategoriesPanelProps> = ({
   mode,

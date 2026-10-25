@@ -4,7 +4,7 @@ import React, { useMemo, useState } from "react";
 import { loadList } from "../api/hooks";
 import { useUser } from "../auth";
 import useSet from "../hooks/useSet";
-import { CategoryMetaData, ExamSelectedForDownload } from "../interfaces";
+import { ExamSelectedForDownload } from "../interfaces";
 import {
   dlSelectedExams,
   filterMatches,
@@ -13,9 +13,10 @@ import {
 import ExamTypeSection from "./exam-type-section";
 import { IconDownload, IconSearch } from "@tabler/icons-react";
 import { Link } from "react-router-dom";
+import { CategoryData } from "../api/model";
 
 interface ExamListProps {
-  metaData: CategoryMetaData;
+  metaData: CategoryData;
 }
 const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
   const {

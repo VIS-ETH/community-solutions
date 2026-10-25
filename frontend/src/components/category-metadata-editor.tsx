@@ -16,18 +16,18 @@ import React from "react";
 import { fetchPost, fetchPatch } from "../api/fetch-utils";
 import useForm from "../hooks/useForm";
 import useInitialState from "../hooks/useInitialState";
-import { Attachment, CategoryMetaData } from "../interfaces";
 import { createOptions, options } from "../utils/ts-utils";
 import AttachmentsEditor, { EditorAttachment } from "./attachments-editor";
 import OfferedInEditor from "./offered-in-editor";
 import UserSetEditor from "./user-set-editor";
 import { IconDeviceFloppy, IconX } from "@tabler/icons-react";
+import { CategoryData, CategoryDataAttachment } from "../api/model";
 
 //'semester', 'form', 'permission', 'remark', 'has_payments', 'more_exams_link'
 const setMetaData = async (
   slug: string,
-  changes: Partial<CategoryMetaData>,
-): Promise<CategoryMetaData | undefined> => {
+  changes: Partial<CategoryData>,
+): Promise<CategoryData | undefined> => {
   if (Object.keys(changes).length === 0) return;
   return (await fetchPost(`/api/category/setmetadata/${slug}/`, changes)).value;
 };
@@ -82,7 +82,7 @@ const removeAttachment = async (filename: string) => {
 };
 
 export interface CategoryMetaDataDraft extends Omit<
-  CategoryMetaData,
+  CategoryData,
   "attachments"
 > {
   attachments: EditorAttachment[];
@@ -90,12 +90,12 @@ export interface CategoryMetaDataDraft extends Omit<
 
 const applyChanges = async (
   slug: string,
-  oldMetaData: CategoryMetaData,
+  oldMetaData: CategoryData,
   newMetaData: CategoryMetaDataDraft,
   oldOfferedIn: (readonly [string, string])[],
   newOfferedIn: (readonly [string, string])[],
 ) => {
-  const metaDataDiff: Partial<CategoryMetaData> = {};
+  const metaDataDiff: Partial<CategoryData> = {};
   if (oldMetaData.displayname !== newMetaData.displayname)
     metaDataDiff.displayname = newMetaData.displayname;
   if (oldMetaData.semester !== newMetaData.semester)
@@ -112,7 +112,7 @@ const applyChanges = async (
     metaDataDiff.permission = newMetaData.permission;
   const fetchedMetaData = await setMetaData(slug, metaDataDiff);
   const newSlug = fetchedMetaData?.slug ?? slug;
-  const newAttachments: Attachment[] = [];
+  const newAttachments: CategoryDataAttachment[] = [];
   for (const attachment of newMetaData.attachments) {
     if (attachment.filename instanceof File) {
       const filename = await addAttachment(
@@ -208,8 +208,8 @@ const permissionOptions = createOptions({
 });
 
 interface CategoryMetaDataEditorProps {
-  currentMetaData: CategoryMetaData;
-  onMetaDataChange: (newMetaData: CategoryMetaData) => void;
+  currentMetaData: CategoryData;
+  onMetaDataChange: (newMetaData: CategoryData) => void;
   close: () => void;
   offeredIn: (readonly [string, string])[];
 }
