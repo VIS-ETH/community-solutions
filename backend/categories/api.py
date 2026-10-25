@@ -166,8 +166,8 @@ class ListExamsResponse(Schema):
     filename: str
     category_displayname: str
     needs_payment: bool
-    examtype: str | None
-    remark: str | None
+    examtype: str
+    remark: str
     import_claim: str | None
     import_claim_displayname: str | None
     import_claim_time: str | None
@@ -244,10 +244,10 @@ class CategoryData(Schema):
     semester: str | None
     form: str | None
     permission: str | None
-    remark: str | None
+    remark: str
     has_payments: bool
     catadmin: bool
-    more_exams_link: str | None
+    more_exams_link: str
     pinned: bool
     attachments: list[dict[str, str]]
 
