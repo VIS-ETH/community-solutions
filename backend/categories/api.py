@@ -236,6 +236,11 @@ def list_exams(request, slug):
     return {"value": res}
 
 
+class CategoryDataAttachment(Schema):
+    displayname: str
+    filename: str
+
+
 class CategoryData(Schema):
     displayname: str
     slug: str
@@ -249,7 +254,7 @@ class CategoryData(Schema):
     catadmin: bool
     more_exams_link: str
     pinned: bool
-    attachments: list[dict[str, str]]
+    attachments: list[CategoryDataAttachment]
 
 
 def get_category_data(request, cat) -> CategoryData:
