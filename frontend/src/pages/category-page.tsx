@@ -1,4 +1,3 @@
-import { useRequest } from "ahooks";
 import {
   Breadcrumbs,
   Alert,
@@ -24,7 +23,6 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { useRemoveCategory } from "../api/hooks";
 import { UserContext, useUser } from "../auth";
 import CategoryMetaDataEditor from "../components/category-metadata-editor";
 import ExamList from "../components/exam-list";
@@ -47,10 +45,14 @@ import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSear
 import { UploadPdfForm } from "../components/upload-pdf-card";
 import { UploadTranscriptForm } from "../components/upload-transcript-card.js";
 import {
+  getGetCategoryMetadataQueryKey,
+  getListExamsQueryKey,
   useGetCategoryMetadata,
   useListMetaCategories,
+  useRemoveCategory,
 } from "../api/hooks/categories";
 import { CategoryData } from "../api/model";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface CategoryPageContentProps {
   onMetaDataChange: (newMetaData: CategoryData) => void;
@@ -70,13 +72,32 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
     },
   });
   const navigate = useNavigate();
-  const [removeLoading, remove] = useRemoveCategory(() => navigate("/"));
+  const queryClient = useQueryClient();
+  const { isPending: removeLoading, mutate: remove } = useRemoveCategory({
+    mutation: {
+      onSuccess: () => {
+        void navigate("/");
+        // Remove caches
+        queryClient.removeQueries({
+          queryKey: getGetCategoryMetadataQueryKey(metaData.slug),
+        });
+        queryClient.removeQueries({
+          queryKey: getListExamsQueryKey(metaData.slug),
+        });
+        // Invalidate caches for all category listings (e.g. quicksearch box)
+        void queryClient.invalidateQueries({
+          predicate: ({ queryKey: [key] }) =>
+            typeof key === "string" && key.startsWith("/api/category/list"),
+        });
+      },
+    },
+  });
   const [removeConfirm, modals] = useRemoveConfirm();
   const onRemove = useCallback(
     () =>
       removeConfirm(
         `Do you really want to remove the category "${metaData.displayname}"?`,
-        () => remove(metaData.slug),
+        () => remove({ data: { slug: metaData.slug } }),
       ),
     [removeConfirm, remove, metaData],
   );

@@ -334,12 +334,6 @@ export const removeExam = async (filename: string) => {
   await fetchPost(`/api/exam/remove/exam/${filename}/`, {});
 };
 
-export const removeCategory = async (slug: string) => {
-  await fetchPost("/api/category/remove/", { slug });
-};
-export const useRemoveCategory = (onSuccess?: () => void) =>
-  useMutation(removeCategory, onSuccess);
-
 export const loadExamUserSolved = async (exam: string) => {
   return fetchGet<{ user_solved: boolean }>(`/api/exam/${exam}/usersolved`);
 };
