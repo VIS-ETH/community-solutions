@@ -40,12 +40,9 @@ import { ListCategoriesWithMetaResponse } from "../api/model";
 const displayNameGetter = (data: ListCategoriesWithMetaResponse) =>
   data.displayname;
 
-const loadCategories = async () => {
-  return (await listCategoriesWithMeta()).value;
-};
 const loadCategoryData = async () => {
   const [categories, metaCategories] = await Promise.all([
-    loadCategories(),
+    listCategoriesWithMeta().then(res => res.value),
     listMetaCategories().then(res => res.value),
   ]);
   return [
