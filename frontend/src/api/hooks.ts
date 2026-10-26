@@ -111,10 +111,6 @@ export const loadCuts = async (filename: string) => {
   return (await fetchGet(`/api/exam/cuts/${filename}/`))
     .value as ServerCutResponse;
 };
-export const loadPaymentCategories = async () => {
-  return (await fetchGet("/api/category/listonlypayment/"))
-    .value as CategoryMetaData[];
-};
 const loadAnswers = async (oid: string) => {
   const section = (await fetchGet(`/api/exam/answersection/${oid}/`))
     .value as AnswerSection;
