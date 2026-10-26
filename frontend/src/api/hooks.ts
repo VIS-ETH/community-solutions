@@ -4,8 +4,6 @@ import {
   Answer,
   AnswerSection,
   CategoryExam,
-  CategoryMetaData,
-  CategoryMetaDataMinimal,
   CutVersions,
   ExamMetaData,
   ServerCutResponse,
