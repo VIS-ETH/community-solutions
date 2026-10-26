@@ -183,7 +183,7 @@ class ListExamsResponse(Schema):
 
 @router.get(
     "listexams/{slug}/",
-    response={200: ValueWrapped[list[ListExamsResponse]]},
+    response={200: ValueWrapped[list[ListExamsResponse]], 404: response.ErrorSchema},
     operation_id="listExams",
 )
 def list_exams(request, slug):

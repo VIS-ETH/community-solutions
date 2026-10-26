@@ -8,7 +8,6 @@ import {
   CategoryMetaDataMinimal,
   CutVersions,
   ExamMetaData,
-  MetaCategory,
   ServerCutResponse,
   SingleComment,
   SearchResponse,
@@ -17,9 +16,6 @@ import {
 import PDF from "../pdf/pdf-renderer";
 import { getDocument } from "../pdf/pdfjs";
 import { fetchDelete, fetchGet, fetchPost, fetchPut } from "./fetch-utils";
-
-// Interval to consider "close succession" to de-dupe requests
-const RAPID_SUCCESSIVE_REQUESTS_DEDUPE_INTERVAL = 500; // milliseconds
 
 export declare type Mutate<R> = (x: R | undefined | ((data: R) => R)) => void;
 
@@ -90,14 +86,6 @@ export const uploadPdf = async (
 export const uploadTranscript = async (file: Blob, category: string) => {
   return (await fetchPost("/api/exam/upload/transcript/", { file, category }))
     .filename as string;
-};
-export const loadCategoryMetaData = async (slug: string) => {
-  return (await fetchGet(`/api/category/metadata/${slug}/`))
-    .value as CategoryMetaData;
-};
-export const loadList = async (slug: string) => {
-  return (await fetchGet(`/api/category/listexams/${slug}/`))
-    .value as CategoryExam[];
 };
 export const claimExam = async (filename: string, claim: boolean) => {
   await fetchPost(`/api/exam/claimexam/${filename}/`, {
