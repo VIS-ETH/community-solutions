@@ -1,8 +1,9 @@
 import { Alert, Button, Grid, Group } from "@mantine/core";
 import React, { useMemo, useState } from "react";
-import { useMetaCategories } from "../api/hooks";
 import { IconX } from "@tabler/icons-react";
 import Creatable from "./creatable";
+import { useListMetaCategories } from "../api/hooks/categories";
+import { Meta1CategoryResponse } from "../api/model";
 
 interface OfferedInEditorProps {
   offeredIn: (readonly [string, string])[];
@@ -13,10 +14,20 @@ const OfferedInEditor: React.FC<OfferedInEditorProps> = ({
   setOfferedIn,
 }) => {
   const [newMeta1, setNewMeta1] = useState("");
-  const meta1Value = useMemo(() => newMeta1, [newMeta1]);
   const [newMeta2, setNewMeta2] = useState("");
-  const meta2Value = useMemo(() => newMeta2, [newMeta2]);
-  const [error, loading, data, mutate] = useMetaCategories();
+  const {
+    error,
+    isPending: loading,
+    data: fetchedData,
+  } = useListMetaCategories({
+    query: {
+      select: ({ value }) => value,
+    },
+  });
+  const [mutatedData, setMutatedData] = useState<
+    Meta1CategoryResponse[] | undefined
+  >();
+  const data = mutatedData ?? fetchedData;
   const meta1Options: string[] = useMemo(
     () => data?.map(d => d.displayname) ?? [],
     [data],
@@ -36,7 +47,12 @@ const OfferedInEditor: React.FC<OfferedInEditorProps> = ({
   };
   const onMeta1Create = (value: string) => {
     if (data) {
-      mutate([{ displayname: value, meta2: [] }]);
+      setMutatedData([
+        {
+          displayname: value,
+          meta2: [],
+        },
+      ]);
     }
     return value;
   };
@@ -45,7 +61,7 @@ const OfferedInEditor: React.FC<OfferedInEditorProps> = ({
   };
   const onMeta2Create = (value: string) => {
     if (data) {
-      mutate([
+      setMutatedData([
         {
           displayname: newMeta1,
           meta2: data
@@ -99,7 +115,7 @@ const OfferedInEditor: React.FC<OfferedInEditorProps> = ({
                   `+ Create new Meta 1 "${query}"`
                 }
                 data={meta1Options}
-                value={meta1Value}
+                value={newMeta1}
                 onChange={onMeta1Change}
                 onCreate={onMeta1Create}
               />
@@ -113,7 +129,7 @@ const OfferedInEditor: React.FC<OfferedInEditorProps> = ({
                   `+ Create new Meta 2 "${query}"`
                 }
                 data={meta2Options}
-                value={meta2Value}
+                value={newMeta2}
                 onChange={onMeta2Change}
                 onCreate={onMeta2Create}
               />

@@ -16,7 +16,6 @@ import { useDisclosure, useLocalStorage } from "@mantine/hooks";
 import { useRequest } from "ahooks";
 import React, { useCallback, useMemo, useState } from "react";
 import { fetchPost } from "../api/fetch-utils";
-import { loadMetaCategories } from "../api/hooks";
 import { useUser } from "../auth";
 import CategoryCard from "../components/category-card";
 import RecentlyViewedExams from "../components/recently-viewed-exams";
@@ -32,7 +31,10 @@ import CollapseWrapper from "../components/collapse-wrapper";
 import { clsx } from "clsx";
 import classes from "../utils/focus-outline.module.css";
 import { slugify } from "../utils/slugify";
-import { listCategoriesWithMeta } from "../api/hooks/categories";
+import {
+  listCategoriesWithMeta,
+  listMetaCategories,
+} from "../api/hooks/categories";
 import { ListCategoriesWithMetaResponse } from "../api/model";
 
 const displayNameGetter = (data: ListCategoriesWithMetaResponse) =>
@@ -44,7 +46,7 @@ const loadCategories = async () => {
 const loadCategoryData = async () => {
   const [categories, metaCategories] = await Promise.all([
     loadCategories(),
-    loadMetaCategories(),
+    listMetaCategories().then(res => res.value),
   ]);
   return [
     categories.sort((a, b) => a.displayname.localeCompare(b.displayname)),

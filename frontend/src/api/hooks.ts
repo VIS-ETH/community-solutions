@@ -95,17 +95,6 @@ export const loadCategoryMetaData = async (slug: string) => {
   return (await fetchGet(`/api/category/metadata/${slug}/`))
     .value as CategoryMetaData;
 };
-export const loadMetaCategories = async () => {
-  return (await fetchGet("/api/category/listmetacategories/"))
-    .value as MetaCategory[];
-};
-export const useMetaCategories = () => {
-  const { error, loading, data, mutate } = useRequest(loadMetaCategories, {
-    cacheKey: "listmetacategories",
-    staleTime: RAPID_SUCCESSIVE_REQUESTS_DEDUPE_INTERVAL,
-  });
-  return [error, loading, data, mutate] as const;
-};
 export const loadList = async (slug: string) => {
   return (await fetchGet(`/api/category/listexams/${slug}/`))
     .value as CategoryExam[];

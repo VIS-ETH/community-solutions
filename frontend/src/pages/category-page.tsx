@@ -24,7 +24,7 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { loadMetaCategories, useRemoveCategory } from "../api/hooks";
+import { useRemoveCategory } from "../api/hooks";
 import { UserContext, useUser } from "../auth";
 import CategoryMetaDataEditor from "../components/category-metadata-editor";
 import ExamList from "../components/exam-list";
@@ -46,7 +46,10 @@ import {
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
 import { UploadPdfForm } from "../components/upload-pdf-card";
 import { UploadTranscriptForm } from "../components/upload-transcript-card.js";
-import { useGetCategoryMetadata } from "../api/hooks/categories";
+import {
+  useGetCategoryMetadata,
+  useListMetaCategories,
+} from "../api/hooks/categories";
 import { CategoryData } from "../api/model";
 
 interface CategoryPageContentProps {
@@ -57,8 +60,14 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
   onMetaDataChange,
   metaData,
 }) => {
-  const { data, loading, run } = useRequest(loadMetaCategories, {
-    cacheKey: "meta-categories",
+  const {
+    data,
+    isPending: loading,
+    refetch: run,
+  } = useListMetaCategories({
+    query: {
+      select: ({ value }) => value,
+    },
   });
   const navigate = useNavigate();
   const [removeLoading, remove] = useRemoveCategory(() => navigate("/"));
