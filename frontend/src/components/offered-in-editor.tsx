@@ -47,12 +47,14 @@ const OfferedInEditor: React.FC<OfferedInEditorProps> = ({
   };
   const onMeta1Create = (value: string) => {
     if (data) {
-      setMutatedData([
-        {
-          displayname: value,
-          meta2: [],
-        },
-      ]);
+      setMutatedData(
+        data.concat([
+          {
+            displayname: value,
+            meta2: [],
+          },
+        ]),
+      );
     }
     return value;
   };
@@ -61,14 +63,17 @@ const OfferedInEditor: React.FC<OfferedInEditorProps> = ({
   };
   const onMeta2Create = (value: string) => {
     if (data) {
-      setMutatedData([
-        {
-          displayname: newMeta1,
-          meta2: data
-            .find(d => d.displayname === newMeta1)!
-            .meta2.concat({ displayname: value, categories: [] }),
-        },
-      ]);
+      setMutatedData(
+        data.map(d => {
+          if (d.displayname === newMeta1) {
+            return {
+              ...d,
+              meta2: d.meta2.concat({ displayname: value, categories: [] }),
+            };
+          }
+          return d;
+        }),
+      );
     }
     return value;
   };
