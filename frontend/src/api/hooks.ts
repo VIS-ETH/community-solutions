@@ -50,10 +50,6 @@ export const useUserComments = (username: string, page: number = -1) => {
   return [error, loading, data, run] as const;
 };
 
-export const loadAllCategories = async () => {
-  return (await fetchGet("/api/category/listwithmeta/"))
-    .value as CategoryMetaDataMinimal[];
-};
 export const loadExamTypes = async () => {
   return (await fetchGet("/api/exam/listexamtypes/")).value as string[];
 };

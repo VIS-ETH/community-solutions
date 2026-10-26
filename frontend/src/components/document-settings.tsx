@@ -12,11 +12,9 @@ import {
   Grid,
   Loader,
 } from "@mantine/core";
-import { useRequest } from "ahooks";
 import React, { lazy, Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePendingImages } from "./Editor/pending-images";
-import { loadAllCategories } from "../api/hooks";
 import { createOptions, options } from "../utils/ts-utils";
 import CreateDocumentFileModal from "./create-document-file-modal";
 import DocumentFileItem from "./document-file-item";
@@ -40,6 +38,7 @@ import {
 } from "../api/hooks/documents";
 import type { DocumentSchema } from "../api/model/documentSchema";
 import type { UserSchema } from "../api/model/userSchema";
+import { useListCategoriesWithMeta } from "../api/hooks/categories";
 
 const Editor = lazy(() => import("./Editor"));
 
@@ -50,7 +49,11 @@ interface Props {
 
 const DocumentSettings: React.FC<Props> = ({ document, refetch }) => {
   const navigate = useNavigate();
-  const { data: categories } = useRequest(loadAllCategories);
+  const { data: categories } = useListCategoriesWithMeta({
+    query: {
+      select: ({ value }) => value,
+    },
+  });
   const categoryOptions =
     categories &&
     createOptions(
@@ -74,7 +77,7 @@ const DocumentSettings: React.FC<Props> = ({ document, refetch }) => {
 
         if (newDocument.slug !== document.slug) {
           void navigate(
-            `/user/${newDocument.author}/document/${newDocument.slug}`,
+            `/user/${newDocument.author.username}/document/${newDocument.slug}`,
             {
               replace: true,
             },

@@ -9,7 +9,7 @@ import {
   Select,
 } from "@mantine/core";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { loadAllCategories, loadExamMetaData } from "../api/hooks.js";
+import { loadExamMetaData } from "../api/hooks";
 import { useRequest } from "ahooks";
 import { createOptions, options } from "../utils/ts-utils.js";
 import { usePdfUrl } from "./official-solution.js";
@@ -25,7 +25,7 @@ import "react-image-crop/dist/ReactCrop.css";
 import type { ExamMetaData } from "../interfaces.js";
 import { useLocation } from "react-router-dom";
 import { ReactRouterLocation } from "@grafana/faro-react";
-import { listExams } from "../api/hooks/categories.js";
+import { listExams, useListCategoriesWithMeta } from "../api/hooks/categories";
 
 function formatCoordinate(c: number): string {
   const rounded = Math.round(c * 1e6) / 1e6;
@@ -269,8 +269,10 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
     };
   }, [location]);
 
-  const { data: categories } = useRequest(loadAllCategories, {
-    cacheKey: "categories",
+  const { data: categories } = useListCategoriesWithMeta({
+    query: {
+      select: ({ value }) => value,
+    },
   });
   const categoriesMap = useMemo(
     () =>
