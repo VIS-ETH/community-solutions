@@ -74,7 +74,10 @@ class ListCategoriesBasicResponse(Schema):
 
 @router.get(
     "listonlyadmin/",
-    response={200: ValueWrapped[list[ListCategoriesBasicResponse]]},
+    response={
+        200: ValueWrapped[list[ListCategoriesBasicResponse]],
+        403: response.ErrorSchema,
+    },
     operation_id="listCategoriesOnlyAdmin",
 )
 @auth_check.require_login
@@ -93,7 +96,10 @@ def list_categories_only_admin(request):
 
 @router.get(
     "listonlypayment/",
-    response={200: ValueWrapped[list[ListCategoriesBasicResponse]]},
+    response={
+        200: ValueWrapped[list[ListCategoriesBasicResponse]],
+        403: response.ErrorSchema,
+    },
     operation_id="listCategoriesOnlyPayment",
 )
 @auth_check.require_login
@@ -108,7 +114,11 @@ def list_categories_only_payment(request):
     return {"value": res}
 
 
-@router.post("add/", response={200: ValueWrapped[str]}, operation_id="addCategory")
+@router.post(
+    "add/",
+    response={200: ValueWrapped[str], 403: response.ErrorSchema},
+    operation_id="addCategory",
+)
 @auth_check.require_admin
 def add_category(request, category: Form[str]):
     slug = create_category_slug(category)
@@ -149,7 +159,11 @@ def create_category_slug(category, ignored_pk=None):
     return slug
 
 
-@router.post("remove/", response={200: None}, operation_id="removeCategory")
+@router.post(
+    "remove/",
+    response={200: None, 403: response.ErrorSchema},
+    operation_id="removeCategory",
+)
 @auth_check.require_admin
 def remove_category(request, slug: Form[str]):
     cat = get_object_or_404(Category, slug=slug)
@@ -299,7 +313,11 @@ def get_category_data(request, cat) -> CategoryData:
 
 @router.get(
     "metadata/{slug}/",
-    response={200: ValueWrapped[CategoryData], 404: response.ErrorSchema},
+    response={
+        200: ValueWrapped[CategoryData],
+        403: response.ErrorSchema,
+        404: response.ErrorSchema,
+    },
     operation_id="getCategoryMetadata",
 )
 @auth_check.require_login
@@ -321,7 +339,11 @@ class SetMetadataRequest(Schema):
 
 @router.post(
     "setmetadata/{slug}/",
-    response={200: ValueWrapped[CategoryData], 404: response.ErrorSchema},
+    response={
+        200: ValueWrapped[CategoryData],
+        403: response.ErrorSchema,
+        404: response.ErrorSchema,
+    },
     operation_id="setCategoryMetadata",
 )
 @auth_check.require_admin
@@ -358,7 +380,7 @@ def set_metadata(
 
 @router.post(
     "addusertoset/{slug}/",
-    response={204: None, 404: response.ErrorSchema},
+    response={204: None, 403: response.ErrorSchema, 404: response.ErrorSchema},
     operation_id="addUserToCategorySet",
 )
 @auth_check.require_admin
@@ -380,7 +402,7 @@ def add_user_to_set(request, slug: str, key: Form[str], user: Form[str]):
 
 @router.post(
     "removeuserfromset/{slug}/",
-    response={204: None, 404: response.ErrorSchema},
+    response={204: None, 403: response.ErrorSchema, 404: response.ErrorSchema},
     operation_id="removeUserFromCategorySet",
 )
 @auth_check.require_admin
@@ -452,7 +474,7 @@ def list_metacategories(request):
 
 @router.post(
     "addmetacategory/",
-    response={204: None, 404: response.ErrorSchema},
+    response={204: None, 403: response.ErrorSchema, 404: response.ErrorSchema},
     operation_id="addMetaCategory",
 )
 @auth_check.require_admin
@@ -467,7 +489,7 @@ def add_metacategory(request, meta1: Form[str], meta2: Form[str], category: Form
 
 @router.post(
     "removemetacategory/",
-    response={204: None, 404: response.ErrorSchema},
+    response={204: None, 403: response.ErrorSchema, 404: response.ErrorSchema},
     operation_id="removeMetaCategory",
 )
 @auth_check.require_admin
@@ -487,7 +509,7 @@ def remove_metacategory(
 
 @router.post(
     "deletemeta1/",
-    response={204: None, 404: response.ErrorSchema},
+    response={204: None, 403: response.ErrorSchema, 404: response.ErrorSchema},
     operation_id="deleteMetaCategory1",
 )
 @auth_check.require_admin
@@ -499,7 +521,7 @@ def delete_meta1(request, meta1: Form[str]):
 
 @router.post(
     "deletemeta2/",
-    response={204: None, 404: response.ErrorSchema},
+    response={204: None, 403: response.ErrorSchema, 404: response.ErrorSchema},
     operation_id="deleteMetaCategory2",
 )
 @auth_check.require_admin
@@ -512,7 +534,7 @@ def delete_meta2(request, meta1: Form[str], meta2: Form[str]):
 
 @router.post(
     "editmeta1/",
-    response={204: None, 404: response.ErrorSchema},
+    response={204: None, 403: response.ErrorSchema, 404: response.ErrorSchema},
     operation_id="editMetaCategory1",
 )
 @auth_check.require_admin
@@ -527,7 +549,7 @@ def edit_meta1(request, oldmeta1: Form[str], newmeta1: Form[str]):
 
 @router.post(
     "editmeta2/",
-    response={204: None, 404: response.ErrorSchema},
+    response={204: None, 403: response.ErrorSchema, 404: response.ErrorSchema},
     operation_id="editMetaCategory2",
 )
 @auth_check.require_admin
@@ -558,7 +580,7 @@ def edit_meta2(
 
 @router.post(
     "setmetacategoryorder/",
-    response={204: None, 404: response.ErrorSchema},
+    response={204: None, 403: response.ErrorSchema, 404: response.ErrorSchema},
     operation_id="setMetaCategoryOrder",
 )
 @auth_check.require_admin
@@ -582,7 +604,11 @@ class CategoryUserPinnedResponse(Schema):
 
 @router.put(
     "{slug}/pinned/",
-    response={200: CategoryUserPinnedResponse, 404: response.ErrorSchema},
+    response={
+        200: CategoryUserPinnedResponse,
+        403: response.ErrorSchema,
+        404: response.ErrorSchema,
+    },
     operation_id="setCategoryPin",
 )
 @auth_check.require_login
@@ -597,7 +623,11 @@ def set_category_pin(request, slug: str):
 
 @router.get(
     "{slug}/pinned/",
-    response={200: CategoryUserPinnedResponse, 404: response.ErrorSchema},
+    response={
+        200: CategoryUserPinnedResponse,
+        403: response.ErrorSchema,
+        404: response.ErrorSchema,
+    },
     operation_id="getCategoryPin",
 )
 @auth_check.require_login
@@ -611,7 +641,11 @@ def get_category_pin(request, slug: str):
 
 @router.delete(
     "{slug}/pinned/",
-    response={200: CategoryUserPinnedResponse, 404: response.ErrorSchema},
+    response={
+        200: CategoryUserPinnedResponse,
+        403: response.ErrorSchema,
+        404: response.ErrorSchema,
+    },
     operation_id="deleteCategoryPin",
 )
 @auth_check.require_login
