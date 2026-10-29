@@ -1,6 +1,7 @@
 import os
 from datetime import timedelta
 from itertools import cycle
+from pathlib import Path
 
 from django.conf import settings
 from django.core.management import call_command
@@ -83,6 +84,10 @@ class Command(BaseCommand):
 
     def create_images(self):
         self.stdout.write("Create images")
+        test_image = Path(settings.COMSOL_ASSETS_FOLDER) / "static" / "test_image.svg"
+        test_image = test_image.read_text()
+
+        counter = 0
         for user in MyUser.objects.all():
             for _i in range(user.id % 10 + 5):
                 filename = s3_util.generate_filename(
@@ -92,6 +97,15 @@ class Command(BaseCommand):
                     settings.COMSOL_IMAGE_DIR,
                     filename,
                     f"{settings.COMSOL_ASSETS_FOLDER}/static/test_image.svg",
+                )
+                test_image_n = test_image.replace("%counter", str(counter))
+                counter += 1
+
+                s3_util.save_to_s3(
+                    settings.COMSOL_IMAGE_DIR,
+                    filename,
+                    test_image_n.encode(),
+                    "image/svg+xml",
                 )
                 Image(filename=filename, owner=user).save()
 
@@ -109,6 +123,9 @@ class Command(BaseCommand):
     def create_categories(self):
         self.stdout.write("Create categories")
         Category(displayname="default", slug="default").save()
+
+        users = list(MyUser.objects.all())
+
         for i in range(len(category_adjectives) * len(category_nouns)):
             self.stdout.write("Creating category " + str(i + 1))
             category = Category(
@@ -120,23 +137,28 @@ class Command(BaseCommand):
                 slug="category" + str(i + 1),
                 form=(["written"] * 5 + ["oral"])[i % 6],
                 remark=[
-                    "Test remark",
-                    "Slightly longer remark",
-                    "This is a very long remark.\nIt even has multiple lines.\nHowever, it is not useful at all.\n\nThank you for reading!",
+                    f"Test remark ({i})",
+                    f"Slightly longer remark ({i})",
+                    f"This is a very long remark ({i}).\nIt even has multiple lines.\nHowever, it is not useful at all.\n\nThank you for reading!",
                 ][i % 3],
                 semester=["HS", "FS"][i % 2],
                 permission="public",
                 has_payments=(i % 5 == 0),
             )
             category.save()
-            for j, user in enumerate(MyUser.objects.all()):
-                if (i + j) % 6 == 0:
-                    category.admins.add(user)
-                if (i + j) % 9 == 0:
-                    category.experts.add(user)
-            for j, meta in enumerate(MetaCategory.objects.all()):
-                if (i + j) % 4 == 0:
-                    category.meta_categories.add(meta)
+
+            admins = [user for j, user in enumerate(users) if (i + j) % 6 == 0]
+            experts = [user for j, user in enumerate(users) if (i + j) % 9 == 0]
+            meta_categories = [
+                meta
+                for j, meta in enumerate(MetaCategory.objects.all())
+                if (i + j) % 4 == 0
+            ]
+
+            category.admins.add(*admins)
+            category.experts.add(*experts)
+            category.meta_categories.add(*meta_categories)
+
             category.save()
 
     def create_exam_types(self):
@@ -232,6 +254,8 @@ class Command(BaseCommand):
         self.stdout.write("Create answers")
         users = MyUser.objects.all()
         objs = []
+        counter = 0
+
         for section in AnswerSection.objects.all():
             for i in range(section.id % 5):
                 author = users[(section.id + i) % len(users)]
@@ -239,25 +263,37 @@ class Command(BaseCommand):
                 # Warning: owned_image may be none if there was a user who
                 # logged in during this command's execution
                 owned_image = Image.objects.filter(owner=author).first()
+
                 answer = Answer(
                     answer_section=section,
                     author=author,
                     text=[
-                        "This is a test answer.\n\nIt has multiple lines.",
-                        "This is maths: $\\pi = 3$\n\nHowever, it is wrong.",
+                        f"This is a test answer.\n\nIt has multiple lines. ({counter})",
+                        f"This is maths: $\\pi = 3$\n\nHowever, it is wrong. ({counter})",
                         (
-                            f"This is an image: ![Testimage]({owned_image.filename})"
+                            f"This is an image ({counter}): ![Testimage]({owned_image.filename})"
                             if owned_image
                             else ""
                         ),
                     ][(section.id + i) % 3],
                 )
+                counter += 1
+
                 if i == 6:
                     answer.kind = Answer.Kind.LEGACY
                 objs.append(answer)
+
         Answer.objects.bulk_create(objs)
 
         self.stdout.write("Create upvote/downvote/flags on answers")
+
+        AnswerUpvote = answer.upvotes.through
+        AnswerDownvote = answer.downvotes.through
+        AnswerFlag = answer.flagged.through
+
+        upvotes = []
+        downvotes = []
+        flags = []
 
         for answer in Answer.objects.all():
             i = answer.answer_section.id
@@ -265,16 +301,24 @@ class Command(BaseCommand):
                 if user == answer.author:
                     continue
                 if (i + user.id) % 4 == 0:
-                    answer.upvotes.add(user)
+                    upvotes.append(AnswerUpvote(answer_id=answer.id, user_id=user.id))
                 elif (i + user.id) % 7 == 1:
-                    answer.downvotes.add(user)
+                    downvotes.append(
+                        AnswerDownvote(answer_id=answer.id, user_id=user.id)
+                    )
                 elif (i + user.id) % 9 == 0:
-                    answer.flagged.add(user)
+                    flags.append(AnswerFlag(answer_id=answer.id, user_id=user.id))
+
+        AnswerUpvote.objects.bulk_create(upvotes)
+        AnswerDownvote.objects.bulk_create(downvotes)
+        AnswerFlag.objects.bulk_create(flags)
 
     def create_comments(self):
         self.stdout.write("Create comments")
         users = MyUser.objects.all()
         objs = []
+
+        counter = 0
         for answer in Answer.objects.all():
             for i in range(answer.id % 10):
                 author = users[(answer.id + i) % len(users)]
@@ -286,14 +330,15 @@ class Command(BaseCommand):
                     answer=answer,
                     author=author,
                     text=[
-                        f"This is a comment ({i + 1}).",
+                        f"This is a comment ({counter}).",
                         (
-                            f"This is a test image: ![Testimage]({owned_image.filename})"
+                            f"This is a test image ({counter}): ![Testimage]({owned_image.filename})"
                             if owned_image
                             else ""
                         ),
                     ][(answer.id + i) % 2],
                 )
+                counter += 1
                 objs.append(comment)
 
         Comment.objects.bulk_create(objs)
@@ -303,11 +348,17 @@ class Command(BaseCommand):
         # which it needs to associate a report to a comment
         comments = Comment.objects.all()
 
+        CommentFlag = Comment.flagged.through
+
+        flags = []
+
         for comment in comments[::23]:
             # Create 1-4 (incl.) flags for this comment
             for i in range(comment.id % 5):
                 reporter = users[(comment.id + i) % len(users)]
-                comment.flagged.add(reporter)
+                flags.append(CommentFlag(comment_id=comment.id, user_id=reporter.id))
+
+        CommentFlag.objects.bulk_create(flags)
 
     def create_marked_as_ai_testcases(self):
         self.stdout.write("Create marked as AI test cases (5, 6 marks)")
