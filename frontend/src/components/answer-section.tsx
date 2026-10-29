@@ -11,8 +11,18 @@ import {
   Text,
 } from "@mantine/core";
 import React, { useCallback, useEffect, useState } from "react";
-import { getAnswerSection, useRemoveCut } from "../api/hooks/answers";
-import { AnswerSchema, AnswerSectionSchema, AnswerKind } from "../api/model";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  getGetAnswerSectionQueryKey,
+  useGetAnswerSection,
+  useRemoveCut,
+} from "../api/hooks/answers";
+import {
+  AnswerSchema,
+  AnswerSectionSchema,
+  AnswerKind,
+  ValueWrappedAnswerSectionSchema,
+} from "../api/model";
 import { useUser } from "../auth";
 import useInitialState from "../hooks/useInitialState";
 import AnswerComponent from "./answer";
@@ -33,6 +43,16 @@ import classes from "./answer-section.module.css";
 import { useDisclosure } from "@mantine/hooks";
 import AnswerSectionButtons from "./answer-section-buttons";
 import AnswerSectionModal from "./answer-section-overlay";
+
+const getScore = (answer: AnswerSchema) =>
+  answer.expertVotes * 10 + answer.upvotes;
+
+const selectSortedSection = ({
+  value,
+}: ValueWrappedAnswerSectionSchema): AnswerSectionSchema => ({
+  ...value,
+  answers: [...value.answers].sort((a, b) => getScore(b) - getScore(a)),
+});
 
 interface NameCardProps {
   id: string;
@@ -190,15 +210,15 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
     onHasAnswersChange,
     has_answers,
   }) {
-    const [data, setData] = useState<AnswerSectionSchema | undefined>();
-    const getScore = (answer: AnswerSchema) =>
-      answer.expertVotes * 10 + answer.upvotes;
-    const run = useCallback(async () => {
-      const { value: section } = await getAnswerSection(oid);
-      section.answers.sort((a, b) => getScore(b) - getScore(a));
-      setData(section);
-      setCutVersion(section.cutVersion);
-    }, [oid, setCutVersion]);
+    const queryClient = useQueryClient();
+    const [visible, containerElement] = useAlmostInViewport<HTMLDivElement>();
+    const { data, refetch } = useGetAnswerSection(oid, {
+      query: { enabled: !!visible || !hidden, select: selectSortedSection },
+    });
+    useEffect(() => {
+      if (data) setCutVersion(data.cutVersion);
+    }, [data, setCutVersion]);
+
     const [
       deleteWarningIsOpen,
       { open: openDeleteWarning, close: closeDeleteWarning },
@@ -216,22 +236,12 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
       [removeCut, oid],
     );
     const setAnswerSection = useCallback(
-      (newData: AnswerSectionSchema) => {
-        setCutVersion(newData.cutVersion);
-        setData(newData);
-        void run(); // refreshes the data if there's a new answer
-      },
-      [setCutVersion, run],
+      (newData: AnswerSectionSchema) =>
+        queryClient.setQueryData(getGetAnswerSectionQueryKey(oid), {
+          value: newData,
+        }),
+      [queryClient, oid],
     );
-
-    const [visible, containerElement] = useAlmostInViewport<HTMLDivElement>();
-
-    // initial run to get the answers in a section
-    useEffect(() => {
-      if ((visible || !hidden) && !data) {
-        void run();
-      }
-    }, [run, visible, hidden, data]);
 
     const [draftType, setDraftType] = useState<AnswerKind | null>(null);
     const onAddAnswer = useCallback(() => {
@@ -256,7 +266,7 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
     const hideAnswerSection = async () => {
       await onHasAnswersChange();
       closeHideWarning();
-      void run(); // updates data when setting visibility to hidden
+      void refetch(); // updates data when setting visibility to hidden
     };
     const hideAnswerSectionWithWarning = () => {
       if (data) {
