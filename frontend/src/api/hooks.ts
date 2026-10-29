@@ -15,7 +15,6 @@ const RAPID_SUCCESSIVE_REQUESTS_DEDUPE_INTERVAL = 500; // milliseconds
 
 export declare type Mutate<R> = (x: R | undefined | ((data: R) => R)) => void;
 
-
 export const loadCategories = async () => {
   return (await fetchGet("/api/category/listonlyadmin/"))
     .value as CategoryMetaDataMinimal[];
