@@ -31,20 +31,16 @@ const UserComments: React.FC<UserCommentsProps> = ({ username }) => {
     { page: -1 },
     { query: { select: data => data.value } },
   );
-  const [comments, setComments] = useState(data);
   const [lastElement, setLastElement] = useState<HTMLDivElement | null>(null);
 
   const PAGE_SIZE = 10; // loads a limited amount of new elements at a time when scrolling down
 
-  useEffect(() => {
-    if (data) setComments([...data]);
-  }, [data]);
-
-  // resets the cards if we're on a new users page
-  useEffect(() => {
+  // resets the slice when we're on a new user's page
+  const [prevUsername, setPrevUsername] = useState(username);
+  if (username !== prevUsername) {
+    setPrevUsername(username);
     setPage(0);
-    setComments(undefined);
-  }, [username]);
+  }
 
   // sets the observer to the last element once it is rendered
   useEffect(() => {
@@ -69,11 +65,11 @@ const UserComments: React.FC<UserCommentsProps> = ({ username }) => {
   return (
     <>
       {error && <Alert color="red">{error as unknown as string}</Alert>}
-      {(!comments || comments.length === 0) && !loading && (
+      {(!data || data.length === 0) && !loading && (
         <Alert color="gray">No comments</Alert>
       )}
       <div className={classes.column}>
-        {comments?.slice(0, (page + 1) * PAGE_SIZE).map(comment => (
+        {data?.slice(0, (page + 1) * PAGE_SIZE).map(comment => (
           <div key={comment.oid}>
             <SingleCommentComponent
               comment={comment}
