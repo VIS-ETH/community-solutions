@@ -208,3 +208,15 @@ class TestAuth(ComsolTest):
         )
         logging.disable(logging.NOTSET)
         self.assertEqual(response.status_code, 403)
+
+    def test_get_logout(self):
+        user = self.nonAdminUsers[0]
+        self.login_as(user)
+
+        self.get("/api/notification/unreadcount/", status_code=200)
+
+        # GET logout must fail
+        self.get("/api/auth/logout", status_code=405, test_post=False, as_json=False)
+
+        # Still logged in
+        self.get("/api/notification/unreadcount/", status_code=200)
