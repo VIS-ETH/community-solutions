@@ -47,9 +47,24 @@ export function login(redirectUrl = window.location.pathname) {
 }
 
 export function logout(redirectUrl = window.location.pathname) {
-  window.location.href = `/api/auth/logout?rd=${encodeURIComponent(
-    redirectUrl,
-  )}`;
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = "/api/auth/logout";
+
+  const rdInput = document.createElement("input");
+  rdInput.name = "rd";
+  rdInput.value = redirectUrl;
+  rdInput.type = "hidden";
+  form.append(rdInput);
+
+  const csrfInput = document.createElement("input");
+  csrfInput.name = "csrfmiddlewaretoken";
+  csrfInput.value = getCookie("csrftoken") ?? "";
+  csrfInput.type = "hidden";
+  form.append(csrfInput);
+
+  document.body.append(form);
+  form.submit();
 }
 
 export function refreshToken() {

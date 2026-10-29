@@ -15,6 +15,7 @@ from django.http.response import (
     HttpResponseServerError,
 )
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.csrf import csrf_protect
 
 from myauth import auth_check
 from util import response
@@ -305,11 +306,12 @@ def refresh(request: HttpRequest):
     return response
 
 
+@csrf_protect
 def logout(request: HttpRequest):
-    if request.method != "GET":
-        return HttpResponseNotAllowed(["GET"])
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
 
-    redirect_url = request.GET.get("rd", "/")
+    redirect_url = request.POST.get("rd", "/")
     # Check whether the redirect url is allowed: Only allow redirects to the same application
     if not url_has_allowed_host_and_scheme(
         redirect_url, settings.REAL_ALLOWED_HOSTS, settings.SECURE
