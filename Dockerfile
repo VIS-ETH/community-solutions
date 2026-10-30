@@ -48,7 +48,7 @@ COPY --chown=app-user:app-user ./configs/pgbouncer ./pgbouncer
 
 # -------------------------------
 
-FROM node:24-alpine AS frontend-base
+FROM node:26-alpine AS frontend-base
 
 WORKDIR /usr/src/app
 COPY ./frontend/package.json \
