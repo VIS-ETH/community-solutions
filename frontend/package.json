@@ -17,7 +17,7 @@
     "clsx": "^2.1.0",
     "date-fns": "^4.0.0",
     "jszip": "^3.10.0",
-    "katex": "^0.16.9",
+    "katex": "^0.19.0",
     "lodash-es": "^4.17.21",
     "pdfjs-dist": "^6.0.0",
     "react": "^19.2.5",
@@ -59,7 +59,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.38.0",
-    "@rolldown/plugin-babel": "^0.2.3",
+    "@rolldown/plugin-babel": "^0.3.0",
     "@types/lodash-es": "^4.17.5",
     "@types/node": "^24.19.2",
     "@types/react": "^19.2.14",
