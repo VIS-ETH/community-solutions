@@ -1,4 +1,3 @@
-import { useRequest } from "ahooks";
 import {
   Breadcrumbs,
   Alert,
@@ -24,11 +23,6 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import {
-  loadCategoryMetaData,
-  loadMetaCategories,
-  useRemoveCategory,
-} from "../api/hooks";
 import { UserContext, useUser } from "../auth";
 import CategoryMetaDataEditor from "../components/category-metadata-editor";
 import ExamList from "../components/exam-list";
@@ -36,7 +30,6 @@ import LoadingOverlay from "../components/loading-overlay";
 import DocumentList from "../components/document-list";
 import useRemoveConfirm from "../hooks/useRemoveConfirm";
 import useTitle from "../hooks/useTitle";
-import { CategoryMetaData } from "../interfaces";
 import { getMetaCategoriesForCategory } from "../utils/category-utils";
 import serverData from "../utils/server-data";
 import {
@@ -51,26 +44,60 @@ import {
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
 import { UploadPdfForm } from "../components/upload-pdf-card";
 import { UploadTranscriptForm } from "../components/upload-transcript-card.js";
+import {
+  getGetCategoryMetadataQueryKey,
+  getListExamsQueryKey,
+  useGetCategoryMetadata,
+  useListMetaCategories,
+  useRemoveCategory,
+} from "../api/hooks/categories";
+import { CategoryData } from "../api/model";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface CategoryPageContentProps {
-  onMetaDataChange: (newMetaData: CategoryMetaData) => void;
-  metaData: CategoryMetaData;
+  onMetaDataChange: (newMetaData: CategoryData) => void;
+  metaData: CategoryData;
 }
 const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
   onMetaDataChange,
   metaData,
 }) => {
-  const { data, loading, run } = useRequest(loadMetaCategories, {
-    cacheKey: "meta-categories",
+  const {
+    data,
+    isPending: loading,
+    refetch: run,
+  } = useListMetaCategories({
+    query: {
+      select: ({ value }) => value,
+    },
   });
   const navigate = useNavigate();
-  const [removeLoading, remove] = useRemoveCategory(() => navigate("/"));
+  const queryClient = useQueryClient();
+  const { isPending: removeLoading, mutate: remove } = useRemoveCategory({
+    mutation: {
+      onSuccess: () => {
+        void navigate("/");
+        // Remove caches
+        queryClient.removeQueries({
+          queryKey: getGetCategoryMetadataQueryKey(metaData.slug),
+        });
+        queryClient.removeQueries({
+          queryKey: getListExamsQueryKey(metaData.slug),
+        });
+        // Invalidate caches for all category listings (e.g. quicksearch box)
+        void queryClient.invalidateQueries({
+          predicate: ({ queryKey: [key] }) =>
+            typeof key === "string" && key.startsWith("/api/category/list"),
+        });
+      },
+    },
+  });
   const [removeConfirm, modals] = useRemoveConfirm();
   const onRemove = useCallback(
     () =>
       removeConfirm(
         `Do you really want to remove the category "${metaData.displayname}"?`,
-        () => remove(metaData.slug),
+        () => remove({ data: { slug: metaData.slug } }),
       ),
     [removeConfirm, remove, metaData],
   );
@@ -81,7 +108,7 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
   );
   const user = useUser()!;
   const editorOnMetaDataChange = useCallback(
-    (newMetaData: CategoryMetaData) => {
+    (newMetaData: CategoryData) => {
       onMetaDataChange(newMetaData);
       void run();
     },
@@ -337,19 +364,20 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
 
 const CategoryPage: React.FC = () => {
   const { slug } = useParams() as { slug: string };
-  const { data, loading, error, mutate } = useRequest(
-    () => loadCategoryMetaData(slug),
-    { cacheKey: `category-${slug}`, refreshDeps: [slug] },
-  );
+  const { data, isPending, error, refetch } = useGetCategoryMetadata(slug, {
+    query: {
+      select: ({ value }) => value,
+    },
+  });
   const navigate = useNavigate();
   const onMetaDataChange = useCallback(
-    (newMetaData: CategoryMetaData) => {
-      mutate(newMetaData);
+    (newMetaData: CategoryData) => {
+      void refetch();
       if (slug !== newMetaData.slug) {
         void navigate(`/category/${newMetaData.slug}`);
       }
     },
-    [mutate, navigate, slug],
+    [refetch, navigate, slug],
   );
   useTitle(data?.displayname ?? slug);
   useQuickSearchFilter(
@@ -364,8 +392,8 @@ const CategoryPage: React.FC = () => {
         slug
       } /* we need key to make sure all state is reset when slug changes due to navigation */
     >
-      {error && <Alert color="red">{error.message}</Alert>}
-      {loading && <LoadingOverlay visible={loading} />}
+      {error && <Alert color="red">{error.err}</Alert>}
+      {isPending && <LoadingOverlay visible={isPending} />}
       {data && (
         <UserContext.Provider
           value={

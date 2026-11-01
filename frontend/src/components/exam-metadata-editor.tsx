@@ -21,7 +21,7 @@ import {
   fetchPost,
   fetchPut,
 } from "../api/fetch-utils";
-import { loadCategories, loadExamTypes } from "../api/hooks";
+import { loadExamTypes } from "../api/hooks";
 import useInitialState from "../hooks/useInitialState";
 import { Attachment, ExamMetaData } from "../interfaces";
 import { createOptions, options } from "../utils/ts-utils";
@@ -30,6 +30,7 @@ import FileInput from "./file-input";
 import useForm from "../hooks/useForm";
 import { IconDeviceFloppy, IconX } from "@tabler/icons-react";
 import Creatable from "./creatable";
+import { useListCategoriesOnlyAdmin } from "../api/hooks/categories";
 const stringKeys = [
   "displayname",
   "category",
@@ -178,7 +179,11 @@ const ExamMetadataEditor: React.FC<Props> = ({
   closeEditPage,
   onMetaDataChange,
 }) => {
-  const { data: categories } = useRequest(loadCategories);
+  const { data: categories } = useListCategoriesOnlyAdmin({
+    query: {
+      select: ({ value: data }) => data,
+    },
+  });
   const { data: examTypes } = useRequest(loadExamTypes);
   const categoryOptions =
     categories &&

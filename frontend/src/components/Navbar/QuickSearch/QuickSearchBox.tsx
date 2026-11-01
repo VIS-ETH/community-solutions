@@ -28,7 +28,7 @@ import {
   useOs,
 } from "@mantine/hooks";
 import { useDebounce, useRequest } from "ahooks";
-import { loadAllCategories, loadSearch } from "../../../api/hooks";
+import { loadSearch } from "../../../api/hooks";
 import { useUser } from "../../../auth";
 import {
   AnswerSearchResult,
@@ -45,6 +45,7 @@ import { QuickSearchResults } from "./QuickSearchResults";
 import { QuickSearchFilterContext } from "./QuickSearchFilterContext";
 import { useNavigate } from "react-router-dom";
 import { clsx } from "clsx";
+import { useListCategoriesWithMeta } from "../../../api/hooks/categories";
 
 /**
  * Return the max depth of an array.
@@ -83,8 +84,10 @@ export const QuickSearchBox: React.FC = () => {
     ref.current?.select();
   }, [ref, open]);
 
-  const categories = useRequest(loadAllCategories, {
-    cacheKey: "categories",
+  const { data: categories } = useListCategoriesWithMeta({
+    query: {
+      select: ({ value }) => value,
+    },
   });
 
   // QuickSearch should only be shown with a close button if it's ever shown
@@ -112,7 +115,7 @@ export const QuickSearchBox: React.FC = () => {
   const categoryResults = useSearch(
     // Disable category results (with an empty data list) if we're already
     // searching in a single category
-    isGlobal ? (categories.data ?? []) : [],
+    isGlobal ? (categories ?? []) : [],
     searchQuery,
     // We only really want to show almost-perfect matches for this component.
     // So the max error score we allow is 4 -- this value was found by trial and
@@ -230,7 +233,7 @@ export const QuickSearchBox: React.FC = () => {
       itemToPath(results[currentSelection.type][currentSelection.index]),
     );
     close();
-  }, [currentSelection, history, results, close]);
+  }, [currentSelection, navigate, results, close]);
 
   useEffect(() => {
     // Do some raw-JS scrollIntoView so that moving up/down via keyboard scrolls

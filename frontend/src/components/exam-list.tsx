@@ -1,10 +1,8 @@
 import { Alert, Button, Flex, Loader, Popover, TextInput } from "@mantine/core";
-import { useRequest } from "ahooks";
 import React, { useMemo, useState } from "react";
-import { loadList } from "../api/hooks";
 import { useUser } from "../auth";
 import useSet from "../hooks/useSet";
-import { CategoryMetaData, ExamSelectedForDownload } from "../interfaces";
+import { ExamSelectedForDownload } from "../interfaces";
 import {
   dlSelectedExams,
   filterMatches,
@@ -13,19 +11,22 @@ import {
 import ExamTypeSection from "./exam-type-section";
 import { IconDownload, IconSearch } from "@tabler/icons-react";
 import { Link } from "react-router-dom";
+import { CategoryData } from "../api/model";
+import { useListExams } from "../api/hooks/categories";
 
 interface ExamListProps {
-  metaData: CategoryMetaData;
+  metaData: CategoryData;
 }
 const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
   const {
     data,
-    loading,
+    isPending: loading,
     error,
-    run: reload,
-  } = useRequest(() => loadList(metaData.slug), {
-    refreshDeps: [metaData.slug],
-    cacheKey: `exam-list-${metaData.slug}`,
+    refetch: reload,
+  } = useListExams(metaData.slug, {
+    query: {
+      select: ({ value }) => value,
+    },
   });
   const [filter, setFilter] = useState("");
   const { isCategoryAdmin } = useUser()!;
@@ -58,7 +59,7 @@ const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
 
   return (
     <>
-      {error && <Alert color="red">{error.message}</Alert>}
+      {error && <Alert color="red">{error.err}</Alert>}
       {loading && <Loader />}
       <Flex
         direction={{ base: "column", sm: "row" }}

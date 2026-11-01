@@ -12,7 +12,8 @@ import { IconCloudUpload, IconDownload } from "@tabler/icons-react";
 import { useRequest } from "ahooks";
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loadPaymentCategories, uploadTranscript } from "../api/hooks";
+import { uploadTranscript } from "../api/hooks";
+import { useListCategoriesOnlyPayment } from "../api/hooks/categories";
 
 interface UploadTranscriptFormProps {
   category?: string;
@@ -24,9 +25,13 @@ export const UploadTranscriptForm: React.FC<UploadTranscriptFormProps> = ({
   const navigate = useNavigate();
   const {
     error: categoriesError,
-    loading: categoriesLoading,
+    isPending: categoriesLoading,
     data: categories,
-  } = useRequest(loadPaymentCategories);
+  } = useListCategoriesOnlyPayment({
+    query: {
+      select: ({ value }) => value,
+    },
+  });
   const {
     error: uploadError,
     loading: uploadLoading,
@@ -35,8 +40,9 @@ export const UploadTranscriptForm: React.FC<UploadTranscriptFormProps> = ({
     manual: true,
     onSuccess: filename => void navigate(`/exams/${filename}`),
   });
-  const [validationError, setValidationError] = useState("");
-  const error = categoriesError ?? uploadError ?? validationError;
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const error =
+    categoriesError?.err ?? uploadError?.toString() ?? validationError;
   const loading = categoriesLoading || uploadLoading;
 
   const options = useMemo(
@@ -55,6 +61,7 @@ export const UploadTranscriptForm: React.FC<UploadTranscriptFormProps> = ({
 
     const actualCategory = givenCategory ?? category;
     if (file && actualCategory) {
+      setValidationError(null);
       void upload(file, actualCategory);
     } else if (file === undefined) {
       setValidationError("No file selected");
@@ -74,7 +81,7 @@ export const UploadTranscriptForm: React.FC<UploadTranscriptFormProps> = ({
       </Button>
       <form onSubmit={onSubmit}>
         <Stack>
-          {error && <Alert color="red">{error.toString()}</Alert>}
+          {error && <Alert color="red">{error}</Alert>}
           <FileInput
             label="File"
             placeholder="Click to choose file..."

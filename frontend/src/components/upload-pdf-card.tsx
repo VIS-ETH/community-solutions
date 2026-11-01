@@ -12,7 +12,8 @@ import { IconCloudUpload } from "@tabler/icons-react";
 import { useRequest } from "ahooks";
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loadCategories, uploadPdf } from "../api/hooks";
+import { uploadPdf } from "../api/hooks";
+import { useListCategoriesOnlyAdmin } from "../api/hooks/categories";
 
 interface UploadPdfFormProps {
   category?: string;
@@ -24,10 +25,13 @@ export const UploadPdfForm: React.FC<UploadPdfFormProps> = ({
   const navigate = useNavigate();
   const {
     error: categoriesError,
-    loading: categoriesLoading,
+    isPending: categoriesLoading,
     data: categories,
-  } = useRequest(loadCategories, {
-    manual: !!givenCategory,
+  } = useListCategoriesOnlyAdmin({
+    query: {
+      enabled: !!givenCategory,
+      select: ({ value: data }) => data,
+    },
   });
   const {
     error: uploadError,

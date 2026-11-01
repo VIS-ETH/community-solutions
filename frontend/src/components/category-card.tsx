@@ -2,18 +2,23 @@ import { Card, Text, Progress, Anchor, Stack, Tooltip } from "@mantine/core";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authenticated, login } from "../api/fetch-utils";
-import { markCategoryUserPinned, unmarkCategoryUserPinned } from "../api/hooks";
 import { useUser } from "../auth";
 import { SearchResult } from "../hooks/useSearch";
-import { CategoryMetaData } from "../interfaces";
 import { highlight } from "../utils/search-utils";
 import { clsx } from "clsx";
 import classes from "../utils/focus-outline.module.css";
 import IconButton from "./icon-button";
 import { IconPin, IconPinnedFilled } from "@tabler/icons-react";
+import { ListCategoriesWithMetaResponse } from "../api/model";
+import {
+  useDeleteCategoryPin,
+  useSetCategoryPin,
+} from "../api/hooks/categories";
 
 interface Props {
-  category: SearchResult<CategoryMetaData> | CategoryMetaData;
+  category:
+    | SearchResult<ListCategoriesWithMetaResponse>
+    | ListCategoriesWithMetaResponse;
   reload: () => void;
 }
 const CategoryCard: React.FC<Props> = ({ category, reload }) => {
@@ -25,14 +30,25 @@ const CategoryCard: React.FC<Props> = ({ category, reload }) => {
       else void navigate(`/category/${category.slug}`);
     }
   };
-  const handleTogglePinned = async (event: React.SyntheticEvent) => {
+  const { mutate: markCategoryPinned } = useSetCategoryPin({
+    mutation: {
+      onSuccess: reload,
+    },
+  });
+  const { mutate: unmarkCategoryUserPinned } = useDeleteCategoryPin({
+    mutation: {
+      onSuccess: reload,
+    },
+  });
+
+  const handleTogglePinned = (event: React.SyntheticEvent) => {
     event.stopPropagation();
     event.preventDefault();
 
     if (category.pinned) {
-      await unmarkCategoryUserPinned(category.slug);
+      unmarkCategoryUserPinned({ slug: category.slug });
     } else {
-      await markCategoryUserPinned(category.slug);
+      markCategoryPinned({ slug: category.slug });
     }
 
     reload();

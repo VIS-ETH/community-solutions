@@ -6,7 +6,8 @@ import {
   ScrollArea,
   useCombobox,
 } from "@mantine/core";
-import { ReactNode, useState } from "react";
+import { ReactNode } from "react";
+import useInitialState from "../hooks/useInitialState";
 import classes from "./creatable.module.css";
 
 interface CreatableProps {
@@ -37,7 +38,7 @@ const Creatable: React.FC<CreatableProps> = ({
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
-  const [search, setSearch] = useState(value ?? "");
+  const [search, setSearch] = useInitialState(value ?? "");
 
   const exactOptionMatch = data.some(item => {
     return typeof item === "string" ? item === search : item.value === search;
