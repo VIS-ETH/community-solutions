@@ -2,6 +2,27 @@
 
 All changes to this project are documented here.
 
+## v2026.11.p0
+
+### Important for you
+
+- Fixed ZIP download hanging forever for documents without any files (!762)
+- Logout requests now use POST, hardening against CSRF (!795)
+- Fixed rendering of PDFs containing JBIG2 images (!776)
+- Auth errors are now shown to you on the login callback instead of failing silently (!773)
+- Feedback entries are now sorted correctly (!777)
+
+### Behind the scenes
+
+- Rewrote the Notifications, Payments, and Scoreboard APIs to be OpenAPI-compliant (!757, !759, !764)
+- New Dockerfile and removed cinit (!742)
+- Added backend tests and richer local test data (!755, !784)
+- Local observability for development (!774)
+- Migrate ahooks `useLocalStorageState` to Mantine `useLocalStorage` (!769)
+- Dependency updates (many Renovate merges)
+
+Many thanks to contributors Yuto, Luca, Jacques, Burak, and Junus.
+
 ## v2026.07.p1
 
 ### Fixed
