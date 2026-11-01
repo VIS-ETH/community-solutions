@@ -480,10 +480,12 @@ def list_metacategories(request):
 @auth_check.require_admin
 def add_metacategory(request, meta1: Form[str], meta2: Form[str], category: Form[str]):
     cat = get_object_or_404(Category, slug=category)
-    meta1, _ = MetaCategory.objects.get_or_create(displayname=meta1, parent=None)
-    meta2, _ = MetaCategory.objects.get_or_create(displayname=meta2, parent=meta1)
-    if not meta2.category_set.filter(pk=cat.pk).exists():
-        meta2.category_set.add(cat)
+    meta1_obj, _ = MetaCategory.objects.get_or_create(displayname=meta1, parent=None)
+    meta2_obj, _ = MetaCategory.objects.get_or_create(
+        displayname=meta2, parent=meta1_obj
+    )
+    if not meta2_obj.category_set.filter(pk=cat.pk).exists():
+        meta2_obj.category_set.add(cat)
     return response.success()
 
 
@@ -497,13 +499,13 @@ def remove_metacategory(
     request, meta1: Form[str], meta2: Form[str], category: Form[str]
 ):
     cat = get_object_or_404(Category, slug=category)
-    meta1 = get_object_or_404(MetaCategory, displayname=meta1, parent=None)
-    meta2 = get_object_or_404(MetaCategory, displayname=meta2, parent=meta1)
-    meta2.category_set.remove(cat)
-    if not meta2.category_set.exists():
-        meta2.delete()
-    if not meta1.metacategory_set.exists():
-        meta1.delete()
+    parent = get_object_or_404(MetaCategory, displayname=meta1, parent=None)
+    child = get_object_or_404(MetaCategory, displayname=meta2, parent=parent)
+    child.category_set.remove(cat)
+    if not child.category_set.exists():
+        child.delete()
+    if not parent.metacategory_set.exists():
+        parent.delete()
     return response.success()
 
 
