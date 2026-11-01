@@ -143,18 +143,18 @@ const applyChanges = async (
   }
   for (const [newMeta1, newMeta2] of newOfferedIn) {
     if (
-      oldOfferedIn.find(
+      !oldOfferedIn.some(
         ([meta1, meta2]) => meta1 === newMeta1 && meta2 === newMeta2,
-      ) === undefined
+      )
     ) {
       await addMetaCategory(newSlug, newMeta1, newMeta2);
     }
   }
   for (const [oldMeta1, oldMeta2] of oldOfferedIn) {
     if (
-      newOfferedIn.find(
+      !newOfferedIn.some(
         ([meta1, meta2]) => meta1 === oldMeta1 && meta2 === oldMeta2,
-      ) === undefined
+      )
     ) {
       await removeMetaCategory(newSlug, oldMeta1, oldMeta2);
     }
