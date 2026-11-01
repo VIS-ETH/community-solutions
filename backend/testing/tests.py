@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import TypedDict
 
 from django.test import Client, TestCase
 from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
@@ -43,8 +44,21 @@ def get_token(user):
     return "Bearer " + token.serialize()
 
 
+class ComsolTestUser(TypedDict):
+    sub: str
+    username: str
+    given_name: str
+    family_name: str
+    admin: bool
+    displayname: str
+
+
 class ComsolTest(TestCase):
     test_http_methods = True
+    nonAdminUsers: list[ComsolTestUser] = []
+    adminUsers: list[ComsolTestUser] = []
+    users: list[ComsolTestUser] = []
+    user: ComsolTestUser
 
     def get(self, path, status_code=200, test_post=True, as_json=True):
         if test_post and self.test_http_methods:

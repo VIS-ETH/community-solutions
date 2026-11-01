@@ -1,4 +1,5 @@
 import random
+from typing import TYPE_CHECKING
 
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVectorField
@@ -6,6 +7,9 @@ from django.db import models
 from django.db.models import Exists, OuterRef
 from django.utils import timezone
 from django_prometheus.models import ExportModelOperationsMixin
+
+if TYPE_CHECKING:
+    from django.db.models.fields.related_descriptors import RelatedManager
 
 from myauth import auth_check
 from util.models import CommentMixin
@@ -118,6 +122,9 @@ class AnswerSection(models.Model):
     name = models.CharField(max_length=256, default="")
     hidden = models.BooleanField(default=False)
     has_answers = models.BooleanField(default=True)
+
+    if TYPE_CHECKING:
+        answer_set: RelatedManager["Answer"]  # Answer.answer_section
 
 
 def generate_long_id():

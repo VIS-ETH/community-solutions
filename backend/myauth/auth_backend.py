@@ -2,6 +2,7 @@ import json
 import logging
 import urllib.request
 from datetime import UTC, datetime
+from typing import Any, cast
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
@@ -16,6 +17,12 @@ from notifications.models import NotificationSetting, NotificationType
 from util.func_cache import cache
 
 logger = logging.getLogger(__name__)
+
+
+class AuthHttpRequest(HttpRequest):
+    simulate_nonadmin: bool
+    claims: dict[str, Any]
+    roles: list[str]
 
 
 @cache(60)
@@ -58,6 +65,7 @@ def generate_unique_username(preferred_username):
 
 
 def add_auth(request: HttpRequest):
+    request = cast(AuthHttpRequest, request)
     request.user = None
     headers = request.headers
     request.simulate_nonadmin = "SimulateNonAdmin" in headers

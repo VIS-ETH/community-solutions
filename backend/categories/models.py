@@ -1,5 +1,13 @@
+from typing import TYPE_CHECKING
+
 from django.db import models
 from django_prometheus.models import ExportModelOperationsMixin
+
+if TYPE_CHECKING:
+    from django.db.models.fields.related_descriptors import RelatedManager
+
+    from answers.models import Exam
+    from documents.models import Document
 
 
 class Category(models.Model):
@@ -24,6 +32,11 @@ class Category(models.Model):
     meta_categories = models.ManyToManyField(
         "MetaCategory", related_name="category_set"
     )
+
+    if TYPE_CHECKING:
+        meta: "CategoryMetaData"  # CategoryMetaData.category (related_name="meta")
+        exam_set: RelatedManager[Exam]  # answers.Exam.category
+        document_set: RelatedManager[Document]  # documents.Document.category
 
     def answer_progress(self):
         if self.meta.total_cuts == 0:
@@ -61,6 +74,10 @@ class MetaCategory(models.Model):
     displayname = models.CharField(max_length=256)
     parent = models.ForeignKey("MetaCategory", null=True, on_delete=models.CASCADE)
     order = models.IntegerField(default=0)
+
+    if TYPE_CHECKING:
+        category_set: RelatedManager[Category]  # Category.meta_categories (M2M)
+        metacategory_set: RelatedManager["MetaCategory"]  # self-referential parent
 
 
 class CategoryUserPinned(
