@@ -48,7 +48,7 @@ const UserSetEditor: React.FC<UserSetEditorProps> = ({ users, setUsers }) => {
             />
           </Grid.Col>
           <Grid.Col span={{ md: 2 }}>
-            <Button fullWidth type="submit">
+            <Button fullWidth type="submit" disabled={!user}>
               Add
             </Button>
           </Grid.Col>

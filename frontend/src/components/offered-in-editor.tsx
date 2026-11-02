@@ -35,11 +35,19 @@ const OfferedInEditor: React.FC<OfferedInEditorProps> = ({
   const meta2Options: string[] = useMemo(
     () =>
       data && newMeta1.length > 0
-        ? (data
-            .find(m => m.displayname === newMeta1)
-            ?.meta2.map(m => m.displayname) ?? [])
+        ? (
+            data
+              .find(m => m.displayname === newMeta1)
+              ?.meta2.map(m => m.displayname) ?? []
+          ).filter(
+            newMeta2 =>
+              !offeredIn.some(
+                ([otherMeta1, otherMeta2]) =>
+                  otherMeta1 === newMeta1 && otherMeta2 === newMeta2,
+              ),
+          )
         : [],
-    [data, newMeta1],
+    [data, newMeta1, offeredIn],
   );
   const onMeta1Change = (value: string) => {
     setNewMeta1(value);
@@ -137,11 +145,16 @@ const OfferedInEditor: React.FC<OfferedInEditorProps> = ({
                 value={newMeta2}
                 onChange={onMeta2Change}
                 onCreate={onMeta2Create}
+                disabled={newMeta1.length === 0}
               />
             )}
           </Grid.Col>
           <Grid.Col span={{ md: 2 }}>
-            <Button fullWidth type="submit">
+            <Button
+              fullWidth
+              type="submit"
+              disabled={newMeta1.length === 0 || newMeta2.length === 0}
+            >
               Add
             </Button>
           </Grid.Col>
