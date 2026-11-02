@@ -2,6 +2,18 @@
 
 All changes to this project are documented here.
 
+## v2026.11.p1
+
+### Important for you
+
+- Fixed an issue listing exams that could crash the frontend (!800)
+
+### Behind the scenes
+
+- Improved the typing of Django Models for a better dev experience (!799)
+
+Many thanks to Luca.
+
 ## v2026.11.p0
 
 ### Important for you
