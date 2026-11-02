@@ -2263,7 +2263,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^26.0.0":
+"@types/node@npm:^26.6.6":
   version: 26.6.6
   resolution: "@types/node@npm:26.6.6"
   dependencies:
@@ -4551,7 +4551,7 @@ __metadata:
     "@tabler/icons-react": "npm:^3.0.0"
     "@tanstack/react-query": "npm:^5.100.9"
     "@types/lodash-es": "npm:^4.17.5"
-    "@types/node": "npm:^26.0.0"
+    "@types/node": "npm:^26.6.6"
     "@types/react": "npm:^19.2.14"
     "@types/react-dom": "npm:^19.2.3"
     "@types/react-syntax-highlighter": "npm:^15.5.13"

@@ -55,7 +55,10 @@ COPY ./frontend/package.json \
   ./frontend/yarn.lock \
   ./frontend/.yarnrc.yml ./
 
-RUN corepack enable && yarn install --immutable && yarn cache clean
+RUN npm install -g corepack \
+  && corepack enable \
+  && yarn install --immutable \
+  && yarn cache clean
 
 FROM frontend-base AS frontend-build
 ARG git_branch
