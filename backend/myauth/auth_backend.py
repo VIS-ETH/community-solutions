@@ -67,6 +67,7 @@ def generate_unique_username(preferred_username):
 def add_auth(request: HttpRequest):
     request = cast(AuthHttpRequest, request)
     request.user = None
+    request.roles = []
     headers = request.headers
     request.simulate_nonadmin = "SimulateNonAdmin" in headers
 

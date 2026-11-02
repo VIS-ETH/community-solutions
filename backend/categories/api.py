@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.conf import settings
 from django.db.models import Exists, OuterRef
 from django.shortcuts import get_object_or_404
@@ -184,7 +186,7 @@ class ListExamsResponse(Schema):
     remark: str
     import_claim: str | None
     import_claim_displayname: str | None
-    import_claim_time: str | None
+    import_claim_time: datetime | None
     public: bool
     has_solution: bool
     is_printonly: bool
