@@ -62,7 +62,7 @@ ARG git_branch
 ARG git_commit
 
 COPY ./frontend ./
-COPY ./CHANGELOG.md ./CHANGELOG.md
+COPY ./CHANGELOG.md ../CHANGELOG.md
 COPY --from=backend /app/static/openapi.json ./public/openapi.json
 ENV VITE_GIT_BRANCH=${git_branch}
 ENV VITE_GIT_COMMIT=${git_commit}
@@ -103,7 +103,7 @@ CMD uv run manage.py migrate \
 FROM frontend-base AS frontend-dev
 
 COPY frontend ./
-COPY ./CHANGELOG.md ./CHANGELOG.md
+COPY ./CHANGELOG.md ../CHANGELOG.md
 
 RUN yarn install
 
