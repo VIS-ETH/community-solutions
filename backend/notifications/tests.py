@@ -74,3 +74,37 @@ class TestNotifications(ComsolTest):
         self.assertEqual(res[0]["message"], notification.text)
         res = self.get("/api/notification/unreadcount/")["value"]
         self.assertEqual(res, 0)
+
+
+class TestNotificationAccess(ComsolTest):
+    def test_cannot_set_read_on_foreign_notification(self):
+        owner = self.nonAdminUsers[0]
+        other = self.nonAdminUsers[1]
+        self.login_as(owner)
+        notification = Notification(
+            sender=self.get_my_user(),
+            receiver=self.get_my_user(),
+            type=1,
+            title="Test Notification",
+            text="Test Text",
+        )
+        notification.save()
+
+        self.login_as(other)
+        self.post(
+            f"/api/notification/setread/{notification.id}/",
+            {"read": True},
+            status_code=404,
+            test_get=False,
+        )
+        notification.refresh_from_db()
+        self.assertFalse(notification.read)
+
+        self.login_as(owner)
+        self.post(
+            f"/api/notification/setread/{notification.id}/",
+            {"read": True},
+            test_get=False,
+        )
+        notification.refresh_from_db()
+        self.assertTrue(notification.read)

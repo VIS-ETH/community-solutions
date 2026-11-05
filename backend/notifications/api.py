@@ -152,7 +152,7 @@ def all(request, unread: bool = False):
 )
 @auth_check.require_login
 def setread(request, oid: int, body: Form[NotificationSetReadRequest]):
-    notification = get_object_or_404(Notification, pk=oid)
+    notification = get_object_or_404(Notification, pk=oid, receiver=request.user)
     notification.read = body.read
     notification.save()
     return response.success()

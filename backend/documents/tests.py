@@ -1,5 +1,5 @@
 from categories.models import Category
-from documents.models import Document, DocumentType
+from documents.models import Document, DocumentFile, DocumentType
 from myauth.models import MyUser
 from notifications.models import Notification, NotificationSetting, NotificationType
 from testing.tests import ComsolTest
@@ -380,3 +380,75 @@ class TestDocumentTransfer(ComsolTestDocumentData):
         )["err"]
 
         self.assertTrue("same user" in res, f'{res=} must contain "same user".')
+
+
+class TestMoveDocumentFile(ComsolTestDocumentData):
+    def setUp(self, call_my_setup=True):
+        super().setUp(call_my_setup=False)
+
+        self.own_document = self.documents[0]
+        self.own_files = [
+            DocumentFile(
+                document=self.own_document,
+                display_name=f"File {i}",
+                filename=f"ownfile{i}.pdf",
+                mime_type="application/pdf",
+                order=i,
+            )
+            for i in range(2)
+        ]
+        for f in self.own_files:
+            f.save()
+
+        self.foreign_document = Document(
+            display_name="Foreign Document",
+            category=self.category,
+            document_type=self.document_type,
+            author=MyUser.objects.get(username=self.nonAdminUsers[1]["username"]),
+        )
+        self.foreign_document.save()
+        self.foreign_file = DocumentFile(
+            document=self.foreign_document,
+            display_name="Foreign File",
+            filename="foreignfile0.pdf",
+            mime_type="application/pdf",
+            order=1,
+        )
+        self.foreign_file.save()
+
+        if call_my_setup:
+            self.mySetUp()
+
+    def move_url(self, document, filename):
+        return (
+            f"/api/document/{document.author.username}/{document.slug}"
+            f"/files/{filename}/move/"
+        )
+
+    def test_move_own_file(self):
+        self.login_as(self.nonAdminUsers[0])
+        self.post(
+            self.move_url(self.own_document, self.own_files[1].filename),
+            {"direction": "up"},
+            status_code=204,
+            as_json=False,
+        )
+        for f in self.own_files:
+            f.refresh_from_db()
+        self.assertEqual(self.own_files[0].order, 1)
+        self.assertEqual(self.own_files[1].order, 0)
+
+    def test_cannot_move_file_of_other_document(self):
+        # Author of own_document passes a file belonging to foreign_document
+        self.login_as(self.nonAdminUsers[0])
+        self.post(
+            self.move_url(self.own_document, self.foreign_file.filename),
+            {"direction": "up"},
+            status_code=404,
+            as_json=False,
+        )
+        self.foreign_file.refresh_from_db()
+        self.assertEqual(self.foreign_file.order, 1)
+        for i, f in enumerate(self.own_files):
+            f.refresh_from_db()
+            self.assertEqual(f.order, i)

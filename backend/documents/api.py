@@ -1002,7 +1002,7 @@ def move_document_file(
 
     direction = -1 if data.direction == "up" else 1
 
-    file = get_object_or_404(DocumentFile, filename=filename)
+    file = get_object_or_404(DocumentFile, document=document, filename=filename)
     moved_file = get_object_or_404(
         DocumentFile, document=document, order=file.order + direction
     )
