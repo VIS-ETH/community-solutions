@@ -15,6 +15,7 @@ import hashlib
 import os
 import sys
 from base64 import b64encode
+from urllib.parse import urlsplit
 
 import yaml
 from jwcrypto.jwk import JWK, JWKSet
@@ -55,7 +56,33 @@ COMSOL_DOCUMENT_SLUG_CHARS = (
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-"
 )
 
-COMSOL_FRONTEND_GLOB_ID = os.environ.get("FRONTEND_GLOB_ID", "") or "vseth-1116-vis"
+# Script setting `window.configOptions`; external URL or a file in BRANDING_DIR served at /branding/.
+BRANDING_DIR = os.environ.get("BRANDING_DIR", "") or os.path.join(BASE_DIR, "branding")
+
+
+def _vseth_branding_url(glob_id: str) -> str:
+    return f"https://static.vseth.ethz.ch/assets/{glob_id}/config.js"
+
+
+def resolve_branding_url(environ) -> str:
+    if environ.get("FRONTEND_BRANDING_URL"):
+        return environ["FRONTEND_BRANDING_URL"]
+    # Deprecated
+    if environ.get("FRONTEND_GLOB_ID"):
+        return _vseth_branding_url(environ["FRONTEND_GLOB_ID"])
+    return _vseth_branding_url("vseth-1116-vis")
+
+
+def csp_sources(url: str) -> list[str]:
+    parts = urlsplit(url)
+    if not parts.netloc:
+        return []
+    return [f"{parts.scheme}://{parts.netloc}" if parts.scheme else parts.netloc]
+
+
+FRONTEND_BRANDING_URL = resolve_branding_url(os.environ)
+# Must be trusted: added to the CSP.
+_branding_csp_sources = csp_sources(FRONTEND_BRANDING_URL)
 
 # The following config settings configure the config with which a keycloak js client instance is
 # constructed in the React frontend.
@@ -218,19 +245,19 @@ CONTENT_SECURITY_POLICY = {
         "script-src": [
             "'self'",
             "'unsafe-eval'",
-            "https://static.vseth.ethz.ch",
+            *_branding_csp_sources,
             *allowed_script_sources,
         ],
         "style-src": [
             "'self'",
             "'unsafe-inline'",
             "https://fonts.googleapis.com",
-            "https://static.vseth.ethz.ch",
+            *_branding_csp_sources,
         ],
         "font-src": ["'self'", "data:", "https://fonts.gstatic.com"],
         "connect-src": [
             "'self'",
-            "https://static.vseth.ethz.ch",
+            *_branding_csp_sources,
             "https://auth.vseth.ethz.ch",
             S3_ENDPOINT_URL,
         ]
@@ -238,7 +265,8 @@ CONTENT_SECURITY_POLICY = {
         "img-src": [
             "'self'",
             "data:",
-            "https://static.vseth.ethz.ch",
+            *_branding_csp_sources,
+            *csp_sources(FAVICON_URL),
             "https://fe.vseth.ethz.ch",
         ],
     }

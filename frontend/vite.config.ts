@@ -44,6 +44,11 @@ export default defineConfig({
         changeOrigin: false,
         secure: false,
       },
+      "/branding": {
+        target: `http://${process.env.BACKEND_HOST ?? "localhost"}:8081`,
+        changeOrigin: false,
+        secure: false,
+      },
       "/static/ninja": {
         target: `http://${process.env.BACKEND_HOST ?? "localhost"}:8081`,
         changeOrigin: false,
