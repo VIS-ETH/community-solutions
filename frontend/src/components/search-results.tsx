@@ -13,13 +13,13 @@ import {
 import React from "react";
 import { Link } from "react-router-dom";
 import MarkdownText from "./markdown-text";
-import { SearchResponse } from "../interfaces";
 import { IconChevronRight } from "@tabler/icons-react";
 import classes from "./search-results.module.css";
 import { HighlightedContent } from "./HighlightSearchHeadline";
+import type { SearchResult } from "../api/model";
 
 interface Props {
-  data: SearchResponse;
+  data: SearchResult;
 }
 const SearchResults: React.FC<Props> = React.memo(({ data }) => {
   return (
@@ -39,9 +39,9 @@ const SearchResults: React.FC<Props> = React.memo(({ data }) => {
                       tt="uppercase"
                       size="xs"
                       component={Link}
-                      to={`/category/${result.category_slug}`}
+                      to={`/category/${result.categorySlug}`}
                     >
-                      {result.category_displayname}
+                      {result.categoryDisplayname}
                     </Anchor>
                   </Breadcrumbs>
                 </Group>
@@ -90,7 +90,7 @@ const SearchResults: React.FC<Props> = React.memo(({ data }) => {
           );
         } else if (result.type === "answer") {
           return (
-            <div key={`answer-${result.long_id}`}>
+            <div key={`answer-${result.longId}`}>
               <Card withBorder shadow="md" mb="sm" p="md">
                 <Group>
                   <Badge>Answer</Badge>
@@ -102,9 +102,9 @@ const SearchResults: React.FC<Props> = React.memo(({ data }) => {
                       tt="uppercase"
                       size="xs"
                       component={Link}
-                      to={`/category/${result.category_slug}`}
+                      to={`/category/${result.categorySlug}`}
                     >
-                      {result.category_displayname}
+                      {result.categoryDisplayname}
                     </Anchor>
                     <Anchor
                       tt="uppercase"
@@ -112,22 +112,22 @@ const SearchResults: React.FC<Props> = React.memo(({ data }) => {
                       component={Link}
                       to={`/exams/${result.filename}`}
                     >
-                      {result.exam_displayname}
+                      {result.examDisplayname}
                     </Anchor>
                   </Breadcrumbs>
                 </Group>
                 <div>
                   <Anchor
                     component={Link}
-                    to={`/exams/${result.filename}/#${result.long_id}`}
+                    to={`/exams/${result.filename}/#${result.longId}`}
                   >
                     <Title py="xs" order={4}>
-                      {result.author_displayname}
+                      {result.author.display_name}
                     </Title>
                   </Anchor>
                   <MarkdownText
                     value={result.text}
-                    highlight_matches={result.highlighted_words}
+                    highlight_matches={result.highlightedWords}
                   />
                 </div>
               </Card>
@@ -135,7 +135,7 @@ const SearchResults: React.FC<Props> = React.memo(({ data }) => {
           );
         } else {
           return (
-            <div key={`comment-${result.long_id}`}>
+            <div key={`comment-${result.longId}`}>
               <Card withBorder shadow="md" mb="sm" p="md">
                 <Group>
                   <Badge>Comment</Badge>
@@ -147,9 +147,9 @@ const SearchResults: React.FC<Props> = React.memo(({ data }) => {
                       tt="uppercase"
                       size="xs"
                       component={Link}
-                      to={`/category/${result.category_slug}`}
+                      to={`/category/${result.categorySlug}`}
                     >
-                      {result.category_displayname}
+                      {result.categoryDisplayname}
                     </Anchor>
                     <Anchor
                       tt="uppercase"
@@ -157,22 +157,22 @@ const SearchResults: React.FC<Props> = React.memo(({ data }) => {
                       component={Link}
                       to={`/exams/${result.filename}`}
                     >
-                      {result.exam_displayname}
+                      {result.examDisplayname}
                     </Anchor>
                   </Breadcrumbs>
                 </Group>
                 <div>
                   <Anchor
                     component={Link}
-                    to={`/exams/${result.filename}/#${result.long_id}`}
+                    to={`/exams/${result.filename}/#${result.longId}`}
                   >
                     <Title py="xs" order={4}>
-                      {result.author_displayname}
+                      {result.author.display_name}
                     </Title>
                   </Anchor>
                   <MarkdownText
                     value={result.text}
-                    highlight_matches={result.highlighted_words}
+                    highlight_matches={result.highlightedWords}
                   />
                 </div>
               </Card>

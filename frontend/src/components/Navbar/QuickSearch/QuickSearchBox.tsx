@@ -27,14 +27,15 @@ import {
   useMediaQuery,
   useOs,
 } from "@mantine/hooks";
-import { useDebounce, useRequest } from "ahooks";
-import { loadSearch } from "../../../api/hooks";
+import { useDebounce } from "ahooks";
+import { keepPreviousData } from "@tanstack/react-query";
+import { useSearch as useSearchRequest } from "../../../api/hooks/answers";
 import { useUser } from "../../../auth";
-import {
+import type {
   AnswerSearchResult,
   CommentSearchResult,
   ExamSearchResult,
-} from "../../../interfaces";
+} from "../../../api/model";
 import useCategorisedNavigation from "../../../hooks/useCategorisedNavigation";
 import { itemToPath } from "../../../utils/search-utils";
 import useSearch from "../../../hooks/useSearch";
@@ -126,16 +127,18 @@ export const QuickSearchBox: React.FC = () => {
     data => data.displayname,
   ).slice(0, 4);
 
-  const searchResults = useRequest(
-    () =>
-      loadSearch(
-        debouncedSearchQuery,
-        isGlobal ? undefined : contextFilter?.slug,
-        true,
-      ),
+  const searchResults = useSearchRequest(
     {
-      ready: loggedIn,
-      refreshDeps: [debouncedSearchQuery, isGlobal],
+      term: debouncedSearchQuery,
+      category: isGlobal ? undefined : contextFilter?.slug,
+      examsWithCategoryName: true,
+    },
+    {
+      query: {
+        enabled: loggedIn && debouncedSearchQuery !== "",
+        select: data => data.value,
+        placeholderData: keepPreviousData,
+      },
     },
   );
 
@@ -372,7 +375,7 @@ export const QuickSearchBox: React.FC = () => {
           <Loader
             size="sm"
             className={classes.searchLoader}
-            display={searchResults.loading ? "block" : "none"}
+            display={searchResults.isFetching ? "block" : "none"}
           />
         </Group>
         <Divider className={classes.escapeModalMargin} mt="xs" />
@@ -395,7 +398,7 @@ export const QuickSearchBox: React.FC = () => {
                 currentSelection={currentSelection}
                 onClick={close}
               />
-              {!searchResults.loading && searchResults.error && (
+              {!searchResults.isFetching && searchResults.error && (
                 <Text c="dimmed" mx="auto">
                   {String(searchResults.error)}
                 </Text>

@@ -43,9 +43,9 @@ async function resolveOpenApiPath(): Promise<string> {
 
   throw new Error(
     "Could not find OpenAPI schema. Try one of the following:\n" +
-    `  - Start the backend server on ${backendUrl}.\n` +
-    "  - Run `uv run manage.py export_openapi`.\n" +
-    "  - Become a carrot farmer in Uzbekistan and avoid all of this hassle.",
+      `  - Start the backend server on ${backendUrl}.\n` +
+      "  - Run `uv run manage.py export_openapi`.\n" +
+      "  - Become a carrot farmer in Uzbekistan and avoid all of this hassle.",
   );
 }
 
@@ -68,6 +68,14 @@ export default defineConfig({
         mutator: {
           path: "src/api/mutator.ts",
           name: "customFetch",
+        },
+        operations: {
+          // cache /api/exam/search
+          search: {
+            query: {
+              useQuery: true,
+            },
+          },
         },
       },
     },

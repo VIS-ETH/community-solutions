@@ -11,10 +11,20 @@ import {
   Text,
 } from "@mantine/core";
 import React, { useCallback, useEffect, useState } from "react";
-import { useAnswers, useRemoveSplit } from "../api/hooks";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  getGetAnswerSectionQueryKey,
+  useGetAnswerSection,
+  useRemoveCut,
+} from "../api/hooks/answers";
+import {
+  AnswerSchema,
+  AnswerSectionSchema,
+  AnswerKind,
+  ValueWrappedAnswerSectionSchema,
+} from "../api/model";
 import { useUser } from "../auth";
 import useInitialState from "../hooks/useInitialState";
-import { AnswerKind, AnswerSection } from "../interfaces";
 import AnswerComponent from "./answer";
 import IconButton from "./icon-button";
 import { getAnswerSectionId } from "../utils/exam-utils";
@@ -33,6 +43,16 @@ import classes from "./answer-section.module.css";
 import { useDisclosure } from "@mantine/hooks";
 import AnswerSectionButtons from "./answer-section-buttons";
 import AnswerSectionModal from "./answer-section-overlay";
+
+const getScore = (answer: AnswerSchema) =>
+  answer.expertVotes * 10 + answer.upvotes;
+
+const selectSortedSection = ({
+  value,
+}: ValueWrappedAnswerSectionSchema): AnswerSectionSchema => ({
+  ...value,
+  answers: [...value.answers].sort((a, b) => getScore(b) - getScore(a)),
+});
 
 interface NameCardProps {
   id: string;
@@ -87,7 +107,7 @@ const AddButton: React.FC<AddButtonProps> = ({
           {allowAnswer && (
             <Menu.Item
               onClick={onAnswer}
-              disabled={draftType === AnswerKind.Personal}
+              disabled={draftType === AnswerKind.personal}
             >
               Add Answer
             </Menu.Item>
@@ -95,7 +115,7 @@ const AddButton: React.FC<AddButtonProps> = ({
           {allowOfficialAnswer && (
             <Menu.Item
               onClick={onOfficialAnswer}
-              disabled={draftType === AnswerKind.Official}
+              disabled={draftType === AnswerKind.official}
             >
               Add Official Answer
             </Menu.Item>
@@ -103,7 +123,7 @@ const AddButton: React.FC<AddButtonProps> = ({
           {allowLegacyAnswer && (
             <Menu.Item
               onClick={onLegacyAnswer}
-              disabled={draftType === AnswerKind.Legacy}
+              disabled={draftType === AnswerKind.legacy}
             >
               Add Legacy Answer
             </Menu.Item>
@@ -118,7 +138,7 @@ const AddButton: React.FC<AddButtonProps> = ({
           <Button
             size="sm"
             onClick={onAnswer}
-            disabled={draftType === AnswerKind.Personal}
+            disabled={draftType === AnswerKind.personal}
           >
             Add Answer
           </Button>
@@ -127,7 +147,7 @@ const AddButton: React.FC<AddButtonProps> = ({
           <Button
             size="sm"
             onClick={onOfficialAnswer}
-            disabled={draftType === AnswerKind.Official}
+            disabled={draftType === AnswerKind.official}
           >
             Add Official Answer
           </Button>
@@ -136,7 +156,7 @@ const AddButton: React.FC<AddButtonProps> = ({
           <Button
             size="sm"
             onClick={onLegacyAnswer}
-            disabled={draftType === AnswerKind.Legacy}
+            disabled={draftType === AnswerKind.legacy}
           >
             Add Legacy Answer
           </Button>
@@ -147,7 +167,7 @@ const AddButton: React.FC<AddButtonProps> = ({
 };
 
 interface Props {
-  oid: string;
+  oid: number;
   onSectionChange: () => void;
   onToggleHidden: () => void;
   hidden: boolean;
@@ -190,48 +210,50 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
     onHasAnswersChange,
     has_answers,
   }) {
-    const [data, setData] = useState<AnswerSection | undefined>();
-    const run = useAnswers(oid, data => {
-      setData(data);
-      setCutVersion(data.cutVersion);
+    const queryClient = useQueryClient();
+    const [visible, containerElement] = useAlmostInViewport<HTMLDivElement>();
+    const { data, refetch } = useGetAnswerSection(oid, {
+      query: { enabled: !!visible || !hidden, select: selectSortedSection },
     });
+    useEffect(() => {
+      if (data) setCutVersion(data.cutVersion);
+    }, [data, setCutVersion]);
+
     const [
       deleteWarningIsOpen,
       { open: openDeleteWarning, close: closeDeleteWarning },
     ] = useDisclosure();
-    const runRemoveSplit = useRemoveSplit(oid, () => {
-      if (isBeingMoved) onCancelMove();
-      onSectionChange();
-    });
-    const setAnswerSection = useCallback(
-      (newData: AnswerSection) => {
-        setCutVersion(newData.cutVersion);
-        setData(newData);
-        void run(); // refreshes the data if there's a new answer
+    const { mutate: removeCut } = useRemoveCut({
+      mutation: {
+        onSuccess: () => {
+          if (isBeingMoved) onCancelMove();
+          onSectionChange();
+        },
       },
-      [setCutVersion, run],
+    });
+    const runRemoveSplit = useCallback(
+      () => removeCut({ oid }),
+      [removeCut, oid],
     );
-
-    const [visible, containerElement] = useAlmostInViewport<HTMLDivElement>();
-
-    // initial run to get the answers in a section
-    useEffect(() => {
-      if ((visible || !hidden) && !data) {
-        void run();
-      }
-    }, [run, visible, hidden, data]);
+    const setAnswerSection = useCallback(
+      (newData: AnswerSectionSchema) =>
+        queryClient.setQueryData(getGetAnswerSectionQueryKey(oid), {
+          value: newData,
+        }),
+      [queryClient, oid],
+    );
 
     const [draftType, setDraftType] = useState<AnswerKind | null>(null);
     const onAddAnswer = useCallback(() => {
-      setDraftType(AnswerKind.Personal);
+      setDraftType(AnswerKind.personal);
       if (hidden) onToggleHidden();
     }, [hidden, onToggleHidden]);
     const onAddOfficialAnswer = useCallback(() => {
-      setDraftType(AnswerKind.Official);
+      setDraftType(AnswerKind.official);
       if (hidden) onToggleHidden();
     }, [hidden, onToggleHidden]);
     const onAddLegacyAnswer = useCallback(() => {
-      setDraftType(AnswerKind.Legacy);
+      setDraftType(AnswerKind.legacy);
       if (hidden) onToggleHidden();
     }, [hidden, onToggleHidden]);
     const user = useUser()!;
@@ -244,7 +266,7 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
     const hideAnswerSection = async () => {
       await onHasAnswersChange();
       closeHideWarning();
-      void run(); // updates data when setting visibility to hidden
+      void refetch(); // updates data when setting visibility to hidden
     };
     const hideAnswerSectionWithWarning = () => {
       if (data) {
@@ -332,28 +354,28 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
                   answerKind={answer.kind}
                 />
               ))}
-              {draftType === AnswerKind.Personal && (
+              {draftType === AnswerKind.personal && (
                 <AnswerComponent
                   section={data}
                   onSectionChanged={setAnswerSection}
                   onDelete={() => setDraftType(null)}
-                  answerKind={AnswerKind.Personal}
+                  answerKind={AnswerKind.personal}
                 />
               )}
-              {draftType === AnswerKind.Official && (
+              {draftType === AnswerKind.official && (
                 <AnswerComponent
                   section={data}
                   onSectionChanged={setAnswerSection}
                   onDelete={() => setDraftType(null)}
-                  answerKind={AnswerKind.Official}
+                  answerKind={AnswerKind.official}
                 />
               )}
-              {draftType === AnswerKind.Legacy && (
+              {draftType === AnswerKind.legacy && (
                 <AnswerComponent
                   section={data}
                   onSectionChanged={setAnswerSection}
                   onDelete={() => setDraftType(null)}
-                  answerKind={AnswerKind.Legacy}
+                  answerKind={AnswerKind.legacy}
                 />
               )}
             </div>
@@ -386,14 +408,14 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
                         (data.answers.length === 0 || !hidden) &&
                         has_answers &&
                         data &&
-                        (data.allow_new_answer ||
-                          (data.allow_new_legacy_answer && isCatAdmin)) && (
+                        (data.allowNewAnswer ||
+                          (data.allowNewLegacyAnswer && isCatAdmin)) && (
                           <AddButton
-                            allowAnswer={data.allow_new_answer}
+                            allowAnswer={data.allowNewAnswer}
                             allowLegacyAnswer={
-                              data.allow_new_legacy_answer && isCatAdmin
+                              data.allowNewLegacyAnswer && isCatAdmin
                             }
-                            allowOfficialAnswer={data.allow_new_official_answer}
+                            allowOfficialAnswer={data.allowNewOfficialAnswer}
                             draftType={draftType}
                             onAnswer={onAddAnswer}
                             onLegacyAnswer={onAddLegacyAnswer}

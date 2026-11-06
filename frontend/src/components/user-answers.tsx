@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useUserAnswers } from "../api/hooks";
 import AnswerComponent from "./answer";
 import { Alert, Loader } from "@mantine/core";
 import classes from "./user-answers.module.css";
+import { useListAnswersByUser } from "../api/hooks/answers";
 // `transform: translateX(0)` fixes an issue on webkit browsers
 // where relative positioned elements aren't displayed in containers
 // with multiple columns. This is a quick-fix as pointed out on the
@@ -20,21 +20,32 @@ interface UserAnswersProps {
 
 const UserAnswers: React.FC<UserAnswersProps> = ({ username }) => {
   const [page, setPage] = useState(0); // to indicate what page of answers should be loaded
-  const [error, loading, data, reload] = useUserAnswers(username, -1);
-  const [answers, setAnswers] = useState(data);
+  const {
+    error,
+    isLoading: loading,
+    data,
+    refetch,
+  } = useListAnswersByUser(
+    username,
+    {
+      page: -1,
+    },
+    {
+      query: {
+        select: data => data.value,
+      },
+    },
+  );
   const [lastElement, setLastElement] = useState<HTMLDivElement | null>(null);
 
   const PAGE_SIZE = 10; // loads a limited amount of new elements at a time when scrolling down
 
-  useEffect(() => {
-    if (data) setAnswers([...data]);
-  }, [data]);
-
-  // resets the cards if we're on a new users page
-  useEffect(() => {
+  // resets the slice when we're on a new user's page
+  const [prevUsername, setPrevUsername] = useState(username);
+  if (username !== prevUsername) {
+    setPrevUsername(username);
     setPage(0);
-    setAnswers(undefined);
-  }, [username]);
+  }
 
   // sets the observer to the last element once it is rendered
   useEffect(() => {
@@ -61,18 +72,18 @@ const UserAnswers: React.FC<UserAnswersProps> = ({ username }) => {
 
   return (
     <>
-      {error && <Alert color="red">{error.message}</Alert>}
-      {(!answers || answers.length === 0) && !loading && (
+      {error && <Alert color="red">{error as unknown as string}</Alert>}
+      {(!data || data.length === 0) && !loading && (
         <Alert color="gray">No answers</Alert>
       )}
       <div className={classes.column}>
-        {answers?.slice(0, (page + 1) * PAGE_SIZE).map(answer => (
+        {data?.slice(0, (page + 1) * PAGE_SIZE).map(answer => (
           <div key={answer.oid}>
             <AnswerComponent
               hasId={false}
               answer={answer}
               answerKind={answer.kind}
-              onSectionChanged={reload}
+              onSectionChanged={() => void refetch()}
             />
           </div>
         ))}

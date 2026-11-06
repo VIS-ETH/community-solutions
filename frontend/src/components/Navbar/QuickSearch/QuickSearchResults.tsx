@@ -1,16 +1,16 @@
 import { Divider, Stack, Text } from "@mantine/core";
 import { SearchResult as LocalSearchResult } from "../../../hooks/useSearch";
-import {
-  AnswerSearchResult,
-  CategoryMetaDataMinimal,
-  CommentSearchResult,
-  ExamSearchResult,
-} from "../../../interfaces";
+import { CategoryMetaDataMinimal } from "../../../interfaces";
 import { QuickSearchResult } from "./QuickSearchResult";
 import { highlight, itemToPath } from "../../../utils/search-utils";
 import { HighlightedContent } from "../../HighlightSearchHeadline";
 import MarkdownText from "../../markdown-text";
 import { useMemo } from "react";
+import type {
+  AnswerSearchResult,
+  CommentSearchResult,
+  ExamSearchResult,
+} from "../../../api/model";
 
 type QuickSeachResultsProps = {
   currentSelection: {
@@ -114,18 +114,18 @@ export const QuickSearchResults = ({
         element: (
           <Stack gap={0} key={i}>
             <Text>
-              {answer.author_displayname} on {answer.exam_displayname} -{" "}
-              {answer.category_displayname}
+              {answer.author.display_name} on {answer.examDisplayname} -{" "}
+              {answer.categoryDisplayname}
             </Text>
             <Text opacity={0.7}>
               <MarkdownText
                 value={answer.text}
-                highlight_matches={answer.highlighted_words}
+                highlight_matches={answer.highlightedWords}
               />
             </Text>
           </Stack>
         ),
-        key: answer.long_id,
+        key: answer.longId,
         link: itemToPath(answer),
       }));
 
@@ -134,18 +134,18 @@ export const QuickSearchResults = ({
         element: (
           <Stack gap={0} key={i}>
             <Text>
-              {comment.author_displayname} on {comment.exam_displayname} -{" "}
-              {comment.category_displayname}
+              {comment.author.display_name} on {comment.examDisplayname} -{" "}
+              {comment.categoryDisplayname}
             </Text>
             <Text opacity={0.7}>
               <MarkdownText
                 value={comment.text}
-                highlight_matches={comment.highlighted_words}
+                highlight_matches={comment.highlightedWords}
               />
             </Text>
           </Stack>
         ),
-        key: comment.long_id,
+        key: comment.longId,
         link: itemToPath(comment),
       }));
 

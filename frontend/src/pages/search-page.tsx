@@ -1,18 +1,11 @@
-import { useRequest } from "ahooks";
 import { Container, TextInput } from "@mantine/core";
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { fetchPost } from "../api/fetch-utils";
 import LoadingOverlay from "../components/loading-overlay";
 import SearchResults from "../components/search-results";
 import useTitle from "../hooks/useTitle";
-import { SearchResponse } from "../interfaces";
+import { useSearch } from "../api/hooks/answers";
 import { IconSearch } from "@tabler/icons-react";
-
-const loadSearch = async (term: string) => {
-  return (await fetchPost("/api/exam/search/", { term }))
-    .value as SearchResponse;
-};
 
 const SearchPage: React.FC = () => {
   useTitle("Search");
@@ -47,10 +40,19 @@ const SearchPage: React.FC = () => {
     return () => clearTimeout(timeout);
   }, [term, query, setSearchParams]);
 
-  const { data, error, loading } = useRequest(
-    () => (query ? loadSearch(query) : Promise.resolve([])),
+  const {
+    data,
+    error,
+    isFetching: loading,
+  } = useSearch(
+    { term: query },
     {
-      refreshDeps: [query],
+      query: {
+        enabled: query !== "",
+        select: data => data.value,
+        placeholderData: previousData =>
+          query !== "" ? previousData : undefined,
+      },
     },
   );
   return (
