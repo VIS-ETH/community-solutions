@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 from django.core.management.base import BaseCommand
+from django.core.serializers.json import DjangoJSONEncoder
 
 from backend.urls import api
 
@@ -17,6 +18,6 @@ class Command(BaseCommand):
         static_directory.mkdir(exist_ok=True)
 
         with out_path.open("w") as f:
-            json.dump(schema, f, indent=2)
+            json.dump(schema, f, indent=2, cls=DjangoJSONEncoder)
 
         self.stdout.write(self.style.SUCCESS(f"Successfully exported {out_path}"))
