@@ -28,6 +28,7 @@ import {
   useOs,
 } from "@mantine/hooks";
 import { useDebounce } from "ahooks";
+import { keepPreviousData } from "@tanstack/react-query";
 import { useSearch as useSearchRequest } from "../../../api/hooks/answers";
 import { useUser } from "../../../auth";
 import type {
@@ -136,6 +137,7 @@ export const QuickSearchBox: React.FC = () => {
       query: {
         enabled: loggedIn && debouncedSearchQuery !== "",
         select: data => data.value,
+        placeholderData: keepPreviousData,
       },
     },
   );
