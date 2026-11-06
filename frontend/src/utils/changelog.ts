@@ -1,4 +1,4 @@
-import changelogSource from "../../CHANGELOG.md?raw";
+import changelogSource from "@changelog?raw";
 
 const VERSION_HEADING = /^(v\S+).*[\s]*$/m;
 const LEVEL_2_HEADING = /^## (.*)$/gm;
