@@ -3,7 +3,6 @@ import {
   Button,
   Stack,
   TextInput,
-  Popover,
   Text,
   ActionIcon,
   Group,
@@ -27,7 +26,6 @@ const CreateMarkdownFileModal: React.FC<Props> = ({
 }) => {
   const [displayName, setDisplayName] = useState("");
   const [files, setFiles] = useState<File[]>([]);
-  const [namePopoverIsOpen, setNamePopoverIsOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
   const { mutateAsync, isError, error } = useCreateDocumentFile<
@@ -49,7 +47,6 @@ const CreateMarkdownFileModal: React.FC<Props> = ({
 
     setFiles(previousFiles => [...previousFiles, newFile]);
     setDisplayName("");
-    setNamePopoverIsOpen(false);
   }
 
   function handleRemoveFile(indexToRemove: number): void {
@@ -112,40 +109,24 @@ const CreateMarkdownFileModal: React.FC<Props> = ({
           {error instanceof Error ? error.message : error}{" "}
         </Alert>
       )}
-      <Popover
-        opened={namePopoverIsOpen}
-        onChange={setNamePopoverIsOpen}
-        position="bottom"
-        withArrow
-      >
-        <Popover.Target>
-          <Button
-            leftSection={<IconPlus />}
-            onClick={() => setNamePopoverIsOpen(true)}
-            disabled={isCreating}
-          >
-            Add File
-          </Button>
-        </Popover.Target>
+      <Group align="flex-end" wrap="nowrap">
+        <TextInput
+          flex={1}
+          label="File name"
+          placeholder="Please enter a file name..."
+          value={displayName}
+          disabled={isCreating}
+          onChange={event => setDisplayName(event.currentTarget.value)}
+        />
 
-        <Popover.Dropdown>
-          <Stack gap="sm">
-            <TextInput
-              label="File name"
-              placeholder="Please enter a file name..."
-              value={displayName}
-              onChange={event => setDisplayName(event.currentTarget.value)}
-            />
-
-            <Button
-              disabled={isCreating || displayName.trim() === ""}
-              onClick={handleAddFile}
-            >
-              Add
-            </Button>
-          </Stack>
-        </Popover.Dropdown>
-      </Popover>
+        <Button
+          disabled={isCreating || displayName.trim() === ""}
+          onClick={handleAddFile}
+          leftSection={<IconPlus />}
+        >
+          Add
+        </Button>
+      </Group>
 
       {files.length > 0 && (
         <Stack gap="xs">
@@ -182,7 +163,7 @@ const CreateMarkdownFileModal: React.FC<Props> = ({
           void handleCreate();
         }}
       >
-        {files.length === 1 ? "Create File" : "Create Files"}
+        {files.length >= 2 ? "Create Files" : "Create File"}
       </Button>
     </Stack>
   );
