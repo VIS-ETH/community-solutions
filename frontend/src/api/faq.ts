@@ -4,19 +4,20 @@ import { useRequest } from "ahooks";
 import { useMutation } from "./hooks";
 
 const loadFAQs = async () => {
-  return (await fetchGet("/api/faq/")).value as FAQEntry[];
+  return (await fetchGet<{ value: FAQEntry[] }>("/api/faq/")).value;
 };
 const addFAQ = async (question: string, answer: string, order: number) => {
   return (
-    await fetchPost("/api/faq/", {
+    await fetchPost<{ value: FAQEntry }>("/api/faq/", {
       question,
       answer,
       order,
     })
-  ).value as FAQEntry;
+  ).value;
 };
 const updateFAQ = async (oid: string, changes: Partial<FAQEntry>) => {
-  return (await fetchPut(`/api/faq/${oid}/`, changes)).value as FAQEntry;
+  return (await fetchPut<{ value: FAQEntry }>(`/api/faq/${oid}/`, changes))
+    .value;
 };
 const swapFAQ = async (a: FAQEntry, b: FAQEntry) => {
   return Promise.all([

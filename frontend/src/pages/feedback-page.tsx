@@ -80,7 +80,10 @@ const FeedbackForm: React.FC = () => {
         onChange={e => setText(e.currentTarget.value)}
         minRows={12}
       />
-      <Button disabled={text.length === 0} onClick={handleFeedbackSubmit}>
+      <Button
+        disabled={text.length === 0}
+        onClick={() => void handleFeedbackSubmit()}
+      >
         Submit
       </Button>
     </Stack>
@@ -178,6 +181,7 @@ const FeedbackAdminView: React.FC = () => {
 };
 const FeedbackPage: React.FC = () => {
   useTitle("Feedback");
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { isAdmin } = useUser()!;
   return isAdmin ? (
     <FeedbackAdminView />

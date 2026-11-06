@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Modal,
   Button,
@@ -104,7 +97,7 @@ export const QuickSearchBox: React.FC = () => {
 
   // Category filter, set by pages like ExamPage or CategoryPage through the
   // global context (in App). Undefined if there is no filter.
-  const { filter: contextFilter } = useContext(QuickSearchFilterContext) ?? {};
+  const { filter: contextFilter } = use(QuickSearchFilterContext) ?? {};
 
   // Whether we use global search or category search. If using category search,
   // we'll use contextFilter for the slug and display name. isGlobal should
@@ -400,7 +393,7 @@ export const QuickSearchBox: React.FC = () => {
               />
               {!searchResults.isFetching && searchResults.error && (
                 <Text c="dimmed" mx="auto">
-                  {String(searchResults.error)}
+                  {searchResults.error as unknown as string}
                 </Text>
               )}
               <QuickSearchResults

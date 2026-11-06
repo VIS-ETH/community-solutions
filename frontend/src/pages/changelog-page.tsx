@@ -12,7 +12,7 @@ const ChangelogPage: React.FC = () => {
 
   // Remember the first value so we can set local storage without triggering
   // a re-render
-  const [lastSeenState, _] = React.useState(lastSeen);
+  const [lastSeenState] = React.useState(lastSeen);
 
   const lastSeenIndex = versions.findIndex(v => v.version === lastSeenState);
 

@@ -57,7 +57,7 @@ const Panel: React.FC<PanelProps> = ({
           <div
             className={classes.panel}
             style={{
-              ...transitionStyles[state as keyof typeof transitionStyles],
+              ...transitionStyles[state],
             }}
             ref={ref}
           >

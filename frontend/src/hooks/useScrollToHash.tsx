@@ -39,16 +39,16 @@ export const useScrollToHash = () => {
       subtree: true,
     });
 
-    const timeout = window.setTimeout(() => {
-      if (disconnect) disconnect();
+    const timeout = setTimeout(() => {
+      disconnect();
     }, JUMP_TIMEOUT);
 
     // Try scrolling once if the element currently is present
     tryScroll();
 
     return () => {
-      window.clearTimeout(timeout);
-      disconnect?.();
+      clearTimeout(timeout);
+      disconnect();
     };
   }, [hashLocation]);
   return null;

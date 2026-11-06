@@ -6,14 +6,9 @@ type Options = Record<string, string>;
 type OptionsResult<T extends Options> = {
   [key in keyof T]: { value: key; label: T[key] };
 };
-export const fromEntries = <T extends [string, unknown][]>(o: T) =>
-  o.reduce((prev: any, curr) => {
-    prev[curr[0]] = curr[1];
-    return prev;
-  }, {});
 
 export const createOptions = <T extends Options>(o: T) =>
-  fromEntries(
+  Object.fromEntries(
     Object.entries(o).map(([key, value]) => [
       key,
       { value: key, label: value },

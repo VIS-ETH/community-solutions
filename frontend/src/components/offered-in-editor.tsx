@@ -99,7 +99,7 @@ const OfferedInEditor: React.FC<OfferedInEditorProps> = ({
   };
   return (
     <>
-      {error && <Alert color="red">{error.toString()}</Alert>}
+      {error && <Alert color="red">{error as unknown as string}</Alert>}
       <Group>
         {offeredIn.map(([meta1, meta2]) => (
           <Button

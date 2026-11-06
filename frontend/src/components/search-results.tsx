@@ -21,7 +21,10 @@ import type { SearchResult } from "../api/model";
 interface Props {
   data: SearchResult;
 }
-const SearchResults: React.FC<Props> = React.memo(({ data }) => {
+// eslint-disable-next-line prefer-arrow-callback
+const SearchResults: React.FC<Props> = React.memo(function SearchResults({
+  data,
+}) {
   return (
     <div className={classes.column}>
       {data.map(result => {
@@ -74,7 +77,7 @@ const SearchResults: React.FC<Props> = React.memo(({ data }) => {
                           <Text component="span" c="dimmed">
                             ...{" "}
                           </Text>
-                          <HighlightedContent content={part} key={i} />
+                          <HighlightedContent content={part} />
                           <Text component="span" c="dimmed">
                             {" "}
                             ...

@@ -30,7 +30,7 @@ const BasicEditor: React.FC<Props> = ({
 }) => {
   const preElRef = useRef<HTMLPreElement>(null);
 
-  (getSelectionRangeRef as any).current = () => {
+  getSelectionRangeRef.current = () => {
     const textarea = textareaElRef.current;
     if (textarea === null) return;
     return {
@@ -39,7 +39,7 @@ const BasicEditor: React.FC<Props> = ({
     };
   };
 
-  (setSelectionRangeRef as any).current = (newSelection: Range) => {
+  setSelectionRangeRef.current = (newSelection: Range) => {
     const textarea = textareaElRef.current;
     if (textarea === null) return;
     setTimeout(() => {
@@ -49,7 +49,7 @@ const BasicEditor: React.FC<Props> = ({
   };
 
   const onTextareaChange = useCallback(
-    (e: React.FormEvent<HTMLTextAreaElement>) => {
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const newContent = e.currentTarget.value;
       onChange(newContent);
     },

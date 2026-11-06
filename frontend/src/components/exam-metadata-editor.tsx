@@ -220,7 +220,7 @@ const ExamMetadataEditor: React.FC<Props> = ({
     useForm(
       currentMetaData as ExamMetaDataDraft,
       values =>
-        runApplyChanges(
+        void runApplyChanges(
           currentMetaData.filename,
           currentMetaData,
           values,
@@ -250,11 +250,11 @@ const ExamMetadataEditor: React.FC<Props> = ({
         <Grid.Col span={{ md: 6 }}>
           <NativeSelect
             label="Category"
-            data={categoryOptions ? (options(categoryOptions) as any) : []}
+            data={categoryOptions ? options(categoryOptions) : []}
             value={categoryOptions?.[formState.category].value}
-            onChange={(e: any) => {
+            onChange={e => {
               const value = e.currentTarget.value;
-              setFormValue("category", value as string);
+              setFormValue("category", value);
               setFormValue(
                 "categoryDisplayname",
                 categoryOptions?.[value]?.label ?? value,

@@ -112,7 +112,16 @@ interface Props {
   translateY: number;
 }
 const PdfSectionText: React.FC<Props> = React.memo(
-  ({ page, start, end, renderer, view, scale, translateY }) => {
+  // eslint-disable-next-line prefer-arrow-callback
+  function PdfSectionText({
+    page,
+    start,
+    end,
+    renderer,
+    view,
+    scale,
+    translateY,
+  }) {
     const textContent = useTextLayer(
       true,
       renderer,
@@ -133,16 +142,15 @@ const PdfSectionText: React.FC<Props> = React.memo(
           top: "0",
         }}
       >
-        {textContent &&
-          textContent.items.map((item, index) => (
-            <PdfTextElement
-              key={index}
-              item={item}
-              styles={textContent.styles}
-              view={view ?? defaultView}
-              scale={1.0}
-            />
-          ))}
+        {textContent?.items.map((item, index) => (
+          <PdfTextElement
+            key={index}
+            item={item}
+            styles={textContent.styles}
+            view={view ?? defaultView}
+            scale={1.0}
+          />
+        ))}
       </div>
     );
   },

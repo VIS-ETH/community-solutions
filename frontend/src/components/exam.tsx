@@ -54,14 +54,15 @@ function objectFromMap<S, T, K extends string | number | symbol>(
 function useObjectFromMap<S, T, K extends string | number | symbol>(
   array: T[],
   fn: (arg: T) => readonly [K, S] | undefined,
-  deps: any[],
+  deps: unknown[],
 ) {
   // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo
   return useMemo(() => objectFromMap(array, fn), [array, fn, ...deps]);
 }
 
 const Exam: React.FC<Props> = React.memo(
-  ({
+  // eslint-disable-next-line prefer-arrow-callback
+  function Exam({
     metaData,
     sections,
     width,
@@ -80,7 +81,7 @@ const Exam: React.FC<Props> = React.memo(
     expandedSections,
     onExpandSections,
     onCollapseSections,
-  }) => {
+  }) {
     useScrollToPermalink();
 
     const getAddCutHandler = useCallback(
@@ -145,7 +146,9 @@ const Exam: React.FC<Props> = React.memo(
             if (cancelled) return;
             onExpandSections(res.value.sectionId);
           })
-          .catch(() => {});
+          .catch(() => {
+            /* do nothing */
+          });
       }
       return () => {
         cancelled = true;
@@ -205,7 +208,7 @@ const Exam: React.FC<Props> = React.memo(
                   }
                   cutName={section.name}
                   onCutNameChange={(name: string) =>
-                    onUpdateCut(section.oid, { name })
+                    void onUpdateCut(section.oid, { name })
                   }
                   onHasAnswersChange={() =>
                     onUpdateCut(section.oid, {
@@ -248,26 +251,24 @@ const Exam: React.FC<Props> = React.memo(
                   {pageCounter < section.start.page && ++pageCounter && (
                     <div id={`page-${pageCounter}`} key={section.key} />
                   )}
-                  {renderer && (
-                    <PdfSectionCanvas
-                      /* PDF cut data */
-                      oid={section.cutOid}
-                      page={section.start.page}
-                      start={section.start.position}
-                      end={section.end.position}
-                      hidden={section.hidden}
-                      /* Handler */
-                      onSectionHiddenChange={onUpdateCut}
-                      displayHideShowButtons={displayHideShowButtons}
-                      renderer={renderer}
-                      targetWidth={width}
-                      onInViewChange={onChangeListeners[section.key]}
-                      /* Add cut */
-                      snap={snap}
-                      addCutText={addCutText}
-                      onAddCut={addCutHandlers[section.key]}
-                    />
-                  )}
+                  <PdfSectionCanvas
+                    /* PDF cut data */
+                    oid={section.cutOid}
+                    page={section.start.page}
+                    start={section.start.position}
+                    end={section.end.position}
+                    hidden={section.hidden}
+                    /* Handler */
+                    onSectionHiddenChange={onUpdateCut}
+                    displayHideShowButtons={displayHideShowButtons}
+                    renderer={renderer}
+                    targetWidth={width}
+                    onInViewChange={onChangeListeners[section.key]}
+                    /* Add cut */
+                    snap={snap}
+                    addCutText={addCutText}
+                    onAddCut={addCutHandlers[section.key]}
+                  />
                 </React.Fragment>
               );
             } else {

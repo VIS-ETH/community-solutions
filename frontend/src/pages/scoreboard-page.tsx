@@ -29,7 +29,7 @@ type Mode =
 interface ThProps {
   children: React.ReactNode;
   sorted: boolean;
-  onSort(): void;
+  onSort: () => void;
 }
 
 function Th({ children, sorted, onSort }: ThProps) {

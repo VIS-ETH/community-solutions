@@ -9,6 +9,7 @@ import { FaroErrorBoundary } from "@grafana/faro-react";
 import serverData from "./utils/server-data";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const container = document.getElementById("root")!;
 const root = createRoot(container);
 

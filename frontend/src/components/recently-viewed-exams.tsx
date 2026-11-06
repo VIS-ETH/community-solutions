@@ -1,15 +1,10 @@
 import { Anchor, Text } from "@mantine/core";
-import { useLocalStorage } from "@mantine/hooks";
 import React from "react";
 import { Link } from "react-router-dom";
-import { RECENT_EXAMS_KEY, RecentExam } from "../utils/recently-viewed-exams";
+import { useRecentExams } from "../utils/recently-viewed-exams";
 
 const RecentlyViewedExams: React.FC = () => {
-  const [recentExams] = useLocalStorage<RecentExam[]>({
-    key: RECENT_EXAMS_KEY,
-    defaultValue: [],
-    getInitialValueInEffect: false,
-  });
+  const [recentExams] = useRecentExams();
 
   if (recentExams.length === 0) return null;
 

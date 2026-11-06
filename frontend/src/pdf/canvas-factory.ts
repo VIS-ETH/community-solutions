@@ -57,32 +57,12 @@ export class CanvasFactory {
     }
   }
   /**
-   * This is the pdf-js interface for reusing `CanvasObject`s
-   * @param obj
-   * @param width
-   * @param height
-   */
-  reset(obj: CanvasObject, width: number, height: number) {
-    if (!obj.canvas) {
-      throw new Error("Canvas is not specified");
-    }
-    obj.context.setTransform(1, 0, 0, 1, 0, 0);
-    if (width <= 0 || height <= 0) {
-      throw new Error("Invalid canvas size");
-    }
-    obj.canvas.width = width;
-    obj.canvas.height = height;
-  }
-  /**
    * Call this method if you no longer need the specified `CanvasObject`.
    * Does nothing if the `CanvasObject`is not managed by this instance of
    * `CanvasFactory`.
    * @param obj
    */
   public destroy(obj: CanvasObject) {
-    if (!obj.canvas) {
-      throw new Error("Canvas is not specified");
-    }
     obj.canvas.height = 0;
     obj.canvas.width = 0;
     const index = this.objectIndexMap.get(obj);

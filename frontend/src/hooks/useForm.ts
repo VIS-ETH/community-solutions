@@ -40,19 +40,15 @@ type ResetFnMap<T extends FormData> = {
  *   []
  * );
  */
-const useForm = <
-  S extends keyof T,
-  T extends FormData,
-  K extends (data: T, reset: () => void) => any,
->(
+const useForm = <S extends keyof T, T extends FormData>(
   initialData: T,
-  formSubmit?: K,
+  formSubmit?: (data: T, reset: () => void) => void,
   _state: S[] = [],
 ) => {
   const ref = useRef({ ...initialData });
   useDebugValue(ref.current);
   const [state, setState] = useState<Pick<T, S>>({ ...initialData });
-  const resetFnMap = useRef<ResetFnMap<T>>({});
+  const resetFnMapRef = useRef<ResetFnMap<T>>({});
   const getValues = useCallback(() => {
     return ref.current;
   }, []);
@@ -60,9 +56,9 @@ const useForm = <
     ref.current[name] = value;
   }, []);
   const onChangeTransform = useCallback(
-    <B extends keyof T, M, A extends React.ChangeEvent<M>>(
+    <B extends keyof T, M>(
       name: B,
-      e: A,
+      e: React.ChangeEvent<M>,
       transform: (val: M) => T[B],
     ) => {
       setValue(name, transform(e.target));
@@ -70,7 +66,7 @@ const useForm = <
     [setValue],
   );
   const setStateValue = useCallback(
-    <K extends S>(key: K, value: T[S]) => {
+    (key: S, value: T[S]) => {
       setValue(key, value);
       setState(prevState => ({ ...prevState, [key]: value }));
     },
@@ -82,7 +78,7 @@ const useForm = <
       transform: (val: M) => T[K],
       valueTransform: (val: T[K]) => S,
     ) => {
-      const handler = <A extends React.ChangeEvent<M>>(e: A) =>
+      const handler = (e: React.ChangeEvent<M>) =>
         onChangeTransform(name, e, transform);
       return {
         ...valueTransform(getValues()[name]),
@@ -97,7 +93,7 @@ const useForm = <
       return register<K, InputElement<T[K]>, Partial<InputElement<T[K]>>>(
         name,
         e => {
-          resetFnMap.current[name] = () => (e.value = initialData[name]);
+          resetFnMapRef.current[name] = () => (e.value = initialData[name]);
 
           return e.value;
         },
@@ -108,14 +104,16 @@ const useForm = <
     },
     [register, initialData],
   );
+
+  type Keys = KeysWhereValue<T, boolean>;
   const registerCheckbox = useCallback(
-    <K extends KeysWhereValue<T, boolean>>(name: K) => {
-      return register<K, CheckedElement, Partial<CheckedElement>>(
+    (name: Keys) => {
+      return register<Keys, CheckedElement, Partial<CheckedElement>>(
         name,
         e => {
-          resetFnMap.current[name] = () => (e.checked = initialData[name]);
+          resetFnMapRef.current[name] = () => (e.checked = initialData[name]);
 
-          return e.checked as T[K];
+          return e.checked as T[Keys];
         },
         v => ({ defaultChecked: v }),
       );
@@ -125,18 +123,18 @@ const useForm = <
 
   const reset = useCallback(() => {
     ref.current = { ...initialData };
-    for (const key in resetFnMap.current) {
-      if (Object.prototype.hasOwnProperty.call(resetFnMap.current, key)) {
-        const fn = resetFnMap.current[key];
+    for (const key in resetFnMapRef.current) {
+      if (Object.prototype.hasOwnProperty.call(resetFnMapRef.current, key)) {
+        const fn = resetFnMapRef.current[key];
         if (fn) fn();
       }
     }
-    resetFnMap.current = {};
+    resetFnMapRef.current = {};
     setState({ ...initialData });
   }, [initialData]);
 
   const onSubmit = useCallback(
-    <T>(e: React.FormEvent<T>) => {
+    (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
       if (formSubmit) formSubmit(getValues(), reset);

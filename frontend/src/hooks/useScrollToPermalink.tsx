@@ -54,7 +54,7 @@ export const useScrollToPermalink = () => {
     });
 
     const timeout = window.setTimeout(() => {
-      if (disconnect) disconnect();
+      disconnect();
     }, JUMP_TIMEOUT);
 
     // Try scrolling once if the element currently is present
@@ -62,7 +62,7 @@ export const useScrollToPermalink = () => {
 
     return () => {
       window.clearTimeout(timeout);
-      disconnect?.();
+      disconnect();
     };
   }, [answer, comment]);
 };

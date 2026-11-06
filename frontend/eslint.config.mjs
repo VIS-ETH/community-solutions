@@ -12,8 +12,8 @@ export default defineConfig(
     eslintReact.configs.recommended,
     reactHooksPlugin.configs.flat.recommended,
     {
-        // equivalent rules already enabled in react-hooks
         rules: {
+            // equivalent rules already enabled in react-hooks
             "@eslint-react/rules-of-hooks": "off",
             "@eslint-react/exhaustive-deps": "off",
             "@eslint-react/set-state-in-effect": "off",
@@ -50,7 +50,6 @@ export default defineConfig(
 
         // Custom rules
         rules: {
-            "@eslint-react/no-leaked-conditional-rendering": "warn",
             // Unused variables should begin with an underscore
             "@typescript-eslint/no-unused-vars": ["warn", {
                 args: "none",

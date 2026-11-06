@@ -149,6 +149,7 @@ const PdfCutter: React.FC<PdfSelectorProps> = ({ selectedPdf, onCrop }) => {
     let renderTask: RenderTask | undefined;
 
     async function renderPdf() {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const pdfPage = await pdfObject!.getPage(page);
 
       if (!active) return;
@@ -324,12 +325,7 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
   const examFile = !examMetadataLoading && examMetadata;
 
   useEffect(() => {
-    if (
-      selectedCategory &&
-      selectedExam &&
-      examMetadata &&
-      !examMetadataLoading
-    ) {
+    if (selectedCategory && selectedExam && examMetadata) {
       // Eagerly load solution or else exam
       setSelectedPdf(
         examMetadata.hasSolution ? SelectedPdf.Solution : SelectedPdf.Exam,
@@ -377,7 +373,7 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
           <Radio.Group
             value={selectedPdf}
             onChange={value => {
-              setSelectedPdf(value as SelectedPdf);
+              setSelectedPdf(value);
             }}
           >
             <Center>

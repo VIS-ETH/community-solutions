@@ -69,26 +69,28 @@ function useAlmostInViewport(arg: Arg): [InViewport];
 function useAlmostInViewport<T extends HTMLElement = HTMLElement>(
   ...args: [Arg] | []
 ): [InViewport, RefObject<T | null>?] {
-  const element = useRef<T>(null);
+  const elementRef = useRef<T>(null);
   const hasPassedInElement = args.length === 1;
-  const arg = useRef(args[0]);
-  const [inViewPort, setInViewport] = useState<InViewport>(() => {
+  const argRef = useRef(args[0]);
+  const [inViewport, setInViewport] = useState<InViewport>(() => {
     const initDOM =
-      typeof arg.current === "function" ? arg.current() : arg.current;
+      typeof argRef.current === "function" ? argRef.current() : argRef.current;
 
     return isInViewPort(initDOM!);
   });
 
   useLayoutEffect(() => {
     const passedInElement =
-      typeof arg.current === "function" ? arg.current() : arg.current;
+      typeof argRef.current === "function" ? argRef.current() : argRef.current;
 
     const targetElement = hasPassedInElement
       ? passedInElement
-      : element.current;
+      : elementRef.current;
 
     if (!targetElement) {
-      return () => {};
+      return () => {
+        /* no-op */
+      };
     }
 
     const observer = new IntersectionObserver(
@@ -110,15 +112,15 @@ function useAlmostInViewport<T extends HTMLElement = HTMLElement>(
       observer.disconnect();
     };
   }, [
-    element.current,
-    typeof arg.current === "function" ? undefined : arg.current,
+    elementRef.current,
+    typeof argRef.current === "function" ? undefined : argRef.current,
   ]);
 
   if (hasPassedInElement) {
-    return [inViewPort];
+    return [inViewport];
   }
 
-  return [inViewPort, element as RefObject<T | null>];
+  return [inViewport, elementRef];
 }
 
 export default useAlmostInViewport;

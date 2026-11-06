@@ -43,6 +43,7 @@ const ExamTypeSection: React.FC<ExamTypeCardProps> = ({
   onDeselect,
   reload,
 }) => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const user = useUser()!;
   const catAdmin = user.isCategoryAdmin;
   const allSelected = exams.every(exam => selected.has(exam.filename));
@@ -115,9 +116,8 @@ const ExamTypeSection: React.FC<ExamTypeCardProps> = ({
                   checked={selected.has(exam.filename)}
                   onClick={e => e.stopPropagation()}
                   onChange={e => {
-                    e.currentTarget.checked
-                      ? onSelect(exam.filename)
-                      : onDeselect(exam.filename);
+                    if (e.currentTarget.checked) onSelect(exam.filename);
+                    else onDeselect(exam.filename);
                   }}
                   disabled={!exam.canView}
                   mt="0.25em"
