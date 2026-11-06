@@ -131,24 +131,35 @@ const CreateDocumentFileModal: React.FC<Props> = ({
           onChange={handleFilesSelected}
         >
           {buttonProps => (
-            <Button
-              {...buttonProps}
-              disabled={isUploading}
-              leftSection={<IconFile size={18} />}
-            >
-              Choose files
-            </Button>
+            <>
+              <Button
+                {...buttonProps}
+                disabled={isUploading}
+                leftSection={<IconFile size={18} />}
+              >
+                Choose files
+              </Button>
+
+              {files.length === 0 && (
+                <Paper
+                  className={classes.dropZone}
+                  p="md"
+                  radius="md"
+                  {...buttonProps}
+                  component="button"
+                  type="button"
+                  disabled={isUploading}
+                >
+                  <IconCloudUpload size={40} stroke={1.5} aria-hidden="true" />
+                  <Text size="sm" ta="center">
+                    Drop files here, or click to choose files.
+                  </Text>
+                </Paper>
+              )}
+            </>
           )}
         </FileButton>
 
-        {files.length === 0 && (
-          <Paper className={classes.dropZone} p="md" radius="md">
-            <IconCloudUpload size={40} stroke={1.5} aria-hidden="true" />
-            <Text size="sm" ta="center">
-              Drop files here, or use Choose files.
-            </Text>
-          </Paper>
-        )}
         {files.length !== 0 && (
           <Text size="xs" c="dimmed">
             Drop more files into this dialog, or use Choose files.

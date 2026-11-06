@@ -251,7 +251,7 @@ const DocumentFileItem: React.FC<Props> = ({
                     disabled={updateDocumentFile.isPending}
                     leftSection={<IconFile size={18} />}
                   >
-                    Choose files
+                    Choose file
                   </Button>
                 )}
               </FileButton>

@@ -5,5 +5,9 @@
   align-items: center;
   justify-content: center;
   gap: var(--mantine-spacing-sm);
-  border: 2px dashed var(--mantine-color-default-border);
+  border: 2px dashed var(--mantine-primary-color-filled);
+}
+
+.dropZone:hover {
+  border-style: solid;
 }
