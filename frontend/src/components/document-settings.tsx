@@ -17,11 +17,13 @@ import { useNavigate } from "react-router-dom";
 import { usePendingImages } from "./Editor/pending-images";
 import { createOptions, options } from "../utils/ts-utils";
 import CreateDocumentFileModal from "./create-document-file-modal";
+import CreateMarkdownFileModal from "./create-markdown-file-modal";
 import DocumentFileItem from "./document-file-item";
 import { UndoStack } from "./Editor/utils/undo-stack";
 import IconButton from "./icon-button";
 import MarkdownText from "./markdown-text";
 import {
+  IconCloudUpload,
   IconDeviceFloppy,
   IconPlus,
   IconReload,
@@ -125,16 +127,37 @@ const DocumentSettings: React.FC<Props> = ({ document, refetch }) => {
   const [transferUser, setTransferUser] = useState<UserSchema | null>();
 
   const [
-    addModalIsOpen,
-    { toggle: toggleAddModalIsOpen, open: openAddModal, close: closeAddModal },
+    uploadModalIsOpen,
+    { open: openUploadModal, close: closeUploadModal },
+  ] = useDisclosure();
+
+  const [
+    createMarkdownModalIsOpen,
+    { open: openCreateMarkdownModal, close: closeCreateMarkdownModal },
   ] = useDisclosure();
 
   return (
     <>
-      <Modal title="Add File" opened={addModalIsOpen} onClose={closeAddModal}>
+      <Modal
+        title="Upload File"
+        opened={uploadModalIsOpen}
+        onClose={closeUploadModal}
+      >
         <CreateDocumentFileModal
-          onClose={openAddModal}
+          onClose={closeUploadModal}
           document={document}
+          refetch={refetch}
+        />
+      </Modal>
+
+      <Modal
+        title="Create File"
+        opened={createMarkdownModalIsOpen}
+        onClose={closeCreateMarkdownModal}
+      >
+        <CreateMarkdownFileModal
+          document={document}
+          onClose={closeCreateMarkdownModal}
           refetch={refetch}
         />
       </Modal>
@@ -276,9 +299,13 @@ const DocumentSettings: React.FC<Props> = ({ document, refetch }) => {
             />
           ))}
       </List>
-      <Flex justify="end">
-        <Button leftSection={<IconPlus />} onClick={toggleAddModalIsOpen}>
-          Add
+      <Flex justify="end" gap="sm" wrap="wrap">
+        <Button leftSection={<IconCloudUpload />} onClick={openUploadModal}>
+          Upload Files
+        </Button>
+
+        <Button leftSection={<IconPlus />} onClick={openCreateMarkdownModal}>
+          Create Markdown File
         </Button>
       </Flex>
       {document.can_delete && (

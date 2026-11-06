@@ -1,10 +1,19 @@
-import { Alert, Button, FileInput, Stack, TextInput } from "@mantine/core";
+import {
+  Alert,
+  Button,
+  FileButton,
+  Stack,
+  Text,
+  ActionIcon,
+  Group,
+  Paper,
+} from "@mantine/core";
 import * as React from "react";
-import { useState } from "react";
-import { IconCloudUpload, IconPlus } from "@tabler/icons-react";
+import { useState, useRef } from "react";
+import { IconCloudUpload, IconX, IconFile } from "@tabler/icons-react";
 import { useCreateDocumentFile } from "../api/hooks/documents";
 import type { DocumentSchema } from "../api/model/documentSchema";
-
+import classes from "./create-document-file-modal.module.css";
 interface Props {
   document: DocumentSchema;
   onClose: () => void;
@@ -16,60 +25,206 @@ const CreateDocumentFileModal: React.FC<Props> = ({
   document,
   refetch,
 }) => {
-  const [displayName, setDisplayName] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const { mutate, isError, error, isPending } = useCreateDocumentFile({
-    mutation: {
-      onSuccess() {
-        onClose();
-        refetch();
-        setDisplayName("");
-        setFile(null);
-      },
-    },
-  });
+  // added to clear browser input when a file is deleted from the pending list
+  const resetFileInput = useRef<(() => void) | null>(null);
+
+  const { mutateAsync, isError, error } = useCreateDocumentFile<
+    string | Error
+  >();
+
+  function handleFilesSelected(selectedFiles: File[]): void {
+    setFiles(prevFiles => [...prevFiles, ...selectedFiles]);
+    resetFileInput.current?.();
+  }
+
+  function handleDrop(event: React.DragEvent<HTMLDivElement>): void {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+
+    if (isUploading) {
+      return;
+    }
+
+    const droppedFiles = Array.from(event.dataTransfer.files);
+
+    if (droppedFiles.length === 0) {
+      return;
+    }
+
+    handleFilesSelected(droppedFiles);
+  }
+
+  function handleDragOver(event: React.DragEvent<HTMLDivElement>): void {
+    setIsDragging(!isUploading);
+    event.preventDefault();
+    event.stopPropagation();
+
+    event.dataTransfer.dropEffect = isUploading ? "none" : "copy";
+  }
+
+  function handleDragLeave(event: React.DragEvent<HTMLDivElement>): void {
+    if (
+      event.relatedTarget instanceof Node &&
+      event.currentTarget.contains(event.relatedTarget)
+    ) {
+      return;
+    }
+
+    setIsDragging(false);
+  }
+
+  function handleRemoveFile(indexToRemove: number): void {
+    if (isUploading) {
+      return;
+    }
+    setFiles(previousFiles =>
+      previousFiles.filter((_, index) => index !== indexToRemove),
+    );
+  }
+
+  async function handleUpload(): Promise<void> {
+    if (files.length === 0 || isUploading) {
+      return;
+    }
+
+    setIsUploading(true);
+    let uploadedCount = 0;
+
+    try {
+      // reversing the array to optimize filtering state at every iteration, state updates when the upload finishes
+      const fileQueue = [...files].reverse();
+      while (fileQueue.length > 0) {
+        const curFile = fileQueue.pop();
+
+        if (curFile === undefined) {
+          break;
+        }
+
+        await mutateAsync({
+          username: document.author.username,
+          slug: document.slug,
+          data: {
+            display_name: curFile.name,
+            file: curFile,
+          },
+        });
+
+        uploadedCount += 1;
+      }
+
+      onClose();
+    } catch {
+      // The existing Alert displays the mutation error.
+    } finally {
+      if (uploadedCount > 0) {
+        setFiles(previousFiles => previousFiles.slice(uploadedCount));
+      }
+      refetch();
+      setIsUploading(false);
+    }
+  }
 
   return (
     <>
-      <Stack>
-        {isError && <Alert color="red">{error as unknown as string}</Alert>}
-        <TextInput
-          label="Display Name"
-          value={displayName}
-          onChange={e => setDisplayName(e.currentTarget.value)}
-        />
-        <FileInput
-          label="File"
-          placeholder="Click here to pick file..."
-          leftSection={<IconCloudUpload />}
-          value={file}
-          onChange={setFile}
-        />
-        <div>
-          If you don't select any file we will create an empty markdown file for
-          you that you can edit afterwards.
-        </div>
+      <Stack
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        onDragLeave={handleDragLeave}
+      >
+        {isError && (
+          <Alert color="red">
+            {" "}
+            {error instanceof Error ? error.message : error}{" "}
+          </Alert>
+        )}
+        <FileButton
+          multiple
+          resetRef={resetFileInput}
+          disabled={isUploading}
+          onChange={handleFilesSelected}
+        >
+          {buttonProps => (
+            <>
+              <Button
+                {...buttonProps}
+                disabled={isUploading}
+                leftSection={<IconFile size={18} />}
+              >
+                Choose files
+              </Button>
+
+              {files.length === 0 && (
+                <Paper
+                  className={classes.dropZone}
+                  data-dragging={isDragging}
+                  p="md"
+                  radius="md"
+                  {...buttonProps}
+                  component="button"
+                  type="button"
+                  disabled={isUploading}
+                >
+                  <IconCloudUpload size={40} stroke={1.5} aria-hidden="true" />
+                  <Text size="sm" ta="center">
+                    Drop files here, or click to choose files.
+                  </Text>
+                </Paper>
+              )}
+            </>
+          )}
+        </FileButton>
+
+        {files.length !== 0 && (
+          <Text size="xs" c="dimmed">
+            Drop more files into this dialog, or use Choose files.
+          </Text>
+        )}
+        {files.length > 0 && (
+          <Stack gap="xs">
+            <Text size="sm" fw={500}>
+              Selected files: {files.length}
+            </Text>
+
+            {files.map((file, index) => (
+              <Group key={`${file.name}-${index}`} gap="xs" wrap="nowrap">
+                <Text
+                  size="sm"
+                  truncate="end"
+                  flex={1}
+                  miw={0}
+                  title={file.name}
+                >
+                  {file.name}
+                </Text>
+
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="sm"
+                  aria-label={`Remove ${file.name} from the pending list`}
+                  disabled={isUploading}
+                  onClick={() => handleRemoveFile(index)}
+                >
+                  <IconX size={16} />
+                </ActionIcon>
+              </Group>
+            ))}
+          </Stack>
+        )}
         <Button
-          loading={isPending}
-          leftSection={<IconPlus />}
-          disabled={isPending || displayName.trim() === ""}
+          loading={isUploading}
+          leftSection={<IconCloudUpload />}
+          disabled={isUploading || files.length === 0}
           onClick={() => {
-            mutate({
-              username: document.author.username,
-              slug: document.slug,
-              data: {
-                display_name: displayName.trim(),
-                file:
-                  file ??
-                  new File([], "document.md", {
-                    type: "text/markdown",
-                  }),
-              },
-            });
+            void handleUpload();
           }}
         >
-          Add
+          Upload
         </Button>
       </Stack>
     </>
