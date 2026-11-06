@@ -37,6 +37,7 @@ import type { DocumentSchema } from "../api/model/documentSchema";
 import type { DocumentFileSchema } from "../api/model/documentFileSchema";
 import classes from "./document-file-item.module.css";
 import uploadClasses from "./create-document-file-modal.module.css";
+
 interface Props {
   max_order: number;
   document: DocumentSchema;
@@ -197,76 +198,81 @@ const DocumentFileItem: React.FC<Props> = ({
               onChange={e => setDisplayName(e.currentTarget.value)}
             />
 
-            {replaceFile === undefined && (
-              <Paper className={uploadClasses.dropZone}>
-                <IconFile size={40} stroke={1.5} aria-hidden="true" />
-                <Text className={classes.replacementDescription}>
-                  Drop one replacement file here, or choose one
-                </Text>
-              </Paper>
-            )}
+            <FileButton
+              resetRef={resetFileInput}
+              disabled={updateDocumentFile.isPending}
+              onChange={selectedFile =>
+                handleReplacementSelected(selectedFile ?? undefined)
+              }
+            >
+              {buttonProps => (
+                <>
+                  {replaceFile === undefined && (
+                    <Paper
+                      className={uploadClasses.dropZone}
+                      {...buttonProps}
+                      component="button"
+                      type="button"
+                      disabled={updateDocumentFile.isPending}
+                    >
+                      <IconFile size={40} stroke={1.5} aria-hidden="true" />
+                      <Text className={classes.replacementDescription}>
+                        Drop one replacement file here, or click to choose one.
+                      </Text>
+                    </Paper>
+                  )}
+                  {replaceFile !== undefined && (
+                    <Group gap="xs" wrap="nowrap">
+                      <Text
+                        size="sm"
+                        truncate="end"
+                        flex={1}
+                        miw={0}
+                        title={replaceFile.name}
+                      >
+                        {replaceFile.name}
+                      </Text>
 
-            {replaceFile !== undefined && (
-              <Group gap="xs" wrap="nowrap">
-                <Text
-                  size="sm"
-                  truncate="end"
-                  flex={1}
-                  miw={0}
-                  title={replaceFile.name}
-                >
-                  {replaceFile.name}
-                </Text>
+                      <ActionIcon
+                        variant="subtle"
+                        color="gray"
+                        size="sm"
+                        aria-label={`Remove ${replaceFile.name} as the replacement`}
+                        disabled={updateDocumentFile.isPending}
+                        onClick={() => handleReplacementSelected(undefined)}
+                      >
+                        <IconX size={16} />
+                      </ActionIcon>
+                    </Group>
+                  )}
+                  {replacementError && (
+                    <Alert color="red" className={classes.replacementError}>
+                      {replacementError}
+                    </Alert>
+                  )}
+                  <Group justify="space-between">
+                    <Button
+                      {...buttonProps}
+                      disabled={updateDocumentFile.isPending}
+                      leftSection={<IconFile size={18} />}
+                    >
+                      Choose file
+                    </Button>
 
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  size="sm"
-                  aria-label={`Remove ${replaceFile.name} as the replacement`}
-                  disabled={updateDocumentFile.isPending}
-                  onClick={() => handleReplacementSelected(undefined)}
-                >
-                  <IconX size={16} />
-                </ActionIcon>
-              </Group>
-            )}
-
-            {replacementError && (
-              <Alert color="red" className={classes.replacementError}>
-                {replacementError}
-              </Alert>
-            )}
-
-            <Group justify="space-between">
-              <FileButton
-                resetRef={resetFileInput}
-                disabled={updateDocumentFile.isPending}
-                onChange={selectedFile =>
-                  handleReplacementSelected(selectedFile ?? undefined)
-                }
-              >
-                {buttonProps => (
-                  <Button
-                    {...buttonProps}
-                    disabled={updateDocumentFile.isPending}
-                    leftSection={<IconFile size={18} />}
-                  >
-                    Choose file
-                  </Button>
-                )}
-              </FileButton>
-
-              <Button
-                disabled={displayName?.trim() === ""}
-                onClick={() =>
-                  handleUpdateFile(displayName?.trim(), replaceFile)
-                }
-                leftSection={<IconDeviceFloppy />}
-                loading={updateDocumentFile.isPending}
-              >
-                Save
-              </Button>
-            </Group>
+                    <Button
+                      disabled={displayName?.trim() === ""}
+                      onClick={() =>
+                        handleUpdateFile(displayName?.trim(), replaceFile)
+                      }
+                      leftSection={<IconDeviceFloppy />}
+                      loading={updateDocumentFile.isPending}
+                    >
+                      Save
+                    </Button>
+                  </Group>
+                </>
+              )}
+            </FileButton>
           </Stack>
         </Modal.Body>
       </Modal>
