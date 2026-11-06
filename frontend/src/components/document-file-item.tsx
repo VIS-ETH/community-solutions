@@ -54,6 +54,7 @@ const DocumentFileItem: React.FC<Props> = ({
   const [displayName, setDisplayName] = useState<string | undefined>();
   const [replaceFile, setFile] = useState<File | undefined>(undefined);
   const [replacementError, setReplacementError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const resetFileInput = useRef<(() => void) | null>(null);
 
@@ -133,6 +134,7 @@ const DocumentFileItem: React.FC<Props> = ({
   function handleReplacementDrop(event: React.DragEvent<HTMLDivElement>): void {
     event.preventDefault();
     event.stopPropagation();
+    setIsDragging(false);
 
     if (updateDocumentFile.isPending) {
       return;
@@ -161,12 +163,26 @@ const DocumentFileItem: React.FC<Props> = ({
   function handleReplacementDragOver(
     event: React.DragEvent<HTMLDivElement>,
   ): void {
+    setIsDragging(!updateDocumentFile.isPending);
     event.preventDefault();
     event.stopPropagation();
 
     event.dataTransfer.dropEffect = updateDocumentFile.isPending
       ? "none"
       : "copy";
+  }
+
+  function handleReplacementDragLeave(
+    event: React.DragEvent<HTMLDivElement>,
+  ): void {
+    if (
+      event.relatedTarget instanceof Node &&
+      event.currentTarget.contains(event.relatedTarget)
+    ) {
+      return;
+    }
+
+    setIsDragging(false);
   }
 
   function handleReplacementSelected(selectedFile: File | undefined): void {
@@ -191,6 +207,7 @@ const DocumentFileItem: React.FC<Props> = ({
           <Stack
             onDragOver={handleReplacementDragOver}
             onDrop={handleReplacementDrop}
+            onDragLeave={handleReplacementDragLeave}
           >
             <TextInput
               label="Display Name"
@@ -214,6 +231,7 @@ const DocumentFileItem: React.FC<Props> = ({
                       component="button"
                       type="button"
                       disabled={updateDocumentFile.isPending}
+                      data-dragging={isDragging}
                     >
                       <IconFile size={40} stroke={1.5} aria-hidden="true" />
                       <Text className={classes.replacementDescription}>

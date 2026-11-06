@@ -8,6 +8,7 @@
   border: 2px dashed var(--mantine-primary-color-filled);
 }
 
-.dropZone:hover {
+.dropZone:hover,
+.dropZone[data-dragging="true"] {
   border-style: solid;
 }

@@ -27,6 +27,7 @@ const CreateDocumentFileModal: React.FC<Props> = ({
 }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   // added to clear browser input when a file is deleted from the pending list
   const resetFileInput = useRef<(() => void) | null>(null);
@@ -43,6 +44,7 @@ const CreateDocumentFileModal: React.FC<Props> = ({
   function handleDrop(event: React.DragEvent<HTMLDivElement>): void {
     event.preventDefault();
     event.stopPropagation();
+    setIsDragging(false);
 
     if (isUploading) {
       return;
@@ -58,10 +60,22 @@ const CreateDocumentFileModal: React.FC<Props> = ({
   }
 
   function handleDragOver(event: React.DragEvent<HTMLDivElement>): void {
+    setIsDragging(!isUploading);
     event.preventDefault();
     event.stopPropagation();
 
     event.dataTransfer.dropEffect = isUploading ? "none" : "copy";
+  }
+
+  function handleDragLeave(event: React.DragEvent<HTMLDivElement>): void {
+    if (
+      event.relatedTarget instanceof Node &&
+      event.currentTarget.contains(event.relatedTarget)
+    ) {
+      return;
+    }
+
+    setIsDragging(false);
   }
 
   function handleRemoveFile(indexToRemove: number): void {
@@ -117,7 +131,11 @@ const CreateDocumentFileModal: React.FC<Props> = ({
 
   return (
     <>
-      <Stack onDragOver={handleDragOver} onDrop={handleDrop}>
+      <Stack
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        onDragLeave={handleDragLeave}
+      >
         {isError && (
           <Alert color="red">
             {" "}
@@ -143,6 +161,7 @@ const CreateDocumentFileModal: React.FC<Props> = ({
               {files.length === 0 && (
                 <Paper
                   className={classes.dropZone}
+                  data-dragging={isDragging}
                   p="md"
                   radius="md"
                   {...buttonProps}
