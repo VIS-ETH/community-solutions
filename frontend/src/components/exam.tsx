@@ -60,7 +60,7 @@ function useObjectFromMap<S, T, K extends string | number | symbol>(
   fn: (arg: T) => readonly [K, S] | undefined,
   deps: any[],
 ) {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo
   return useMemo(() => objectFromMap(array, fn), [array, fn, ...deps]);
 }
 
