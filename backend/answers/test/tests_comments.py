@@ -20,17 +20,17 @@ class TestComment(ComsolTestExamData):
         self.assertEqual(comment.marked_as_ai.count(), 0)
         self.post(
             f"/api/exam/setcommentmarkedasai/{comment.id}/",
-            {"marked_as_ai": False},
+            {"markedAsAi": False},
         )
         self.post(
             f"/api/exam/setcommentmarkedasai/{comment.id}/",
-            {"marked_as_ai": True},
+            {"markedAsAi": True},
         )
         comment.refresh_from_db()
         self.assertEqual(comment.marked_as_ai.count(), 1)
         self.post(
             f"/api/exam/setcommentmarkedasai/{comment.id}/",
-            {"marked_as_ai": False},
+            {"markedAsAi": False},
         )
         comment.refresh_from_db()
         self.assertEqual(comment.marked_as_ai.count(), 0)

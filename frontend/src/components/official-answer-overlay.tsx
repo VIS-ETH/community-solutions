@@ -9,7 +9,8 @@ import {
   Select,
 } from "@mantine/core";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { loadExamMetaData } from "../api/hooks";
+import { getExamMetadata, useGetExamMetadata } from "../api/hooks/answers.js";
+import type { ExamMetadataSchema } from "../api/model/index.js";
 import { useRequest } from "ahooks";
 import { createOptions, options } from "../utils/ts-utils.js";
 import { usePdfUrl } from "./official-solution.js";
@@ -22,10 +23,12 @@ import { getDocument } from "../pdf/pdfjs.js";
 import { ReactCrop, type Crop } from "react-image-crop";
 
 import "react-image-crop/dist/ReactCrop.css";
-import type { ExamMetaData } from "../interfaces.js";
 import { useLocation } from "react-router-dom";
 import { ReactRouterLocation } from "@grafana/faro-react";
-import { listExams, useListCategoriesWithMeta } from "../api/hooks/categories";
+import {
+  listCategoryExams,
+  useListCategoriesWithMeta,
+} from "../api/hooks/categories";
 
 function formatCoordinate(c: number): string {
   const rounded = Math.round(c * 1e6) / 1e6;
@@ -53,11 +56,11 @@ url: ${url}
 
 async function pdfUrlPrefill(
   url: Location | ReactRouterLocation,
-): Promise<ExamMetaData | undefined> {
+): Promise<ExamMetadataSchema | undefined> {
   if (url.pathname.startsWith("/exams/")) {
     const exam = url.pathname.slice("/exams/".length);
     try {
-      const metadata = await loadExamMetaData(exam);
+      const { value: metadata } = await getExamMetadata(exam);
       return metadata;
     } catch {
       return undefined;
@@ -290,7 +293,7 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
   const { data: exams } = useRequest(
     () =>
       selectedCategory
-        ? listExams(selectedCategory)
+        ? listCategoryExams(selectedCategory)
         : Promise.resolve(undefined),
     {
       cacheKey: `exam-list-${selectedCategory}`,
@@ -308,19 +311,16 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
     [exams],
   );
 
-  const { loading: examMetadataLoading, data: examMetadata } = useRequest(
-    () =>
-      selectedExam
-        ? loadExamMetaData(selectedExam)
-        : Promise.resolve(undefined),
-    {
-      cacheKey: `exam-metaData-${selectedExam}`,
-      refreshDeps: [selectedExam],
-    },
-  );
+  const { isLoading: examMetadataLoading, data: examMetadata } =
+    useGetExamMetadata(selectedExam ?? "", {
+      query: {
+        enabled: selectedExam !== undefined,
+        select: data => data.value,
+      },
+    });
 
   const solutionFile =
-    examMetadataLoading || !examMetadata ? false : examMetadata.has_solution;
+    examMetadataLoading || !examMetadata ? false : examMetadata.hasSolution;
   const examFile = !examMetadataLoading && examMetadata;
 
   useEffect(() => {
@@ -332,7 +332,7 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
     ) {
       // Eagerly load solution or else exam
       setSelectedPdf(
-        examMetadata.has_solution ? SelectedPdf.Solution : SelectedPdf.Exam,
+        examMetadata.hasSolution ? SelectedPdf.Solution : SelectedPdf.Exam,
       );
     }
   }, [selectedCategory, selectedExam, examMetadata, examMetadataLoading]);

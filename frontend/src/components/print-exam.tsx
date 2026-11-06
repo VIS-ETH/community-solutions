@@ -1,6 +1,6 @@
 import { Button, Card, PasswordInput } from "@mantine/core";
 import * as React from "react";
-import { fetchPost } from "../api/fetch-utils";
+import { printExamPdf, printSolutionPdf } from "../api/hooks/answers";
 
 interface Props {
   title: string;
@@ -25,9 +25,10 @@ export default class PrintExam extends React.Component<Props, State> {
       error: "",
     });
     if (this.state.currentPassword.length > 0) {
-      fetchPost(
-        `/api/exam/printpdf/${this.props.examtype}/${this.props.filename}/`,
-        { password: this.state.currentPassword },
+      const data = { password: this.state.currentPassword };
+      (this.props.examtype === "solution"
+        ? printSolutionPdf(this.props.filename, data)
+        : printExamPdf(this.props.filename, data)
       )
         .then(() => {
           this.setState({

@@ -12,7 +12,7 @@ import ExamTypeSection from "./exam-type-section";
 import { IconDownload, IconSearch } from "@tabler/icons-react";
 import { Link } from "react-router-dom";
 import { CategoryData } from "../api/model";
-import { useListExams } from "../api/hooks/categories";
+import { useListCategoryExams } from "../api/hooks/categories";
 
 interface ExamListProps {
   metaData: CategoryData;
@@ -23,7 +23,7 @@ const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
     isPending: loading,
     error,
     refetch: reload,
-  } = useListExams(metaData.slug, {
+  } = useListCategoryExams(metaData.slug, {
     query: {
       select: ({ value }) => value,
     },

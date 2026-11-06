@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useUserComments } from "../api/hooks";
 import SingleCommentComponent from "./comment-single";
 import { Alert, Loader } from "@mantine/core";
 import classes from "./user-comments.module.css";
+import { useListCommentsByUser } from "../api/hooks/answers";
 
 // `transform: translateX(0)` fixes an issue on webkit browsers
 // where relative positioned elements aren't displayed in containers
@@ -21,21 +21,26 @@ interface UserCommentsProps {
 
 const UserComments: React.FC<UserCommentsProps> = ({ username }) => {
   const [page, setPage] = useState(0); // to indicate what page of answers should be loaded
-  const [error, loading, data, reload] = useUserComments(username, -1);
-  const [comments, setComments] = useState(data);
+  const {
+    error,
+    isLoading: loading,
+    data,
+    refetch: reload,
+  } = useListCommentsByUser(
+    username,
+    { page: -1 },
+    { query: { select: data => data.value } },
+  );
   const [lastElement, setLastElement] = useState<HTMLDivElement | null>(null);
 
   const PAGE_SIZE = 10; // loads a limited amount of new elements at a time when scrolling down
 
-  useEffect(() => {
-    if (data) setComments([...data]);
-  }, [data]);
-
-  // resets the cards if we're on a new users page
-  useEffect(() => {
+  // resets the slice when we're on a new user's page
+  const [prevUsername, setPrevUsername] = useState(username);
+  if (username !== prevUsername) {
+    setPrevUsername(username);
     setPage(0);
-    setComments(undefined);
-  }, [username]);
+  }
 
   // sets the observer to the last element once it is rendered
   useEffect(() => {
@@ -59,14 +64,17 @@ const UserComments: React.FC<UserCommentsProps> = ({ username }) => {
 
   return (
     <>
-      {error && <Alert color="red">{error.message}</Alert>}
-      {(!comments || comments.length === 0) && !loading && (
+      {error && <Alert color="red">{error as unknown as string}</Alert>}
+      {(!data || data.length === 0) && !loading && (
         <Alert color="gray">No comments</Alert>
       )}
       <div className={classes.column}>
-        {comments?.slice(0, (page + 1) * PAGE_SIZE).map(comment => (
+        {data?.slice(0, (page + 1) * PAGE_SIZE).map(comment => (
           <div key={comment.oid}>
-            <SingleCommentComponent comment={comment} reload={reload} />
+            <SingleCommentComponent
+              comment={comment}
+              reload={() => void reload()}
+            />
           </div>
         ))}
         <div

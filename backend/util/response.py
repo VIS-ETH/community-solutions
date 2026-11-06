@@ -7,7 +7,6 @@ from django.http import (
     HttpResponseNotAllowed,
     JsonResponse,
 )
-from ninja import Schema
 
 
 def request_method(methods: "tuple[str] | list[str]"):
@@ -60,10 +59,6 @@ def data_dumper(obj):
         return obj.isoformat()
     else:
         return obj
-
-
-class ErrorSchema(Schema):
-    err: str
 
 
 def success(**obj):

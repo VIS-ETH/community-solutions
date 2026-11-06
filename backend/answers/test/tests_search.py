@@ -37,7 +37,7 @@ class TestSearch(ComsolTestExamData):
         # First check that we get nothing if we don't include exams
         res = self.post(
             "/api/exam/search/",
-            {"term": "uniqueidthatwecansearch", "include_exams": False},
+            {"term": "uniqueidthatwecansearch", "includeExams": False},
         )["value"]
         self.assertEqual(len(res), 0)
 
@@ -51,8 +51,8 @@ class TestSearch(ComsolTestExamData):
         match = res[0]
         self.assertEqual(match["type"], "exam")
         self.assertEqual(len(match["headline"]), 1)
-        self.assertEqual(match["category_displayname"], "default")
-        self.assertEqual(match["category_slug"], "default")
+        self.assertEqual(match["categoryDisplayname"], "default")
+        self.assertEqual(match["categorySlug"], "default")
         self.assertEqual(len(match["pages"]), 1)
 
     def test_search_exam_with_category_filter(self):
@@ -75,7 +75,7 @@ class TestSearch(ComsolTestExamData):
         """Test searching for a specific term in an answer."""
         res = self.post(
             "/api/exam/search/",
-            {"term": "mywacky answer", "include_answers": False},
+            {"term": "mywacky answer", "includeAnswers": False},
         )["value"]
         self.assertEqual(len(res), 0)
 
@@ -88,11 +88,11 @@ class TestSearch(ComsolTestExamData):
         match = res[0]
         self.assertEqual(match["type"], "answer")
         self.assertEqual(
-            match["category_displayname"],
+            match["categoryDisplayname"],
             self.answers[0].answer_section.exam.category.displayname,
         )
         self.assertEqual(
-            match["category_slug"], self.answers[0].answer_section.exam.category.slug
+            match["categorySlug"], self.answers[0].answer_section.exam.category.slug
         )
 
     def test_search_answer_with_category_filter(self):
@@ -118,7 +118,7 @@ class TestSearch(ComsolTestExamData):
         """Test searching for a specific term in a comment."""
         res = self.post(
             "/api/exam/search/",
-            {"term": "mywacky comment", "include_comments": False},
+            {"term": "mywacky comment", "includeComments": False},
         )["value"]
         self.assertEqual(len(res), 0)
 
@@ -131,11 +131,11 @@ class TestSearch(ComsolTestExamData):
         match = res[0]
         self.assertEqual(match["type"], "comment")
         self.assertEqual(
-            match["category_displayname"],
+            match["categoryDisplayname"],
             self.comments[0].answer.answer_section.exam.category.displayname,
         )
         self.assertEqual(
-            match["category_slug"],
+            match["categorySlug"],
             self.comments[0].answer.answer_section.exam.category.slug,
         )
 
@@ -162,7 +162,7 @@ class TestSearch(ComsolTestExamData):
         """Test searching for a specific term in both answers and comments."""
         res = self.post(
             "/api/exam/search/",
-            {"term": "mywacky", "include_comments": True, "include_answers": True},
+            {"term": "mywacky", "includeComments": True, "includeAnswers": True},
         )["value"]
         self.assertEqual(len(res), 2)
 
@@ -171,8 +171,8 @@ class TestSearch(ComsolTestExamData):
             "/api/exam/search/",
             {
                 "term": "mywacky",
-                "include_comments": True,
-                "include_answers": True,
+                "includeComments": True,
+                "includeAnswers": True,
                 "category": self.comments[0].answer.answer_section.exam.category.slug,
             },
         )["value"]
@@ -183,8 +183,8 @@ class TestSearch(ComsolTestExamData):
             "/api/exam/search/",
             {
                 "term": "mywacky",
-                "include_comments": True,
-                "include_answers": True,
+                "includeComments": True,
+                "includeAnswers": True,
                 "category": "something",
             },
         )["value"]

@@ -60,7 +60,7 @@ function writeStorage(drafts: StorageDraft) {
 }
 
 export function saveDraftToStorage(
-  oid: string | undefined,
+  oid: string | number | undefined,
   newValue: string,
   type: "answer" | "comment",
 ) {
@@ -89,7 +89,7 @@ export function saveDraftToStorage(
 }
 
 export function clearDraftFromStorage(
-  oid: string | undefined,
+  oid: string | number | undefined,
   type: "answer" | "comment",
 ) {
   if (oid === undefined) return;
@@ -107,7 +107,7 @@ export function clearDraftFromStorage(
 }
 
 export function readDraftFromStorage(
-  oid: string | undefined,
+  oid: string | number | undefined,
   type: "answer" | "comment",
 ): string | undefined {
   if (oid === undefined) return;

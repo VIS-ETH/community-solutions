@@ -1,8 +1,11 @@
+import datetime
+
 from django.db.models import Count, Exists, F, Manager, OuterRef, Prefetch
+from ninja import Schema
 
 from answers.models import Answer, Comment
 from myauth import auth_check
-from myauth.models import get_my_user
+from users.api import UserSchema
 
 
 def prepare_answer_objects(objects: Manager[Answer], request) -> Manager[Answer]:
@@ -58,7 +61,45 @@ def prepare_answer_objects(objects: Manager[Answer], request) -> Manager[Answer]
     )
 
 
-def get_answer_response(request, answer: Answer, ignore_exam_admin=False):
+class CommentSchema(Schema):
+    oid: int
+    longId: str
+    text: str
+    author: UserSchema
+    canEdit: bool
+    time: datetime.datetime
+    edittime: datetime.datetime
+    isFlagged: bool
+    flaggedCount: int
+    isMarkedAsAi: bool
+    markedAsAiCount: int
+
+
+class AnswerSchema(Schema):
+    oid: int
+    longId: str
+    upvotes: int
+    expertVotes: int
+    author: UserSchema | None
+    canEdit: bool
+    isAuthor: bool
+    isUpvoted: bool
+    isDownvoted: bool
+    isExpertVoted: bool
+    isFlagged: bool
+    flaggedCount: int
+    isMarkedAsAi: bool
+    markedAsAiCount: int
+    comments: list[CommentSchema]
+    text: str
+    time: datetime.datetime
+    edittime: datetime.datetime
+    filename: str
+    sectionId: int
+    kind: Answer.AnswerKind
+
+
+def get_answer_response(request, answer, ignore_exam_admin=False) -> AnswerSchema:
     """
     Call `prepare_answer_objects` on the answer objects beforehand to annotate
     them with the required aggregations. This function will fail otherwise.
@@ -72,88 +113,102 @@ def get_answer_response(request, answer: Answer, ignore_exam_admin=False):
 
     try:
         comments = [
-            {
-                "oid": comment.id,
-                "longId": comment.long_id,
-                "text": comment.text,
-                "authorId": comment.author.username,
-                "authorDisplayName": get_my_user(comment.author).displayname(),
-                "canEdit": comment.author == request.user,
-                "time": comment.time,
-                "edittime": comment.edittime,
-                "isFlagged": comment.is_flagged,
-                "flaggedCount": comment.flagged_count,
-                "isMarkedAsAi": comment.is_marked_as_ai,
-                "markedAsAiCount": comment.marked_as_ai_count,
-            }
+            CommentSchema(
+                oid=comment.id,
+                longId=comment.long_id,
+                text=comment.text,
+                author=comment.author,
+                canEdit=comment.author == request.user,
+                time=comment.time,
+                edittime=comment.edittime,
+                isFlagged=comment.is_flagged,
+                flaggedCount=comment.flagged_count,
+                isMarkedAsAi=comment.is_marked_as_ai,
+                markedAsAiCount=comment.marked_as_ai_count,
+            )
             for comment in answer.all_comments
         ]
 
-        return {
-            "oid": answer.id,
-            "longId": answer.long_id,
-            "upvotes": answer.delta_votes,
-            "expertvotes": answer.expert_count,
-            "authorId": answer.author.username
-            if answer.kind == Answer.Kind.PERSONAL
-            else "",
-            "authorDisplayName": get_my_user(answer.author).displayname()
-            if answer.kind == Answer.Kind.PERSONAL
-            else "",
-            "canEdit": answer.author == request.user
-            or (answer.kind != Answer.Kind.PERSONAL and exam_admin),
-            "isAuthor": answer.author == request.user,
-            "isUpvoted": answer.is_upvoted,
-            "isDownvoted": answer.is_downvoted,
-            "isExpertVoted": answer.is_expertvoted,
-            "isFlagged": answer.is_flagged,
-            "flaggedCount": answer.flagged_count,
-            "isMarkedAsAi": answer.is_marked_as_ai,
-            "markedAsAiCount": answer.marked_as_ai_count,
-            "comments": comments,
-            "text": answer.text,
-            "time": answer.time,
-            "edittime": answer.edittime,
-            "filename": answer.answer_section.exam.filename,
-            "sectionId": answer.answer_section.id,
-            "kind": answer.kind,
-        }
+        return AnswerSchema(
+            oid=answer.id,
+            longId=answer.long_id,
+            upvotes=answer.delta_votes,
+            expertVotes=answer.expert_count,
+            author=answer.author if answer.kind == Answer.AnswerKind.PERSONAL else None,
+            canEdit=answer.author == request.user
+            or (answer.kind != Answer.AnswerKind.PERSONAL and exam_admin),
+            isAuthor=answer.author == request.user,
+            isUpvoted=answer.is_upvoted,
+            isDownvoted=answer.is_downvoted,
+            isExpertVoted=answer.is_expertvoted,
+            isFlagged=answer.is_flagged,
+            flaggedCount=answer.flagged_count,
+            isMarkedAsAi=answer.is_marked_as_ai,
+            markedAsAiCount=answer.marked_as_ai_count,
+            comments=comments,
+            text=answer.text,
+            time=answer.time,
+            edittime=answer.edittime,
+            filename=answer.answer_section.exam.filename,
+            sectionId=answer.answer_section.id,
+            kind=answer.kind,
+        )
     except AttributeError as err:
         raise ValueError(
             "The given answer has not been prepared with 'prepare_answer_objects'"
         ) from err
 
 
-def get_comment_response(request, comment: Comment):
+class SingleCommentSchema(CommentSchema):
+    answerLongId: str
+    examDisplayname: str
+    filename: str
+    categoryDisplayname: str
+    categorySlug: str
+
+
+def get_comment_response(request, comment: Comment) -> SingleCommentSchema:
     """
     This function will fail if called on a normal comment object
     You have to either pass the prefetched comments from prepare_answer_objects to here or
     add is_flagged and flagged_count fields yourself before calling this function
     """
     try:
-        return {
-            "oid": comment.id,
-            "longId": comment.long_id,
-            "answerId": comment.answer.long_id,
-            "text": comment.text,
-            "authorId": comment.author.username,
-            "authorDisplayName": get_my_user(comment.author).displayname(),
-            "time": comment.time,
-            "edittime": comment.edittime,
-            "exam_displayname": comment.answer.answer_section.exam.displayname,
-            "filename": comment.answer.answer_section.exam.filename,
-            "category_displayname": comment.answer.answer_section.exam.category.displayname,
-            "category_slug": comment.answer.answer_section.exam.category.slug,
-            "isFlagged": comment.is_flagged,
-            "flaggedCount": comment.flagged_count,
-            "isMarkedAsAi": comment.is_marked_as_ai,
-            "markedAsAiCount": comment.marked_as_ai_count,
-        }
+        return SingleCommentSchema(
+            oid=comment.id,
+            longId=comment.long_id,
+            answerLongId=comment.answer.long_id,
+            text=comment.text,
+            author=comment.author,
+            canEdit=comment.author == request.user,
+            time=comment.time,
+            edittime=comment.edittime,
+            examDisplayname=comment.answer.answer_section.exam.displayname,
+            filename=comment.answer.answer_section.exam.filename,
+            categoryDisplayname=comment.answer.answer_section.exam.category.displayname,
+            categorySlug=comment.answer.answer_section.exam.category.slug,
+            isFlagged=comment.is_flagged,
+            flaggedCount=comment.flagged_count,
+            isMarkedAsAi=comment.is_marked_as_ai,
+            markedAsAiCount=comment.marked_as_ai_count,
+        )
     except AttributeError as err:
         raise ValueError("The object is missing the required annotations.") from err
 
 
-def get_answersection_response(request, section):
+class AnswerSectionSchema(Schema):
+    oid: int
+    name: str
+    answers: list[AnswerSchema]
+    allowNewAnswer: bool
+    allowNewLegacyAnswer: bool
+    allowNewOfficialAnswer: bool
+    hasAnswers: bool
+    hidden: bool
+    cutVersion: int
+
+
+def get_answersection_response(request, section) -> AnswerSectionSchema:
     prepared_query = prepare_answer_objects(section.answer_set, request)
 
     answers = [
@@ -167,20 +222,22 @@ def get_answersection_response(request, section):
         request, section.exam
     )
 
-    return {
-        "oid": section.id,
-        "answers": answers,
-        "allow_new_answer": not prepared_query.filter(
-            author=request.user, kind=Answer.Kind.PERSONAL
+    return AnswerSectionSchema(
+        oid=section.id,
+        name=section.name,
+        answers=answers,
+        allowNewAnswer=not prepared_query.filter(
+            author=request.user, kind=Answer.AnswerKind.PERSONAL
         ).exists(),
-        "allow_new_legacy_answer": not prepared_query.filter(
-            kind=Answer.Kind.LEGACY
+        allowNewLegacyAnswer=not prepared_query.filter(
+            kind=Answer.AnswerKind.LEGACY
         ).exists(),
-        "allow_new_official_answer": has_permission_official_answers
-        and not prepared_query.filter(kind=Answer.Kind.OFFICIAL).exists(),
-        "cutVersion": section.cut_version,
-        "has_answers": section.has_answers,
-    }
+        allowNewOfficialAnswer=has_permission_official_answers
+        and not prepared_query.filter(kind=Answer.AnswerKind.OFFICIAL).exists(),
+        cutVersion=section.cut_version,
+        hasAnswers=section.has_answers,
+        hidden=section.hidden,
+    )
 
 
 def get_answer_fields_to_preselect():

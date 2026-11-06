@@ -1,21 +1,15 @@
 import { Button, Paper } from "@mantine/core";
-import { useRequest } from "ahooks";
 import React from "react";
-import { fetchPost } from "../api/fetch-utils";
-import { AnswerSection } from "../interfaces";
 import TooltipButton from "./TooltipButton";
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
-
-const setLikeReq = async (oid: string, like: -1 | 0 | 1) => {
-  return (await fetchPost(`/api/exam/setlike/${oid}/`, { like }))
-    .value as AnswerSection;
-};
+import { useSetAnswerLike } from "../api/hooks/answers";
+import { AnswerSectionSchema } from "../api/model";
 
 interface Props {
-  oid: string;
+  oid: number;
   upvotes: number;
   userVote: -1 | 0 | 1;
-  onSectionChanged: (newSection: AnswerSection) => void;
+  onSectionChanged: (newSection: AnswerSectionSchema) => void;
 }
 const Score: React.FC<Props> = ({
   oid,
@@ -23,9 +17,10 @@ const Score: React.FC<Props> = ({
   userVote,
   onSectionChanged,
 }) => {
-  const { loading, run: setLike } = useRequest(setLikeReq, {
-    manual: true,
-    onSuccess: onSectionChanged,
+  const { isPending: loading, mutate: setLike } = useSetAnswerLike({
+    mutation: {
+      onSuccess: ({ value }) => onSectionChanged(value),
+    },
   });
   return (
     <Paper shadow="xs">
@@ -35,7 +30,7 @@ const Score: React.FC<Props> = ({
           tooltip="Downvote"
           size="sm"
           disabled={userVote === -1}
-          onClick={() => setLike(oid, -1)}
+          onClick={() => setLike({ oid, data: { like: -1 } })}
         >
           <IconChevronDown />
         </TooltipButton>
@@ -45,7 +40,7 @@ const Score: React.FC<Props> = ({
           px="sm"
           miw={40}
           loading={loading}
-          onClick={() => setLike(oid, 0)}
+          onClick={() => setLike({ oid, data: { like: 0 } })}
         >
           {upvotes}
         </TooltipButton>
@@ -54,7 +49,7 @@ const Score: React.FC<Props> = ({
           tooltip="Upvote"
           size="sm"
           disabled={userVote === 1}
-          onClick={() => setLike(oid, 1)}
+          onClick={() => setLike({ oid, data: { like: 1 } })}
         >
           <IconChevronUp />
         </TooltipButton>
