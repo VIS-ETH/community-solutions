@@ -65,9 +65,13 @@ def _vseth_branding_url(glob_id: str) -> str:
 
 
 def resolve_branding_url(environ) -> str:
+    if environ.get("FRONTEND_GLOB_ID"):
+        print(
+            "Warning: Setting FRONTEND_GLOB_ID is deprecated, "
+            "please use FRONTEND_BRANDING_URL instead."
+        )
     if environ.get("FRONTEND_BRANDING_URL"):
         return environ["FRONTEND_BRANDING_URL"]
-    # Deprecated
     if environ.get("FRONTEND_GLOB_ID"):
         return _vseth_branding_url(environ["FRONTEND_GLOB_ID"])
     return _vseth_branding_url("vseth-1116-vis")
