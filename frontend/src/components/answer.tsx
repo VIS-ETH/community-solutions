@@ -23,7 +23,7 @@ import {
   useResetAnswerMarkedAsAi,
   useSetAnswer,
   useSetAnswerFlagged,
-  useSetAnswerMarkedAsAI,
+  useSetAnswerMarkedAsAi,
   useSetExpertVote,
 } from "../api/hooks/answers";
 import { AnswerSchema, AnswerSectionSchema, AnswerKind } from "../api/model";
@@ -101,7 +101,7 @@ const AnswerComponent: React.FC<Props> = ({
   const { isPending: resetFlaggedLoading, mutate: resetAnswerFlagged } =
     useResetAnswerFlagged(onSectionMutated);
   const { mutate: setAnswerMarkedAsAi } =
-    useSetAnswerMarkedAsAI(onSectionMutated);
+    useSetAnswerMarkedAsAi(onSectionMutated);
   const { mutate: resetAnswerMarkedAsAi } =
     useResetAnswerMarkedAsAi(onSectionMutated);
   const { isPending: setExpertVoteLoading, mutate: setExpertVote } =

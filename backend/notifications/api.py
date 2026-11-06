@@ -7,8 +7,7 @@ from myauth import auth_check
 from notifications.models import Notification, NotificationSetting, NotificationType
 from users.api import UserSchema
 from util import response
-from util.response import ErrorSchema
-from util.schemas import ValueWrapped
+from util.schemas import ErrorSchema, ValueWrapped
 
 
 class NotificationEnableRequest(Schema):

@@ -46,7 +46,7 @@ import { UploadPdfForm } from "../components/upload-pdf-card";
 import { UploadTranscriptForm } from "../components/upload-transcript-card.js";
 import {
   getGetCategoryMetadataQueryKey,
-  getListExamsQueryKey,
+  getListCategoryExamsQueryKey,
   useGetCategoryMetadata,
   useListMetaCategories,
   useRemoveCategory,
@@ -82,7 +82,7 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
           queryKey: getGetCategoryMetadataQueryKey(metaData.slug),
         });
         queryClient.removeQueries({
-          queryKey: getListExamsQueryKey(metaData.slug),
+          queryKey: getListCategoryExamsQueryKey(metaData.slug),
         });
         // Invalidate caches for all category listings (e.g. quicksearch box)
         void queryClient.invalidateQueries({

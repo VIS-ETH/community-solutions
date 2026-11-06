@@ -25,7 +25,10 @@ import { ReactCrop, type Crop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { useLocation } from "react-router-dom";
 import { ReactRouterLocation } from "@grafana/faro-react";
-import { listExams, useListCategoriesWithMeta } from "../api/hooks/categories";
+import {
+  listCategoryExams,
+  useListCategoriesWithMeta,
+} from "../api/hooks/categories";
 
 function formatCoordinate(c: number): string {
   const rounded = Math.round(c * 1e6) / 1e6;
@@ -290,7 +293,7 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
   const { data: exams } = useRequest(
     () =>
       selectedCategory
-        ? listExams(selectedCategory)
+        ? listCategoryExams(selectedCategory)
         : Promise.resolve(undefined),
     {
       cacheKey: `exam-list-${selectedCategory}`,

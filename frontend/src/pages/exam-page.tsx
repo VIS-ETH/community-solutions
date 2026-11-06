@@ -602,7 +602,12 @@ const ExamPage: React.FC = () => {
           >
             {metadata?.categoryDisplayname}
           </Anchor>
-          <Anchor tt="uppercase" size="xs">
+          <Anchor
+            tt="uppercase"
+            size="xs"
+            component={Link}
+            to={`/exams/${metadata ? metadata.filename : ""}`}
+          >
             {metadata?.displayname}
           </Anchor>
         </Breadcrumbs>

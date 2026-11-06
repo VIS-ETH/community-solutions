@@ -243,10 +243,10 @@ def put_answer_user_solved(request, filename: str):
         401: ErrorSchema,
         404: ErrorSchema,
     },
-    operation_id="getAnswerUserSolved",
+    operation_id="getExamUserSolved",
 )
 @auth_check.require_login
-def get_answer_user_solved(request, filename: str):
+def get_exam_user_solved(request, filename: str):
     exam = get_object_or_404(Exam, filename=filename)
     solved = ExamUserSolved.objects.filter(
         user=request.user,

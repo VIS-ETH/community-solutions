@@ -181,6 +181,16 @@ const Exam: React.FC<Props> = React.memo(
         {sections.map(section => {
           if (section.kind === SectionKind.Answer) {
             if (displayHiddenAnswerSections || section.hasAnswers) {
+              const setCutVersionCached = (newVersion: number): void =>
+                setCutVersions(oldVersions =>
+                  oldVersions[section.oid] === newVersion
+                    ? oldVersions
+                    : {
+                        ...oldVersions,
+                        [section.oid]: newVersion,
+                      },
+                );
+
               return (
                 <AnswerSectionComponent
                   displayEmptyCutLabels={displayEmptyCutLabels}
@@ -205,12 +215,7 @@ const Exam: React.FC<Props> = React.memo(
                   hidden={!expandedSections.has(section.oid)}
                   has_answers={section.hasAnswers}
                   cutVersion={cutVersions[section.oid] || section.cutVersion}
-                  setCutVersion={newVersion =>
-                    setCutVersions(oldVersions => ({
-                      ...oldVersions,
-                      [section.oid]: newVersion,
-                    }))
-                  }
+                  setCutVersion={setCutVersionCached}
                   onCancelMove={() => setEditState({ mode: EditMode.None })}
                   onMove={() =>
                     setEditState({

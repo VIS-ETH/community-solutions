@@ -250,7 +250,7 @@ class MarkAsAiRequestBody(Schema):
         401: ErrorSchema,
         404: ErrorSchema,
     },
-    operation_id="setAnswerMarkedAsAI",
+    operation_id="setAnswerMarkedAsAi",
 )
 @auth_check.require_login
 def set_marked_as_ai(request, oid: int, data: Form[MarkAsAiRequestBody]):
