@@ -2,16 +2,29 @@ import { defineConfig } from "eslint/config";
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import importPlugin from "eslint-plugin-import";
-import reactPlugin from "eslint-plugin-react";
+import eslintReact from "@eslint-react/eslint-plugin";
 import reactHooksPlugin from "eslint-plugin-react-hooks";
 import globals from "globals";
 
 export default defineConfig(
     js.configs.recommended,
     importPlugin.flatConfigs.recommended,
-    reactPlugin.configs.flat.recommended,
-    reactPlugin.configs.flat["jsx-runtime"],
+    eslintReact.configs.recommended,
     reactHooksPlugin.configs.flat.recommended,
+    {
+        // equivalent rules already enabled in react-hooks
+        rules: {
+            "@eslint-react/rules-of-hooks": "off",
+            "@eslint-react/exhaustive-deps": "off",
+            "@eslint-react/set-state-in-effect": "off",
+            "@eslint-react/set-state-in-render": "off",
+            "@eslint-react/static-components": "off",
+            "@eslint-react/use-memo": "off",
+            "@eslint-react/purity": "off",
+            "@eslint-react/error-boundaries": "off",
+            "@eslint-react/unsupported-syntax": "off",
+        },
+    },
     {
         // Custom configuration to apply to TypeScript files
         files: ["**/*.{ts,tsx}"],
@@ -37,6 +50,7 @@ export default defineConfig(
 
         // Custom rules
         rules: {
+            "@eslint-react/no-leaked-conditional-rendering": "warn",
             // Unused variables should begin with an underscore
             "@typescript-eslint/no-unused-vars": ["warn", {
                 args: "none",
@@ -111,14 +125,6 @@ export default defineConfig(
     {
         // Custom configuration applied to all files.
 
-        // Configuration used by eslint-plugin-react.
-        // Automatically detect the version of React.
-        settings: {
-            react: {
-                version: "detect",
-            },
-        },
-
         languageOptions: {
             globals: {
                 ...globals.browser,
@@ -132,11 +138,9 @@ export default defineConfig(
         rules: {
             "prefer-arrow-callback": "warn",
             "prefer-template": "error",
-            "react/no-typos": "error",
             "object-shorthand": "error",
             "prefer-const": "error",
             "no-new": "error",
-            "react/self-closing-comp": "error",
             "guard-for-in": "error",
             // As per https://typescript-eslint.io/troubleshooting/typed-linting/performance/#eslint-plugin-import,
             // the following import/ rules are recommended to be turned off
@@ -157,10 +161,7 @@ export default defineConfig(
             // migration (away from eslint-config-react-app) to reduce the number
             // of immediate fixes.
             "no-prototype-builtins": "warn",
-            "react/display-name": "warn",
-            "react/no-children-prop": "warn",
-            "react/prop-types": "off",
-            "react/no-unescaped-entities": "off",
+            "@eslint-react/no-missing-component-display-name": "warn",
             "react-hooks/immutability": "warn",
             "react-hooks/preserve-manual-memoization": "warn",
             "react-hooks/refs": "warn",
