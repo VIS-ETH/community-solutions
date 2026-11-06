@@ -46,7 +46,14 @@ const SearchPage: React.FC = () => {
     isFetching: loading,
   } = useSearch(
     { term: query },
-    { query: { enabled: query !== "", select: data => data.value } },
+    {
+      query: {
+        enabled: query !== "",
+        select: data => data.value,
+        placeholderData: previousData =>
+          query !== "" ? previousData : undefined,
+      },
+    },
   );
   return (
     <>

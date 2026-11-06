@@ -202,10 +202,10 @@ class UserSolvedExamSchema(Schema):
         401: ErrorSchema,
         404: ErrorSchema,
     },
-    operation_id="removeAnswerUserSolved",
+    operation_id="removeExamUserSolved",
 )
 @auth_check.require_login
-def remove_answer_user_solved(request, filename: str):
+def remove_exam_user_solved(request, filename: str):
     exam = get_object_or_404(Exam, filename=filename)
     ExamUserSolved.objects.filter(user=request.user, exam=exam).delete()
 
@@ -223,10 +223,10 @@ def remove_answer_user_solved(request, filename: str):
         401: ErrorSchema,
         404: ErrorSchema,
     },
-    operation_id="setAnswerUserSolved",
+    operation_id="setExamUserSolved",
 )
 @auth_check.require_login
-def put_answer_user_solved(request, filename: str):
+def put_exam_user_solved(request, filename: str):
     exam = get_object_or_404(Exam, filename=filename)
     ExamUserSolved.objects.update_or_create(user=request.user, exam=exam, defaults={})
     return {

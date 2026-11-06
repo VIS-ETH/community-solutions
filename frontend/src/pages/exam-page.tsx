@@ -38,8 +38,8 @@ import {
   useEditCut,
   useGetCuts,
   useGetExamMetadata,
-  useRemoveAnswerUserSolved,
-  useSetAnswerUserSolved,
+  useRemoveExamUserSolved,
+  useSetExamUserSolved,
 } from "../api/hooks/answers";
 import type {
   CutPageSchema,
@@ -136,8 +136,8 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
       },
     },
   });
-  const { mutateAsync: runMarkExamUserSolved } = useSetAnswerUserSolved();
-  const { mutateAsync: runUnmarkExamUserSolved } = useRemoveAnswerUserSolved();
+  const { mutateAsync: runMarkExamUserSolved } = useSetExamUserSolved();
+  const { mutateAsync: runUnmarkExamUserSolved } = useRemoveExamUserSolved();
   const { mutateAsync: editCut } = useEditCut({
     mutation: {
       // Apply the edit locally rather than refetching every cut on the exam.

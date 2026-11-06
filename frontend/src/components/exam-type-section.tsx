@@ -21,9 +21,9 @@ import classes from "../utils/focus-outline.module.css";
 import ExamGrid from "./exam-grid";
 import { IconCheck, IconTrash } from "@tabler/icons-react";
 import {
-  useRemoveAnswerUserSolved,
+  useRemoveExamUserSolved,
   useRemoveExam,
-  useSetAnswerUserSolved,
+  useSetExamUserSolved,
 } from "../api/hooks/answers";
 
 interface ExamTypeCardProps {
@@ -57,8 +57,8 @@ const ExamTypeSection: React.FC<ExamTypeCardProps> = ({
   const { mutate: runRemoveExam } = useRemoveExam({
     mutation: { onSuccess: reload },
   });
-  const { mutateAsync: markSolved } = useSetAnswerUserSolved();
-  const { mutateAsync: unmarkSolved } = useRemoveAnswerUserSolved();
+  const { mutateAsync: markSolved } = useSetExamUserSolved();
+  const { mutateAsync: unmarkSolved } = useRemoveExamUserSolved();
   const handleRemoveClick = (
     e: React.MouseEvent<HTMLButtonElement>,
     exam: CategoryExam,
