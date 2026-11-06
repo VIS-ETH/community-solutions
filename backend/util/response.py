@@ -8,8 +8,6 @@ from django.http import (
     JsonResponse,
 )
 
-from util.schemas import ErrorSchema
-
 
 def request_method(methods: "tuple[str] | list[str]"):
     def request_method(*req_args, optional=False):

@@ -9,7 +9,6 @@ import {
   Title,
 } from "@mantine/core";
 import { IconCloudUpload } from "@tabler/icons-react";
-import { useRequest } from "ahooks";
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useListCategoriesOnlyAdmin } from "../api/hooks/categories";

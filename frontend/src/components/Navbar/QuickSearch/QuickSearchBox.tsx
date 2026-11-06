@@ -27,7 +27,7 @@ import {
   useMediaQuery,
   useOs,
 } from "@mantine/hooks";
-import { useDebounce, useRequest } from "ahooks";
+import { useDebounce } from "ahooks";
 import { useSearch as useSearchRequest } from "../../../api/hooks/answers";
 import { useUser } from "../../../auth";
 import type {
