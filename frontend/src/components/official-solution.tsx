@@ -2,7 +2,7 @@ import { PDFDocumentLoadingTask } from "pdfjs-dist";
 import { getDocument } from "../pdf/pdfjs";
 import React, { memo, useMemo, useRef, useEffect, useState } from "react";
 import { ComponentRenderer } from "./markdown-text";
-import { Tooltip } from "@mantine/core";
+import { Alert, Tooltip } from "@mantine/core";
 import { useGetExamPdfUrl, useGetSolutionPdfUrl } from "../api/hooks/answers";
 
 interface PProps {
@@ -26,7 +26,7 @@ export function usePdfUrl(url: string): {
   display_name: string | undefined;
 } {
   const [type, filename] = url.split("/");
-  const kind = type?.toLowerCase();
+  const kind = type.toLowerCase();
   const solution = useGetSolutionPdfUrl(filename, {
     query: { enabled: kind === "solution", select: data => data.value },
   });
@@ -45,7 +45,7 @@ export function usePdfUrl(url: string): {
 const PdfRenderer: React.FC<PProps> = memo(
   ({ url, refPage, p1X, p1Y, p2X, p2Y }) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const myCanvas = useRef<HTMLCanvasElement>(null);
+    const myCanvasRef = useRef<HTMLCanvasElement>(null);
     const [containerWidth, setContainerWidth] = useState<number>(DEFAULT_WIDTH);
     const { url: pdfUrl, display_name: pdfDisplayName } = usePdfUrl(url);
 
@@ -79,7 +79,7 @@ const PdfRenderer: React.FC<PProps> = memo(
 
     // Render PDF when we have the URL and container width
     useEffect(() => {
-      if (!pdfUrl || !myCanvas.current) return;
+      if (!pdfUrl || !myCanvasRef.current) return;
 
       let cancelled = false;
 
@@ -91,6 +91,7 @@ const PdfRenderer: React.FC<PProps> = memo(
         if (cancelled) return;
 
         const page = await pdf.getPage(Math.min(refPage, pdf.numPages));
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (cancelled) return;
 
         const unscaledViewport = page.getViewport({ scale: 1 });
@@ -107,7 +108,7 @@ const PdfRenderer: React.FC<PProps> = memo(
           offsetY,
         });
 
-        const canvas = myCanvas.current;
+        const canvas = myCanvasRef.current;
         if (canvas) {
           canvas.height = viewport.height * Math.abs(p1Y - p2Y);
           canvas.width = viewport.width * Math.abs(p1X - p2X);
@@ -137,10 +138,10 @@ const PdfRenderer: React.FC<PProps> = memo(
 
     return (
       <>
-        <Tooltip target={myCanvas} label={tooltipLabel} />
+        <Tooltip target={myCanvasRef} label={tooltipLabel} />
         <div ref={containerRef} style={{ width: "100%" }}>
           <a href={pdfDeepLink?.href}>
-            <canvas ref={myCanvas} />
+            <canvas ref={myCanvasRef} />
           </a>
         </div>
       </>
@@ -178,9 +179,16 @@ export const useOfficialSolutionLanguage = (): Record<
 > => {
   return useMemo(
     () => ({
-      official: ({ children }) => (
-        <OfficialSolution value={String(children).replace(/\n$/, "")} />
-      ),
+      official: ({ children }) => {
+        if (typeof children !== "string")
+          return (
+            <Alert color="red">
+              Bad PDF embed. Please report this with a link.
+            </Alert>
+          );
+
+        return <OfficialSolution value={children.replace(/\n$/, "")} />;
+      },
     }),
     [],
   );

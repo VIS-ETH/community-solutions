@@ -9,7 +9,7 @@ interface ButtonPropsOverride {
 type CB = () => void;
 const useRemoveConfirm = () => {
   const [stack, setStack] = useState<
-    [string, CB, CB, ButtonPropsOverride, ButtonPropsOverride][]
+    [string, CB, CB, ButtonPropsOverride, ButtonPropsOverride, number][]
   >([]);
   const push = useCallback(
     (
@@ -24,27 +24,33 @@ const useRemoveConfirm = () => {
         [
           message,
           yes,
-          no ?? (() => {}),
+          no ??
+            (() => {
+              /* no-op */
+            }),
           yesButtonOverrride ?? {
             label: "Remove",
             propsDict: { color: "red" },
           },
           noButtonOverride ?? { label: "Cancel", propsDict: {} },
+          Math.random(),
         ],
       ]);
     },
     [],
   );
-  const pop = useCallback(() => {
-    setStack(prevStack => prevStack.slice(0, prevStack.length - 1));
+  const pop = useCallback((key: number) => {
+    setStack(prevStack => prevStack.filter(s => s[5] !== key));
   }, []);
   const modals = stack.map(
-    ([message, yes, no, yesButtonOverrride, noButtonOverride], i) => (
+    ([message, yes, no, yesButtonOverrride, noButtonOverride, key]) => (
       <Modal
         opened={true}
         withCloseButton={false}
-        onClose={() => {}}
-        key={`${i} message`}
+        onClose={() => {
+          /* no-op */
+        }}
+        key={key}
       >
         <Modal.Body mt="sm">{message}</Modal.Body>
 
@@ -52,7 +58,7 @@ const useRemoveConfirm = () => {
           <Button
             {...noButtonOverride.propsDict}
             onClick={() => {
-              pop();
+              pop(key);
               no();
             }}
           >
@@ -61,7 +67,7 @@ const useRemoveConfirm = () => {
           <Button
             {...yesButtonOverrride.propsDict}
             onClick={() => {
-              pop();
+              pop(key);
               yes();
             }}
           >

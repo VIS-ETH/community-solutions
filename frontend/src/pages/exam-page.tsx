@@ -59,11 +59,7 @@ import ContentContainer from "../components/secondary-container";
 import { TOC, TOCNode } from "../components/table-of-contents";
 import useSet from "../hooks/useSet";
 import useTitle from "../hooks/useTitle";
-import {
-  RECENT_EXAMS_KEY,
-  pushRecentExam,
-  RecentExam,
-} from "../utils/recently-viewed-exams";
+import { useRecentExams } from "../utils/recently-viewed-exams";
 import {
   EditMode,
   EditState,
@@ -124,6 +120,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
       },
     },
   });
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const user = useUser()!;
   const { mutateAsync: addCut } = useAddCut({
     mutation: { onSuccess: reloadCuts },
@@ -181,7 +178,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
     },
     [addCut, metaData, editCut],
   );
-  const toggleExamUserSolved: () => void = async () => {
+  const toggleExamUserSolved: () => Promise<void> = async () => {
     const { filename } = metaData;
     const { value } = metaData.userSolved
       ? await runUnmarkExamUserSolved({ filename })
@@ -305,7 +302,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
                   ? "Mark exam as unsolved"
                   : "Mark exam as solved"
               }
-              onClick={toggleExamUserSolved}
+              onClick={() => void toggleExamUserSolved()}
             />
             {examFile && (
               <IconButton
@@ -470,7 +467,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
           <Center>
             <Button
               leftSection={metaData.userSolved && <IconCheck />}
-              onClick={toggleExamUserSolved}
+              onClick={() => void toggleExamUserSolved()}
               color={metaData.userSolved ? "grape" : "gray"}
             >
               Mark exam as solved
@@ -507,7 +504,15 @@ const ExamPage: React.FC = () => {
     error: metadataError,
     isLoading: metadataLoading,
     data: metadata,
-  } = useGetExamMetadata(filename, { query: { select: data => data.value } });
+  } = useGetExamMetadata(filename, {
+    query: {
+      select: data => data.value,
+      // refetching breaks other plcaes that use `examFile` and other presigned urls
+      // even if the actual content didn't change
+      staleTime: Infinity,
+      refetchOnWindowFocus: false,
+    },
+  });
   const setMetadata = useCallback(
     (
       update:
@@ -522,26 +527,12 @@ const ExamPage: React.FC = () => {
       ),
     [queryClient, filename],
   );
-  const [recentExams, setRecentExams] = useLocalStorage<readonly RecentExam[]>({
-    key: RECENT_EXAMS_KEY,
-    defaultValue: [],
-    getInitialValueInEffect: false,
-  });
+  const [, pushRecentExam] = useRecentExams();
   useTitle(metadata?.displayname ?? filename);
   useEffect(() => {
     if (!metadata) return;
-    try {
-      const updated = pushRecentExam(recentExams, {
-        filename: metadata.filename,
-        displayname: metadata.displayname,
-        category: metadata.category,
-        category_displayname: metadata.categoryDisplayname,
-      });
-      setRecentExams(updated);
-    } catch {
-      // corrupted localStorage entry — silently ignore
-    }
-  }, [metadata?.filename]);
+    pushRecentExam(metadata);
+  }, [metadata, pushRecentExam]);
   useQuickSearchFilter(
     metadata && {
       slug: metadata.category,
@@ -575,15 +566,24 @@ const ExamPage: React.FC = () => {
       if (examFile === null) return Promise.resolve(undefined);
       return loadSplitRenderer(examFile);
     },
-    { refreshDeps: [metadata === undefined, metadata?.examFile] },
+    { refreshDeps: [metadata === undefined, metadata?.examFile === null] },
   );
   const [pdf, renderer] = !pdfLoading && data ? data : [];
   const sections = useMemo(
     () => (cuts && pdf ? loadSections(pdf.numPages, cuts) : undefined),
     [pdf, cuts],
   );
-  const error = metadataError ?? cutsError ?? pdfError;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const user = useUser()!;
+
+  const error = metadataError ?? cutsError ?? pdfError;
+  const errorStringified =
+    typeof error === "string"
+      ? error
+      : error instanceof Error
+        ? error.message
+        : // eslint-disable-next-line @typescript-eslint/no-base-to-string
+          String(error);
 
   const navigate = useNavigate();
 
@@ -615,7 +615,7 @@ const ExamPage: React.FC = () => {
       <div>
         {error && (
           <Container>
-            <Alert color="red">{error.toString()}</Alert>
+            <Alert color="red">{errorStringified}</Alert>
           </Container>
         )}
         {metadataLoading && (
@@ -634,7 +634,7 @@ const ExamPage: React.FC = () => {
                   <Container size="xl">
                     <ExamMetadataEditor
                       currentMetaData={metadata}
-                      closeEditPage={() => navigate("./..")}
+                      closeEditPage={() => void navigate("./..")}
                       onMetaDataChange={setMetadata}
                     />
                   </Container>
@@ -644,7 +644,7 @@ const ExamPage: React.FC = () => {
             <Route
               path="/"
               element={
-                <UserContext.Provider
+                <UserContext
                   value={{
                     ...user,
                     isExpert: user.isExpert ?? metadata.isExpert,
@@ -658,9 +658,9 @@ const ExamPage: React.FC = () => {
                     reloadCuts={reloadCuts}
                     mutateCuts={mutateCuts}
                     mutateMetaData={setMetadata}
-                    goToEditPage={() => navigate("./edit")}
+                    goToEditPage={() => void navigate("./edit")}
                   />
-                </UserContext.Provider>
+                </UserContext>
               }
             />
             <Route path="*" element={<Navigate to="./.." replace />} />

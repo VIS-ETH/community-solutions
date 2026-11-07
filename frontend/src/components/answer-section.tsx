@@ -256,6 +256,7 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
       setDraftType(AnswerKind.legacy);
       if (hidden) onToggleHidden();
     }, [hidden, onToggleHidden]);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const user = useUser()!;
     const isCatAdmin = user.isCategoryAdmin;
 
@@ -292,7 +293,7 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
         <AnswerSectionModal
           isOpen={hideWarningIsOpen}
           onClose={closeHideWarning}
-          setHidden={hideAnswerSection}
+          setHidden={() => void hideAnswerSection()}
           title="Hide section?"
           text="This only hides the section without deleting the answers. Use delete if you want to remove them."
           button="Hide Answer Section"

@@ -1,9 +1,6 @@
 import {
   CategoryExam,
-  CategoryMetaDataAny,
-  CategoryMetaDataOverview,
   MetaCategory,
-  MetaCategoryWithCategories,
   ExamSelectedForDownload,
 } from "../interfaces";
 import { getExamPdfUrl } from "../api/hooks/answers";
@@ -16,8 +13,9 @@ export function filterMatches(filter: string, name: string): boolean {
     return true;
   }
   let fpos = 0;
-  for (let npos = 0; npos < nameLower.length; npos++) {
-    if (filterLower[fpos] === nameLower[npos]) {
+  // Check if name contains the letters from `filter` in order
+  for (const nameChar of nameLower) {
+    if (filterLower[fpos] === nameChar) {
       fpos++;
       if (fpos === filterLower.length) {
         return true;
@@ -25,55 +23,6 @@ export function filterMatches(filter: string, name: string): boolean {
     }
   }
   return false;
-}
-
-export function findCategoryByName<T extends CategoryMetaDataAny>(
-  categories: T[],
-  displayname: string,
-): T | null {
-  for (const category of categories) {
-    if (category.displayname === displayname) {
-      return category;
-    }
-  }
-  return null;
-}
-
-export function filterCategories<T extends CategoryMetaDataAny>(
-  categories: T[],
-  filter: string,
-): T[] {
-  return categories.filter(cat => filterMatches(filter, cat.displayname));
-}
-
-export function filterExams(
-  exams: CategoryExam[],
-  filter: string,
-): CategoryExam[] {
-  return exams.filter(ex => filterMatches(filter, ex.displayname));
-}
-
-export function fillMetaCategories(
-  categories: CategoryMetaDataOverview[],
-  metaCategories: MetaCategory[],
-): MetaCategoryWithCategories[] {
-  const categoryToMeta: Record<string, CategoryMetaDataOverview> = {};
-  categories.forEach(cat => {
-    categoryToMeta[cat.slug] = cat;
-  });
-  return metaCategories
-    .map(meta1 => ({
-      ...meta1,
-      meta2: meta1.meta2
-        .map(meta2 => ({
-          ...meta2,
-          categories: meta2.categories
-            .filter(cat => categoryToMeta.hasOwnProperty(cat))
-            .map(cat => categoryToMeta[cat]),
-        }))
-        .filter(meta2 => meta2.categories.length > 0),
-    }))
-    .filter(meta1 => meta1.meta2.length > 0);
 }
 
 export function getMetaCategoriesForCategory(
@@ -91,7 +40,7 @@ export const mapExamsToExamType = (exams: CategoryExam[]) => {
   return [
     ...exams
       .reduce((map, exam) => {
-        const examtype = exam.examtype ?? "Exams";
+        const examtype = exam.examtype;
         const arr = map.get(examtype);
         if (arr) {
           arr.push(exam);

@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -32,7 +32,7 @@ class CategoryExamSchema(Schema):
     examType: str
     remark: str
     importClaim: UserSchema | None = None
-    importClaimTime: str | None = None
+    importClaimTime: datetime | None = None
     public: bool
     hasSolution: bool
     isPrintonly: bool

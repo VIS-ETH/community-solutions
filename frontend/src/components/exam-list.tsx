@@ -29,6 +29,7 @@ const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
     },
   });
   const [filter, setFilter] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { isCategoryAdmin } = useUser()!;
   const viewableExams = useMemo(
     () =>
@@ -73,7 +74,7 @@ const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
         <Flex gap="sm" align="center">
           <Button
             disabled={selected.size === 0}
-            onClick={() => dlSelectedExams(getSelectedExams(selected))}
+            onClick={() => void dlSelectedExams(getSelectedExams(selected))}
             leftSection={<IconDownload />}
           >
             Download selected exams
@@ -127,7 +128,7 @@ const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
               selected={selected}
               onSelect={onSelect}
               onDeselect={onDeselect}
-              reload={reload}
+              reload={() => void reload()}
             />
           ),
       )}

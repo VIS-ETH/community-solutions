@@ -7,7 +7,7 @@ interface IconButtonProps extends ActionIconProps {
   icon: React.ReactNode;
   loading?: boolean;
   tooltip?: React.ReactNode;
-  onClick?: any;
+  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 const IconButton: React.FC<IconButtonProps> = ({

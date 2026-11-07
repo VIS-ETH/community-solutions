@@ -88,8 +88,8 @@ export default class PDF {
       await page.render({
         canvasContext: canvasObject.context,
         viewport,
-        canvasFactory: globalFactory,
-      } as unknown as any).promise;
+        canvas: canvasObject.canvas,
+      }).promise;
       renderingReference.release();
     })();
 
@@ -205,7 +205,7 @@ export default class PDF {
       if (mainCanvas && mainCanvas.currentMainRef === undefined) {
         isMainUser = true;
         mainCanvas.currentMainRef =
-          mainCanvas?.referenceManager.createRetainedRef();
+          mainCanvas.referenceManager.createRetainedRef();
       }
     }
     // It looks like we have to render from scratch
@@ -213,17 +213,13 @@ export default class PDF {
       mainCanvas = this.createMainCanvas(pageNumber, scale);
       isMainUser = true;
     }
-    // This isn't possible but it's hard to tell typescript that it is not
-    // possible.
-    if (mainCanvas === undefined) throw new Error();
     const ref = isMainUser
-      ? mainCanvas.currentMainRef!
+      ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        mainCanvas.currentMainRef!
       : mainCanvas.referenceManager.createRetainedRef();
 
     if (isMainUser) {
       ref.addListener(() => {
-        // Typescript still thinks that mainCanvas could be undefined...
-        if (mainCanvas === undefined) throw new Error();
         mainCanvas.currentMainRef = undefined;
       });
       // Wait until rendering is finished (needed for snap location detection)
@@ -256,8 +252,6 @@ export default class PDF {
       const renderingReference = newManager.createRetainedRef();
       void mainCanvas.rendered.then(() => {
         const ctx = obj.context;
-        if (ctx === null) throw new Error("Rendering failed.");
-        if (mainCanvas === undefined) throw new Error();
         ctx.drawImage(
           mainCanvas.canvasObject.canvas,
           sx,

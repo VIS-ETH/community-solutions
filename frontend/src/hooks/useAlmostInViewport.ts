@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 // Modified version of https://github.com/umijs/hooks/blob/master/packages/hooks/src/useInViewport/index.ts
 /*
 MIT License
@@ -28,67 +27,26 @@ import { useRef, useLayoutEffect, useState, type RefObject } from "react";
 
 const radius = 500;
 
-type Arg = HTMLElement | (() => HTMLElement) | null;
 type InViewport = boolean | undefined;
-
-function isInViewPort(el: HTMLElement): boolean {
-  if (!el) {
-    return false;
-  }
-
-  const viewPortWidth =
-    window.innerWidth ||
-    document.documentElement.clientWidth ||
-    document.body.clientWidth;
-  const viewPortHeight =
-    window.innerHeight ||
-    document.documentElement.clientHeight ||
-    document.body.clientHeight;
-  const rect = el.getBoundingClientRect();
-
-  if (rect) {
-    const { top, bottom, left, right } = {
-      top: rect.top - radius,
-      bottom: rect.bottom + radius,
-      left: rect.left - radius,
-      right: rect.right + radius,
-    };
-    return (
-      bottom > 0 && top <= viewPortHeight && left <= viewPortWidth && right > 0
-    );
-  }
-
-  return false;
-}
 
 function useAlmostInViewport<T extends HTMLElement = HTMLElement>(): [
   InViewport,
   RefObject<T | null>,
 ];
-function useAlmostInViewport(arg: Arg): [InViewport];
-function useAlmostInViewport<T extends HTMLElement = HTMLElement>(
-  ...args: [Arg] | []
-): [InViewport, RefObject<T | null>?] {
-  const element = useRef<T>(null);
-  const hasPassedInElement = args.length === 1;
-  const arg = useRef(args[0]);
-  const [inViewPort, setInViewport] = useState<InViewport>(() => {
-    const initDOM =
-      typeof arg.current === "function" ? arg.current() : arg.current;
-
-    return isInViewPort(initDOM!);
-  });
+function useAlmostInViewport<T extends HTMLElement = HTMLElement>(): [
+  InViewport,
+  RefObject<T | null>?,
+] {
+  const elementRef = useRef<T>(null);
+  const [inViewport, setInViewport] = useState<InViewport>(false);
 
   useLayoutEffect(() => {
-    const passedInElement =
-      typeof arg.current === "function" ? arg.current() : arg.current;
-
-    const targetElement = hasPassedInElement
-      ? passedInElement
-      : element.current;
+    const targetElement = elementRef.current;
 
     if (!targetElement) {
-      return () => {};
+      return () => {
+        /* no-op */
+      };
     }
 
     const observer = new IntersectionObserver(
@@ -109,16 +67,9 @@ function useAlmostInViewport<T extends HTMLElement = HTMLElement>(
     return () => {
       observer.disconnect();
     };
-  }, [
-    element.current,
-    typeof arg.current === "function" ? undefined : arg.current,
-  ]);
+  }, []);
 
-  if (hasPassedInElement) {
-    return [inViewPort];
-  }
-
-  return [inViewPort, element as RefObject<T | null>];
+  return [inViewport, elementRef];
 }
 
 export default useAlmostInViewport;

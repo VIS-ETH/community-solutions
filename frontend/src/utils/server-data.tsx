@@ -23,7 +23,7 @@ const getServerData = () => {
   if (!(element instanceof HTMLScriptElement))
     throw new Error("Server data container is not a script element.");
   const text = element.innerText;
-  const data = JSON.parse(text);
+  const data = JSON.parse(text) as unknown;
   return data as IServerData;
 };
 

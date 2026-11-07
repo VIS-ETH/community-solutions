@@ -135,12 +135,14 @@ export async function performDataRequest<T>(
     body: formData,
   });
   try {
+    // Endpoints might respond with `200, None`
     let body = undefined as T;
-    if (response.status !== 204) {
-      body = (await response.json()) as T;
+    const text = await response.text();
+    if (text !== "") {
+      body = JSON.parse(text) as T;
     }
     if (!response.ok) {
-      return Promise.reject((body as { err: string }).err);
+      return Promise.reject((body as { err: string } | undefined)?.err);
     }
     return {
       data: body,
@@ -180,12 +182,14 @@ export async function performRequest<T>(
     method,
   });
   try {
+    // Endpoints might respond with `200, None`
     let body = undefined as T;
-    if (response.status !== 204) {
-      body = (await response.json()) as T;
+    const text = await response.text();
+    if (text !== "") {
+      body = JSON.parse(text) as T;
     }
     if (!response.ok) {
-      return Promise.reject((body as { err: string }).err);
+      return Promise.reject((body as { err: string } | undefined)?.err);
     }
     return {
       data: body,

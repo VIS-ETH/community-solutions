@@ -35,9 +35,9 @@ export default class PrintExam extends React.Component<Props, State> {
             printed: true,
           });
         })
-        .catch(err => {
+        .catch((error: unknown) => {
           this.setState({
-            error: err,
+            error: error as string,
           });
         });
     } else {

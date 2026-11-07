@@ -1,11 +1,13 @@
 import { useInViewport } from "ahooks";
 import { Card } from "@mantine/core";
 import * as React from "react";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useCallback, use, useEffect, useRef, useState } from "react";
 import { DebugContext } from "../components/Debug";
 import IconButton from "../components/icon-button";
 import PdfSectionCanvasOverlay from "../components/pdf-section-canvas-overlay";
-import PdfSectionText from "../components/pdf-section-text";
+import PdfSectionText, {
+  type PdfViewTuple,
+} from "../components/pdf-section-text";
 import useAlmostInViewport from "../hooks/useAlmostInViewport";
 import useDpr from "../hooks/useDpr";
 import PDF from "./pdf-renderer";
@@ -24,7 +26,7 @@ const usePdf = (
   scale: number | undefined,
 ): [
   HTMLCanvasElement | null,
-  number[] | undefined,
+  PdfViewTuple | undefined,
   number,
   number,
   boolean,
@@ -32,7 +34,7 @@ const usePdf = (
   const [canvasElement, setCanvasElement] = useState<HTMLCanvasElement | null>(
     null,
   );
-  const [view, setView] = useState<number[]>();
+  const [view, setView] = useState<PdfViewTuple>();
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
   const [isMainCanvas, setIsMainCanvas] = useState(false);
@@ -44,8 +46,9 @@ const usePdf = (
         Promise<[HTMLCanvasElement, boolean, PdfCanvasReference]> | undefined;
       void (async () => {
         const page = await renderer.getPage(pageNumber);
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (cancel) return;
-        setView(page.view);
+        setView(page.view as PdfViewTuple);
         const viewport = page.getViewport({ scale: 1.0 });
         setWidth(viewport.width);
         setHeight(viewport.height);
@@ -60,6 +63,7 @@ const usePdf = (
         );
         const [canvas, isMain, ref] = await currentPromise;
         canvasRef = ref;
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (cancel) return;
         setIsMainCanvas(isMain);
         setCanvasElement(canvas);
@@ -98,7 +102,8 @@ interface Props {
   ) => void;
 }
 const PdfSectionCanvas: React.FC<Props> = React.memo(
-  ({
+  // eslint-disable-next-line prefer-arrow-callback
+  function PdfSectionCanvas({
     oid,
     page,
     start,
@@ -112,11 +117,13 @@ const PdfSectionCanvas: React.FC<Props> = React.memo(
     addCutText,
     snap = true,
     displayHideShowButtons = false,
-    onSectionHiddenChange = () => {},
-  }) => {
+    onSectionHiddenChange = () => {
+      /* no-op */
+    },
+  }) {
     const relativeHeight = end - start;
 
-    const { displayCanvasType } = useContext(DebugContext);
+    const { displayCanvasType } = use(DebugContext);
     const [almostInView, containerElement] =
       useAlmostInViewport<HTMLDivElement>();
     const [containerHeight, setContainerHeight] = useState(0);
@@ -129,6 +136,7 @@ const PdfSectionCanvas: React.FC<Props> = React.memo(
       [oid, page, end, hidden, onSectionHiddenChange],
     );
     const dpr = useDpr();
+
     const [canvas, view, width, height, isMainCanvas] = usePdf(
       almostInView ?? false,
       renderer,
@@ -154,7 +162,9 @@ const PdfSectionCanvas: React.FC<Props> = React.memo(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [v]);
 
-    const canvasMountingPoint = useCallback<(element: HTMLDivElement) => void>(
+    const canvasMountingPoint = useCallback<
+      (element: HTMLDivElement | null) => void
+    >(
       element => {
         if (element === null) return;
         if (canvas === null) return;

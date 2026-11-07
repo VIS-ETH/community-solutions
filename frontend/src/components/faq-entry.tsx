@@ -62,6 +62,7 @@ const FAQEntryComponent: React.FC<Props> = ({
     onUpdate({ question, answer: finalAnswer });
     setEditing(false);
   };
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { isAdmin } = useUser()!;
   return (
     <Card shadow="md" withBorder my="md">
@@ -102,7 +103,11 @@ const FAQEntryComponent: React.FC<Props> = ({
       )}
       {isAdmin && editing && (
         <Flex mt="sm" justify="space-between">
-          <Button size="sm" leftSection={<IconDeviceFloppy />} onClick={save}>
+          <Button
+            size="sm"
+            leftSection={<IconDeviceFloppy />}
+            onClick={() => void save()}
+          >
             Save
           </Button>
           <Button leftSection={<IconX />} onClick={cancel}>
@@ -113,32 +118,28 @@ const FAQEntryComponent: React.FC<Props> = ({
       {isAdmin && !editing && (
         <Group justify="right">
           <Button.Group>
-            {!editing && (
-              <>
-                <IconButton
-                  tooltip="Move up"
-                  icon={<IconArrowUp />}
-                  disabled={prevEntry === undefined}
-                  onClick={() => prevEntry && onSwap(entry, prevEntry)}
-                />
-                <IconButton
-                  tooltip="Move down"
-                  icon={<IconArrowDown />}
-                  disabled={nextEntry === undefined}
-                  onClick={() => nextEntry && onSwap(entry, nextEntry)}
-                />
-                <IconButton
-                  tooltip="Delete FAQ entry"
-                  icon={<IconTrash />}
-                  onClick={() =>
-                    removeConfirm(
-                      "Are you sure that you want to remove this FAQ entry?",
-                      onRemove,
-                    )
-                  }
-                />
-              </>
-            )}
+            <IconButton
+              tooltip="Move up"
+              icon={<IconArrowUp />}
+              disabled={prevEntry === undefined}
+              onClick={() => prevEntry && onSwap(entry, prevEntry)}
+            />
+            <IconButton
+              tooltip="Move down"
+              icon={<IconArrowDown />}
+              disabled={nextEntry === undefined}
+              onClick={() => nextEntry && onSwap(entry, nextEntry)}
+            />
+            <IconButton
+              tooltip="Delete FAQ entry"
+              icon={<IconTrash />}
+              onClick={() =>
+                removeConfirm(
+                  "Are you sure that you want to remove this FAQ entry?",
+                  onRemove,
+                )
+              }
+            />
           </Button.Group>
         </Group>
       )}
