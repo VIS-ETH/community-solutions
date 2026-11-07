@@ -110,6 +110,8 @@ stages:
     - export SIP_S3_FILES_USE_SSL=false
     - uv run python -c "import boto3; boto3.client('s3', endpoint_url='http://rclone:9000', aws_access_key_id='rclone', aws_secret_access_key='rclone123').create_bucket(Bucket='community-solutions')"
     - uv run manage.py test --parallel # parallel speeds up by approx 4x.
+    - echo 'Checking formatting...'
+    - uv run ruff format --check
   after_script:
     - cd backend
     - uv cache prune --ci
@@ -157,21 +159,8 @@ stages:
     - yarn run tsc
     - echo 'Checking linter errors...'
     - yarn run lint
-
-    # Check formatting errors only for merge requests
-    - |
-      if [[ -n ${CI_MERGE_REQUEST_TARGET_BRANCH_NAME-} ]]; then
-        echo 'Checking formatting errors on modified files...'
-        yarn run prettier --check $( \
-          git diff --diff-filter=d --name-only --relative origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME $CI_COMMIT_SHA -- \
-            "src/**/*.js" \
-            "src/**/*.jsx" \
-            "src/**/*.ts" \
-            "src/**/*.tsx" \
-            "src/**/*.json" \
-            "src/**/*.css" \
-        )
-      fi
+    - echo 'Checking formatting...'
+    - yarn run check-format
   needs:
     - artifacts: true
       job: "Generate OpenAPI"

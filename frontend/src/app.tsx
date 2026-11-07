@@ -8,6 +8,7 @@ import {
   Affix,
   rem,
   CSSVariablesResolver,
+  v8CssVariablesResolver,
   SegmentedControl,
   Center,
   Loader,
@@ -239,7 +240,7 @@ const App: React.FC = () => {
     refetchInterval: 300_000,
   });
 
-  const data = (window as any).configOptions as ConfigOptions;
+  const data = ((window as any).configOptions ?? {}) as Partial<ConfigOptions>;
 
   const fvTheme = makeVsethTheme(data.primaryColor);
 
@@ -322,24 +323,30 @@ const App: React.FC = () => {
   ];
 
   // Change CSS variables depending on the color scheme in use
-  const resolver: CSSVariablesResolver = _ => ({
-    variables: {},
-    light: {
-      "--mantine-color-anchor": "var(--mantine-color-black)",
-      // Segmented control background
-      "--custom-segmented-control-background": "var(--mantine-color-gray-2)",
-      // Segmented control indicator
-      "--sc-color": "var(--mantine-color-white)",
-    },
-    dark: {
-      "--mantine-color-anchor": "var(--mantine-color-white)",
-      "--mantine-color-body": "var(--mantine-color-dark-8)",
-      // Segmented control background
-      "--custom-segmented-control-background": "var(--mantine-color-dark-6)",
-      // Segmented control indicator
-      "--sc-color": "var(--mantine-color-dark-8)",
-    },
-  });
+  const resolver: CSSVariablesResolver = theme => {
+    const variables = v8CssVariablesResolver(theme);
+
+    return {
+      ...variables,
+      light: {
+        ...variables.light,
+        "--mantine-color-anchor": "var(--mantine-color-black)",
+        // Segmented control background
+        "--custom-segmented-control-background": "var(--mantine-color-gray-2)",
+        // Segmented control indicator
+        "--sc-color": "var(--mantine-color-white)",
+      },
+      dark: {
+        ...variables.dark,
+        "--mantine-color-anchor": "var(--mantine-color-white)",
+        "--mantine-color-body": "var(--mantine-color-dark-8)",
+        // Segmented control background
+        "--custom-segmented-control-background": "var(--mantine-color-dark-6)",
+        // Segmented control indicator
+        "--sc-color": "var(--mantine-color-dark-8)",
+      },
+    };
+  };
 
   return (
     <MantineProvider theme={fvTheme} cssVariablesResolver={resolver}>

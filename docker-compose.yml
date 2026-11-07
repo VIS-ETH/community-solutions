@@ -63,6 +63,10 @@ services:
       - "8081:8081"
     env_file:
       - backend/.env.development
+    # Self-hosted branding: put a config.js (and logos) in ./branding and set
+    # FRONTEND_BRANDING_URL=/branding/config.js (VITE_BRANDING_URL for the dev frontend).
+    # volumes:
+    #   - ./branding:/app/branding
     healthcheck:
       interval: 1s
       timeout: 1s
