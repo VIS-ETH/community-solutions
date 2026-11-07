@@ -504,7 +504,15 @@ const ExamPage: React.FC = () => {
     error: metadataError,
     isLoading: metadataLoading,
     data: metadata,
-  } = useGetExamMetadata(filename, { query: { select: data => data.value } });
+  } = useGetExamMetadata(filename, {
+    query: {
+      select: data => data.value,
+      // refetching breaks other plcaes that use `examFile` and other presigned urls
+      // even if the actual content didn't change
+      staleTime: Infinity,
+      refetchOnWindowFocus: false,
+    },
+  });
   const setMetadata = useCallback(
     (
       update:
@@ -558,7 +566,7 @@ const ExamPage: React.FC = () => {
       if (examFile === null) return Promise.resolve(undefined);
       return loadSplitRenderer(examFile);
     },
-    { refreshDeps: [metadata === undefined, metadata?.examFile] },
+    { refreshDeps: [metadata === undefined, metadata?.examFile === null] },
   );
   const [pdf, renderer] = !pdfLoading && data ? data : [];
   const sections = useMemo(
