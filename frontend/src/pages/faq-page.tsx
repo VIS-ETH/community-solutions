@@ -1,6 +1,6 @@
 import * as React from "react";
 import { lazy, useState, Suspense } from "react";
-import { useFAQ } from "../api/faq";
+import { useFaq } from "../api/faq";
 import { usePendingImages } from "../components/Editor/pending-images";
 import { useUser } from "../auth";
 import { UndoStack } from "../components/Editor/utils/undo-stack";
@@ -24,7 +24,7 @@ export const FAQPage: React.FC = () => {
   useTitle("FAQ");
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { isAdmin } = useUser()!;
-  const { faqs, add, update, swap, remove } = useFAQ();
+  const { faqs, add, update, swap, remove } = useFaq();
   const [hasDraft, setHasDraft] = useState(false);
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
@@ -39,7 +39,7 @@ export const FAQPage: React.FC = () => {
   };
   const handleNew = async () => {
     const finalAnswer = await flushPendingImages(answer);
-    void add(
+    add(
       question,
       finalAnswer,
       (faqs ?? []).reduce((old, value) => Math.max(old, value.order + 1), 0),
@@ -66,9 +66,9 @@ export const FAQPage: React.FC = () => {
           entry={faq}
           prevEntry={idx > 0 ? faqs[idx - 1] : undefined}
           nextEntry={idx + 1 < faqs.length ? faqs[idx + 1] : undefined}
-          onUpdate={changes => void update(faq.oid, changes)}
-          onSwap={(a, b) => void swap(a, b)}
-          onRemove={() => void remove(faq.oid)}
+          onUpdate={changes => update(faq.oid, changes)}
+          onSwap={(a, b) => swap(a, b)}
+          onRemove={() => remove(faq.oid)}
         />
       ))}
       {hasDraft ? (

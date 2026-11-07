@@ -11,7 +11,6 @@ import React, { lazy, Suspense, useCallback, useState } from "react";
 import { usePendingImages } from "./Editor/pending-images";
 import { useUser } from "../auth";
 import useRemoveConfirm from "../hooks/useRemoveConfirm";
-import { FAQEntry } from "../interfaces";
 import { UndoStack } from "./Editor/utils/undo-stack";
 import IconButton from "./icon-button";
 import MarkdownText from "./markdown-text";
@@ -23,16 +22,17 @@ import {
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
+import type { FaqEntry } from "../api/model";
 
 const Editor = lazy(() => import("./Editor"));
 
 interface Props {
   isAdmin?: boolean;
-  entry: FAQEntry;
-  prevEntry?: FAQEntry;
-  nextEntry?: FAQEntry;
-  onUpdate: (changes: Partial<FAQEntry>) => void;
-  onSwap: (me: FAQEntry, other: FAQEntry) => void;
+  entry: FaqEntry;
+  prevEntry?: FaqEntry;
+  nextEntry?: FaqEntry;
+  onUpdate: (changes: Partial<FaqEntry>) => void;
+  onSwap: (me: FaqEntry, other: FaqEntry) => void;
   onRemove: () => void;
 }
 const FAQEntryComponent: React.FC<Props> = ({
@@ -116,31 +116,29 @@ const FAQEntryComponent: React.FC<Props> = ({
         </Flex>
       )}
       {isAdmin && !editing && (
-        <Group justify="right">
-          <Button.Group>
-            <IconButton
-              tooltip="Move up"
-              icon={<IconArrowUp />}
-              disabled={prevEntry === undefined}
-              onClick={() => prevEntry && onSwap(entry, prevEntry)}
-            />
-            <IconButton
-              tooltip="Move down"
-              icon={<IconArrowDown />}
-              disabled={nextEntry === undefined}
-              onClick={() => nextEntry && onSwap(entry, nextEntry)}
-            />
-            <IconButton
-              tooltip="Delete FAQ entry"
-              icon={<IconTrash />}
-              onClick={() =>
-                removeConfirm(
-                  "Are you sure that you want to remove this FAQ entry?",
-                  onRemove,
-                )
-              }
-            />
-          </Button.Group>
+        <Group justify="right" gap="xs">
+          <IconButton
+            tooltip="Move up"
+            icon={<IconArrowUp />}
+            disabled={prevEntry === undefined}
+            onClick={() => prevEntry && onSwap(entry, prevEntry)}
+          />
+          <IconButton
+            tooltip="Move down"
+            icon={<IconArrowDown />}
+            disabled={nextEntry === undefined}
+            onClick={() => nextEntry && onSwap(entry, nextEntry)}
+          />
+          <IconButton
+            tooltip="Delete FAQ entry"
+            icon={<IconTrash />}
+            onClick={() =>
+              removeConfirm(
+                "Are you sure that you want to remove this FAQ entry?",
+                onRemove,
+              )
+            }
+          />
         </Group>
       )}
     </Card>

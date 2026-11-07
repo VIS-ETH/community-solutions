@@ -123,13 +123,6 @@ export interface ExamSelectedForDownload {
   displayname: string;
 }
 
-export interface FAQEntry {
-  oid: string;
-  question: string;
-  answer: string;
-  order: number;
-}
-
 export enum EditMode {
   None,
   Add,
