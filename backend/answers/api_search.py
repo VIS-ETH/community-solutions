@@ -473,7 +473,7 @@ class SearchRequestBody(Schema):
 
 
 class HighlightedMatchSchema(RootModel):
-    root: str | list["HighlightedMatchSchema"]
+    root: str | list[HighlightedMatchSchema]
 
 
 class PageSchema(RootModel):

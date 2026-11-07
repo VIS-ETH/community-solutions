@@ -9,7 +9,7 @@ from django.http import (
 )
 
 
-def request_method(methods: "tuple[str] | list[str]"):
+def request_method(methods: tuple[str] | list[str]):
     def request_method(*req_args, optional=False):
         def wrap_func(f):
             @wraps(f)

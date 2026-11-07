@@ -19,7 +19,7 @@ class MyUser(User):
         proxy = True
 
     if TYPE_CHECKING:
-        payment_set: RelatedManager["Payment"]  # payments.Payment.user
+        payment_set: RelatedManager[Payment]  # payments.Payment.user
 
     def displayname(self):
         if not self.first_name:

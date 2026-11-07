@@ -34,7 +34,7 @@ class Category(models.Model):
     )
 
     if TYPE_CHECKING:
-        meta: "CategoryMetaData"  # CategoryMetaData.category (related_name="meta")
+        meta: CategoryMetaData  # CategoryMetaData.category (related_name="meta")
         exam_set: RelatedManager[Exam]  # answers.Exam.category
         document_set: RelatedManager[Document]  # documents.Document.category
 
@@ -77,7 +77,7 @@ class MetaCategory(models.Model):
 
     if TYPE_CHECKING:
         category_set: RelatedManager[Category]  # Category.meta_categories (M2M)
-        metacategory_set: RelatedManager["MetaCategory"]  # self-referential parent
+        metacategory_set: RelatedManager[MetaCategory]  # self-referential parent
 
 
 class CategoryUserPinned(
