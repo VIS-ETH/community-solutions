@@ -16,6 +16,7 @@ interface UserPaymentsProps {
   username: string;
 }
 const UserPayments: React.FC<UserPaymentsProps> = ({ username }) => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const user = useUser()!;
   const isAdmin = user.isAdmin;
   const {

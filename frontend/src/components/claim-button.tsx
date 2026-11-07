@@ -20,6 +20,7 @@ const ClaimButton: React.FC<Props> = ({
   reloadExams,
   ...buttonProps
 }) => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { username } = useUser()!;
   const { isPending: loading, mutate: setClaim } = useClaimExam({
     mutation: { onSuccess: reloadExams },

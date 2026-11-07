@@ -256,6 +256,7 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
       setDraftType(AnswerKind.legacy);
       if (hidden) onToggleHidden();
     }, [hidden, onToggleHidden]);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const user = useUser()!;
     const isCatAdmin = user.isCategoryAdmin;
 

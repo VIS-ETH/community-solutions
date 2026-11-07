@@ -29,6 +29,7 @@ const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
     },
   });
   const [filter, setFilter] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { isCategoryAdmin } = useUser()!;
   const viewableExams = useMemo(
     () =>

@@ -164,6 +164,7 @@ const HomePage: React.FC = () => {
   );
 };
 export const CategoryList: React.FC = () => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { isAdmin } = useUser()!;
   const [mode, setMode] = useLocalStorage({
     key: "mode",

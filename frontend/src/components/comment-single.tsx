@@ -53,6 +53,7 @@ const SingleCommentComponent: React.FC<Props> = ({ comment, reload }) => {
     useSetCommentMarkedAsAi(onCommentMutated);
   const { mutate: resetExamCommentMarkedAsAi } =
     useResetCommentMarkedAsAi(onCommentMutated);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { isAdmin, username } = useUser()!;
 
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;

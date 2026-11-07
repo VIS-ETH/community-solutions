@@ -83,6 +83,7 @@ const CommentComponent: React.FC<Props> = ({
   const { mutate: resetExamCommentMarkedAsAi } =
     useResetCommentMarkedAsAi(onSectionMutated);
   const [viewSource, { toggle: toggleViewSource }] = useDisclosure();
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { isAdmin, username } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
   const [editing, setEditing] = useState(false);

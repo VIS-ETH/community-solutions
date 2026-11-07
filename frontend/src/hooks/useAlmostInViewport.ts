@@ -76,6 +76,7 @@ function useAlmostInViewport<T extends HTMLElement = HTMLElement>(
     const initDOM =
       typeof argRef.current === "function" ? argRef.current() : argRef.current;
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return isInViewPort(initDOM!);
   });
 

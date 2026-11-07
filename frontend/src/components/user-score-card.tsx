@@ -101,6 +101,7 @@ const UserScoreCard: React.FC<UserScoreCardProps> = ({
   isMyself,
 }) => {
   const setUser = useSetUser();
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const user = useUser()!;
   const [simulateNonAdmin, setSimulateNonAdmin, clearSimulateNonAdmin] =
     useLocalStorage<boolean>({
