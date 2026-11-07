@@ -259,7 +259,9 @@ const Exam: React.FC<Props> = React.memo(
                     end={section.end.position}
                     hidden={section.hidden}
                     /* Handler */
-                    onSectionHiddenChange={onUpdateCut}
+                    onSectionHiddenChange={(section, update) =>
+                      void onUpdateCut(section, update)
+                    }
                     displayHideShowButtons={displayHideShowButtons}
                     renderer={renderer}
                     targetWidth={width}

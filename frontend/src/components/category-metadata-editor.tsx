@@ -29,7 +29,11 @@ const setMetaData = async (
   changes: Partial<CategoryData>,
 ): Promise<CategoryData | undefined> => {
   if (Object.keys(changes).length === 0) return;
-  return (await fetchPost(`/api/category/setmetadata/${slug}/`, changes)).value;
+  return (
+    await fetchPost<{
+      value: CategoryData;
+    }>(`/api/category/setmetadata/${slug}/`, changes)
+  ).value;
 };
 const addUserToSet = async (slug: string, key: string, user: string) => {
   await fetchPost(`/api/category/addusertoset/${slug}/`, {
@@ -67,12 +71,12 @@ const addAttachment = async (
   file: File,
 ) => {
   return (
-    await fetchPost("/api/filestore/upload/", {
+    await fetchPost<{ filename: string }>("/api/filestore/upload/", {
       category,
       displayname,
       file,
     })
-  ).filename as string;
+  ).filename;
 };
 const editAttachment = async (filename: string, newdisplayname: string) => {
   await fetchPatch(`/api/filestore/edit/${filename}/`, { newdisplayname });
@@ -274,7 +278,7 @@ const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
                   formState.semester as keyof typeof semesterOptions
                 ]?.value ?? "--"
               }
-              onChange={(event: any) =>
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
                 setFormValue("semester", event.currentTarget.value)
               }
             />
@@ -286,7 +290,7 @@ const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
               value={
                 formOptions[formState.form as keyof typeof formOptions].value
               }
-              onChange={(event: any) =>
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
                 setFormValue("form", event.currentTarget.value)
               }
             />
@@ -303,7 +307,7 @@ const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
                   formState.permission as keyof typeof permissionOptions
                 ].value
               }
-              onChange={(event: any) =>
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
                 setFormValue("permission", event.currentTarget.value)
               }
             />

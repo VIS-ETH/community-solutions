@@ -93,7 +93,7 @@ export default defineConfig(
             "@typescript-eslint/no-explicit-any": "warn",
             "@typescript-eslint/no-extraneous-class": "warn",
             "@typescript-eslint/no-floating-promises": "warn",
-            "@typescript-eslint/no-misused-promises": "warn",
+            "@typescript-eslint/no-misused-promises": "error",
             "@typescript-eslint/no-non-null-assertion": "error",
             "@typescript-eslint/no-unnecessary-condition": "warn",
             "@typescript-eslint/no-unnecessary-template-expression": "warn",

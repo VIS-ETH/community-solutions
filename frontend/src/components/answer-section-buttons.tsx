@@ -23,13 +23,11 @@ const AnswerSectionButtons: React.FC<{
     <Container fluid px={0}>
       {visibility}
       <SimpleGrid cols={1}>
-        {[cancel_add, show_hide, move]
-          .filter(elem => elem)
-          .map((elem, index) => (
-            <Group grow key={index}>
-              {elem}
-            </Group>
-          ))}
+        {[cancel_add, show_hide, move].filter(Boolean).map((elem, index) => (
+          <Group grow key={index}>
+            {elem}
+          </Group>
+        ))}
       </SimpleGrid>
     </Container>
   );

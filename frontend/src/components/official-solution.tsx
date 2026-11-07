@@ -2,7 +2,7 @@ import { PDFDocumentLoadingTask } from "pdfjs-dist";
 import { getDocument } from "../pdf/pdfjs";
 import React, { memo, useMemo, useRef, useEffect, useState } from "react";
 import { ComponentRenderer } from "./markdown-text";
-import { Tooltip } from "@mantine/core";
+import { Alert, Tooltip } from "@mantine/core";
 import { useGetExamPdfUrl, useGetSolutionPdfUrl } from "../api/hooks/answers";
 
 interface PProps {
@@ -179,9 +179,16 @@ export const useOfficialSolutionLanguage = (): Record<
 > => {
   return useMemo(
     () => ({
-      official: ({ children }) => (
-        <OfficialSolution value={String(children).replace(/\n$/, "")} />
-      ),
+      official: ({ children }) => {
+        if (typeof children !== "string")
+          return (
+            <Alert color="red">
+              Bad PDF embed. Please report this with a link.
+            </Alert>
+          );
+
+        return <OfficialSolution value={children.replace(/\n$/, "")} />;
+      },
     }),
     [],
   );
