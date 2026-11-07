@@ -44,7 +44,9 @@ export const UploadTranscriptForm: React.FC<UploadTranscriptFormProps> = ({
   });
   const [validationError, setValidationError] = useState<string | null>(null);
   const error =
-    categoriesError?.err ?? uploadError?.toString() ?? validationError;
+    categoriesError?.err ??
+    (uploadError as unknown as string | undefined) ??
+    validationError;
   const loading = categoriesLoading || uploadLoading;
 
   const options = useMemo(
