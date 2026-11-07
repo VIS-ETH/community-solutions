@@ -48,7 +48,7 @@ const ImageModal: React.FC<ModalProps> = ({
   const uploadImage = useUploadImage({
     mutation: {
       onSuccess() {
-        images.refetch();
+        void images.refetch();
       },
     },
   });
@@ -83,7 +83,7 @@ const ImageModal: React.FC<ModalProps> = ({
           <Button
             color="red"
             disabled={selected.size === 0}
-            onClick={removeSelected}
+            onClick={() => void removeSelected()}
           >
             Delete selected
           </Button>

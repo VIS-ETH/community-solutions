@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 // Modified version of https://github.com/umijs/hooks/blob/master/packages/hooks/src/useInViewport/index.ts
 /*
 MIT License
@@ -28,65 +27,21 @@ import { useRef, useLayoutEffect, useState, type RefObject } from "react";
 
 const radius = 500;
 
-type Arg = HTMLElement | (() => HTMLElement) | null;
 type InViewport = boolean | undefined;
-
-function isInViewPort(el: HTMLElement): boolean {
-  if (!el) {
-    return false;
-  }
-
-  const viewPortWidth =
-    window.innerWidth ||
-    document.documentElement.clientWidth ||
-    document.body.clientWidth;
-  const viewPortHeight =
-    window.innerHeight ||
-    document.documentElement.clientHeight ||
-    document.body.clientHeight;
-  const rect = el.getBoundingClientRect();
-
-  if (rect) {
-    const { top, bottom, left, right } = {
-      top: rect.top - radius,
-      bottom: rect.bottom + radius,
-      left: rect.left - radius,
-      right: rect.right + radius,
-    };
-    return (
-      bottom > 0 && top <= viewPortHeight && left <= viewPortWidth && right > 0
-    );
-  }
-
-  return false;
-}
 
 function useAlmostInViewport<T extends HTMLElement = HTMLElement>(): [
   InViewport,
   RefObject<T | null>,
 ];
-function useAlmostInViewport(arg: Arg): [InViewport];
-function useAlmostInViewport<T extends HTMLElement = HTMLElement>(
-  ...args: [Arg] | []
-): [InViewport, RefObject<T | null>?] {
+function useAlmostInViewport<T extends HTMLElement = HTMLElement>(): [
+  InViewport,
+  RefObject<T | null>?,
+] {
   const elementRef = useRef<T>(null);
-  const hasPassedInElement = args.length === 1;
-  const argRef = useRef(args[0]);
-  const [inViewport, setInViewport] = useState<InViewport>(() => {
-    const initDOM =
-      typeof argRef.current === "function" ? argRef.current() : argRef.current;
-
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return isInViewPort(initDOM!);
-  });
+  const [inViewport, setInViewport] = useState<InViewport>(false);
 
   useLayoutEffect(() => {
-    const passedInElement =
-      typeof argRef.current === "function" ? argRef.current() : argRef.current;
-
-    const targetElement = hasPassedInElement
-      ? passedInElement
-      : elementRef.current;
+    const targetElement = elementRef.current;
 
     if (!targetElement) {
       return () => {
@@ -112,14 +67,7 @@ function useAlmostInViewport<T extends HTMLElement = HTMLElement>(
     return () => {
       observer.disconnect();
     };
-  }, [
-    elementRef.current,
-    typeof argRef.current === "function" ? undefined : argRef.current,
-  ]);
-
-  if (hasPassedInElement) {
-    return [inViewport];
-  }
+  }, []);
 
   return [inViewport, elementRef];
 }

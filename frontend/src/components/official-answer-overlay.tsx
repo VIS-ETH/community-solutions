@@ -180,7 +180,7 @@ const PdfCutter: React.FC<PdfSelectorProps> = ({ selectedPdf, onCrop }) => {
   }, [pdfObject, page, containerRect]);
 
   if (!pdfUrl && !loading) {
-    return <>Could not fetch PDF.</>;
+    return "Could not fetch PDF.";
   }
 
   function handleInsert() {
@@ -379,13 +379,11 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
             <Center>
               <Group>
                 <Radio
-                  defaultChecked={!solutionFile}
                   disabled={!examFile}
                   value={SelectedPdf.Exam}
                   label="Cut from Exam"
                 />
                 <Radio
-                  defaultChecked={solutionFile}
                   disabled={!solutionFile}
                   value={SelectedPdf.Solution}
                   label="Cut from Official Solution"

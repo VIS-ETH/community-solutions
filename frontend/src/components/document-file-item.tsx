@@ -52,11 +52,11 @@ const DocumentFileItem: React.FC<Props> = ({
   refetch,
 }) => {
   const [displayName, setDisplayName] = useState<string | undefined>();
-  const [replaceFile, setFile] = useState<File | undefined>(undefined);
+  const [replaceFile, setReplaceFile] = useState<File | undefined>(undefined);
   const [replacementError, setReplacementError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const resetFileInput = useRef<(() => void) | null>(null);
+  const resetFileInputRef = useRef<(() => void) | null>(null);
 
   const moveFile = useMoveDocumentFile({
     mutation: {
@@ -107,7 +107,7 @@ const DocumentFileItem: React.FC<Props> = ({
     mutation: {
       onSuccess() {
         setDisplayName(undefined);
-        setFile(undefined);
+        setReplaceFile(undefined);
 
         refetch();
 
@@ -156,7 +156,7 @@ const DocumentFileItem: React.FC<Props> = ({
     // already checking array length === 1
     const replacement = droppedFiles[0];
 
-    setFile(replacement);
+    setReplaceFile(replacement);
     setReplacementError(null);
   }
 
@@ -190,8 +190,8 @@ const DocumentFileItem: React.FC<Props> = ({
       return;
     }
 
-    setFile(selectedFile);
-    resetFileInput.current?.();
+    setReplaceFile(selectedFile);
+    resetFileInputRef.current?.();
     setReplacementError(null);
   }
 
@@ -216,7 +216,7 @@ const DocumentFileItem: React.FC<Props> = ({
             />
 
             <FileButton
-              resetRef={resetFileInput}
+              resetRef={resetFileInputRef}
               disabled={updateDocumentFile.isPending}
               onChange={selectedFile =>
                 handleReplacementSelected(selectedFile ?? undefined)

@@ -302,7 +302,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
                   ? "Mark exam as unsolved"
                   : "Mark exam as solved"
               }
-              onClick={toggleExamUserSolved}
+              onClick={() => void toggleExamUserSolved()}
             />
             {examFile && (
               <IconButton

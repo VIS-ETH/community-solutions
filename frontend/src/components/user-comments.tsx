@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import SingleCommentComponent from "./comment-single";
 import { Alert, Loader } from "@mantine/core";
 import classes from "./user-comments.module.css";
@@ -41,17 +41,24 @@ const UserComments: React.FC<UserCommentsProps> = ({ username }) => {
     setPrevUsername(username);
     setPage(0);
   }
-
-  // sets the observer to the last element once it is rendered
-  useEffect(() => {
-    // called if the last answer is seen, resulting in a new set of answers being loaded
-    const handleObserver = (entities: IntersectionObserverEntry[]) => {
+  // called if the last answer is seen, resulting in a new set of answers being loaded
+  const handleObserver = useCallback(
+    (entities: IntersectionObserverEntry[]) => {
       const first = entities[0];
       if (first.isIntersecting) {
         setPage(no => no + 1);
       }
-    };
-    const observer = new IntersectionObserver(handleObserver);
+    },
+    [setPage],
+  );
+
+  const observer = useMemo(
+    () => new IntersectionObserver(handleObserver),
+    [handleObserver],
+  );
+
+  // sets the observer to the last element once it is rendered
+  useEffect(() => {
     if (lastElement) {
       observer.observe(lastElement);
     }
@@ -60,7 +67,7 @@ const UserComments: React.FC<UserCommentsProps> = ({ username }) => {
         observer.unobserve(lastElement);
       }
     };
-  }, [lastElement]);
+  }, [lastElement, observer]);
 
   return (
     <>

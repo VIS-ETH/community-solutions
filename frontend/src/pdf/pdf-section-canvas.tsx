@@ -5,7 +5,9 @@ import { useCallback, use, useEffect, useRef, useState } from "react";
 import { DebugContext } from "../components/Debug";
 import IconButton from "../components/icon-button";
 import PdfSectionCanvasOverlay from "../components/pdf-section-canvas-overlay";
-import PdfSectionText from "../components/pdf-section-text";
+import PdfSectionText, {
+  type PdfViewTuple,
+} from "../components/pdf-section-text";
 import useAlmostInViewport from "../hooks/useAlmostInViewport";
 import useDpr from "../hooks/useDpr";
 import PDF from "./pdf-renderer";
@@ -24,7 +26,7 @@ const usePdf = (
   scale: number | undefined,
 ): [
   HTMLCanvasElement | null,
-  number[] | undefined,
+  PdfViewTuple | undefined,
   number,
   number,
   boolean,
@@ -32,7 +34,7 @@ const usePdf = (
   const [canvasElement, setCanvasElement] = useState<HTMLCanvasElement | null>(
     null,
   );
-  const [view, setView] = useState<number[]>();
+  const [view, setView] = useState<PdfViewTuple>();
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
   const [isMainCanvas, setIsMainCanvas] = useState(false);
@@ -46,7 +48,7 @@ const usePdf = (
         const page = await renderer.getPage(pageNumber);
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (cancel) return;
-        setView(page.view);
+        setView(page.view as PdfViewTuple);
         const viewport = page.getViewport({ scale: 1.0 });
         setWidth(viewport.width);
         setHeight(viewport.height);

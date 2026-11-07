@@ -1,15 +1,25 @@
-import type { TextContent, TextItem } from "pdfjs-dist/types/src/display/api";
+import type {
+  TextContent,
+  TextItem,
+  TextMarkedContent,
+  TextStyle,
+} from "pdfjs-dist/types/src/display/api";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PDF from "../pdf/pdf-renderer";
 
 const MAX_ITEMS = 1_000;
 
+function isPdfTextItem(item: TextItem | TextMarkedContent): item is TextItem {
+  // `str` is hopefully stable
+  return Object.hasOwn(item, "str");
+}
+
 const useTextLayer = (
   shouldRender: boolean,
   renderer: PDF,
   pageNumber: number,
-  view: number[],
+  view: PdfViewTuple,
   start: number,
   end: number,
 ): TextContent | null => {
@@ -31,9 +41,10 @@ const useTextLayer = (
   const filteredItems = useMemo(() => {
     if (textContent === null) return;
     if (textContent.items.length > MAX_ITEMS) return;
-    return textContent.items.filter(genericItem => {
-      const item = genericItem as TextItem;
-      const [, , , offsetY, , y] = item.transform;
+    return textContent.items.filter(item => {
+      if (!isPdfTextItem(item)) return false;
+
+      const [, , , offsetY, , y] = item.transform as TextTransformTuple;
       const [, , , yMax] = view;
       const top = yMax - (y + offsetY);
       const bottom = top + item.height;
@@ -50,22 +61,40 @@ const useTextLayer = (
   return result;
 };
 
+type TextTransformTuple = [
+  fontHeightPx: number,
+  skewX: number,
+  skewY: number,
+  offsetY: number,
+  x: number,
+  y: number,
+];
+export type PdfViewTuple = [
+  xMin: number,
+  yMin: number,
+  xMax: number,
+  yMax: number,
+];
+
 interface TextElementProps {
-  item: any;
+  item: TextItem;
   // Style currently isn't used. Setting the font family breaks alignment
-  styles: any;
-  view: number[];
+  styles: Record<string, TextStyle>;
+  view: PdfViewTuple;
   scale: number;
 }
 const PdfTextElement: React.FC<TextElementProps> = ({ item, view, scale }) => {
-  const [fontHeightPx, , , offsetY, x, y] = item.transform;
+  const [fontHeightPx, , , offsetY, x, y] =
+    item.transform as TextTransformTuple;
   const [xMin, , , yMax] = view;
   const top = yMax - (y + offsetY);
   const left = x - xMin;
   const divRef = useCallback(
     (ref: HTMLDivElement | null) => {
       if (ref === null) return;
-      const [width, height] = [ref.clientWidth, fontHeightPx];
+      const width = ref.clientWidth;
+      const height = fontHeightPx;
+
       const targetWidth = item.width * scale;
       const targetHeight = item.height * scale;
       const xScale = targetWidth / width;
@@ -101,13 +130,13 @@ const PdfTextElement: React.FC<TextElementProps> = ({ item, view, scale }) => {
     </div>
   );
 };
-const defaultView = [0, 0, 0, 0];
+const defaultView: PdfViewTuple = [0, 0, 0, 0];
 interface Props {
   page: number;
   start: number;
   end: number;
   renderer: PDF;
-  view?: number[];
+  view?: PdfViewTuple;
   scale: number;
   translateY: number;
 }
@@ -142,15 +171,17 @@ const PdfSectionText: React.FC<Props> = React.memo(
           top: "0",
         }}
       >
-        {textContent?.items.map((item, index) => (
-          <PdfTextElement
-            key={index}
-            item={item}
-            styles={textContent.styles}
-            view={view ?? defaultView}
-            scale={1.0}
-          />
-        ))}
+        {textContent?.items.map((item, index) =>
+          isPdfTextItem(item) ? (
+            <PdfTextElement
+              key={index}
+              item={item}
+              styles={textContent.styles}
+              view={view ?? defaultView}
+              scale={1.0}
+            />
+          ) : null,
+        )}
       </div>
     );
   },

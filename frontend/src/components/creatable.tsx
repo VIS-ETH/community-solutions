@@ -38,7 +38,7 @@ const Creatable: React.FC<CreatableProps> = ({
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
-  const [search, setSearch] = useInitialState(value ?? "");
+  const [search, setSearch] = useInitialState(value);
 
   const exactOptionMatch = data.some(item => {
     return typeof item === "string" ? item === search : item.value === search;
@@ -87,7 +87,7 @@ const Creatable: React.FC<CreatableProps> = ({
           title={title}
           pointer
           rightSection={
-            clearable && value !== null && value !== undefined ? (
+            clearable ? (
               <CloseButton
                 size="sm"
                 onMouseDown={event => event.preventDefault()}
@@ -102,7 +102,7 @@ const Creatable: React.FC<CreatableProps> = ({
               <Combobox.Chevron />
             )
           }
-          rightSectionPointerEvents={value === null ? "none" : "all"}
+          rightSectionPointerEvents="all"
           value={search}
           onChange={event => {
             combobox.openDropdown();

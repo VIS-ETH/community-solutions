@@ -106,130 +106,125 @@ const SingleCommentComponent: React.FC<Props> = ({ comment, reload }) => {
                 ·
               </Text>
             </Anchor>
-            {comment && <TimeText time={comment.time} suffix="ago" />}
-            {comment &&
-              differenceInSeconds(
-                new Date(comment.edittime),
-                new Date(comment.time),
-              ) > 1 && (
-                <>
-                  <Text c="dimmed" mx={6} component="span">
-                    ·
-                  </Text>
-                  <TimeText
-                    time={comment.edittime}
-                    prefix="edited"
-                    suffix="ago"
-                  />
-                </>
-              )}
+            <TimeText time={comment.time} suffix="ago" />
+            {differenceInSeconds(
+              new Date(comment.edittime),
+              new Date(comment.time),
+            ) > 1 && (
+              <>
+                <Text c="dimmed" mx={6} component="span">
+                  ·
+                </Text>
+                <TimeText
+                  time={comment.edittime}
+                  prefix="edited"
+                  suffix="ago"
+                />
+              </>
+            )}
             <MarkedAsAiBadge count={comment.markedAsAiCount} />
           </Box>
           <Flex align="center">
-            {comment && (
-              <FlaggedBadge
-                count={comment.flaggedCount}
-                isFlagged={comment.isFlagged}
-                loading={flaggedLoading}
-                onToggle={
-                  isOwnComment
-                    ? undefined
-                    : () =>
-                        setExamCommentFlagged({
-                          oid: comment.oid,
-                          data: { flagged: !comment.isFlagged },
-                        })
-                }
-              />
-            )}
-            {comment && (
-              <Menu withinPortal>
-                <Menu.Target>
-                  <Button size="xs" variant="light" color="gray" mr="md">
-                    <IconDots />
-                  </Button>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  {!isOwnComment && (
-                    <>
-                      {!comment.isMarkedAsAi ? (
-                        <Menu.Item
-                          leftSection={<IconRobot />}
-                          onClick={() =>
-                            setExamCommentMarkedAsAi({
-                              oid: comment.oid,
-                              data: { markedAsAi: true },
-                            })
-                          }
-                        >
-                          Mark as AI-generated
-                        </Menu.Item>
-                      ) : (
-                        <Menu.Item
-                          leftSection={<IconRobotOff />}
-                          onClick={() =>
-                            setExamCommentMarkedAsAi({
-                              oid: comment.oid,
-                              data: { markedAsAi: false },
-                            })
-                          }
-                        >
-                          Remove AI-generated mark
-                        </Menu.Item>
-                      )}
-                      {comment.flaggedCount === 0 && (
-                        <Menu.Item
-                          leftSection={<IconFlag />}
-                          onClick={() =>
-                            setExamCommentFlagged({
-                              oid: comment.oid,
-                              data: { flagged: true },
-                            })
-                          }
-                        >
-                          Flag as Inappropriate
-                        </Menu.Item>
-                      )}
-                    </>
-                  )}
+            <FlaggedBadge
+              count={comment.flaggedCount}
+              isFlagged={comment.isFlagged}
+              loading={flaggedLoading}
+              onToggle={
+                isOwnComment
+                  ? undefined
+                  : () =>
+                      setExamCommentFlagged({
+                        oid: comment.oid,
+                        data: { flagged: !comment.isFlagged },
+                      })
+              }
+            />
+            <Menu withinPortal>
+              <Menu.Target>
+                <Button size="xs" variant="light" color="gray" mr="md">
+                  <IconDots />
+                </Button>
+              </Menu.Target>
+              <Menu.Dropdown>
+                {!isOwnComment && (
+                  <>
+                    {!comment.isMarkedAsAi ? (
+                      <Menu.Item
+                        leftSection={<IconRobot />}
+                        onClick={() =>
+                          setExamCommentMarkedAsAi({
+                            oid: comment.oid,
+                            data: { markedAsAi: true },
+                          })
+                        }
+                      >
+                        Mark as AI-generated
+                      </Menu.Item>
+                    ) : (
+                      <Menu.Item
+                        leftSection={<IconRobotOff />}
+                        onClick={() =>
+                          setExamCommentMarkedAsAi({
+                            oid: comment.oid,
+                            data: { markedAsAi: false },
+                          })
+                        }
+                      >
+                        Remove AI-generated mark
+                      </Menu.Item>
+                    )}
+                    {comment.flaggedCount === 0 && (
+                      <Menu.Item
+                        leftSection={<IconFlag />}
+                        onClick={() =>
+                          setExamCommentFlagged({
+                            oid: comment.oid,
+                            data: { flagged: true },
+                          })
+                        }
+                      >
+                        Flag as Inappropriate
+                      </Menu.Item>
+                    )}
+                  </>
+                )}
+                <Menu.Item
+                  onClick={() =>
+                    copy(
+                      `${document.location.origin}/exams/${comment.filename}?comment=${comment.longId}&answer=${comment.answerLongId}`,
+                    )
+                  }
+                >
+                  Copy Permalink
+                </Menu.Item>
+                {isAdmin && comment.markedAsAiCount > 0 && (
                   <Menu.Item
+                    leftSection={<IconRobotOff />}
                     onClick={() =>
-                      copy(
-                        `${document.location.origin}/exams/${comment.filename}?comment=${comment.longId}&answer=${comment.answerLongId}`,
-                      )
+                      resetExamCommentMarkedAsAi({ oid: comment.oid })
                     }
                   >
-                    Copy Permalink
+                    Remove all AI-generated marks
                   </Menu.Item>
-                  {isAdmin && comment.markedAsAiCount > 0 && (
-                    <Menu.Item
-                      leftSection={<IconRobotOff />}
-                      onClick={() =>
-                        resetExamCommentMarkedAsAi({ oid: comment.oid })
-                      }
-                    >
-                      Remove all AI-generated marks
-                    </Menu.Item>
-                  )}
-                  {isAdmin && comment.flaggedCount > 0 && (
-                    <Menu.Item
-                      leftSection={<IconFlag />}
-                      onClick={() =>
-                        resetExamCommentFlagged({ oid: comment.oid })
-                      }
-                    >
-                      Remove all inappropriate flags
-                    </Menu.Item>
-                  )}
+                )}
+                {isAdmin && comment.flaggedCount > 0 && (
                   <Menu.Item
-                    leftSection={<IconCode />}
-                    onClick={toggleViewSource}
+                    leftSection={<IconFlag />}
+                    onClick={() =>
+                      resetExamCommentFlagged({ oid: comment.oid })
+                    }
                   >
-                    Toggle Source Code Mode
+                    Remove all inappropriate flags
                   </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
-            )}
+                )}
+                <Menu.Item
+                  leftSection={<IconCode />}
+                  onClick={toggleViewSource}
+                >
+                  Toggle Source Code Mode
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
           </Flex>
         </Flex>
         <Divider />

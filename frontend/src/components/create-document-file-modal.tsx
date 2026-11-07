@@ -30,7 +30,7 @@ const CreateDocumentFileModal: React.FC<Props> = ({
   const [isDragging, setIsDragging] = useState(false);
 
   // added to clear browser input when a file is deleted from the pending list
-  const resetFileInput = useRef<(() => void) | null>(null);
+  const resetFileInputRef = useRef<(() => void) | null>(null);
 
   const { mutateAsync, isError, error } = useCreateDocumentFile<
     string | Error
@@ -38,7 +38,7 @@ const CreateDocumentFileModal: React.FC<Props> = ({
 
   function handleFilesSelected(selectedFiles: File[]): void {
     setFiles(prevFiles => [...prevFiles, ...selectedFiles]);
-    resetFileInput.current?.();
+    resetFileInputRef.current?.();
   }
 
   function handleDrop(event: React.DragEvent<HTMLDivElement>): void {
@@ -144,7 +144,7 @@ const CreateDocumentFileModal: React.FC<Props> = ({
         )}
         <FileButton
           multiple
-          resetRef={resetFileInput}
+          resetRef={resetFileInputRef}
           disabled={isUploading}
           onChange={handleFilesSelected}
         >

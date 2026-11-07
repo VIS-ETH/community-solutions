@@ -25,6 +25,8 @@ export function useRecentExams(): readonly [
 
   const pushExam = useCallback(
     (metadata: ExamMetadataSchema) => {
+      if (!metadata.filename) return;
+
       updateRecentExams(previous => {
         // Remove exam if it is already viewed so it is duplicated
         // We want to push it to the top

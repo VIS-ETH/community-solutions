@@ -208,7 +208,7 @@ const ExamTypeSection: React.FC<ExamTypeCardProps> = ({
                       : "Mark exam as solved"
                   }
                   icon={<IconCheck />}
-                  onClick={(event: React.SyntheticEvent) => {
+                  onClick={event => {
                     void handleToggleUserSolved(event, exam);
                   }}
                 />
@@ -220,9 +220,7 @@ const ExamTypeSection: React.FC<ExamTypeCardProps> = ({
                     tooltip="Delete exam"
                     icon={<IconTrash />}
                     variant="outline"
-                    onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                      handleRemoveClick(e, exam)
-                    }
+                    onClick={e => handleRemoveClick(e, exam)}
                   />
                 )}
               </Grid.Col>
