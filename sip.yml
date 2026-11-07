@@ -33,9 +33,14 @@ env:
     secret:
       key: api-key
       create: provided
+  # deprecated, use FRONTEND_BRANDING_URL
   - name: "FRONTEND_GLOB_ID"
     secret:
       key: frontend-glob-id
+      create: provided
+  - name: "FRONTEND_BRANDING_URL"
+    secret:
+      key: frontend-branding-url
       create: provided
   - name: "FRONTEND_TITLE_PREFIX"
     secret:

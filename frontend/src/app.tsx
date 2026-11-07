@@ -240,7 +240,7 @@ const App: React.FC = () => {
     refetchInterval: 300_000,
   });
 
-  const data = (window as any).configOptions as ConfigOptions;
+  const data = ((window as any).configOptions ?? {}) as Partial<ConfigOptions>;
 
   const fvTheme = makeVsethTheme(data.primaryColor);
 

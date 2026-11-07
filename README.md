@@ -194,6 +194,21 @@ Whenever you modify the API, ensure you update the generated frontend code:
 
 ---
 
+## Branding
+
+Branding (colors, logo, navigation, footer links) is loaded from the script at `FRONTEND_BRANDING_URL`
+(`VITE_BRANDING_URL` for the dev server). The script sets `window.configOptions`; see `ConfigOptions` in
+[`constants.ts`](frontend/src/components/Navbar/constants.ts) for the shape.
+
+To self-host it, mount a folder with a `config.js` at `/app/branding` and set
+`FRONTEND_BRANDING_URL=/branding/config.js`. Set `logo` and `signet` there and keep images under `/branding/`,
+since other hosts are blocked by the Content Security Policy.
+
+Only point `FRONTEND_BRANDING_URL` at a host you trust: the script runs on every page, and its host is
+added to the Content Security Policy.
+
+---
+
 ## Testing
 
 To fill the website with users, exams and documents, you would run the following (but read on below, before executing the command):

@@ -19,6 +19,7 @@ urlpatterns = [
     re_path("^document/.*$", views.index, name="document"),
     path("favicon.ico", views.favicon, name="favicon"),
     path("manifest.json", views.manifest, name="manifest"),
+    re_path(r"^branding/(?P<path>.+)$", views.branding, name="branding"),
     path("resolve/<str:filename>/", views.resolve, name="resolve"),
     path(
         "api/can_i_haz_csrf_cookie/",
