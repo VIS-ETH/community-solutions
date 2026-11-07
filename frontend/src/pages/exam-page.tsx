@@ -573,9 +573,17 @@ const ExamPage: React.FC = () => {
     () => (cuts && pdf ? loadSections(pdf.numPages, cuts) : undefined),
     [pdf, cuts],
   );
-  const error = metadataError ?? cutsError ?? pdfError;
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const user = useUser()!;
+
+  const error = metadataError ?? cutsError ?? pdfError;
+  const errorStringified =
+    typeof error === "string"
+      ? error
+      : error instanceof Error
+        ? error.message
+        : // eslint-disable-next-line @typescript-eslint/no-base-to-string
+          String(error);
 
   const navigate = useNavigate();
 
@@ -607,7 +615,7 @@ const ExamPage: React.FC = () => {
       <div>
         {error && (
           <Container>
-            <Alert color="red">{error as unknown as string}</Alert>
+            <Alert color="red">{errorStringified}</Alert>
           </Container>
         )}
         {metadataLoading && (

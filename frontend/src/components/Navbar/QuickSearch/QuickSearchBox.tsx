@@ -393,7 +393,8 @@ export const QuickSearchBox: React.FC = () => {
               />
               {!searchResults.isFetching && searchResults.error && (
                 <Text c="dimmed" mx="auto">
-                  {searchResults.error as unknown as string}
+                  {/* eslint-disable-next-line @typescript-eslint/no-base-to-string */}
+                  {String(searchResults.error)}
                 </Text>
               )}
               <QuickSearchResults

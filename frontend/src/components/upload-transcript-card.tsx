@@ -45,7 +45,8 @@ export const UploadTranscriptForm: React.FC<UploadTranscriptFormProps> = ({
   const [validationError, setValidationError] = useState<string | null>(null);
   const error =
     categoriesError?.err ??
-    (uploadError as unknown as string | undefined) ??
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
+    uploadError?.toString() ??
     validationError;
   const loading = categoriesLoading || uploadLoading;
 

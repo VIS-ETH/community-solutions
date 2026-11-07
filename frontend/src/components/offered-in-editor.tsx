@@ -99,7 +99,8 @@ const OfferedInEditor: React.FC<OfferedInEditorProps> = ({
   };
   return (
     <>
-      {error && <Alert color="red">{error as unknown as string}</Alert>}
+      {/* eslint-disable-next-line @typescript-eslint/no-base-to-string */}
+      {error && <Alert color="red">{error.toString()}</Alert>}
       <Group>
         {offeredIn.map(([meta1, meta2]) => (
           <Button

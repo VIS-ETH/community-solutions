@@ -71,7 +71,8 @@ export const UploadPdfForm: React.FC<UploadPdfFormProps> = ({
   return (
     <form onSubmit={onSubmit}>
       <Stack mt="sm">
-        {error && <Alert color="red">{error as unknown as string}</Alert>}
+        {/* eslint-disable-next-line @typescript-eslint/no-base-to-string */}
+        {error && <Alert color="red">{error.toString()}</Alert>}
         <FileInput
           label="File"
           placeholder="Click to choose file..."
