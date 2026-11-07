@@ -65,7 +65,7 @@ stages:
       command: ["postgres"]
       variables:
         POSTGRES_HOST_AUTH_METHOD: trust
-    - name: rclone/rclone:1.75.2
+    - name: rclone/rclone:1.76.0
       alias: rclone
       command:
         - serve
