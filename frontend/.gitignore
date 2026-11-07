@@ -34,6 +34,8 @@ yarn-error.log*
 !.yarn/versions
 
 # orval
-
 src/api/model/
 src/api/hooks/
+
+# openapi
+public/openapi.json
