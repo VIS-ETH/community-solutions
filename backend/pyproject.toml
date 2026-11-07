@@ -6,7 +6,7 @@ dependencies = [
   "beautifulsoup4==4.9.3",
   "boto3==1.42.97",
   "django==6.0.10",
-  "django-ninja==1.5.3",
+  "django-ninja>=1.7.3",
   "django-probes==1.9.0",
   "django-prometheus==2.5.0",
   "gevent==26.7.0",
