@@ -124,7 +124,7 @@ class AnswerSection(models.Model):
     has_answers = models.BooleanField(default=True)
 
     if TYPE_CHECKING:
-        answer_set: RelatedManager["Answer"]  # Answer.answer_section
+        answer_set: RelatedManager[Answer]  # Answer.answer_section
 
 
 def generate_long_id():
