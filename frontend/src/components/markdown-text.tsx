@@ -34,20 +34,25 @@ export type ComponentRenderer = (
   >,
 ) => React.ReactElement;
 
+interface MarkableProps {
+  children?: React.ReactNode;
+  className?: string;
+}
+
 const addMarks = (
-  obj: any,
+  obj: React.ReactNode,
   regex: RegExp | undefined,
   index: number = 0,
 ): React.ReactNode => {
   if (regex === undefined) return obj;
   if (regex.toString() === "/(?:)/") return obj; // if regex matches all strings (including the empty one), this function will loop forever
   if (isNaN(index)) index = 0;
-  if (obj && typeof obj === "string") {
+
+  if (typeof obj === "string") {
     const value = obj;
-    const m = regex.test(value);
-    if (!m) return obj;
+    if (!regex.test(value)) return obj;
     let i = 0;
-    const arr = [];
+    const arr: React.ReactNode[] = [];
     while (i < value.length) {
       const rest = value.substring(i);
       const m = rest.match(regex);
@@ -58,30 +63,32 @@ const addMarks = (
 
         i += start + m[0].length;
       } else {
-        arr.push(<span key={`rest`}>{rest}</span>);
+        arr.push(<span key="rest">{rest}</span>);
         break;
       }
     }
     return <React.Fragment key={index}>{arr}</React.Fragment>;
   }
-  if (obj && obj instanceof Array) {
-    const newArr = [];
-    for (let index = 0; index < obj.length; index++) {
-      newArr.push(addMarks(obj[index], regex, index));
-    }
-    return newArr;
+
+  if (Array.isArray(obj)) {
+    return obj.map((item: React.ReactNode, index) =>
+      addMarks(item, regex, index),
+    );
   }
-  if (obj?.props?.children) {
-    if (obj.props.className === "katex") return obj;
-    let arr = obj.props.children;
-    if (!(arr instanceof Array)) arr = [arr];
-    const newArr = Array<any>();
-    for (let index = 0; index < arr.length; index++) {
-      newArr.push(addMarks(arr[index], regex, index));
-    }
-    return React.cloneElement(obj, obj.props, newArr);
-  }
-  return obj;
+
+  if (!React.isValidElement<MarkableProps>(obj)) return obj;
+
+  const { children, className } = obj.props;
+  if (!children) return obj;
+  if (className === "katex") return obj;
+
+  const arr = Array.isArray(children) ? children : [children];
+  const newChildren = arr.map((item: React.ReactNode, index) =>
+    addMarks(item, regex, index),
+  );
+
+  // eslint-disable-next-line @eslint-react/no-clone-element
+  return React.cloneElement(obj, obj.props, ...newChildren);
 };
 
 const createComponents = (
@@ -140,16 +147,27 @@ const createComponents = (
         ...{ node, className, children, ...props },
       });
     }
-    return language ? (
+
+    if (!language)
+      return (
+        <code className={className} {...props}>
+          {children}
+        </code>
+      );
+
+    if (typeof children !== "string")
+      return (
+        <Alert color="red">
+          Bad code block contents. Please report this with a link.
+        </Alert>
+      );
+
+    return (
       <CodeBlock
         language={language}
-        value={String(children).replace(/\n$/, "")}
+        value={children.replace(/\n$/, "")}
         {...props}
       />
-    ) : (
-      <code className={className} {...props}>
-        {children}
-      </code>
     );
   },
 });
@@ -179,7 +197,7 @@ const errorMessage = (
 
 //to avoid the plugin obj changing on re-renders
 //see https://github.com/remarkjs/react-markdown/pull/890#discussion_r1959688258
-const remarkPlugins: PluggableList = [remarkMath, remarkGfm];
+const remarkPlugins = [remarkMath, remarkGfm] satisfies PluggableList;
 const macros = {}; // Predefined macros. Will be edited by KaTex while rendering!
 const rehypePlugins: PluggableList = [
   [rehypeKatex, { macros }],

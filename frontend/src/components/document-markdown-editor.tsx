@@ -25,15 +25,15 @@ const DocumentMarkdownEditor: React.FC<Props> = ({ document, file, url }) => {
   // This avoids refetching the body every time
   // Further, it avoids a quick flash of stale data
   // if we were to refetch the data.
-  const fileCache = useRef<Record<string, string>>({});
+  const fileCacheRef = useRef<Record<string, string>>({});
 
   const { mutate, isPending } = useUpdateDocumentFile();
   const { data: initialBody } = useQuery({
     queryKey: getGetDocumentFileQueryKey(file.filename),
     // bypass fetch-utils as that can only handle json
     async queryFn() {
-      if (Object.hasOwn(fileCache.current, file.filename)) {
-        return fileCache.current[file.filename];
+      if (Object.hasOwn(fileCacheRef.current, file.filename)) {
+        return fileCacheRef.current[file.filename];
       }
 
       const response = await fetch(url);
@@ -79,7 +79,7 @@ const DocumentMarkdownEditor: React.FC<Props> = ({ document, file, url }) => {
               file: new File([finalText], "file.md", { type: "text/markdown" }),
             },
           });
-          fileCache.current[file.filename] = finalText;
+          fileCacheRef.current[file.filename] = finalText;
         }}
         loading={isPending}
         leftSection={<IconDeviceFloppy />}

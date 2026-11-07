@@ -221,7 +221,7 @@ export const EditMeta2: React.FC<EditMeta2Props> = ({
     }
   };
 
-  useEffect(checkIfExists, [meta2Options, newMeta2]);
+  useEffect(checkIfExists, [meta2Options, newMeta2, setDisabled]);
 
   return (
     <>

@@ -12,8 +12,8 @@ export default defineConfig(
   eslintReact.configs.recommended,
   reactHooksPlugin.configs.flat.recommended,
   {
-    // equivalent rules already enabled in react-hooks
     rules: {
+      // equivalent rules already enabled in react-hooks
       "@eslint-react/rules-of-hooks": "off",
       "@eslint-react/exhaustive-deps": "off",
       "@eslint-react/set-state-in-effect": "off",
@@ -54,7 +54,6 @@ export default defineConfig(
 
     // Custom rules
     rules: {
-      "@eslint-react/no-leaked-conditional-rendering": "warn",
       // Unused variables should begin with an underscore
       "@typescript-eslint/no-unused-vars": [
         "warn",
@@ -88,27 +87,27 @@ export default defineConfig(
         },
       ],
       "@typescript-eslint/array-type": [
-        "warn",
+        "error",
         {
           // Prefer [] over Array<> syntax for array types
           default: "array",
         },
       ],
-      "@typescript-eslint/ban-tslint-comment": "warn",
-      "@typescript-eslint/consistent-generic-constructors": "warn",
-      "@typescript-eslint/consistent-indexed-object-style": "warn",
-      "@typescript-eslint/consistent-type-definitions": "warn",
+      "@typescript-eslint/ban-tslint-comment": "error",
+      "@typescript-eslint/consistent-generic-constructors": "error",
+      "@typescript-eslint/consistent-indexed-object-style": "error",
+      "@typescript-eslint/consistent-type-definitions": "error",
       "@typescript-eslint/dot-notation": "off",
-      "@typescript-eslint/no-base-to-string": "warn",
-      "@typescript-eslint/no-deprecated": "warn",
+      "@typescript-eslint/no-base-to-string": "error",
+      "@typescript-eslint/no-deprecated": "error",
       "@typescript-eslint/no-duplicate-type-constituents": "warn",
       "@typescript-eslint/no-empty-function": "warn",
       "@typescript-eslint/no-empty-object-type": "warn",
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-extraneous-class": "warn",
       "@typescript-eslint/no-floating-promises": "warn",
-      "@typescript-eslint/no-misused-promises": "warn",
-      "@typescript-eslint/no-non-null-assertion": "warn",
+      "@typescript-eslint/no-misused-promises": "error",
+      "@typescript-eslint/no-non-null-assertion": "error",
       "@typescript-eslint/no-unnecessary-condition": "warn",
       "@typescript-eslint/no-unnecessary-template-expression": "warn",
       "@typescript-eslint/no-unnecessary-type-arguments": "warn",
@@ -129,7 +128,7 @@ export default defineConfig(
       "@typescript-eslint/prefer-promise-reject-errors": "warn",
       "@typescript-eslint/prefer-reduce-type-parameter": "warn",
       "@typescript-eslint/prefer-string-starts-ends-with": "warn",
-      "@typescript-eslint/restrict-plus-operands": "warn",
+      "@typescript-eslint/restrict-plus-operands": "error",
       "@typescript-eslint/return-await": "warn",
       "@typescript-eslint/unbound-method": "warn",
       "@typescript-eslint/use-unknown-in-catch-callback-variable": "warn",
@@ -155,6 +154,10 @@ export default defineConfig(
       "prefer-const": "error",
       "no-new": "error",
       "guard-for-in": "error",
+      "no-prototype-builtins": "error",
+      "@eslint-react/no-missing-component-display-name": "error",
+      "react-hooks/preserve-manual-memoization": "error",
+
       // As per https://typescript-eslint.io/troubleshooting/typed-linting/performance/#eslint-plugin-import,
       // the following import/ rules are recommended to be turned off
       // since the TS typechecker performs similar checks, and the eslint
@@ -172,10 +175,7 @@ export default defineConfig(
       // They have been set to "warn" during the eslint 9 and flat config
       // migration (away from eslint-config-react-app) to reduce the number
       // of immediate fixes.
-      "no-prototype-builtins": "warn",
-      "@eslint-react/no-missing-component-display-name": "warn",
       "react-hooks/immutability": "warn",
-      "react-hooks/preserve-manual-memoization": "warn",
       "react-hooks/refs": "warn",
       "react-hooks/set-state-in-effect": "warn",
     },

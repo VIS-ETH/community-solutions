@@ -45,6 +45,7 @@ const ExternalNavElement: React.FC<Props> = ({
             key={i}
             component={NavLink}
             display={"block"}
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             to={childItem.href!}
             className={clsx(classes.link, classes.mobileChild, textClassName)}
           >
@@ -110,6 +111,7 @@ const ExternalNavElement: React.FC<Props> = ({
               <Menu.Item
                 display={"block"}
                 component={NavLink}
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 to={childItem.href!}
                 className={clsx(classes.link, classes.childItem, textClassName)}
                 onClick={childItem.onClick}
@@ -134,6 +136,7 @@ const ExternalNavElement: React.FC<Props> = ({
   ) : (
     <Anchor
       component={NavLink}
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       to={item.href!}
       size="lg"
       className={clsx(classes.navItem, classes.link, textClassName)}

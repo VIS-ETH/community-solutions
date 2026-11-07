@@ -83,6 +83,7 @@ const CommentComponent: React.FC<Props> = ({
   const { mutate: resetExamCommentMarkedAsAi } =
     useResetCommentMarkedAsAi(onSectionMutated);
   const [viewSource, { toggle: toggleViewSource }] = useDisclosure();
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { isAdmin, username } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
   const [editing, setEditing] = useState(false);
@@ -142,7 +143,9 @@ const CommentComponent: React.FC<Props> = ({
   };
   const startEditing = () => {
     if (comment === undefined) return;
-    setDraftText(readDraftFromStorage(comment.oid, "comment") || comment.text);
+    const storageDraft = readDraftFromStorage(comment.oid, "comment");
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+    setDraftText(storageDraft || comment.text);
     setEditing(true);
   };
   const remove = () => {
@@ -303,7 +306,7 @@ const CommentComponent: React.FC<Props> = ({
                     Edit
                   </Menu.Item>
                 )}
-                {comment && (comment.canEdit || isAdmin) && (
+                {(comment.canEdit || isAdmin) && (
                   <Menu.Item leftSection={<IconTrash />} onClick={remove}>
                     Delete
                   </Menu.Item>
@@ -354,7 +357,7 @@ const CommentComponent: React.FC<Props> = ({
               size="sm"
               loading={loading}
               disabled={draftText.trim().length === 0}
-              onClick={onSave}
+              onClick={() => void onSave()}
               leftSection={<IconDeviceFloppy />}
             >
               Save

@@ -44,7 +44,10 @@ export const UploadTranscriptForm: React.FC<UploadTranscriptFormProps> = ({
   });
   const [validationError, setValidationError] = useState<string | null>(null);
   const error =
-    categoriesError?.err ?? uploadError?.toString() ?? validationError;
+    categoriesError?.err ??
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
+    uploadError?.toString() ??
+    validationError;
   const loading = categoriesLoading || uploadLoading;
 
   const options = useMemo(

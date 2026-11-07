@@ -99,6 +99,7 @@ const OfferedInEditor: React.FC<OfferedInEditorProps> = ({
   };
   return (
     <>
+      {/* eslint-disable-next-line @typescript-eslint/no-base-to-string */}
       {error && <Alert color="red">{error.toString()}</Alert>}
       <Group>
         {offeredIn.map(([meta1, meta2]) => (

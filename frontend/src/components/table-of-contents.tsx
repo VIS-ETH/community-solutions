@@ -43,7 +43,7 @@ const TOCNodeComponent: React.FC<NodeCompoennt> = ({ node }) => {
       {node.children.length > 0 && (
         <ul>
           {node.children.map((child, i) => (
-            <TOCNodeComponent node={child} key={child.name + i} />
+            <TOCNodeComponent node={child} key={`${child.name} ${i}`} />
           ))}
         </ul>
       )}
@@ -64,7 +64,7 @@ export const TOC: React.FC<Props> = ({ toc }) => {
       </Flex>
       <ul>
         {toc.children.map((child, i) => (
-          <TOCNodeComponent node={child} key={child.name + i} />
+          <TOCNodeComponent node={child} key={`${child.name} ${i}`} />
         ))}
       </ul>
     </Card>

@@ -118,6 +118,7 @@ const AnswerComponent: React.FC<Props> = ({
       },
     },
   });
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { isAdmin, isExpert, username } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
   const [editing, setEditing] = useState(false);
@@ -135,12 +136,12 @@ const AnswerComponent: React.FC<Props> = ({
     }
 
     setEditing(true);
-  }, [answer]);
+  }, [answer, answerId]);
   const onCancel = useCallback(() => {
     setEditing(false);
     if (answer === undefined && onDelete) onDelete();
     clearDraftFromStorage(answerId, "answer");
-  }, [onDelete, answer]);
+  }, [onDelete, answer, answerId]);
   const save = useCallback(async () => {
     if (!section) return;
     const finalText = await flushPendingImages(draftText);
@@ -367,12 +368,9 @@ const AnswerComponent: React.FC<Props> = ({
           <Card.Section>
             <Box p="md">
               {viewSource ? (
-                <CodeBlock value={answer?.text ?? ""} language="markdown" />
+                <CodeBlock value={answer.text} language="markdown" />
               ) : (
-                <MarkdownText
-                  value={answer?.text ?? ""}
-                  languages={languages}
-                />
+                <MarkdownText value={answer.text} languages={languages} />
               )}
             </Box>
           </Card.Section>
@@ -391,7 +389,7 @@ const AnswerComponent: React.FC<Props> = ({
               </Button>
               <Button
                 size="sm"
-                onClick={save}
+                onClick={() => void save()}
                 loading={updating}
                 disabled={draftText.trim().length === 0}
                 leftSection={<IconDeviceFloppy />}
@@ -491,12 +489,12 @@ const AnswerComponent: React.FC<Props> = ({
                       )}
                     </>
                   )}
-                  {!editing && canEdit && (
+                  {canEdit && (
                     <Menu.Item leftSection={<IconEdit />} onClick={startEdit}>
                       Edit
                     </Menu.Item>
                   )}
-                  {answer && canRemove && (
+                  {canRemove && (
                     <Menu.Item leftSection={<IconTrash />} onClick={remove}>
                       Delete
                     </Menu.Item>

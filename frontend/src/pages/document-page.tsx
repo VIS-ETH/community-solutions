@@ -567,18 +567,17 @@ const DocumentPage: React.FC = () => {
         ) : (
           <ContentContainer mt="-2px">
             <Container size="xl">
-              {activeFile &&
-                (isUnsafeFile(activeFile) ? (
-                  <Alert color="red" my="sm">
-                    This file has an uncommon file extension. Be careful when
-                    downloading it, as the server does not scan user-uploaded
-                    files for viruses.
-                  </Alert>
-                ) : (
-                  <Alert color="blue" my="sm">
-                    This file can only be downloaded.
-                  </Alert>
-                ))}
+              {isUnsafeFile(activeFile) ? (
+                <Alert color="red" my="sm">
+                  This file has an uncommon file extension. Be careful when
+                  downloading it, as the server does not scan user-uploaded
+                  files for viruses.
+                </Alert>
+              ) : (
+                <Alert color="blue" my="sm">
+                  This file can only be downloaded.
+                </Alert>
+              )}
               <Button
                 leftSection={<IconDownload />}
                 onClick={() =>

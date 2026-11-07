@@ -270,7 +270,7 @@ const Editor: React.FC<Props> = ({
 
   const header = (
     <EditorHeader
-      onFiles={onFiles}
+      onFiles={files => void onFiles(files)}
       activeMode={mode}
       onActiveModeChange={setMode}
       onMathClick={onMathClick}
@@ -305,7 +305,12 @@ const Editor: React.FC<Props> = ({
         onOpenImageOverlay={onOpenImageOverlay}
         onOpenOfficialAnswerOverlay={onOpenOfficialAnswerOverlay}
       />
-      {isDragHovered && <DropZone onDragLeave={onDragLeave} onDrop={onFiles} />}
+      {isDragHovered && (
+        <DropZone
+          onDragLeave={onDragLeave}
+          onDrop={files => void onFiles(files)}
+        />
+      )}
       <ImageOverlay
         isOpen={imageOverlayOpen}
         onClose={() => onImageDialogClose("")}

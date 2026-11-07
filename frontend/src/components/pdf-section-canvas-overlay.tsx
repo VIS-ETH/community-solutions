@@ -1,11 +1,5 @@
 import { Badge } from "@mantine/core";
-import React, {
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-  useContext,
-} from "react";
+import React, { use, useCallback, useMemo, useRef, useState } from "react";
 import { determineOptimalCutPositions } from "../pdf/snap";
 import { DebugContext } from "./Debug";
 import classes from "./pdf-section-canvas-overlay.module.css";
@@ -21,8 +15,17 @@ interface Props {
   snap?: boolean;
 }
 const PdfSectionCanvasOverlay: React.FC<Props> = React.memo(
-  ({ canvas, start, end, isMain, onAddCut, addCutText, snap = true }) => {
-    const { viewOptimalCutAreas } = useContext(DebugContext);
+  // eslint-disable-next-line prefer-arrow-callback
+  function PdfSectionCanvasOverlay({
+    canvas,
+    start,
+    end,
+    isMain,
+    onAddCut,
+    addCutText,
+    snap = true,
+  }) {
+    const { viewOptimalCutAreas } = use(DebugContext);
     const [clientY, setClientY] = useState<number | undefined>(undefined);
     const ref = useRef<HTMLDivElement>(null);
     const pointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
@@ -60,7 +63,7 @@ const PdfSectionCanvasOverlay: React.FC<Props> = React.memo(
       if (displayPos === undefined) return;
       if (displayPos < 0) return;
       if (height === undefined || displayPos > height) return;
-      displayPos && onAddCut(displayPos);
+      if (displayPos > 0) onAddCut(displayPos);
     };
     return (
       <div

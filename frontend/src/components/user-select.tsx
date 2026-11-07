@@ -27,7 +27,7 @@ const UserSelect: React.FC<UserSelectProps> = ({
   const selectData =
     users
       ?.filter(user => filter(user))
-      ?.map(user => ({
+      .map(user => ({
         value: String(user.id),
         label: user.display_name,
         user,

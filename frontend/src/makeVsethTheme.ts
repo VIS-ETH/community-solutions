@@ -24,7 +24,10 @@ const makeVsethTheme = (newPrimaryColor?: MantineColorsTuple | string) => {
   const vsethTheme: MantineThemeOverride = {
     colors: {
       brand,
-      vsethGray: new Array(10).fill("rgb(144, 146, 150)") as any,
+      vsethGray: Array.from(
+        { length: 10 },
+        () => "rgb(144, 146, 150)",
+      ) as unknown as MantineColorsTuple,
     },
     defaultRadius: "md",
     primaryColor: "brand",

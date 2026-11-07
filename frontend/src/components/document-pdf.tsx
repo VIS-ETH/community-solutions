@@ -71,7 +71,7 @@ const DocumentPdf: React.FC<DocumentPdfProps> = ({ url }) => {
           (v: boolean) => inViewChange(pageNumber, v),
         ]),
       ),
-    [renderer],
+    [renderer, inViewChange],
   );
 
   return (

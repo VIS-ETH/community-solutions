@@ -106,6 +106,7 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
       data ? getMetaCategoriesForCategory(data, metaData.slug) : undefined,
     [data, metaData],
   );
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const user = useUser()!;
   const editorOnMetaDataChange = useCallback(
     (newMetaData: CategoryData) => {
@@ -395,7 +396,7 @@ const CategoryPage: React.FC = () => {
       {error && <Alert color="red">{error.err}</Alert>}
       {isPending && <LoadingOverlay visible={isPending} />}
       {data && (
-        <UserContext.Provider
+        <UserContext
           value={
             user
               ? {
@@ -409,7 +410,7 @@ const CategoryPage: React.FC = () => {
             metaData={data}
             onMetaDataChange={onMetaDataChange}
           />
-        </UserContext.Provider>
+        </UserContext>
       )}
     </Container>
   );

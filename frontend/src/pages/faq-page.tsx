@@ -22,6 +22,7 @@ const Editor = lazy(() => import("../components/Editor"));
 
 export const FAQPage: React.FC = () => {
   useTitle("FAQ");
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { isAdmin } = useUser()!;
   const { faqs, add, update, swap, remove } = useFAQ();
   const [hasDraft, setHasDraft] = useState(false);
@@ -65,9 +66,9 @@ export const FAQPage: React.FC = () => {
           entry={faq}
           prevEntry={idx > 0 ? faqs[idx - 1] : undefined}
           nextEntry={idx + 1 < faqs.length ? faqs[idx + 1] : undefined}
-          onUpdate={changes => update(faq.oid, changes)}
-          onSwap={swap}
-          onRemove={() => remove(faq.oid)}
+          onUpdate={changes => void update(faq.oid, changes)}
+          onSwap={(a, b) => void swap(a, b)}
+          onRemove={() => void remove(faq.oid)}
         />
       ))}
       {hasDraft ? (
@@ -93,7 +94,7 @@ export const FAQPage: React.FC = () => {
               <Button
                 size="sm"
                 leftSection={<IconDeviceFloppy />}
-                onClick={handleNew}
+                onClick={() => void handleNew()}
               >
                 Save
               </Button>

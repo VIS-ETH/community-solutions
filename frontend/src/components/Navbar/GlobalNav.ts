@@ -5,8 +5,8 @@ interface LangMap {
   [s: string]: ReactNode;
 }
 
-function isLangMap(obj: LangMap | {}): obj is LangMap {
-  return obj.hasOwnProperty("en");
+function isLangMap(obj: LangMap): obj is LangMap {
+  return Object.hasOwn(obj, "en");
 }
 
 function getTitle(title: ReactNode | LangMap, lang: string) {
@@ -15,14 +15,16 @@ function getTitle(title: ReactNode | LangMap, lang: string) {
     typeof title === "string" ||
     typeof title === "number" ||
     typeof title === "boolean" ||
+    typeof title === "bigint" ||
     Array.isArray(title)
   )
     return title;
   if (isValidElement(title)) {
     return title;
   }
-  if (isLangMap(title)) {
-    return title[lang] ?? title.en;
+  const langMap = title as LangMap;
+  if (isLangMap(langMap)) {
+    return langMap[lang] ?? langMap.en;
   }
   return undefined;
 }
