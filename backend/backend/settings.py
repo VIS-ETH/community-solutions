@@ -18,6 +18,7 @@ from base64 import b64encode
 from urllib.parse import urlsplit
 
 import yaml
+from django.utils.csp import CSP
 from jwcrypto.jwk import JWK, JWKSet
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -243,37 +244,35 @@ S3_ENDPOINT_URL = "http{}://{}:{}".format(
     os.environ.get("SIP_S3_FILES_PORT", "9000"),
 )
 
-CONTENT_SECURITY_POLICY = {
-    "DIRECTIVES": {
-        "default-src": ["'self'"],
-        "script-src": [
-            "'self'",
-            "'unsafe-eval'",
-            *_branding_csp_sources,
-            *allowed_script_sources,
-        ],
-        "style-src": [
-            "'self'",
-            "'unsafe-inline'",
-            "https://fonts.googleapis.com",
-            *_branding_csp_sources,
-        ],
-        "font-src": ["'self'", "data:", "https://fonts.gstatic.com"],
-        "connect-src": [
-            "'self'",
-            *_branding_csp_sources,
-            "https://auth.vseth.ethz.ch",
-            S3_ENDPOINT_URL,
-        ]
-        + ([FARO_URL] if FARO_URL else []),
-        "img-src": [
-            "'self'",
-            "data:",
-            *_branding_csp_sources,
-            *csp_sources(FAVICON_URL),
-            "https://fe.vseth.ethz.ch",
-        ],
-    }
+SECURE_CSP = {
+    "default-src": [CSP.SELF],
+    "script-src": [
+        CSP.SELF,
+        CSP.UNSAFE_EVAL,
+        *_branding_csp_sources,
+        *allowed_script_sources,
+    ],
+    "style-src": [
+        CSP.SELF,
+        CSP.UNSAFE_INLINE,
+        "https://fonts.googleapis.com",
+        *_branding_csp_sources,
+    ],
+    "font-src": [CSP.SELF, "data:", "https://fonts.gstatic.com"],
+    "connect-src": [
+        CSP.SELF,
+        *_branding_csp_sources,
+        "https://auth.vseth.ethz.ch",
+        S3_ENDPOINT_URL,
+    ]
+    + ([FARO_URL] if FARO_URL else []),
+    "img-src": [
+        CSP.SELF,
+        "data:",
+        *_branding_csp_sources,
+        *csp_sources(FAVICON_URL),
+        "https://fe.vseth.ethz.ch",
+    ],
 }
 
 
@@ -303,7 +302,6 @@ INSTALLED_APPS = [
     "testing.apps.TestingConfig",
     "django_probes",
     "ninja",
-    "csp",
 ]
 
 MIDDLEWARE = [
@@ -313,7 +311,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "csp.middleware.CSPMiddleware",
+    "django.middleware.csp.ContentSecurityPolicyMiddleware",
     "ninja.compatibility.files.fix_request_files_middleware",
     "util.middleware.parse_request_middleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",

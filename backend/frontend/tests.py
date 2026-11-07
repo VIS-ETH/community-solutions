@@ -41,9 +41,7 @@ class TestCspSources(ComsolTest):
         self.login_as(None)
 
     def test_absolute_url(self):
-        self.assertEqual(
-            csp_sources(VSETH_VIS_URL), ["https://static.vseth.ethz.ch"]
-        )
+        self.assertEqual(csp_sources(VSETH_VIS_URL), ["https://static.vseth.ethz.ch"])
 
     def test_url_with_port(self):
         self.assertEqual(

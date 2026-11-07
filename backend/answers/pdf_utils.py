@@ -56,5 +56,5 @@ def analyze_pdf(
         ExamPage.objects.bulk_create(exam_pages)
 
         return True
-    except (FileNotFoundError, pdfium.PdfiumError):
+    except FileNotFoundError, pdfium.PdfiumError:
         return False
