@@ -3,7 +3,6 @@ name = "community-solutions"
 version = "0.1.0"
 requires-python = ">=3.14"
 dependencies = [
-  "beautifulsoup4==4.9.3",
   "boto3==1.42.97",
   "django==6.0.10",
   "django-ninja>=1.7.3",

@@ -30,18 +30,3 @@ const parseVersions = (): {
 export const versions = parseVersions();
 
 export const latestVersion: string | undefined = versions[0]?.version;
-
-/**
- * Returns the markdown slice covering entries newer than `sinceVersion`. If
- * `sinceVersion` is not found (or not provided), returns all entries. The
- * returned slice starts at the first version heading, omitting any top-level
- * "Changelog" heading.
- */
-export const entriesSince = (sinceVersion: string | undefined): string => {
-  if (versions.length === 0) return "";
-  const match = versions.find(v => v.version === sinceVersion);
-  const end = match ? match.index : changelogSource.length;
-  return changelogSource.slice(versions[0].index, end).trimEnd();
-};
-
-export { changelogSource };

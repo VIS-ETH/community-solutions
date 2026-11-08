@@ -14,9 +14,5 @@ export const createOptions = <T extends Options>(o: T) =>
       { value: key, label: value },
     ]) as [string, unknown][],
   ) as unknown as OptionsResult<T>;
-export interface SelectOption<T> {
-  value: keyof T;
-  label: string;
-}
 export const options = <T extends Options>(map: OptionsResult<T>) =>
   Object.values(map) as { value: keyof T & string; label: string }[];
