@@ -71,8 +71,8 @@ class TestFAQ(ComsolTest):
 
         res = self.get("/api/faq/")["value"]
 
-        self.put(f"/api/faq/swap/{res[0]['oid']}/{res[1]['oid']}", {}, as_json=False)
-        self.put(f"/api/faq/swap/{res[2]['oid']}/{res[3]['oid']}", {}, as_json=False)
+        self.put(f"/api/faq/swap/{res[0]['oid']}/{res[1]['oid']}/", {}, as_json=False)
+        self.put(f"/api/faq/swap/{res[2]['oid']}/{res[3]['oid']}/", {}, as_json=False)
 
         res_new = self.get("/api/faq/")["value"]
 
