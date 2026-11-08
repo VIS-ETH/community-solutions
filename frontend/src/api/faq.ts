@@ -6,7 +6,7 @@ import {
   useListFaqEntries,
   useUpdateFaqEntry,
   useSwapFaqEntries,
-} from "./hooks/categories";
+} from "./hooks/faq";
 import type { FaqEntry } from "./model";
 
 // Lower order comes first. As a tiebreaker, entry with lower id comes first

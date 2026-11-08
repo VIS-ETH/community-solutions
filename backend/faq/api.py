@@ -6,7 +6,7 @@ from faq.models import FAQuestion
 from myauth import auth_check
 from util.schemas import ErrorSchema, ValueWrapped
 
-router = Router(tags=["Categories"])
+router = Router(tags=["Faq"])
 
 
 class FaqEntry(Schema):
@@ -35,7 +35,8 @@ def get_faq_obj(faq: FAQuestion) -> FaqEntry:
 )
 @auth_check.require_login
 def list_faq_entries(request):
-    res = [get_faq_obj(q) for q in FAQuestion.objects.order_by("order").all()]
+    res = [get_faq_obj(q) for q in FAQuestion.objects.order_by("order", "pk").all()]
+
     return {
         "value": res,
     }
@@ -132,7 +133,7 @@ def remove_faq_entry(request, id: int):
 
 
 @router.put(
-    "swap/{id_a}/{id_b}",
+    "swap/{id_a}/{id_b}/",
     response={
         200: None,
         401: ErrorSchema,
