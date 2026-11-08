@@ -13,7 +13,6 @@ import examTypeClasses from "./exam-type-section.module.css";
 import { Link } from "react-router-dom";
 import { useUser } from "../auth";
 import useRemoveConfirm from "../hooks/useRemoveConfirm";
-import { CategoryExam } from "../interfaces";
 import ClaimButton from "./claim-button";
 import IconButton from "./icon-button";
 import { clsx } from "clsx";
@@ -25,10 +24,11 @@ import {
   useRemoveExam,
   useSetExamUserSolved,
 } from "../api/hooks/answers";
+import type { ListExamsResponse } from "../api/model";
 
 interface ExamTypeCardProps {
   examtype: string;
-  exams: CategoryExam[];
+  exams: ListExamsResponse[];
   selected: Set<string>;
   onSelect: (...filenames: string[]) => void;
   onDeselect: (...filenames: string[]) => void;
@@ -62,7 +62,7 @@ const ExamTypeSection: React.FC<ExamTypeCardProps> = ({
   const { mutateAsync: unmarkSolved } = useRemoveExamUserSolved();
   const handleRemoveClick = (
     e: React.MouseEvent<HTMLButtonElement>,
-    exam: CategoryExam,
+    exam: ListExamsResponse,
   ) => {
     e.stopPropagation();
     e.preventDefault();
@@ -74,7 +74,7 @@ const ExamTypeSection: React.FC<ExamTypeCardProps> = ({
 
   async function handleToggleUserSolved(
     event: React.SyntheticEvent,
-    exam: CategoryExam,
+    exam: ListExamsResponse,
   ) {
     event.stopPropagation();
     event.preventDefault();

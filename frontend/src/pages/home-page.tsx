@@ -23,7 +23,6 @@ import Grid from "../components/grid";
 import ContentContainer from "../components/secondary-container";
 import useSearch from "../hooks/useSearch";
 import useTitle from "../hooks/useTitle";
-import { MetaCategory } from "../interfaces";
 import CourseCategoriesPanel from "../components/course-categories-panel";
 import { IconFilter, IconPlus } from "@tabler/icons-react";
 import { EditMeta1, EditMeta2 } from "../components/edit-meta-categories";
@@ -35,7 +34,10 @@ import {
   listCategoriesWithMeta,
   listMetaCategories,
 } from "../api/hooks/categories";
-import { ListCategoriesWithMetaResponse } from "../api/model";
+import {
+  ListCategoriesWithMetaResponse,
+  type Meta1CategoryResponse,
+} from "../api/model";
 
 const displayNameGetter = (data: ListCategoriesWithMetaResponse) =>
   data.displayname;
@@ -56,7 +58,7 @@ const addCategory = async (category: string) => {
 
 const mapToCategories = (
   categories: ListCategoriesWithMetaResponse[],
-  meta1: MetaCategory[],
+  meta1: Meta1CategoryResponse[],
 ) => {
   const categoryMap = new Map<string, ListCategoriesWithMetaResponse>();
   const assignedCategories = new WeakSet<ListCategoriesWithMetaResponse>();
@@ -185,7 +187,9 @@ export const CategoryList: React.FC = () => {
   // Check for local storage cache of category data and use that as a backup
   // while the actual request is loading
   const [localStorageCategoryData, setLocalStorageCategoryData] =
-    useLocalStorage<[ListCategoriesWithMetaResponse[]?, MetaCategory[]?]>({
+    useLocalStorage<
+      [ListCategoriesWithMetaResponse[]?, Meta1CategoryResponse[]?]
+    >({
       key: "category-data",
       defaultValue: [undefined, undefined],
       getInitialValueInEffect: false,
@@ -202,7 +206,7 @@ export const CategoryList: React.FC = () => {
       // our website won't break -- it's just a cache to speed up perceived load.
       setLocalStorageCategoryData(
         // onSuccess gives us a readonly array, so cast it to a mutable array
-        data as [ListCategoriesWithMetaResponse[], MetaCategory[]],
+        data as [ListCategoriesWithMetaResponse[], Meta1CategoryResponse[]],
       );
     },
   });
