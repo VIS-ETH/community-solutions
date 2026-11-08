@@ -144,11 +144,16 @@ def remove_faq_entry(request, id: int):
 )
 @auth_check.require_admin
 def swap_faq_entries(request, id_a: int, id_b: int):
-    faq_a = get_object_or_404(FAQuestion, pk=id_a)
-    faq_b = get_object_or_404(FAQuestion, pk=id_b)
+    if id_a == id_b:
+        return
 
-    faq_a.order, faq_b.order = faq_b.order, faq_a.order
+    id_a, id_b = min(id_a, id_b), max(id_a, id_b)
 
     with transaction.atomic():
-        faq_a.save()
-        faq_b.save()
+        faq_a = get_object_or_404(FAQuestion.objects.select_for_update(), pk=id_a)
+        faq_b = get_object_or_404(FAQuestion.objects.select_for_update(), pk=id_b)
+
+        faq_a.order, faq_b.order = faq_b.order, faq_a.order
+
+        faq_a.save(update_fields=("order",))
+        faq_b.save(update_fields=("order",))
