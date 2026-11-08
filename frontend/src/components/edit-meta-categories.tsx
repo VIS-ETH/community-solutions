@@ -14,7 +14,7 @@ import {
 } from "@mantine/core";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import Creatable from "./creatable";
-import { MetaCategory } from "../interfaces";
+import type { Meta1CategoryResponse } from "../api/model";
 
 const editMeta1Name = async (oldmeta1: string, newmeta1: string) => {
   await fetchPost("/api/category/editmeta1/", { oldmeta1, newmeta1 });
@@ -43,7 +43,7 @@ const deleteMeta2 = async (meta1: string, meta2: string) => {
 };
 
 interface EditMeta1Props {
-  data: MetaCategory[] | undefined;
+  data: Meta1CategoryResponse[] | undefined;
   oldMeta1: string;
   onChange: () => void;
 }
@@ -146,7 +146,7 @@ export const EditMeta1: React.FC<EditMeta1Props> = ({
 };
 
 interface EditMeta2Props {
-  data: MetaCategory[] | undefined;
+  data: Meta1CategoryResponse[] | undefined;
   oldMeta2: string;
   meta1: string;
   onChange: () => void;

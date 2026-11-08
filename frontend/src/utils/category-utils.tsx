@@ -1,10 +1,7 @@
-import {
-  CategoryExam,
-  MetaCategory,
-  ExamSelectedForDownload,
-} from "../interfaces";
+import { ExamSelectedForDownload } from "../interfaces";
 import { getExamPdfUrl } from "../api/hooks/answers";
 import { downloadZipFile, type ZipFileItem } from "./download-zip-file.js";
+import type { ListExamsResponse, Meta1CategoryResponse } from "../api/model";
 
 export function filterMatches(filter: string, name: string): boolean {
   const nameLower = name.replace(/\s/g, "").toLowerCase();
@@ -26,9 +23,9 @@ export function filterMatches(filter: string, name: string): boolean {
 }
 
 export function getMetaCategoriesForCategory(
-  metaCategories: MetaCategory[],
+  metaCategories: Meta1CategoryResponse[],
   category: string,
-): MetaCategory[] {
+): Meta1CategoryResponse[] {
   return metaCategories
     .map(meta1 => ({
       ...meta1,
@@ -36,7 +33,7 @@ export function getMetaCategoriesForCategory(
     }))
     .filter(meta1 => meta1.meta2.length > 0);
 }
-export const mapExamsToExamType = (exams: CategoryExam[]) => {
+export const mapExamsToExamType = (exams: ListExamsResponse[]) => {
   return [
     ...exams
       .reduce((map, exam) => {
@@ -48,7 +45,7 @@ export const mapExamsToExamType = (exams: CategoryExam[]) => {
           map.set(examtype, [exam]);
         }
         return map;
-      }, new Map<string, CategoryExam[]>())
+      }, new Map<string, ListExamsResponse[]>())
       .entries(),
   ].sort(([a], [b]) => a.localeCompare(b));
 };
