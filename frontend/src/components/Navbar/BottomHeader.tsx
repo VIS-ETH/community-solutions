@@ -13,6 +13,9 @@ interface Props {
   title: string;
   loginButton?: ReactNode;
   size: MantineSize | undefined;
+  searchOpened: boolean;
+  onSearchOpen: () => void;
+  onSearchClose: () => void;
 }
 
 const BottomHeader: React.FC<Props> = ({
@@ -21,6 +24,9 @@ const BottomHeader: React.FC<Props> = ({
   title,
   loginButton,
   size,
+  searchOpened,
+  onSearchOpen,
+  onSearchClose,
 }) => {
   return (
     <Container visibleFrom="md" className={classes.navbar} fluid={true}>
@@ -36,7 +42,11 @@ const BottomHeader: React.FC<Props> = ({
           wrap="nowrap"
           gap="2.75rem"
         >
-          <QuickSearchBox />
+          <QuickSearchBox
+            searchOpened={searchOpened}
+            onSearchOpen={onSearchOpen}
+            onSearchClose={onSearchClose}
+          />
           {translate(appNav, lang).map((item, i) => {
             return (
               <ExternalNavElement

@@ -7,8 +7,9 @@ import {
   Indicator,
   Stack,
   useMantineTheme,
+  ActionIcon,
 } from "@mantine/core";
-
+import { IconSearch } from "@tabler/icons-react";
 import { NavItem, translate } from "./GlobalNav";
 import ExternalNavElement from "./ExternalNav";
 import classes from "./MobileHeader.module.css";
@@ -20,6 +21,7 @@ interface Props {
   title: string;
   loginButton?: ReactNode;
   signet: string;
+  onSearchOpen: () => void;
 }
 const BottomHeader: React.FC<Props> = ({
   selectedLanguage,
@@ -27,6 +29,7 @@ const BottomHeader: React.FC<Props> = ({
   title,
   loginButton,
   signet,
+  onSearchOpen,
 }) => {
   const theme = useMantineTheme();
   const [opened, setOpened] = React.useState(false);
@@ -56,6 +59,14 @@ const BottomHeader: React.FC<Props> = ({
           </div>
         </div>
         <Group>
+          <ActionIcon
+            onClick={onSearchOpen}
+            aria-label="Search"
+            variant="transparent"
+            color="white"
+          >
+            <IconSearch />
+          </ActionIcon>
           <ColorSchemeToggle />
           <Indicator
             /** All items have no indicators, and all subitems (if they exist) have no indicators */

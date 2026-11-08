@@ -22,7 +22,6 @@ import {
 } from "@mantine/core";
 import {
   getHotkeyHandler,
-  useDisclosure,
   useHotkeys,
   useMediaQuery,
   useOs,
@@ -70,9 +69,18 @@ const displayOrder = [
   "more",
 ] as const;
 
-export const QuickSearchBox: React.FC = () => {
+interface Props {
+  searchOpened: boolean;
+  onSearchOpen: () => void;
+  onSearchClose: () => void;
+}
+
+export const QuickSearchBox: React.FC<Props> = ({
+  searchOpened: opened,
+  onSearchOpen: open,
+  onSearchClose: close,
+}) => {
   const loggedIn = useUser()?.loggedin ?? false;
-  const [opened, { open, close }] = useDisclosure(false);
 
   // Reference to the input element so that we can select all text upon modal open
   const ref = useRef<HTMLInputElement>(null);

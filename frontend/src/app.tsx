@@ -208,6 +208,8 @@ const App: React.FC = () => {
   }, [user]);
   const [debugPanel, { toggle: toggleDebugPanel, close: closeDebugPanel }] =
     useDisclosure();
+  const [searchOpened, { open: openSearch, close: closeSearch }] =
+    useDisclosure(false);
   const [debugOptions, setDebugOptions] = useState(defaultDebugOptions);
   const [quickSearchFilter, setQuickSearchFilter] = useState<
     QuickSearchFilter | undefined
@@ -386,12 +388,16 @@ const App: React.FC = () => {
                   appNav={bottomHeaderNav}
                   title={"Community Solutions"}
                   size="xl"
+                  searchOpened={searchOpened}
+                  onSearchOpen={openSearch}
+                  onSearchClose={closeSearch}
                 />
                 <MobileHeader
                   signet={data.signet ?? defaultConfigOptions.signet}
                   selectedLanguage={"en"}
                   appNav={bottomHeaderNav}
                   title={"Community Solutions"}
+                  onSearchOpen={openSearch}
                 />
                 <AnnouncementHeader />
                 <Box component="main" mt="2em">
