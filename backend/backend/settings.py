@@ -306,6 +306,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
+    "util.compression.ContentTypeAwareGZipMiddleware",
     "myauth.auth_backend.AuthenticationMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
