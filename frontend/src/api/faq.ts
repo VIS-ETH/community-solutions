@@ -1,65 +1,110 @@
-import { fetchGet, fetchPost, fetchPut, fetchDelete } from "./fetch-utils";
-import { FAQEntry } from "../interfaces";
-import { useRequest } from "ahooks";
-import { useMutation } from "./hooks";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  getListFaqEntriesQueryKey,
+  useAddFaqEntry,
+  useRemoveFaqEntry,
+  useListFaqEntries,
+  useUpdateFaqEntry,
+  useSwapFaqEntries,
+} from "./hooks/faq";
+import type { FaqEntry } from "./model";
 
-const loadFAQs = async () => {
-  return (await fetchGet<{ value: FAQEntry[] }>("/api/faq/")).value;
-};
-const addFAQ = async (question: string, answer: string, order: number) => {
-  return (
-    await fetchPost<{ value: FAQEntry }>("/api/faq/", {
-      question,
-      answer,
-      order,
-    })
-  ).value;
-};
-const updateFAQ = async (oid: string, changes: Partial<FAQEntry>) => {
-  return (await fetchPut<{ value: FAQEntry }>(`/api/faq/${oid}/`, changes))
-    .value;
-};
-const swapFAQ = async (a: FAQEntry, b: FAQEntry) => {
-  return Promise.all([
-    updateFAQ(a.oid, { order: b.order }),
-    updateFAQ(b.oid, { order: a.order }),
-  ]);
-};
-const deleteFAQ = async (oid: string) => {
-  await fetchDelete(`/api/faq/${oid}/`);
-  return oid;
-};
-const sorted = (arg: FAQEntry[]) => arg.sort((a, b) => a.order - b.order);
+// Lower order comes first. As a tiebreaker, entry with lower id comes first
+const sorted = (arg: FaqEntry[]) =>
+  arg.sort((a, b) => a.order - b.order || a.oid - b.oid);
 
-export const useFAQ = () => {
-  const { data: faqs, mutate } = useRequest(loadFAQs, { cacheKey: "faqs" });
-  const [, runAddFAQ] = useMutation(addFAQ, newFAQ => {
-    mutate(prevEntries => sorted([...prevEntries, newFAQ]));
+export const useFaq = () => {
+  const queryClient = useQueryClient();
+  const faqEntries = useListFaqEntries({
+    query: {
+      select: data => data.value,
+    },
   });
-  const [, runUpdateFAQ] = useMutation(updateFAQ, changed =>
-    mutate(prevEntry =>
-      sorted(
-        prevEntry.map(entry => (entry.oid === changed.oid ? changed : entry)),
-      ),
-    ),
-  );
-  const [, runSwapFAQ] = useMutation(swapFAQ, ([newA, newB]) => {
-    mutate(prevEntry =>
-      sorted(
-        prevEntry.map(entry =>
-          entry.oid === newA.oid ? newA : entry.oid === newB.oid ? newB : entry,
-        ),
-      ),
-    );
+
+  function setQueryData(faqs: FaqEntry[]) {
+    queryClient.setQueryData(getListFaqEntriesQueryKey(), {
+      value: sorted(faqs),
+    });
+  }
+
+  const addFaq = useAddFaqEntry({
+    mutation: {
+      onSuccess(data) {
+        if (faqEntries.data) {
+          setQueryData([...faqEntries.data, data.value]);
+        } else {
+          void faqEntries.refetch();
+        }
+      },
+    },
   });
-  const [, runDeleteFAQ] = useMutation(deleteFAQ, removedOid =>
-    mutate(prevEntry => prevEntry.filter(entry => entry.oid !== removedOid)),
-  );
+  const updateFaq = useUpdateFaqEntry({
+    mutation: {
+      onSuccess(data) {
+        if (faqEntries.data) {
+          const filtered = faqEntries.data.filter(
+            s => s.oid !== data.value.oid,
+          );
+          setQueryData([...filtered, data.value]);
+        } else {
+          void faqEntries.refetch();
+        }
+      },
+    },
+  });
+  const removeFaq = useRemoveFaqEntry({
+    mutation: {
+      onSuccess() {
+        void faqEntries.refetch();
+      },
+    },
+  });
+
+  const swapFaq = useSwapFaqEntries({
+    mutation: {
+      onSuccess() {
+        void faqEntries.refetch();
+      },
+    },
+  });
+
+  function runAddFaq(question: string, answer: string, order: number) {
+    addFaq.mutate({
+      data: {
+        question,
+        answer,
+        order,
+      },
+    });
+  }
+
+  function runUpdateFaq(id: number, changes: Partial<FaqEntry>) {
+    updateFaq.mutate({
+      id,
+      data: {
+        answer: changes.answer ?? null,
+        question: changes.question ?? null,
+        order: changes.order ?? null,
+      },
+    });
+  }
+
+  function runRemoveFaq(id: number) {
+    removeFaq.mutate({ id });
+  }
+
+  function runSwapFaq(a: FaqEntry, b: FaqEntry) {
+    swapFaq.mutate({
+      idA: a.oid,
+      idB: b.oid,
+    });
+  }
+
   return {
-    faqs,
-    add: runAddFAQ,
-    update: runUpdateFAQ,
-    swap: runSwapFAQ,
-    remove: runDeleteFAQ,
+    faqs: faqEntries.data,
+    add: runAddFaq,
+    update: runUpdateFaq,
+    swap: runSwapFaq,
+    remove: runRemoveFaq,
   } as const;
 };
