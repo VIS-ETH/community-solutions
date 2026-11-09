@@ -13,7 +13,6 @@ import {
   Title,
 } from "@mantine/core";
 import React from "react";
-import { fetchPost, fetchPatch } from "../api/fetch-utils";
 import useForm from "../hooks/useForm";
 import useInitialState from "../hooks/useInitialState";
 import { createOptions, options } from "../utils/ts-utils";
@@ -22,68 +21,18 @@ import OfferedInEditor from "./offered-in-editor";
 import UserSetEditor from "./user-set-editor";
 import { IconDeviceFloppy, IconX } from "@tabler/icons-react";
 import { CategoryData, CategoryDataAttachment } from "../api/model";
-
-//'semester', 'form', 'permission', 'remark', 'has_payments', 'more_exams_link'
-const setMetaData = async (
-  slug: string,
-  changes: Partial<CategoryData>,
-): Promise<CategoryData | undefined> => {
-  if (Object.keys(changes).length === 0) return;
-  return (
-    await fetchPost<{
-      value: CategoryData;
-    }>(`/api/category/setmetadata/${slug}/`, changes)
-  ).value;
-};
-const addUserToSet = async (slug: string, key: string, user: string) => {
-  await fetchPost(`/api/category/addusertoset/${slug}/`, {
-    key,
-    user,
-  });
-};
-const removeUserFromSet = async (slug: string, key: string, user: string) => {
-  await fetchPost(`/api/category/removeuserfromset/${slug}/`, {
-    key,
-    user,
-  });
-};
-const addMetaCategory = async (slug: string, meta1: string, meta2: string) => {
-  await fetchPost("/api/category/addmetacategory/", {
-    meta1,
-    meta2,
-    category: slug,
-  });
-};
-const removeMetaCategory = async (
-  slug: string,
-  meta1: string,
-  meta2: string,
-) => {
-  await fetchPost("/api/category/removemetacategory/", {
-    meta1,
-    meta2,
-    category: slug,
-  });
-};
-const addAttachment = async (
-  category: string,
-  displayname: string,
-  file: File,
-) => {
-  return (
-    await fetchPost<{ filename: string }>("/api/filestore/upload/", {
-      category,
-      displayname,
-      file,
-    })
-  ).filename;
-};
-const editAttachment = async (filename: string, newdisplayname: string) => {
-  await fetchPatch(`/api/filestore/edit/${filename}/`, { newdisplayname });
-};
-const removeAttachment = async (filename: string) => {
-  await fetchPost(`/api/filestore/remove/${filename}/`, {});
-};
+import {
+  editAttachment,
+  removeAttachment,
+  uploadAttachment,
+} from "../api/hooks/filestore";
+import {
+  addMetaCategory,
+  addUserToCategorySet,
+  removeMetaCategory,
+  removeUserFromCategorySet,
+  setCategoryMetadata,
+} from "../api/hooks/categories";
 
 export interface CategoryMetaDataDraft extends Omit<
   CategoryData,
@@ -114,17 +63,20 @@ const applyChanges = async (
     metaDataDiff.more_exams_link = newMetaData.more_exams_link;
   if (oldMetaData.permission !== newMetaData.permission)
     metaDataDiff.permission = newMetaData.permission;
-  const fetchedMetaData = await setMetaData(slug, metaDataDiff);
-  const newSlug = fetchedMetaData?.slug ?? slug;
+  const fetchedMetaData = await setCategoryMetadata(slug, metaDataDiff);
+  const newSlug = fetchedMetaData.value.slug;
   const newAttachments: CategoryDataAttachment[] = [];
   for (const attachment of newMetaData.attachments) {
     if (attachment.filename instanceof File) {
-      const filename = await addAttachment(
-        newSlug,
-        attachment.displayname,
-        attachment.filename,
-      );
-      newAttachments.push({ displayname: attachment.displayname, filename });
+      const { value: uploadResponse } = await uploadAttachment({
+        category: newSlug,
+        displayname: attachment.displayname,
+        file: attachment.filename,
+      });
+      newAttachments.push({
+        displayname: attachment.displayname,
+        filename: uploadResponse.filename,
+      });
     }
   }
   for (const attachment of oldMetaData.attachments) {
@@ -138,7 +90,9 @@ const applyChanges = async (
     if (foundAttachment.displayname === attachment.displayname) {
       newAttachments.push(attachment);
     } else {
-      await editAttachment(attachment.filename, foundAttachment.displayname);
+      await editAttachment(attachment.filename, {
+        displayname: foundAttachment.displayname,
+      });
       newAttachments.push({
         displayname: foundAttachment.displayname,
         filename: attachment.filename,
@@ -151,7 +105,11 @@ const applyChanges = async (
         ([meta1, meta2]) => meta1 === newMeta1 && meta2 === newMeta2,
       )
     ) {
-      await addMetaCategory(newSlug, newMeta1, newMeta2);
+      await addMetaCategory({
+        category: newSlug,
+        meta1: newMeta1,
+        meta2: newMeta2,
+      });
     }
   }
   for (const [oldMeta1, oldMeta2] of oldOfferedIn) {
@@ -160,28 +118,44 @@ const applyChanges = async (
         ([meta1, meta2]) => meta1 === oldMeta1 && meta2 === oldMeta2,
       )
     ) {
-      await removeMetaCategory(newSlug, oldMeta1, oldMeta2);
+      await removeMetaCategory({
+        category: newSlug,
+        meta1: oldMeta1,
+        meta2: oldMeta2,
+      });
     }
   }
   for (const admin of newMetaData.admins) {
     if (!oldMetaData.admins.includes(admin)) {
-      await addUserToSet(newSlug, "admins", admin);
+      await addUserToCategorySet(newSlug, {
+        key: "admins",
+        user: admin,
+      });
     }
   }
   for (const admin of oldMetaData.admins) {
     if (!newMetaData.admins.includes(admin)) {
-      await removeUserFromSet(newSlug, "admins", admin);
+      await removeUserFromCategorySet(newSlug, {
+        key: "admins",
+        user: admin,
+      });
     }
   }
 
   for (const expert of newMetaData.experts) {
     if (!oldMetaData.experts.includes(expert)) {
-      await addUserToSet(newSlug, "experts", expert);
+      await addUserToCategorySet(newSlug, {
+        key: "experts",
+        user: expert,
+      });
     }
   }
   for (const expert of oldMetaData.experts) {
     if (!newMetaData.experts.includes(expert)) {
-      await removeUserFromSet(newSlug, "experts", expert);
+      await removeUserFromCategorySet(newSlug, {
+        key: "experts",
+        user: expert,
+      });
     }
   }
   return {
@@ -274,8 +248,10 @@ const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
               label="Semester"
               data={options(semesterOptions)}
               value={
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                 semesterOptions[
                   formState.semester as keyof typeof semesterOptions
+                  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                 ]?.value ?? "--"
               }
               onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>

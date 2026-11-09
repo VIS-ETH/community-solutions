@@ -363,10 +363,10 @@ const App: React.FC = () => {
           Sign in with AAI
         </Button>
       </Modal>
-      <DebugContext.Provider value={debugOptions}>
-        <UserContext.Provider value={user}>
-          <SetUserContext.Provider value={setUser}>
-            <QuickSearchFilterContext.Provider
+      <DebugContext value={debugOptions}>
+        <UserContext value={user}>
+          <SetUserContext value={setUser}>
+            <QuickSearchFilterContext
               value={{
                 filter: quickSearchFilter,
                 setFilter: setQuickSearchFilter,
@@ -456,10 +456,10 @@ const App: React.FC = () => {
                   data.homepage ?? "/"
                 }
               />
-            </QuickSearchFilterContext.Provider>
-          </SetUserContext.Provider>
-        </UserContext.Provider>
-      </DebugContext.Provider>
+            </QuickSearchFilterContext>
+          </SetUserContext>
+        </UserContext>
+      </DebugContext>
       {process.env.NODE_ENV === "development" && (
         <>
           <Affix position={{ bottom: rem(80), left: rem(0) }}>
