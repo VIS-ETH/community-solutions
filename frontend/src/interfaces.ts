@@ -21,13 +21,6 @@ export interface PdfSection {
   hidden: boolean;
 }
 
-export interface FlaggedStatus {
-  link: string; // link to the flagged comment or answer
-  flaggedCount: number; // how many time it was flagger
-  author: string;
-  flagType: boolean; // true if this is a comment false if it is an answer
-}
-
 export interface CutPosition {
   page: number; // the first page is 1
   position: number;

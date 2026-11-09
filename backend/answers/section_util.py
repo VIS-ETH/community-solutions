@@ -249,18 +249,6 @@ def get_answer_fields_to_preselect():
     ]
 
 
-def get_answer_fields_to_prefetch():
-    return [
-        "upvotes",
-        "downvotes",
-        "expertvotes",
-        "flagged",
-        "marked_as_ai",
-        "comments",
-        "comments__author",
-    ]
-
-
 def get_comment_fields_to_preselect():
     return [
         "answer",
