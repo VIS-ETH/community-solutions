@@ -63,8 +63,10 @@ export function changelogParserPlugin() {
 
         this.addWatchFile(changelogPath);
 
+        const versions = parseVersions(changelogSource);
+
         return {
-          code: `export default ${JSON.stringify(parseVersions(changelogSource))}`,
+          code: `export default ${JSON.stringify(versions.slice(0, 10))}`,
           map: null,
         };
       },
