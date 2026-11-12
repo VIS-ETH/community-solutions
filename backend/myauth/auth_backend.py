@@ -23,6 +23,7 @@ class AuthHttpRequest(HttpRequest):
     simulate_nonadmin: bool
     claims: dict[str, Any]
     roles: list[str]
+    user: MyUser | None  # ty: ignore[invalid-attribute-override]
 
 
 @cache(60)

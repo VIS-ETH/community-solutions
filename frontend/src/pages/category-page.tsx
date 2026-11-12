@@ -267,18 +267,19 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                 </Box>
               )}
               <Grid my="sm">
-                {metaData.experts.includes(user.username) && (
-                  <Grid.Col span="auto">
-                    <Alert
-                      color="yellow"
-                      title="Category expert"
-                      icon={<IconStar />}
-                    >
-                      You are an expert for this category. You can endorse
-                      correct answers, which will be visible to other users.
-                    </Alert>
-                  </Grid.Col>
-                )}
+                {user.user?.username &&
+                  metaData.experts.includes(user.user.username) && (
+                    <Grid.Col span="auto">
+                      <Alert
+                        color="yellow"
+                        title="Category expert"
+                        icon={<IconStar />}
+                      >
+                        You are an expert for this category. You can endorse
+                        correct answers, which will be visible to other users.
+                      </Alert>
+                    </Grid.Col>
+                  )}
                 {metaData.has_payments && (
                   <Grid.Col span="auto">
                     <Alert color="gray" icon={<IconInfoCircle />}>

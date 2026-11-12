@@ -147,7 +147,7 @@ const ExamPanel: React.FC<ExamPanelProps> = ({
               Could not load admin info: {examError as unknown as string}
             </Text>
           )}
-          {exam && (
+          {exam && user?.user && (
             <>
               <Title order={6}>Edit Mode</Title>
               <Group>
@@ -155,7 +155,7 @@ const ExamPanel: React.FC<ExamPanelProps> = ({
                   exam.importClaim?.username,
                   exam.importClaimTime,
                 ) &&
-                  exam.importClaim?.username === user?.username && (
+                  exam.importClaim?.username === user.user.username && (
                     <>
                       {editState.mode !== EditMode.Add && (
                         <Button
@@ -193,8 +193,9 @@ const ExamPanel: React.FC<ExamPanelProps> = ({
             </>
           )}
           {exam &&
+            user?.user &&
             hasValidClaim(exam.importClaim?.username, exam.importClaimTime) &&
-            exam.importClaim?.username === user?.username &&
+            exam.importClaim?.username === user.user.username &&
             editState.mode !== EditMode.None && (
               <div>
                 <Checkbox

@@ -84,7 +84,7 @@ const CommentComponent: React.FC<Props> = ({
     useResetCommentMarkedAsAi(onSectionMutated);
   const [viewSource, { toggle: toggleViewSource }] = useDisclosure();
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const { isAdmin, username } = useUser()!;
+  const { isAdmin, user } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
   const [editing, setEditing] = useState(false);
   const [draftText, setDraftText] = useState(
@@ -156,7 +156,7 @@ const CommentComponent: React.FC<Props> = ({
       });
   };
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
-  const isOwnComment = comment?.author.username === username;
+  const isOwnComment = !!user && comment?.author.username === user.username;
 
   return (
     <Paper
@@ -172,13 +172,13 @@ const CommentComponent: React.FC<Props> = ({
         <div>
           <Anchor
             component={Link}
-            to={`/user/${comment?.author.username ?? username}`}
+            to={`/user/${comment?.author.username ?? user?.username ?? ""}`}
           >
             <Text fw={700} component="span">
               {comment?.author.display_name ?? "(Draft)"}
             </Text>
             <Text ml="0.25em" c="dimmed" component="span">
-              @{comment?.author.username ?? username}
+              @{comment?.author.username ?? user?.username ?? ""}
             </Text>
           </Anchor>
           <Text component="span" mx={6} c="dimmed">

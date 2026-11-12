@@ -57,7 +57,7 @@ const DocumentCommentComponent = ({
   refetch,
 }: Props) => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const { isAdmin, username } = useUser()!;
+  const { isAdmin, user } = useUser()!;
 
   const updateComment = useUpdateDocumentComment({
     mutation: {
@@ -99,7 +99,7 @@ const DocumentCommentComponent = ({
 
   const flaggedLoading =
     setCommentFlagged.isPending || resetCommentFlagged.isPending;
-  const isOwnComment = comment.author.username === username;
+  const isOwnComment = !!user && comment.author.username === user.username;
 
   return (
     <div id={String(comment.oid)}>
