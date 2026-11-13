@@ -22,18 +22,28 @@ const Score: React.FC<Props> = ({
       onSuccess: ({ value }) => onSectionChanged(value),
     },
   });
+  const renderVoteButton = (vote: -1 | 1) => {
+    const isSelected = userVote === vote;
+
+    return (
+      <TooltipButton
+        px={8}
+        tooltip={isSelected ? "Reset vote" : vote === 1 ? "Upvote" : "Downvote"}
+        size="sm"
+        data-disabled={isSelected || undefined}
+        style={isSelected && !loading ? { cursor: "pointer" } : undefined}
+        disabled={loading}
+        onClick={() => setLike({ oid, data: { like: isSelected ? 0 : vote } })}
+      >
+        {vote === 1 ? <IconChevronUp /> : <IconChevronDown />}
+      </TooltipButton>
+    );
+  };
+
   return (
     <Paper shadow="xs">
       <Button.Group>
-        <TooltipButton
-          px={8}
-          tooltip="Downvote"
-          size="sm"
-          disabled={userVote === -1}
-          onClick={() => setLike({ oid, data: { like: -1 } })}
-        >
-          <IconChevronDown />
-        </TooltipButton>
+        {renderVoteButton(-1)}
         <TooltipButton
           tooltip="Reset vote"
           size="sm"
@@ -44,15 +54,7 @@ const Score: React.FC<Props> = ({
         >
           {upvotes}
         </TooltipButton>
-        <TooltipButton
-          px={8}
-          tooltip="Upvote"
-          size="sm"
-          disabled={userVote === 1}
-          onClick={() => setLike({ oid, data: { like: 1 } })}
-        >
-          <IconChevronUp />
-        </TooltipButton>
+        {renderVoteButton(1)}
       </Button.Group>
     </Paper>
   );
