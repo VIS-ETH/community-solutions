@@ -1,12 +1,16 @@
 **/.venv
 **/venv
 **/.env.*
+**/.env
 
 **/.pre-commit-config.yaml
 **/.gitignore
 
 # Backend
 /backend/static
+/backend/.ruff_cache
+/backend/**/__pycache__
+/backend/intermediate_pdf_storage
 
 # Frontend
 /frontend/.yarn
