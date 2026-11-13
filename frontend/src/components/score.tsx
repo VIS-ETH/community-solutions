@@ -5,6 +5,34 @@ import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { useSetAnswerLike } from "../api/hooks/answers";
 import { AnswerSectionSchema } from "../api/model";
 
+const VoteButton: React.FC<{
+  vote: -1 | 1;
+  userVote: -1 | 0 | 1;
+  loading: boolean;
+  onVote: (vote: -1 | 0 | 1) => void;
+}> = ({
+  vote,
+  userVote,
+  loading,
+  onVote,
+}) => {
+  const isSelected = userVote === vote;
+
+  return (
+    <TooltipButton
+      px={8}
+      tooltip={isSelected ? "Reset vote" : vote === 1 ? "Upvote" : "Downvote"}
+      size="sm"
+      data-disabled={isSelected || undefined}
+      style={isSelected && !loading ? { cursor: "pointer" } : undefined}
+      disabled={loading}
+      onClick={() => onVote(isSelected ? 0 : vote)}
+    >
+      {vote === 1 ? <IconChevronUp /> : <IconChevronDown />}
+    </TooltipButton>
+  );
+};
+
 interface Props {
   oid: number;
   upvotes: number;
@@ -22,28 +50,18 @@ const Score: React.FC<Props> = ({
       onSuccess: ({ value }) => onSectionChanged(value),
     },
   });
-  const renderVoteButton = (vote: -1 | 1) => {
-    const isSelected = userVote === vote;
-
-    return (
-      <TooltipButton
-        px={8}
-        tooltip={isSelected ? "Reset vote" : vote === 1 ? "Upvote" : "Downvote"}
-        size="sm"
-        data-disabled={isSelected || undefined}
-        style={isSelected && !loading ? { cursor: "pointer" } : undefined}
-        disabled={loading}
-        onClick={() => setLike({ oid, data: { like: isSelected ? 0 : vote } })}
-      >
-        {vote === 1 ? <IconChevronUp /> : <IconChevronDown />}
-      </TooltipButton>
-    );
-  };
+  const handleVote = (vote: -1 | 0 | 1) =>
+    setLike({ oid, data: { like: vote } });
 
   return (
     <Paper shadow="xs">
       <Button.Group>
-        {renderVoteButton(-1)}
+        <VoteButton
+          vote={-1}
+          userVote={userVote}
+          loading={loading}
+          onVote={handleVote}
+        />
         <TooltipButton
           tooltip="Reset vote"
           size="sm"
@@ -54,7 +72,12 @@ const Score: React.FC<Props> = ({
         >
           {upvotes}
         </TooltipButton>
-        {renderVoteButton(1)}
+        <VoteButton
+          vote={1}
+          userVote={userVote}
+          loading={loading}
+          onVote={handleVote}
+        />
       </Button.Group>
     </Paper>
   );
