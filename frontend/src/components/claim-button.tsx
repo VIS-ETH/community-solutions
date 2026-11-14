@@ -21,12 +21,12 @@ const ClaimButton: React.FC<Props> = ({
   ...buttonProps
 }) => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const { username } = useUser()!;
+  const { user } = useUser()!;
   const { isPending: loading, mutate: setClaim } = useClaimExam({
     mutation: { onSuccess: reloadExams },
   });
   return hasValidClaim(claimedByUsername, claimTime) ? (
-    claimedByUsername === username ? (
+    claimedByUsername === user?.username ? (
       <Button
         size="sm"
         color="gray"

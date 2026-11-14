@@ -26,7 +26,7 @@ import {
   minValidity,
   refreshToken,
 } from "./api/fetch-utils";
-import { notLoggedIn, SetUserContext, User, UserContext } from "./auth";
+import { notLoggedIn, SetUserContext, UserContext } from "./auth";
 import { AuthenticatedRoutes } from "./auth/AuthenticatedRoutes";
 import { DebugContext, defaultDebugOptions } from "./components/Debug";
 import DebugModal from "./components/Debug/DebugModal";
@@ -55,6 +55,8 @@ import {
   getNotificationUnreadCount,
 } from "./api/hooks/notifications";
 import { useQuery } from "@tanstack/react-query";
+import { authViewMe } from "./api/hooks/auth";
+import type { User } from "./api/model";
 
 const UploadTranscriptPage = lazy(
   () => import("./pages/submittranscript-page"),
@@ -186,17 +188,10 @@ const App: React.FC = () => {
   useEffect(() => {
     let cancelled = false;
     if (user === undefined) {
-      fetchGet("/api/auth/me/").then(
+      authViewMe().then(
         res => {
           if (cancelled) return;
-          setUser({
-            loggedin: res.loggedin,
-            username: res.username,
-            userid: res.userid,
-            displayname: res.displayname,
-            isAdmin: res.adminrights,
-            isCategoryAdmin: res.adminrightscat,
-          });
+          setUser(res.value);
         },
         () => {
           setUser(notLoggedIn);
@@ -318,7 +313,7 @@ const App: React.FC = () => {
       indicator: unreadCount !== undefined && unreadCount > 0 && (
         <Badge mt={2}>{unreadCount}</Badge>
       ),
-      href: `/user/${user?.username}`,
+      href: `/user/${user?.user?.username}`,
     },
   ];
 

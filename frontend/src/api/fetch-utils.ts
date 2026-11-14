@@ -1,3 +1,9 @@
+import {
+  getAuthLoginUrl,
+  getAuthLogoutUrl,
+  getAuthRefreshUrl,
+} from "./hooks/auth";
+
 /**
  * Minimum validity of the access token in seconds when a request to the API starts
  */
@@ -36,20 +42,21 @@ export function authenticated(expires = getAuthenticationExpiry().token) {
   return expires !== undefined;
 }
 
-const encodeScopes = (...scopes: string[]) => scopes.join("+");
+const encodeScopes = (...scopes: string[]) => scopes.join(" ");
 
 const scopes = encodeScopes("profile", "openid");
 
-export function login(redirectUrl = window.location.pathname) {
-  window.location.href = `/api/auth/login?scope=${scopes}&rd=${encodeURIComponent(
-    redirectUrl,
-  )}`;
+export function login(redirectUrl = location.pathname) {
+  location.href = getAuthLoginUrl({
+    rd: redirectUrl,
+    scope: scopes,
+  });
 }
 
-export function logout(redirectUrl = window.location.pathname) {
+export function logout(redirectUrl = location.pathname) {
   const form = document.createElement("form");
   form.method = "POST";
-  form.action = "/api/auth/logout";
+  form.action = getAuthLogoutUrl();
 
   const rdInput = document.createElement("input");
   rdInput.name = "rd";
@@ -71,7 +78,10 @@ export function refreshToken() {
   if (refreshRequest !== undefined) {
     return refreshRequest;
   }
-  refreshRequest = fetch(`/api/auth/refresh?scope=${scopes}`, {
+  const refreshUrl = getAuthRefreshUrl({
+    scope: scopes,
+  });
+  refreshRequest = fetch(refreshUrl, {
     headers: getHeaders(),
   }).then(req => {
     refreshRequest = undefined;
@@ -205,8 +215,9 @@ export function getCookie(name: string): string | null {
   let cookieValue = null;
   if (document.cookie && document.cookie !== "") {
     const cookies = document.cookie.split(";");
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
+    for (let cookie of cookies) {
+      cookie = cookie.trim();
+
       // Does this cookie string begin with the name we want?
       if (cookie.substring(0, name.length + 1) === `${name}=`) {
         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));

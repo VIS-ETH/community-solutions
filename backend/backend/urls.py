@@ -50,15 +50,13 @@ api.add_router("payment/", "payments.api.router")
 api.add_router("notification/", "notifications.api.router")
 api.add_router("exam/", "answers.api.router")
 api.add_router("faq/", "faq.api.router")
+api.add_router("auth/", "myauth.api.router")
 api.add_router("filestore/", "filestore.api.router")
 
 urlpatterns = [
     path("", include("health.urls")),
     path("", include("frontend.urls")),
-    # Any endpoints defined by Ninja
     path("api/", api.urls),
-    # Any endpoints defined by the old style of Django views
-    path("api/auth/", include("myauth.urls")),
     re_path(
         r"^static/(?P<path>.*)$",
         views.cached_serve,
