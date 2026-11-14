@@ -1,10 +1,19 @@
-import { Alert, Button, Flex, Loader, Popover, TextInput } from "@mantine/core";
+import {
+  Alert,
+  Button,
+  Flex,
+  Loader,
+  Popover,
+  TextInput,
+  Tooltip,
+} from "@mantine/core";
 import React, { useMemo, useState } from "react";
 import { useUser } from "../auth";
 import useSet from "../hooks/useSet";
 import { ExamSelectedForDownload } from "../interfaces";
 import {
   dlSelectedExams,
+  dlSelectedSolutions,
   filterMatches,
   mapExamsToExamType,
 } from "../utils/category-utils";
@@ -58,6 +67,43 @@ const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
     }
     return selectedExams;
   };
+  const selectedExamsHasSolution = (selected: Set<string>) => {
+    for (const filename of selected) {
+      if (data === undefined) return false;
+      for (const exam of data) {
+        if (exam.filename === filename && exam.has_solution) return true;
+      }
+    }
+    return false;
+  };
+  const getSelectedSolutions = (selected: Set<string>) => {
+    const selectedSolutions: ExamSelectedForDownload[] = [];
+    if (data == undefined) return selectedSolutions;
+
+    for (const solution of data) {
+      if (selected.has(solution.filename) && solution.has_solution)
+        selectedSolutions.push({
+          examtype: solution.examtype,
+          filename: solution.filename,
+          displayname: solution.displayname,
+        });
+    }
+    return selectedSolutions;
+  };
+  const downloadSolutionButton = (
+    <Button
+      disabled={selected.size === 0 || !selectedExamsHasSolution(selected)} // MODIFIER ICI POUR LE PROBLEME
+      onClick={() =>
+        void dlSelectedSolutions(
+          metaData.displayname,
+          getSelectedSolutions(selected),
+        )
+      }
+      leftSection={<IconDownload />}
+    >
+      Download selected solutions
+    </Button>
+  );
 
   return (
     <>
@@ -85,6 +131,14 @@ const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
           >
             Download selected exams
           </Button>
+
+          {!selectedExamsHasSolution(selected) && selected.size !== 0 ? (
+            <Tooltip label="selected exams do not have a solution file">
+              {downloadSolutionButton}
+            </Tooltip>
+          ) : (
+            downloadSolutionButton
+          )}
 
           {examTypeMap &&
             examTypeMap.reduce(
