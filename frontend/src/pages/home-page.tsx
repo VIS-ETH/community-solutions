@@ -15,7 +15,6 @@ import {
 import { useDisclosure, useLocalStorage } from "@mantine/hooks";
 import { useRequest } from "ahooks";
 import React, { useCallback, useMemo, useState } from "react";
-import { fetchPost } from "../api/fetch-utils";
 import { useUser } from "../auth";
 import CategoryCard from "../components/category-card";
 import RecentlyViewedExams from "../components/recently-viewed-exams";
@@ -33,6 +32,7 @@ import { slugify } from "../utils/slugify";
 import {
   listCategoriesWithMeta,
   listMetaCategories,
+  useAddCategory,
 } from "../api/hooks/categories";
 import {
   ListCategoriesWithMetaResponse,
@@ -51,9 +51,6 @@ const loadCategoryData = async () => {
     categories.sort((a, b) => a.displayname.localeCompare(b.displayname)),
     metaCategories,
   ] as const;
-};
-const addCategory = async (category: string) => {
-  await fetchPost("/api/category/add/", { category });
 };
 
 const mapToCategories = (
@@ -100,17 +97,22 @@ const AddCategory: React.FC<{ onAddCategory: () => void }> = ({
     addCategoryModalIsOpen,
     { open: openAddCategoryModal, close: closeAddCategoryModal },
   ] = useDisclosure();
-  const { loading, run } = useRequest(addCategory, {
-    manual: true,
-    onSuccess: () => {
-      setCategoryName("");
-      closeAddCategoryModal();
-      onAddCategory();
+  const addCategory = useAddCategory({
+    mutation: {
+      onSuccess() {
+        setCategoryName("");
+        closeAddCategoryModal();
+        onAddCategory();
+      },
     },
   });
   const [categoryName, setCategoryName] = useState("");
   const onSubmit = () => {
-    void run(categoryName);
+    addCategory.mutate({
+      data: {
+        category: categoryName,
+      },
+    });
   };
 
   return (
@@ -129,9 +131,9 @@ const AddCategory: React.FC<{ onAddCategory: () => void }> = ({
           />
           <Button
             onClick={onSubmit}
-            disabled={categoryName.length === 0 || loading}
+            disabled={categoryName.length === 0 || addCategory.isPending}
           >
-            {loading ? <Loader /> : "Add Category"}
+            {addCategory.isPending ? <Loader /> : "Add Category"}
           </Button>
         </Stack>
       </Modal>

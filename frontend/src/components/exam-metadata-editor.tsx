@@ -15,7 +15,7 @@ import {
   Title,
 } from "@mantine/core";
 import React, { useEffect, useState } from "react";
-import { download, fetchPost, fetchPut } from "../api/fetch-utils";
+import { download } from "../api/fetch-utils";
 import useInitialState from "../hooks/useInitialState";
 import { Attachment } from "../interfaces";
 import { createOptions, options } from "../utils/ts-utils";
@@ -36,6 +36,11 @@ import {
   uploadPrintonly,
   uploadSolution,
 } from "../api/hooks/answers";
+import {
+  editAttachment,
+  removeAttachment,
+  uploadAttachment,
+} from "../api/hooks/filestore";
 
 const stringKeys = [
   "displayname",
@@ -52,21 +57,6 @@ const booleanKeys = [
   "solutionPrintonly",
   "darkModeWarning",
 ] as const;
-const addAttachment = async (exam: string, displayname: string, file: File) => {
-  return (
-    await fetchPost("/api/filestore/upload/", {
-      exam,
-      displayname,
-      file,
-    })
-  ).filename as string;
-};
-const editAttachment = async (filename: string, newdisplayname: string) => {
-  await fetchPut(`/api/filestore/edit/${filename}/`, { newdisplayname });
-};
-const removeAttachment = async (filename: string) => {
-  await fetchPost(`/api/filestore/remove/${filename}/`, {});
-};
 
 export interface ExamMetaDataDraft extends Omit<
   ExamMetadataSchema,
@@ -101,14 +91,14 @@ const applyChanges = async (
   const newAttachments: Attachment[] = [];
   for (const attachment of newMetaData.attachments) {
     if (attachment.filename instanceof File) {
-      const newFilename = await addAttachment(
-        filename,
-        attachment.displayname,
-        attachment.filename,
-      );
+      const { value: uploadResult } = await uploadAttachment({
+        exam: filename,
+        displayname: attachment.displayname,
+        file: attachment.filename,
+      });
       newAttachments.push({
         displayname: attachment.displayname,
-        filename: newFilename,
+        filename: uploadResult.filename,
       });
     }
   }
@@ -123,7 +113,9 @@ const applyChanges = async (
     if (foundAttachment.displayname === attachment.displayname) {
       newAttachments.push(attachment);
     } else {
-      await editAttachment(attachment.filename, foundAttachment.displayname);
+      await editAttachment(attachment.filename, {
+        displayname: foundAttachment.displayname,
+      });
       newAttachments.push({
         displayname: foundAttachment.displayname,
         filename: attachment.filename,

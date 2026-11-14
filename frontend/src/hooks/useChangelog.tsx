@@ -1,4 +1,5 @@
 import { useLocalStorage } from "@mantine/hooks";
+
 import { latestVersion } from "../utils/changelog";
 
 const STORAGE_KEY = "last-seen-changelog-version";
@@ -19,6 +20,7 @@ export const useChangelog = () => {
         /* empty */
       },
     };
+
   const hasNew = lastSeen !== latestVersion;
 
   return {

@@ -11,45 +11,64 @@ from django.http import HttpRequest
 from django.http.response import (
     HttpResponse,
     HttpResponseBadRequest,
-    HttpResponseNotAllowed,
     HttpResponseServerError,
 )
+from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_protect
+from ninja import Cookie, Form, P, Query, Router, Schema
 
 from myauth import auth_check
-from util import response
+from users.api import UserSchema
+from util.schemas import ValueWrapped
 
 logger = logging.getLogger(__name__)
 
-# Whether the id_token should be stored as a cookie
-user_id_token = False
+
+router = Router(tags=["Auth"])
 
 
-@response.request_get()
+class User(Schema):
+    loggedin: bool
+    isAdmin: bool
+    isCategoryAdmin: bool
+    user: UserSchema | None
+
+
+@router.get(
+    "me/",
+    response={
+        200: ValueWrapped[User],
+    },
+    operation_id="authViewMe",
+)
 def me_view(request):
     if request.user is not None:
-        return response.success(
+        user = User(
             loggedin=True,
-            adminrights=auth_check.has_admin_rights(request),
-            adminrightscat=auth_check.has_admin_rights_for_any_category(request),
-            username=request.user.username,
-            displayname=request.user.displayname(),
-            userid=request.user.id,
+            isAdmin=auth_check.has_admin_rights(request),
+            isCategoryAdmin=auth_check.has_admin_rights_for_any_category(request),
+            user=request.user,
         )
     else:
-        return response.success(
+        user = User(
             loggedin=False,
-            adminrights=False,
-            adminrightscat=False,
-            username="",
-            displayname="Not Authorized",
-            userid=-1,
+            isAdmin=False,
+            isCategoryAdmin=False,
+            user=None,
         )
+
+    return {
+        "value": user,
+    }
 
 
 def redirect_url_from_host(host: str):
-    return ("http://" if settings.DEBUG else "https://") + host + "/api/auth/callback"
+    return (
+        ("http://" if settings.DEBUG else "https://")
+        + host
+        + reverse("api-1.0.0:auth_callback")
+    )
 
 
 # https://gist.github.com/cameronmaske/f520903ade824e4c30ab
@@ -85,19 +104,24 @@ def compute_hash(value: bytes):
     return base64url_encode(m.digest())
 
 
-def login(request: HttpRequest):
-    if request.method != "GET":
-        return HttpResponseNotAllowed(["GET"])
-
-    # The url we redirect to after successful authentication
-    redirect_url = request.GET.get("rd", "/")
-    scope = request.GET.get("scope", "profile")
+@router.get(
+    "login",
+    response={
+        302: None,
+    },
+    operation_id="authLogin",
+)
+def login(
+    request: HttpRequest,
+    response: HttpResponse,
+    scope: str = "",
+    redirect_url: Query[str, P(alias="rd")] = "/",  # ty: ignore[invalid-type-form, invalid-type-arguments]
+):
     # Check whether the redirect url is allowed: Only allow redirects to the same application
     if not url_has_allowed_host_and_scheme(
         redirect_url, settings.REAL_ALLOWED_HOSTS, settings.SECURE
     ):
         return HttpResponseBadRequest("invalid redirect url")
-    scope = request.GET.get("scope", "")
 
     # We generate a random nonce and store it encrypted as a httpOnly cookie
     # In the callback endpoint. we then check whether it matches the state we get
@@ -120,7 +144,6 @@ def login(request: HttpRequest):
     # The base URL of our redirect
     url = settings.OAUTH2_AUTH_URL
 
-    response = HttpResponse()
     response.status_code = 302
     # We need the nonce in a request which comes back from the AP - thus we have to
     # use sameSite=Lax to have the cookie included in that request
@@ -128,7 +151,6 @@ def login(request: HttpRequest):
     # comes from our chosen OP
     response.set_cookie("nonce", nonce_cookie, httponly=True, samesite="Lax")
     response.headers["Location"] = url + "?" + urlencode(query_params)
-
     return response
 
 
@@ -138,7 +160,7 @@ def set_token_cookies(response: HttpResponse, token_response):
     token_type: str = token_response["token_type"]
 
     if token_type.lower() != "bearer":
-        return ValueError("OP returned unexpected token_type")
+        raise ValueError("OP returned unexpected token_type")
 
     now = datetime.datetime.now()
 
@@ -146,9 +168,9 @@ def set_token_cookies(response: HttpResponse, token_response):
     # client and thus isn't relevant for security
     if "expires_in" in token_response:
         expires_in: str = token_response["expires_in"]
-        expires = now + datetime.timedelta(seconds=expires_in)
+        expires = now + datetime.timedelta(seconds=float(expires_in))
         response.set_cookie(
-            "token_expires", expires.timestamp(), httponly=False, samesite="Lax"
+            "token_expires", str(expires.timestamp()), httponly=False, samesite="Lax"
         )
 
     access_token = token_response["access_token"]
@@ -178,42 +200,38 @@ def set_token_cookies(response: HttpResponse, token_response):
     # spam-request refreshing when our refresh token is already expired.
     if "refresh_expires_in" in token_response:
         refresh_expires_in: str = token_response["refresh_expires_in"]
-        refresh_expires = now + datetime.timedelta(seconds=refresh_expires_in)
+        refresh_expires = now + datetime.timedelta(seconds=float(refresh_expires_in))
         response.set_cookie(
             "refresh_expires",
-            refresh_expires.timestamp(),
+            str(refresh_expires.timestamp()),
             httponly=False,  # Client side JS will need to read it
             samesite="Strict" if settings.SECURE else "Lax",
             secure=settings.SECURE,
         )
 
-    # id_tokens aren't necessarily refreshed, thus we check that here and leave it as is
-    # if it already exists
-    if user_id_token and "id_token" in token_response:
-        id_token: str = token_response["id_token"]
-        response.set_cookie(
-            "id_token",
-            id_token,
-            httponly=True,
-            samesite="Strict" if settings.SECURE else "Lax",
-            secure=settings.SECURE,
-        )
+    return response
 
 
-def callback(request: HttpRequest):
-    if request.method != "GET":
-        return HttpResponseNotAllowed(["GET"])
-
+@router.get(
+    "callback",
+    response={
+        302: None,
+    },
+    operation_id="authCallback",
+)
+def auth_callback(
+    request: HttpRequest,
+    response: HttpResponse,
+    error: str | None = None,
+    error_description: str | None = None,
+    code: str | None = None,
+    state: str | None = None,
+    nonce_cookie: Cookie[str | None, P(alias="nonce")] = None,  # ty: ignore[invalid-type-arguments, invalid-type-form]
+):
     # E.g. https://exams.vis.ethz.ch/api/auth/callback?error=invalid_scope&error_description=Invalid+scopes:+profile+openid+badscope
-    error = request.GET.get("error")
-    error_desc = request.GET.get("error_description", "")
-
     if error:
-        return HttpResponseBadRequest(f"{error}: {error_desc}")
+        return HttpResponseBadRequest(f"{error}: {error_description}")
 
-    code = request.GET.get("code")
-    state = request.GET.get("state")
-    nonce_cookie = request.COOKIES.get("nonce")
     # Check whether all relevant parameters exist
     if code is None or state is None or nonce_cookie is None:
         return HttpResponseBadRequest("code, state or nonce cookie not provided")
@@ -245,7 +263,6 @@ def callback(request: HttpRequest):
             + (": " + res["error_description"] if "error_description" in res else "")
         )
 
-    response = HttpResponse()
     response.status_code = 302
     set_token_cookies(response, res)
     response.delete_cookie("nonce")
@@ -256,23 +273,25 @@ def callback(request: HttpRequest):
     return response
 
 
-def refresh(request: HttpRequest):
-    if request.method != "GET":
-        return HttpResponseNotAllowed(["GET"])
-
-    refresh_token = request.COOKIES.get("refresh_token")
-    refresh_expires = request.COOKIES.get("refresh_expires")
-    scope = request.GET.get("scope", "")
-    if refresh_token is None:
-        return HttpResponseBadRequest("refresh_token not found")
-
+@router.get(
+    "refresh",
+    response={
+        200: None,
+    },
+    operation_id="authRefresh",
+)
+def refresh(
+    request: HttpRequest,
+    response: HttpResponse,
+    refresh_token: Cookie[str],
+    scope: str = "",
+    refresh_expires: Cookie[str | None] = None,
+):
     if refresh_expires:
         now = datetime.datetime.now()
         if float(refresh_expires) < now.timestamp():
             # Don't try to refresh if the refresh token is no longer valid
-            response = HttpResponse("Refresh token is no longer valid")
-            response.status_code = 400
-            return response
+            return HttpResponse("Refresh token is no longer valid", status=400)
 
     # Get new tokens
     with requests.post(
@@ -288,9 +307,7 @@ def refresh(request: HttpRequest):
     ) as r:
         # A non 200 status code implies that the request was not successful
         if r.status_code != 200:
-            response = HttpResponse("refresh failed")
-            response.status_code = 403
-            return response
+            return HttpResponse("Refresh failed", status=403)
 
         res = r.json()
 
@@ -301,24 +318,30 @@ def refresh(request: HttpRequest):
             + (": " + res["error_description"] if "error_description" in res else "")
         )
 
-    response = HttpResponse()
     set_token_cookies(response, res)
+
     return response
 
 
-@csrf_protect
-def logout(request: HttpRequest):
-    if request.method != "POST":
-        return HttpResponseNotAllowed(["POST"])
-
-    redirect_url = request.POST.get("rd", "/")
+@router.post(
+    "logout",
+    response={
+        302: None,
+    },
+    operation_id="authLogout",
+)  # ty: ignore[invalid-argument-type]
+@csrf_protect  # ty: ignore[invalid-argument-type]
+def logout(
+    request: HttpRequest,
+    response: HttpResponse,
+    redirect_url: Form[str, P(alias="rd")] = "/",  # ty: ignore[invalid-type-arguments, invalid-type-form]
+):
     # Check whether the redirect url is allowed: Only allow redirects to the same application
     if not url_has_allowed_host_and_scheme(
         redirect_url, settings.REAL_ALLOWED_HOSTS, settings.SECURE
     ):
         return HttpResponseBadRequest("invalid redirect url")
 
-    response = HttpResponse()
     response.status_code = 302
 
     response.delete_cookie("id_token")

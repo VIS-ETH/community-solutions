@@ -1,7 +1,5 @@
 import { useDisclosure } from "@mantine/hooks";
-import { fetchPost } from "../api/fetch-utils";
 import useInitialState from "../hooks/useInitialState";
-import { useRequest } from "ahooks";
 import { useEffect, useMemo } from "react";
 import {
   ActionIcon,
@@ -15,32 +13,12 @@ import {
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import Creatable from "./creatable";
 import type { Meta1CategoryResponse } from "../api/model";
-
-const editMeta1Name = async (oldmeta1: string, newmeta1: string) => {
-  await fetchPost("/api/category/editmeta1/", { oldmeta1, newmeta1 });
-};
-
-const editMeta2Name = async (
-  oldmeta2: string,
-  newmeta2: string,
-  meta1: string,
-  newmeta1: string,
-) => {
-  await fetchPost("/api/category/editmeta2/", {
-    oldmeta2,
-    newmeta2,
-    meta1,
-    newmeta1,
-  });
-};
-
-const deleteMeta1 = async (meta1: string) => {
-  await fetchPost("/api/category/deletemeta1/", { meta1 });
-};
-
-const deleteMeta2 = async (meta1: string, meta2: string) => {
-  await fetchPost("/api/category/deletemeta2/", { meta1, meta2 });
-};
+import {
+  useDeleteMetaCategory1,
+  useDeleteMetaCategory2,
+  useEditMetaCategory1,
+  useEditMetaCategory2,
+} from "../api/hooks/categories";
 
 interface EditMeta1Props {
   data: Meta1CategoryResponse[] | undefined;
@@ -58,24 +36,35 @@ export const EditMeta1: React.FC<EditMeta1Props> = ({
     useDisclosure();
   const [meta1, setMeta1] = useInitialState(oldMeta1);
   const [disabled, setDisabled] = useInitialState(true);
-  const { loading, run } = useRequest(editMeta1Name, {
-    manual: true,
-    onSuccess: () => {
-      closeEditModal();
-      onChange();
+  const editMeta1 = useEditMetaCategory1({
+    mutation: {
+      onSuccess() {
+        closeEditModal();
+        onChange();
+      },
     },
   });
-  const { run: deleteRun } = useRequest(deleteMeta1, {
-    manual: true,
-    onSuccess: () => {
-      onChange();
+  const deleteMeta1 = useDeleteMetaCategory1({
+    mutation: {
+      onSuccess() {
+        onChange();
+      },
     },
   });
   const onSubmit = () => {
-    void run(oldMeta1, meta1);
+    editMeta1.mutate({
+      data: {
+        oldmeta1: oldMeta1,
+        newmeta1: meta1,
+      },
+    });
   };
   const onDelete = () => {
-    void deleteRun(oldMeta1);
+    deleteMeta1.mutate({
+      data: {
+        meta1: oldMeta1,
+      },
+    });
   };
   const meta1Options: string[] = useMemo(
     () => data?.map(d => d.displayname) ?? [],
@@ -128,9 +117,9 @@ export const EditMeta1: React.FC<EditMeta1Props> = ({
           />
           <Button
             onClick={onSubmit}
-            disabled={meta1.length === 0 || loading || disabled}
+            disabled={meta1.length === 0 || editMeta1.isPending || disabled}
           >
-            {loading ? <Loader /> : "Edit Meta Category"}
+            {editMeta1.isPending ? <Loader /> : "Edit Meta Category"}
           </Button>
         </Stack>
       </Modal>
@@ -163,18 +152,19 @@ export const EditMeta2: React.FC<EditMeta2Props> = ({
   const [deleteModal, { open: openDeleteModal, close: closeDeleteModal }] =
     useDisclosure();
   const [disabled, setDisabled] = useInitialState(true);
-  const { loading, run } = useRequest(editMeta2Name, {
-    manual: true,
-    onSuccess: () => {
-      closeEditModal();
-      onChange();
+  const editMeta2 = useEditMetaCategory2({
+    mutation: {
+      onSuccess() {
+        closeEditModal();
+        onChange();
+      },
     },
   });
-
-  const { run: deleteRun } = useRequest(deleteMeta2, {
-    manual: true,
-    onSuccess: () => {
-      onChange();
+  const deleteMeta2 = useDeleteMetaCategory2({
+    mutation: {
+      onSuccess() {
+        onChange();
+      },
     },
   });
 
@@ -204,10 +194,22 @@ export const EditMeta2: React.FC<EditMeta2Props> = ({
     return value;
   };
   const onSubmit = () => {
-    void run(oldMeta2, newMeta2, meta1, newMeta1);
+    editMeta2.mutate({
+      data: {
+        meta1,
+        newmeta1: newMeta1,
+        newmeta2: newMeta2,
+        oldmeta2: oldMeta2,
+      },
+    });
   };
   const onDelete = () => {
-    void deleteRun(meta1, oldMeta2);
+    deleteMeta2.mutate({
+      data: {
+        meta1,
+        meta2: oldMeta2,
+      },
+    });
   };
   const onTextChange = (input: string) => {
     setNewMeta2(input);
@@ -270,9 +272,9 @@ export const EditMeta2: React.FC<EditMeta2Props> = ({
           />
           <Button
             onClick={onSubmit}
-            disabled={newMeta2.length === 0 || loading || disabled}
+            disabled={newMeta2.length === 0 || editMeta2.isPending || disabled}
           >
-            {loading ? <Loader /> : "Edit Meta Category"}
+            {editMeta2.isPending ? <Loader /> : "Edit Meta Category"}
           </Button>
         </Stack>
       </Modal>

@@ -19,5 +19,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["src", "src/assets/*"]
+  "include": ["src", "src/assets/*", "plugins/*"]
 }

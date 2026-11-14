@@ -1,23 +1,19 @@
 import { createContext, useContext } from "react";
+import type { User } from "../api/model";
 
-export interface User {
-  loggedin: boolean;
-  username: string;
-  userid: number;
-  displayname: string;
-  isAdmin: boolean;
-  isCategoryAdmin: boolean;
-  isExpert?: boolean;
-}
 export const notLoggedIn: User = {
   loggedin: false,
   isAdmin: false,
   isCategoryAdmin: false,
-  userid: -1,
-  username: "",
-  displayname: "Not Authorized",
+  user: null,
 };
-export const UserContext = createContext<User | undefined>(undefined);
+
+// Dynamically add `isExpert` depending on source
+type UserEnriched = User & {
+  isExpert?: boolean;
+};
+
+export const UserContext = createContext<UserEnriched | undefined>(undefined);
 export const useUser = () => useContext(UserContext);
 export const SetUserContext = createContext<(user: User | undefined) => void>(
   () => {},

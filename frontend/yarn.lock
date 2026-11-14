@@ -1738,6 +1738,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@rolldown/pluginutils@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@rolldown/pluginutils@npm:1.1.0"
+  checksum: 10c0/3c654f40ebce021f83d79fb1d6d312b5225932e79c6989ddeb90cdd3f7fb9b9b4b9ae86d56dd2b17436f80878ad885bec31037e01e5f7d1047219072a981bc07
+  languageName: node
+  linkType: hard
+
 "@rollup/pluginutils@npm:^5.3.0":
   version: 5.4.0
   resolution: "@rollup/pluginutils@npm:5.4.0"
@@ -4772,6 +4779,7 @@ __metadata:
     "@mantine/hooks": "npm:^9.1.0"
     "@opentelemetry/api": "npm:^1.9.1"
     "@rolldown/plugin-babel": "npm:^0.2.3"
+    "@rolldown/pluginutils": "npm:^1.1.0"
     "@tabler/icons-react": "npm:^3.0.0"
     "@tanstack/react-query": "npm:^5.100.9"
     "@types/lodash-es": "npm:^4.17.5"

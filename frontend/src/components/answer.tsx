@@ -119,7 +119,7 @@ const AnswerComponent: React.FC<Props> = ({
     },
   });
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const { isAdmin, isExpert, username } = useUser()!;
+  const { isAdmin, isExpert, user } = useUser()!;
   const [removeConfirm, modals] = useRemoveConfirm();
   const [editing, setEditing] = useState(false);
 
@@ -217,13 +217,13 @@ const AnswerComponent: React.FC<Props> = ({
               ) : (
                 <Anchor
                   component={Link}
-                  to={`/user/${answer?.author?.username ?? username}`}
+                  to={`/user/${answer?.author?.username ?? user?.username ?? ""}`}
                 >
                   <Text fw={700} component="span">
                     {answer?.author?.display_name ?? "(Draft)"}
                   </Text>
                   <Text ml="0.3em" c="dimmed" component="span">
-                    @{answer?.author?.username ?? username}
+                    @{answer?.author?.username ?? user?.username ?? ""}
                   </Text>
                 </Anchor>
               )}

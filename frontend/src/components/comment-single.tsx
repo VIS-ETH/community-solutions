@@ -54,10 +54,10 @@ const SingleCommentComponent: React.FC<Props> = ({ comment, reload }) => {
   const { mutate: resetExamCommentMarkedAsAi } =
     useResetCommentMarkedAsAi(onCommentMutated);
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const { isAdmin, username } = useUser()!;
+  const { isAdmin, user } = useUser()!;
 
   const flaggedLoading = setFlaggedLoading || resetFlaggedLoading;
-  const isOwnComment = comment.author.username === username;
+  const isOwnComment = !!user && comment.author.username === user.username;
 
   return (
     <Card withBorder shadow="md" mb="md">

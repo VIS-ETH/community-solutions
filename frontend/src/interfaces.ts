@@ -37,6 +37,7 @@ export type CategoryMetaDataMinimal = Pick<
 >;
 
 export interface ExamSelectedForDownload {
+  examtype: string;
   filename: string;
   displayname: string;
 }

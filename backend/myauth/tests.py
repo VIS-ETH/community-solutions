@@ -19,12 +19,12 @@ invalid_key.import_from_pem(invalid_private_key_data)
 
 class TestMyAuthAdmin(ComsolTest):
     def test_me(self):
-        res = self.get("/api/auth/me/")
+        res = self.get("/api/auth/me/")["value"]
         self.assertTrue(res["loggedin"])
-        self.assertTrue(res["adminrights"])
-        self.assertTrue(res["adminrightscat"])
-        self.assertEqual(res["username"], self.user["username"])
-        self.assertEqual(res["displayname"], self.user["displayname"])
+        self.assertTrue(res["isAdmin"])
+        self.assertTrue(res["isCategoryAdmin"])
+        self.assertEqual(res["user"]["username"], self.user["username"])
+        self.assertEqual(res["user"]["display_name"], self.user["displayname"])
 
 
 class TestMyAuthNonadmin(ComsolTest):
@@ -32,12 +32,12 @@ class TestMyAuthNonadmin(ComsolTest):
         self.login_as(self.nonAdminUsers[0])
 
     def test_me(self):
-        res = self.get("/api/auth/me/")
+        res = self.get("/api/auth/me/")["value"]
         self.assertTrue(res["loggedin"])
-        self.assertFalse(res["adminrights"])
-        self.assertFalse(res["adminrightscat"])
-        self.assertEqual(res["username"], self.user["username"])
-        self.assertEqual(res["displayname"], self.user["displayname"])
+        self.assertFalse(res["isAdmin"])
+        self.assertFalse(res["isCategoryAdmin"])
+        self.assertEqual(res["user"]["username"], self.user["username"])
+        self.assertEqual(res["user"]["display_name"], self.user["displayname"])
 
 
 class TestMyAuthUnauthorized(ComsolTest):
@@ -45,10 +45,10 @@ class TestMyAuthUnauthorized(ComsolTest):
         self.login_as(None)
 
     def test_me(self):
-        res = self.get("/api/auth/me/")
+        res = self.get("/api/auth/me/")["value"]
         self.assertFalse(res["loggedin"])
-        self.assertFalse(res["adminrights"])
-        self.assertFalse(res["adminrightscat"])
+        self.assertFalse(res["isAdmin"])
+        self.assertFalse(res["isCategoryAdmin"])
 
 
 class TestJWT(ComsolTest):

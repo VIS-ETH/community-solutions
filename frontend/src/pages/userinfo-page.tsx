@@ -22,9 +22,11 @@ import { useGetUserScores } from "../api/hooks/scoreboard";
 const UserPage: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const user = useUser()!;
-  const { username = user.username } = useParams() as { username?: string };
+  const { username = user.user?.username ?? "" } = useParams() as {
+    username?: string;
+  };
   useTitle(username);
-  const isMyself = user.username === username;
+  const isMyself = user.user?.username === username;
   const {
     isError,
     isPending,

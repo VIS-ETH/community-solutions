@@ -49,7 +49,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
 import { useScrollToPermalink } from "../hooks/useScrollToPermalink";
-import { useUser, type User } from "../auth";
+import { useUser } from "../auth";
 import type { DocumentFileSchema } from "../api/model/documentFileSchema";
 import type { DocumentSchema } from "../api/model/documentSchema";
 import {
@@ -58,7 +58,7 @@ import {
   useRejectDocumentTransfer,
 } from "../api/hooks/documents";
 import serverData from "../utils/server-data";
-import type { UserSchema } from "../api/model";
+import type { User, UserSchema } from "../api/model";
 
 const isPdf = (file: DocumentFileSchema) =>
   file.mime_type === "application/pdf";
@@ -170,9 +170,9 @@ const AcceptTransferBanner: React.FC<AcceptTransferBannerProps> = ({
   // Is the current user the target, are they an admin, or are they the current owner?
   // (These aren't mutually exclusive!)
   const showBecause = {
-    targetUser: loggedInUser.userid === target.id,
+    targetUser: loggedInUser.user?.id === target.id,
     admin: loggedInUser.isCategoryAdmin || loggedInUser.isAdmin,
-    documentOwner: loggedInUser.userid === document.author.id,
+    documentOwner: loggedInUser.user?.id === document.author.id,
   };
 
   if (

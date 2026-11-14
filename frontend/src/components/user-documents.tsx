@@ -17,7 +17,7 @@ const UserDocuments: React.FC<UserDocumentsProps> = ({
 }) => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const user = useUser()!;
-  const isMyself = user.username === username;
+  const isMyself = user.user?.username === username;
   const documents = useListDocuments({
     username,
   });

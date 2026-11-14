@@ -1,5 +1,13 @@
 import * as React from "react";
-import { Container, Timeline, Group, Badge, Paper, Title } from "@mantine/core";
+import {
+  Container,
+  Timeline,
+  Group,
+  Badge,
+  Paper,
+  Title,
+  Anchor,
+} from "@mantine/core";
 import { versions } from "../utils/changelog";
 import MarkdownText from "../components/markdown-text";
 import useTitle from "../hooks/useTitle";
@@ -26,6 +34,10 @@ const ChangelogPage: React.FC = () => {
 
   return (
     <Container size="xl">
+      <Title order={1} mb="lg">
+        Changelog
+      </Title>
+
       <Timeline
         active={lastSeenIndex !== -1 ? lastSeenIndex - 1 : versions.length - 1}
         radius="md"
@@ -36,7 +48,7 @@ const ChangelogPage: React.FC = () => {
             <Timeline.Item
               title={
                 <Group wrap="nowrap" gap="xs" mb="lg">
-                  <Title order={2}>{version.version}</Title>
+                  <Title order={2}>{version.title}</Title>
                   {index < lastSeenIndex && (
                     <Badge color="brand">New since your last visit</Badge>
                   )}
@@ -59,6 +71,20 @@ const ChangelogPage: React.FC = () => {
           );
         })}
       </Timeline>
+
+      <Title order={2} mt="xl">
+        All Changes
+      </Title>
+      <p>
+        An exhaustive list of changes and older releases is available on GitLab:{" "}
+        <Anchor
+          href="https://gitlab.ethz.ch/vseth/sip-com-apps/community-solutions"
+          c="blue"
+        >
+          gitlab.ethz.ch/vseth/sip-com-apps/community-solutions
+        </Anchor>
+        .
+      </p>
     </Container>
   );
 };
