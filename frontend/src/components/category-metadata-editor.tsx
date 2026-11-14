@@ -48,28 +48,32 @@ const applyChanges = async (
   oldOfferedIn: (readonly [string, string])[],
   newOfferedIn: (readonly [string, string])[],
 ) => {
-  const metaDataDiff: Partial<CategoryData> = {};
+  const metadataDiff: Partial<CategoryData> = {};
   if (oldMetaData.displayname !== newMetaData.displayname)
-    metaDataDiff.displayname = newMetaData.displayname;
+    metadataDiff.displayname = newMetaData.displayname;
   if (oldMetaData.semester !== newMetaData.semester)
-    metaDataDiff.semester = newMetaData.semester;
+    metadataDiff.semester = newMetaData.semester;
   if (oldMetaData.form !== newMetaData.form)
-    metaDataDiff.form = newMetaData.form;
+    metadataDiff.form = newMetaData.form;
   if (oldMetaData.remark !== newMetaData.remark)
-    metaDataDiff.remark = newMetaData.remark;
+    metadataDiff.remark = newMetaData.remark;
   if (oldMetaData.has_payments !== newMetaData.has_payments)
-    metaDataDiff.has_payments = newMetaData.has_payments;
+    metadataDiff.has_payments = newMetaData.has_payments;
   if (oldMetaData.more_exams_link !== newMetaData.more_exams_link)
-    metaDataDiff.more_exams_link = newMetaData.more_exams_link;
+    metadataDiff.more_exams_link = newMetaData.more_exams_link;
   if (oldMetaData.permission !== newMetaData.permission)
-    metaDataDiff.permission = newMetaData.permission;
-  const fetchedMetaData = await setCategoryMetadata(slug, metaDataDiff);
-  const newSlug = fetchedMetaData.value.slug;
+    metadataDiff.permission = newMetaData.permission;
+
+  if (Object.keys(metadataDiff).length > 0) {
+    const fetchedMetaData = await setCategoryMetadata(slug, metadataDiff);
+    slug = fetchedMetaData.value.slug;
+  }
+
   const newAttachments: CategoryDataAttachment[] = [];
   for (const attachment of newMetaData.attachments) {
     if (attachment.filename instanceof File) {
       const { value: uploadResponse } = await uploadAttachment({
-        category: newSlug,
+        category: slug,
         displayname: attachment.displayname,
         file: attachment.filename,
       });
@@ -106,7 +110,7 @@ const applyChanges = async (
       )
     ) {
       await addMetaCategory({
-        category: newSlug,
+        category: slug,
         meta1: newMeta1,
         meta2: newMeta2,
       });
@@ -119,7 +123,7 @@ const applyChanges = async (
       )
     ) {
       await removeMetaCategory({
-        category: newSlug,
+        category: slug,
         meta1: oldMeta1,
         meta2: oldMeta2,
       });
@@ -127,7 +131,7 @@ const applyChanges = async (
   }
   for (const admin of newMetaData.admins) {
     if (!oldMetaData.admins.includes(admin)) {
-      await addUserToCategorySet(newSlug, {
+      await addUserToCategorySet(slug, {
         key: "admins",
         user: admin,
       });
@@ -135,7 +139,7 @@ const applyChanges = async (
   }
   for (const admin of oldMetaData.admins) {
     if (!newMetaData.admins.includes(admin)) {
-      await removeUserFromCategorySet(newSlug, {
+      await removeUserFromCategorySet(slug, {
         key: "admins",
         user: admin,
       });
@@ -144,7 +148,7 @@ const applyChanges = async (
 
   for (const expert of newMetaData.experts) {
     if (!oldMetaData.experts.includes(expert)) {
-      await addUserToCategorySet(newSlug, {
+      await addUserToCategorySet(slug, {
         key: "experts",
         user: expert,
       });
@@ -152,7 +156,7 @@ const applyChanges = async (
   }
   for (const expert of oldMetaData.experts) {
     if (!newMetaData.experts.includes(expert)) {
-      await removeUserFromCategorySet(newSlug, {
+      await removeUserFromCategorySet(slug, {
         key: "experts",
         user: expert,
       });
@@ -160,11 +164,11 @@ const applyChanges = async (
   }
   return {
     ...oldMetaData,
-    ...metaDataDiff,
+    ...metadataDiff,
     attachments: newAttachments,
     admins: newMetaData.admins,
     experts: newMetaData.experts,
-    slug: newSlug,
+    slug,
   };
 };
 
@@ -248,11 +252,12 @@ const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
               label="Semester"
               data={options(semesterOptions)}
               value={
-                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                semesterOptions[
-                  formState.semester as keyof typeof semesterOptions
-                  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                ]?.value ?? "--"
+                (
+                  semesterOptions as Record<
+                    string,
+                    { value: string } | undefined
+                  >
+                )[formState.semester ?? ""]?.value ?? "--"
               }
               onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
                 setFormValue("semester", event.currentTarget.value)

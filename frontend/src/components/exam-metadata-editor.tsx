@@ -91,14 +91,14 @@ const applyChanges = async (
   const newAttachments: Attachment[] = [];
   for (const attachment of newMetaData.attachments) {
     if (attachment.filename instanceof File) {
-      const { value: newFilename } = await uploadAttachment({
+      const { value: uploadResult } = await uploadAttachment({
         exam: filename,
         displayname: attachment.displayname,
         file: attachment.filename,
       });
       newAttachments.push({
         displayname: attachment.displayname,
-        filename: newFilename.filename,
+        filename: uploadResult.filename,
       });
     }
   }
