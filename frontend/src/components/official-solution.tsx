@@ -28,10 +28,10 @@ export function usePdfUrl(url: string): {
   const [type, filename] = url.split("/");
   const kind = type.toLowerCase();
   const solution = useGetSolutionPdfUrl(filename, {
-    query: { enabled: kind === "solution", select: data => data.value },
+    query: { enabled: kind === "solution" },
   });
   const exam = useGetExamPdfUrl(filename, {
-    query: { enabled: kind === "exam", select: data => data.value },
+    query: { enabled: kind === "exam" },
   });
   const { isLoading, data } = kind === "solution" ? solution : exam;
 

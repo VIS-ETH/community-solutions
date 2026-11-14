@@ -62,15 +62,7 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
   onMetaDataChange,
   metaData,
 }) => {
-  const {
-    data,
-    isPending: loading,
-    refetch: run,
-  } = useListMetaCategories({
-    query: {
-      select: ({ value }) => value,
-    },
-  });
+  const { data, isPending: loading, refetch: run } = useListMetaCategories();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { isPending: removeLoading, mutate: remove } = useRemoveCategory({
@@ -366,11 +358,7 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
 
 const CategoryPage: React.FC = () => {
   const { slug } = useParams() as { slug: string };
-  const { data, isPending, error, refetch } = useGetCategoryMetadata(slug, {
-    query: {
-      select: ({ value }) => value,
-    },
-  });
+  const { data, isPending, error, refetch } = useGetCategoryMetadata(slug);
   const navigate = useNavigate();
   const onMetaDataChange = useCallback(
     (newMetaData: CategoryData) => {
@@ -394,7 +382,7 @@ const CategoryPage: React.FC = () => {
         slug
       } /* we need key to make sure all state is reset when slug changes due to navigation */
     >
-      {error && <Alert color="red">{error.err}</Alert>}
+      {error && <Alert color="red">{error.message}</Alert>}
       {isPending && <LoadingOverlay visible={isPending} />}
       {data && (
         <UserContext

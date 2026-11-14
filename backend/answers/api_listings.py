@@ -11,7 +11,7 @@ from documents.models import Comment as DocumentComment
 from myauth import auth_check
 from myauth.models import MyUser
 from users.api import UserSchema
-from util.schemas import ErrorSchema, ValueWrapped
+from util.schemas import ErrorSchema
 
 router = Router(tags=["Answers"])
 
@@ -19,31 +19,27 @@ router = Router(tags=["Answers"])
 @router.get(
     "/listexamtypes/",
     response={
-        200: ValueWrapped[list[str]],
+        200: list[str],
         401: ErrorSchema,
     },
     operation_id="listExamTypes",
 )
 @auth_check.require_login
 def list_exam_types(request):
-    return {
-        "value": ExamType.objects.values_list("displayname", flat=True),
-    }
+    return ExamType.objects.values_list("displayname", flat=True)
 
 
 @router.get(
     "/listexams/",
     response={
-        200: ValueWrapped[list[str]],
+        200: list[str],
         401: ErrorSchema,
     },
     operation_id="listExams",
 )
 @auth_check.require_login
 def list_exams(request):
-    return {
-        "value": Exam.objects.values_list("filename", flat=True),
-    }
+    return Exam.objects.values_list("filename", flat=True)
 
 
 class ListImportExamsSchema(Schema):
@@ -60,7 +56,7 @@ class ListImportExamsSchema(Schema):
 @router.get(
     "/listimportexams/",
     response={
-        200: ValueWrapped[list[ListImportExamsSchema]],
+        200: list[ListImportExamsSchema],
         401: ErrorSchema,
     },
     operation_id="listImportExams",
@@ -98,9 +94,7 @@ def list_import_exams(request, includeHidden: bool = False):
         )
     ]
 
-    return {
-        "value": res,
-    }
+    return res
 
 
 class ListPaymentCheckExamsSchema(Schema):
@@ -113,7 +107,7 @@ class ListPaymentCheckExamsSchema(Schema):
 @router.get(
     "/listpaymentcheckexams/",
     response={
-        200: ValueWrapped[list[ListPaymentCheckExamsSchema]],
+        200: list[ListPaymentCheckExamsSchema],
         401: ErrorSchema,
         403: ErrorSchema,
     },
@@ -132,9 +126,7 @@ def list_payment_check_exams(request):
             is_oral_transcript=True, oral_transcript_checked=False
         ).order_by("category__displayname", "displayname")
     ]
-    return {
-        "value": res,
-    }
+    return res
 
 
 class ListFlaggedSchema(Schema):
@@ -147,7 +139,7 @@ class ListFlaggedSchema(Schema):
 @router.get(
     "/listflagged/",
     response={
-        200: ValueWrapped[list[ListFlaggedSchema]],
+        200: list[ListFlaggedSchema],
         401: ErrorSchema,
         403: ErrorSchema,
     },
@@ -217,15 +209,13 @@ def list_flagged(request):
     ]
 
     combined = answer_list + exam_comment_list + document_comment_list
-    return {
-        "value": combined,
-    }
+    return combined
 
 
 @router.get(
     "/listbyuser/{username}/",
     response={
-        200: ValueWrapped[list[AnswerSchema]],
+        200: list[AnswerSchema],
         401: ErrorSchema,
         404: ErrorSchema,
     },
@@ -251,15 +241,13 @@ def get_by_user(request, username: str, page: int = Query(-1, ge=-1)):
         for answer in sorted_answers
     ]
 
-    return {
-        "value": res,
-    }
+    return res
 
 
 @router.get(
     "/listcommentsbyuser/{username}/",
     response={
-        200: ValueWrapped[list[SingleCommentSchema]],
+        200: list[SingleCommentSchema],
         401: ErrorSchema,
         404: ErrorSchema,
     },
@@ -294,6 +282,4 @@ def get_comments_by_user(request, username: str, page: int = Query(-1, ge=-1)):
         section_util.get_comment_response(request, comment)
         for comment in sorted_comments
     ]
-    return {
-        "value": res,
-    }
+    return res

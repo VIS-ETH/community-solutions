@@ -8,7 +8,7 @@ from ninja import Router, Schema
 from myauth import auth_check
 from myauth.models import MyUser
 from util import func_cache, response
-from util.schemas import ValueWrapped
+from util.schemas import ErrorSchema
 
 router = Router(tags=["Scoreboard"])
 
@@ -106,7 +106,11 @@ class UserInfoResponse(Schema):
 
 @router.get(
     "/userinfo/{username}/",
-    response={200: ValueWrapped[UserInfoResponse], 404: None},
+    response={
+        200: UserInfoResponse,
+        401: ErrorSchema,
+        404: ErrorSchema,
+    },
     operation_id="getUserScores",
 )
 @auth_check.require_login
@@ -117,16 +121,21 @@ def userinfo(request, username: str):
         "displayName": user.displayname(),
     }
     get_user_scores(user, res)
-    return response.success(value=res)
+    return res
 
 
 @router.get(
     "/top/{scoretype}/",
-    response={200: ValueWrapped[list[UserInfoResponse]], 404: None},
+    response={
+        200: list[UserInfoResponse],
+        401: ErrorSchema,
+        403: ErrorSchema,
+        404: ErrorSchema,
+    },
     operation_id="getScoreboardTop",
 )
 @auth_check.require_login
 def scoreboard_top(request, scoretype: str, limit: int = 10):
     if limit > 10 and not auth_check.has_admin_rights(request):
         return response.not_allowed()
-    return response.success(value=get_scoreboard_top(scoretype, limit))
+    return get_scoreboard_top(scoretype, limit)

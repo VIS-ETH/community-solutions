@@ -9,7 +9,7 @@ from answers.models import Exam, ExamType
 from categories.models import Category
 from myauth import auth_check
 from util import ethprint, response, s3_util
-from util.schemas import ErrorSchema, ValueWrapped
+from util.schemas import ErrorSchema
 
 router = Router(tags=["Answers"])
 
@@ -34,7 +34,7 @@ class UploadExamPdfRequestBody(Schema):
 @router.post(
     "/upload/exam/",
     response={
-        200: ValueWrapped[str],
+        200: str,
         400: ErrorSchema,
         401: ErrorSchema,
         403: ErrorSchema,
@@ -67,9 +67,7 @@ def upload_exam_pdf(
         settings.COMSOL_EXAM_DIR, filename, file, "application/pdf"
     )
     pdf_utils.analyze_pdf(exam, os.path.join(settings.COMSOL_UPLOAD_FOLDER, filename))
-    return {
-        "value": filename,
-    }
+    return filename
 
 
 class UploadTranscriptRequestBody(Schema):
@@ -80,7 +78,7 @@ class UploadTranscriptRequestBody(Schema):
 @router.post(
     "/upload/transcript/",
     response={
-        200: ValueWrapped[str],
+        200: str,
         400: ErrorSchema,
         401: ErrorSchema,
         404: ErrorSchema,
@@ -120,9 +118,7 @@ def upload_transcript(
     exam.save()
 
     pdf_utils.analyze_pdf(exam, os.path.join(settings.COMSOL_UPLOAD_FOLDER, filename))
-    return {
-        "value": filename,
-    }
+    return filename
 
 
 def get_existing_exam(request, file: File[UploadedFile], filename: str):
@@ -144,7 +140,7 @@ class UploadExamAdditionalFileRequestBody(Schema):
 @router.post(
     "/upload/printonly/",
     response={
-        200: ValueWrapped[ExamPdfUrlSchema],
+        200: ExamPdfUrlSchema,
         400: ErrorSchema,
         401: ErrorSchema,
         403: ErrorSchema,
@@ -167,18 +163,16 @@ def upload_printonly(
         settings.COMSOL_PRINTONLY_DIR, data.filename, file, "application/pdf"
     )
 
-    return {
-        "value": ExamPdfUrlSchema(
-            url=get_presigned_url_printonly(exam),
-            displayName=_format_exam_display_name(exam),
-        )
-    }
+    return ExamPdfUrlSchema(
+        url=get_presigned_url_printonly(exam),
+        displayName=_format_exam_display_name(exam),
+    )
 
 
 @router.post(
     "/upload/solution/",
     response={
-        200: ValueWrapped[ExamPdfUrlSchema],
+        200: ExamPdfUrlSchema,
         400: ErrorSchema,
         401: ErrorSchema,
         403: ErrorSchema,
@@ -201,12 +195,10 @@ def upload_solution(
         settings.COMSOL_SOLUTION_DIR, data.filename, file, "application/pdf"
     )
 
-    return {
-        "value": ExamPdfUrlSchema(
-            url=get_presigned_url_solution(exam),
-            displayName=_format_solution_display_name(exam),
-        ),
-    }
+    return ExamPdfUrlSchema(
+        url=get_presigned_url_solution(exam),
+        displayName=_format_solution_display_name(exam),
+    )
 
 
 @router.post(
@@ -277,7 +269,7 @@ def get_presigned_url_exam(exam: Exam):
 @router.get(
     "/pdf/exam/{filename}/",
     response={
-        200: ValueWrapped[ExamPdfUrlSchema],
+        200: ExamPdfUrlSchema,
         401: ErrorSchema,
         403: ErrorSchema,
         404: ErrorSchema,
@@ -295,9 +287,7 @@ def get_exam_pdf(request, filename: str):
         displayName=_format_exam_display_name(exam),
     )
 
-    return {
-        "value": res,
-    }
+    return res
 
 
 def _format_solution_display_name(exam: Exam) -> str:
@@ -316,7 +306,7 @@ def get_presigned_url_solution(exam: Exam):
 @router.get(
     "/pdf/solution/{filename}/",
     response={
-        200: ValueWrapped[ExamPdfUrlSchema],
+        200: ExamPdfUrlSchema,
         401: ErrorSchema,
         403: ErrorSchema,
         404: ErrorSchema,
@@ -332,12 +322,10 @@ def get_solution_pdf(request, filename: str):
     if not exam.has_solution:
         return response.not_found()
 
-    return {
-        "value": ExamPdfUrlSchema(
-            url=get_presigned_url_solution(exam),
-            displayName=_format_solution_display_name(exam),
-        ),
-    }
+    return ExamPdfUrlSchema(
+        url=get_presigned_url_solution(exam),
+        displayName=_format_solution_display_name(exam),
+    )
 
 
 def get_presigned_url_printonly(exam: Exam):
@@ -352,7 +340,7 @@ def get_presigned_url_printonly(exam: Exam):
 @router.get(
     "/pdf/printonly/{filename}/",
     response={
-        200: ValueWrapped[ExamPdfUrlSchema],
+        200: ExamPdfUrlSchema,
         401: ErrorSchema,
         403: ErrorSchema,
         404: ErrorSchema,
@@ -374,9 +362,7 @@ def get_printonly_pdf(request, filename: str):
         url=get_presigned_url_printonly(exam),
         displayName=_format_exam_display_name(exam),
     )
-    return {
-        "value": res,
-    }
+    return res
 
 
 def print_pdf(exam, request, filename, s3_dir):

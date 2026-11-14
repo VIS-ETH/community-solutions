@@ -26,28 +26,21 @@ export const UploadTranscriptForm: React.FC<UploadTranscriptFormProps> = ({
     error: categoriesError,
     isPending: categoriesLoading,
     data: categories,
-  } = useListCategoriesOnlyPayment({
-    query: {
-      select: ({ value }) => value,
-    },
-  });
+  } = useListCategoriesOnlyPayment();
   const {
     error: uploadError,
     isPending: uploadLoading,
     mutate: upload,
   } = useUploadTranscript({
     mutation: {
-      onSuccess({ value: filename }) {
+      onSuccess(filename) {
         void navigate(`/exams/${filename}`);
       },
     },
   });
   const [validationError, setValidationError] = useState<string | null>(null);
   const error =
-    categoriesError?.err ??
-    // eslint-disable-next-line @typescript-eslint/no-base-to-string
-    uploadError?.toString() ??
-    validationError;
+    categoriesError?.message ?? uploadError?.message ?? validationError;
   const loading = categoriesLoading || uploadLoading;
 
   const options = useMemo(

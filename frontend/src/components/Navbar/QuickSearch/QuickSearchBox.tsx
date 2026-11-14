@@ -78,11 +78,7 @@ export const QuickSearchBox: React.FC = () => {
     ref.current?.select();
   }, [ref, open]);
 
-  const { data: categories } = useListCategoriesWithMeta({
-    query: {
-      select: ({ value }) => value,
-    },
-  });
+  const { data: categories } = useListCategoriesWithMeta();
 
   // QuickSearch should only be shown with a close button if it's ever shown
   // there
@@ -129,7 +125,6 @@ export const QuickSearchBox: React.FC = () => {
     {
       query: {
         enabled: loggedIn && debouncedSearchQuery !== "",
-        select: data => data.value,
         placeholderData: keepPreviousData,
       },
     },
@@ -393,8 +388,7 @@ export const QuickSearchBox: React.FC = () => {
               />
               {!searchResults.isFetching && searchResults.error && (
                 <Text c="dimmed" mx="auto">
-                  {/* eslint-disable-next-line @typescript-eslint/no-base-to-string */}
-                  {String(searchResults.error)}
+                  {searchResults.error.message}
                 </Text>
               )}
               <QuickSearchResults

@@ -22,7 +22,7 @@ class TestFiles(ComsolTest):
                 "displayname": "Test",
                 "file": self.exam_file(),
             },
-        )["value"]
+        )
         response = self.get(f"/api/exam/pdf/exam/{filename}/", as_json=False)
         self.assertEqual(response.status_code, 200)
         self.post(f"/api/exam/remove/exam/{filename}/", {}, as_json=False)
@@ -45,7 +45,7 @@ class TestFiles(ComsolTest):
                 "category": "default",
                 "file": self.exam_file(),
             },
-        )["value"]
+        )
         self.get(f"/api/exam/pdf/exam/{filename}/")
         exam = Exam.objects.get(filename=filename)
         self.assertTrue(exam.is_oral_transcript)
@@ -60,7 +60,7 @@ class TestFiles(ComsolTest):
                 "displayname": "Test",
                 "file": self.exam_file(),
             },
-        )["value"]
+        )
         self.post(
             "/api/exam/upload/printonly/",
             {
@@ -80,7 +80,7 @@ class TestFiles(ComsolTest):
                 "displayname": "Test",
                 "file": self.exam_file(),
             },
-        )["value"]
+        )
         self.post(
             "/api/exam/upload/solution/",
             {

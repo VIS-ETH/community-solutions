@@ -6,12 +6,12 @@ from testing.tests import ComsolTest, ComsolTestExamsData
 class TestAddRemove(ComsolTest):
     def test_add_remove(self):
         self.post("/api/category/add/", {"category": "Test Category"})
-        res = self.get("/api/category/list/")["value"]
+        res = self.get("/api/category/list/")
         self.assertEqual(res, ["default", "Test Category"])
-        res = self.get("/api/category/listwithmeta/")["value"][1]
+        res = self.get("/api/category/listwithmeta/")[1]
         self.assertEqual(res["displayname"], "Test Category")
         self.post("/api/category/remove/", {"slug": res["slug"]})
-        res = self.get("/api/category/list/")["value"]
+        res = self.get("/api/category/list/")
         self.assertEqual(res, ["default"])
 
     def test_remove_not_existing(self):
@@ -23,7 +23,7 @@ class TestAddRemove(ComsolTest):
     def test_add_twice(self):
         self.post("/api/category/add/", {"category": "Test Category"})
         self.post("/api/category/add/", {"category": "Test Category"})
-        res = self.get("/api/category/listwithmeta/")["value"]
+        res = self.get("/api/category/listwithmeta/")
         self.assertEqual(len(res), 3)
         self.assertEqual(res[0]["slug"], "default")
         self.assertNotEqual(res[1]["slug"], res[2]["slug"])
@@ -43,21 +43,21 @@ class TestList(ComsolTest):
         self.cat2.save()
 
     def test_list(self):
-        res = self.get("/api/category/list/")["value"]
+        res = self.get("/api/category/list/")
         self.assertEqual(len(res), 3)
 
     def test_listwithmeta(self):
-        res = self.get("/api/category/listwithmeta/")["value"]
+        res = self.get("/api/category/listwithmeta/")
         self.assertEqual(len(res), 3)
 
     def test_admin(self):
-        res = self.get("/api/category/listonlyadmin/")["value"]
+        res = self.get("/api/category/listonlyadmin/")
         self.assertEqual(len(res), 1)
         self.assertEqual(res[0]["displayname"], self.cat2.displayname)
         self.assertEqual(res[0]["slug"], self.cat2.slug)
 
     def test_payment(self):
-        res = self.get("/api/category/listonlypayment/")["value"]
+        res = self.get("/api/category/listonlypayment/")
         self.assertEqual(len(res), 1)
         self.assertEqual(res[0]["displayname"], self.cat1.displayname)
         self.assertEqual(res[0]["slug"], self.cat1.slug)
@@ -75,7 +75,7 @@ class TestPinned(ComsolTest):
         self.cat2.save()
 
     def pinned_in_list(self, slug):
-        res = self.get("/api/category/listwithmeta/")["value"]
+        res = self.get("/api/category/listwithmeta/")
         return next(cat["pinned"] for cat in res if cat["slug"] == slug)
 
     def test_pinned(self):
@@ -92,8 +92,8 @@ class TestPinned(ComsolTest):
         # Only the pinned category is marked as such
         self.assertTrue(self.pinned_in_list("test1"))
         self.assertFalse(self.pinned_in_list("test2"))
-        self.assertTrue(self.get("/api/category/metadata/test1/")["value"]["pinned"])
-        self.assertFalse(self.get("/api/category/metadata/test2/")["value"]["pinned"])
+        self.assertTrue(self.get("/api/category/metadata/test1/")["pinned"])
+        self.assertFalse(self.get("/api/category/metadata/test2/")["pinned"])
 
     def test_pin_twice(self):
         self.put("/api/category/test1/pinned/", {})
@@ -132,7 +132,7 @@ class TestMetadata(ComsolTest):
         self.cat1.save()
 
     def test_get_metadata(self):
-        res = self.get("/api/category/metadata/test1/")["value"]
+        res = self.get("/api/category/metadata/test1/")
         self.assertEqual(res["displayname"], self.cat1.displayname)
         self.assertEqual(res["slug"], self.cat1.slug)
         self.assertEqual(res["remark"], self.cat1.remark)
@@ -206,7 +206,7 @@ class TestListExams(ComsolTestExamsData):
     def test_list_exams(self):
         self.exams[1].public = False
         self.exams[1].save()
-        res = self.get("/api/category/listexams/TestCategory/")["value"]
+        res = self.get("/api/category/listexams/TestCategory/")
         self.assertEqual(len(res), 3)
         self.assertTrue(res[0]["public"])
         self.assertFalse(res[1]["public"])
@@ -230,7 +230,7 @@ class MetaCategoriesMixin:
 
 class TestMetaCategories(MetaCategoriesMixin, ComsolTest):
     def test_list_meta(self):
-        res = self.get("/api/category/listmetacategories/")["value"]
+        res = self.get("/api/category/listmetacategories/")
         self.assertEqual(len(res), 1)
         self.assertEqual(len(res[0]["meta2"]), 3)
         self.assertEqual(len(res[0]["meta2"][0]["categories"]), 1)
@@ -246,7 +246,7 @@ class TestMetaCategories(MetaCategoriesMixin, ComsolTest):
                 "category": "test2",
             },
         )
-        res = self.get("/api/category/listmetacategories/")["value"]
+        res = self.get("/api/category/listmetacategories/")
         self.assertEqual(len(res[0]["meta2"]), 4)
         self.assertEqual(res[0]["meta2"][3]["categories"][0], "test2")
         self.post(
@@ -257,7 +257,7 @@ class TestMetaCategories(MetaCategoriesMixin, ComsolTest):
                 "category": "test2",
             },
         )
-        res = self.get("/api/category/listmetacategories/")["value"]
+        res = self.get("/api/category/listmetacategories/")
         self.assertEqual(len(res[0]["meta2"]), 4)
         self.assertEqual(len(res[0]["meta2"][0]["categories"]), 2)
         self.assertEqual(res[0]["meta2"][0]["categories"][1], "test2")
@@ -271,7 +271,7 @@ class TestMetaCategories(MetaCategoriesMixin, ComsolTest):
                 "category": "test1",
             },
         )
-        res = self.get("/api/category/listmetacategories/")["value"]
+        res = self.get("/api/category/listmetacategories/")
         self.assertEqual(len(res[0]["meta2"]), 2)
         self.post(
             "/api/category/removemetacategory/",
@@ -289,7 +289,7 @@ class TestMetaCategories(MetaCategoriesMixin, ComsolTest):
                 "category": "test1",
             },
         )
-        res = self.get("/api/category/listmetacategories/")["value"]
+        res = self.get("/api/category/listmetacategories/")
         self.assertEqual(len(res), 0)
 
     def test_metacategory_order(self):
@@ -307,7 +307,7 @@ class TestMetaCategories(MetaCategoriesMixin, ComsolTest):
             "/api/category/editmeta1/",
             {"oldmeta1": "Test Meta 1", "newmeta1": "Renamed Meta 1"},
         )
-        res = self.get("/api/category/listmetacategories/")["value"]
+        res = self.get("/api/category/listmetacategories/")
         self.assertEqual(len(res), 1)
         self.assertEqual(res[0]["displayname"], "Renamed Meta 1")
         # Renaming must not detach the children or their categories
@@ -345,7 +345,7 @@ class TestMetaCategories(MetaCategoriesMixin, ComsolTest):
                 "newmeta2": "Renamed Meta 2",
             },
         )
-        res = self.get("/api/category/listmetacategories/")["value"]
+        res = self.get("/api/category/listmetacategories/")
         self.assertEqual(len(res), 1)
         self.assertEqual(len(res[0]["meta2"]), 3)
         # meta2 entries are listed sorted by (order, displayname)
@@ -362,7 +362,7 @@ class TestMetaCategories(MetaCategoriesMixin, ComsolTest):
                 "newmeta2": "Test Meta 2.0",
             },
         )
-        res = self.get("/api/category/listmetacategories/")["value"]
+        res = self.get("/api/category/listmetacategories/")
         self.assertEqual(len(res), 2)
         self.assertEqual(res[0]["displayname"], "Test Meta 1")
         self.assertEqual(len(res[0]["meta2"]), 2)
@@ -386,7 +386,7 @@ class TestMetaCategories(MetaCategoriesMixin, ComsolTest):
         self.assertFalse(
             MetaCategory.objects.filter(displayname="Test Meta 1").exists()
         )
-        res = self.get("/api/category/listmetacategories/")["value"]
+        res = self.get("/api/category/listmetacategories/")
         self.assertEqual(len(res), 1)
         self.assertEqual(res[0]["displayname"], "Test Meta 1b")
         self.assertEqual(len(res[0]["meta2"]), 3)
@@ -421,7 +421,7 @@ class TestMetaCategories(MetaCategoriesMixin, ComsolTest):
         self.post("/api/category/deletemeta1/", {"meta1": "Test Meta 1"})
         # Deleting a meta1 cascades to its children
         self.assertEqual(MetaCategory.objects.count(), 0)
-        res = self.get("/api/category/listmetacategories/")["value"]
+        res = self.get("/api/category/listmetacategories/")
         self.assertEqual(len(res), 0)
         # The categories themselves are not affected
         self.assertTrue(Category.objects.filter(slug="test1").exists())
@@ -437,7 +437,7 @@ class TestMetaCategories(MetaCategoriesMixin, ComsolTest):
             {"meta1": "Test Meta 1", "meta2": "Test Meta 2.0"},
         )
         self.assertEqual(MetaCategory.objects.count(), 3)
-        res = self.get("/api/category/listmetacategories/")["value"]
+        res = self.get("/api/category/listmetacategories/")
         self.assertEqual(len(res[0]["meta2"]), 2)
         self.assertTrue(Category.objects.filter(slug="test1").exists())
 

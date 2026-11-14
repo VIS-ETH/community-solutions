@@ -49,7 +49,6 @@ const SearchPage: React.FC = () => {
     {
       query: {
         enabled: query !== "",
-        select: data => data.value,
         placeholderData: previousData =>
           query !== "" ? previousData : undefined,
       },
@@ -82,7 +81,7 @@ const SearchPage: React.FC = () => {
               <div>
                 An error occurred:{" "}
                 <div>
-                  <pre>{JSON.stringify(error, null, 3)}</pre>
+                  <pre>{error.message}</pre>
                 </div>
               </div>
             )}

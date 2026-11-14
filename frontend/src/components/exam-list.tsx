@@ -32,11 +32,7 @@ const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
     isPending: loading,
     error,
     refetch: reload,
-  } = useListCategoryExams(metaData.slug, {
-    query: {
-      select: ({ value }) => value,
-    },
-  });
+  } = useListCategoryExams(metaData.slug);
   const [filter, setFilter] = useState("");
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { isCategoryAdmin } = useUser()!;
@@ -107,7 +103,7 @@ const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
 
   return (
     <>
-      {error && <Alert color="red">{error.err}</Alert>}
+      {error && <Alert color="red">{error.message}</Alert>}
       {loading && <Loader />}
       <Flex
         direction={{ base: "column", sm: "row" }}

@@ -60,8 +60,7 @@ async function pdfUrlPrefill(
   if (url.pathname.startsWith("/exams/")) {
     const exam = url.pathname.slice("/exams/".length);
     try {
-      const { value: metadata } = await getExamMetadata(exam);
-      return metadata;
+      return await getExamMetadata(exam);
     } catch {
       return undefined;
     }
@@ -273,11 +272,7 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
     };
   }, [location]);
 
-  const { data: categories } = useListCategoriesWithMeta({
-    query: {
-      select: ({ value }) => value,
-    },
-  });
+  const { data: categories } = useListCategoriesWithMeta();
   const categoriesMap = useMemo(
     () =>
       categories &&
@@ -306,19 +301,14 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
       exams &&
       createOptions(
         Object.fromEntries(
-          exams.value.map(exam => [exam.filename, exam.displayname] as const),
+          exams.map(exam => [exam.filename, exam.displayname] as const),
         ),
       ),
     [exams],
   );
 
   const { isLoading: examMetadataLoading, data: examMetadata } =
-    useGetExamMetadata(selectedExam ?? "", {
-      query: {
-        enabled: selectedExam !== undefined,
-        select: data => data.value,
-      },
-    });
+    useGetExamMetadata(selectedExam ?? "");
 
   const solutionFile =
     examMetadataLoading || !examMetadata ? false : examMetadata.hasSolution;

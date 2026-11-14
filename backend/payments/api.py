@@ -7,7 +7,7 @@ from myauth import auth_check
 from myauth.models import MyUser
 from payments.models import Payment
 from util import response
-from util.schemas import ErrorSchema, ValueWrapped
+from util.schemas import ErrorSchema
 
 router = Router(tags=["Payments"])
 
@@ -113,7 +113,7 @@ def get_user_payments(user):
 @router.get(
     "/query/{username}/",
     response={
-        200: ValueWrapped[list[PaymentInfo]],
+        200: list[PaymentInfo],
         # Unauthorised
         403: ErrorSchema,
         404: ErrorSchema,
@@ -127,7 +127,7 @@ def query(request, username: str):
         return response.not_allowed()
 
     user = get_object_or_404(MyUser, username=username)
-    return response.success(value=get_user_payments(user))
+    return get_user_payments(user)
 
 
 @router.post(

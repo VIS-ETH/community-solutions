@@ -1,3 +1,5 @@
+from django.core.files.uploadedfile import SimpleUploadedFile
+
 from categories.models import Category
 from documents.models import Document, DocumentFile, DocumentType
 from myauth.models import MyUser
@@ -62,7 +64,7 @@ class TestDocumentTransfer(ComsolTestDocumentData):
             f"/api/document/{document.author.username}/{document.slug}/",
             {"pending_transfer_user": target_username},
             json_body=True,
-        )["value"]
+        )
 
         self.assertEqual(res["pending_transfer_user"]["username"], target_username)
         document.refresh_from_db()
@@ -92,7 +94,7 @@ class TestDocumentTransfer(ComsolTestDocumentData):
             f"/api/document/{document.author.username}/{document.slug}/",
             {"pending_transfer_user": target_username},
             json_body=True,
-        )["value"]
+        )
 
         self.assertEqual(res["pending_transfer_user"]["username"], target_username)
         document.refresh_from_db()
@@ -130,7 +132,7 @@ class TestDocumentTransfer(ComsolTestDocumentData):
             f"/api/document/{document.author.username}/{document.slug}/",
             {"pending_transfer_user": None},
             json_body=True,
-        )["value"]
+        )
 
         self.assertFalse(
             "pending_transfer_user" in res,
@@ -154,7 +156,7 @@ class TestDocumentTransfer(ComsolTestDocumentData):
             f"/api/document/{document.author.username}/{document.slug}/",
             {"pending_transfer_user": None},
             json_body=True,
-        )["value"]
+        )
 
         self.assertFalse(
             "pending_transfer_user" in res,
@@ -200,7 +202,7 @@ class TestDocumentTransfer(ComsolTestDocumentData):
             f"/api/document/{document.author.username}/{document.slug}/transfer/accept",
             {},
             json_body=True,
-        )["value"]
+        )
 
         self.assertEqual(res["author"]["id"], transfer_target.id)
         self.assertFalse(
@@ -238,7 +240,7 @@ class TestDocumentTransfer(ComsolTestDocumentData):
             f"/api/document/{document.author.username}/{document.slug}/transfer/accept",
             {},
             json_body=True,
-        )["value"]
+        )
 
         self.assertEqual(res["author"]["id"], transfer_target.id)
         self.assertFalse(
@@ -287,7 +289,7 @@ class TestDocumentTransfer(ComsolTestDocumentData):
             f"/api/document/{document.author.username}/{document.slug}/transfer/reject",
             {},
             json_body=True,
-        )["value"]
+        )
 
         self.assertEqual(res["author"]["id"], original_owner.id)
         self.assertFalse(
@@ -327,7 +329,7 @@ class TestDocumentTransfer(ComsolTestDocumentData):
             f"/api/document/{document.author.username}/{document.slug}/transfer/reject",
             {},
             json_body=True,
-        )["value"]
+        )
 
         self.assertEqual(res["author"]["id"], original_owner.id)
         self.assertFalse(
@@ -354,7 +356,7 @@ class TestDocumentTransfer(ComsolTestDocumentData):
             f"/api/document/{document.author.username}/{document.slug}/transfer/reject",
             {},
             json_body=True,
-        )["value"]
+        )
 
         self.assertEqual(res["author"]["id"], original_owner_id)
         self.assertFalse(
@@ -452,3 +454,30 @@ class TestMoveDocumentFile(ComsolTestDocumentData):
         for i, f in enumerate(self.own_files):
             f.refresh_from_db()
             self.assertEqual(f.order, i)
+
+
+class TestUpdateDocumentFileContent(ComsolTestDocumentData):
+    def setUp(self, call_my_setup=True):
+        super().setUp(call_my_setup=False)
+
+        self.document = self.documents[0]
+        self.document_file = DocumentFile(
+            document=self.document,
+            display_name="File",
+            filename="file0.txt",
+            mime_type="text/plain",
+            order=0,
+        )
+        self.document_file.save()
+
+        if call_my_setup:
+            self.mySetUp()
+
+    def test_invalid_api_key(self):
+        res = self.post(
+            f"/api/document/{self.document.author.username}/{self.document.slug}"
+            f"/files/{self.document_file.pk}/update/",
+            {"file": SimpleUploadedFile("file0.txt", b"content")},
+            status_code=403,
+        )
+        self.assertEqual(res, {"err": "invalid authorization token"})

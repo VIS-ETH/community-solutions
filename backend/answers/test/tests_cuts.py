@@ -6,7 +6,7 @@ class TestCuts(ComsolTestExamData):
     add_answers = False
 
     def test_get_cuts(self):
-        res = self.get(f"/api/exam/cuts/{self.exam.filename}/")["value"]["1"]
+        res = self.get(f"/api/exam/cuts/{self.exam.filename}/")["1"]
         self.assertEqual(len(res), 4)
         for i in range(1, 5):
             self.assertEqual(res[i - 1]["relHeight"], i * 0.25)
@@ -61,7 +61,7 @@ class TestCuts(ComsolTestExamData):
 
 class TestCutVersion(ComsolTestExamData):
     def check_versions(self):
-        res = self.get(f"/api/exam/cutversions/{self.exam.filename}/")["value"]
+        res = self.get(f"/api/exam/cutversions/{self.exam.filename}/")
         for section in self.sections:
             section.refresh_from_db()
             self.assertEqual(res[str(section.id)], section.cut_version)
@@ -133,7 +133,7 @@ class TestCutVersion(ComsolTestExamData):
 class TestAnswerSection(ComsolTestExamData):
     def test_get_section(self):
         for section in self.sections:
-            res = self.get(f"/api/exam/answersection/{section.id}/")["value"]
+            res = self.get(f"/api/exam/answersection/{section.id}/")
             self.assertEqual(len(res["answers"]), 5)
             self.assertEqual(len(res["answers"][0]["comments"]), 4)
 

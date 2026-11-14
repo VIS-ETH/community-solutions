@@ -21,9 +21,8 @@ class TestUploadDownload(ComsolTest):
                     "category": category.slug,
                     "file": f,
                 },
-                test_get=False,
             )
-            filename = res["value"]["filename"]
+            filename = res["filename"]
 
         self.get(f"/api/filestore/get/{filename}/", as_json=False)
         self.delete(f"/api/filestore/remove/{filename}/", as_json=False)
@@ -45,9 +44,8 @@ class TestUploadDownload(ComsolTest):
                     "exam": exam.filename,
                     "file": f,
                 },
-                test_get=False,
             )
-            filename = res["value"]["filename"]
+            filename = res["filename"]
 
         self.get(f"/api/filestore/get/{filename}/", as_json=False)
         self.delete(f"/api/filestore/remove/{filename}/", as_json=False)

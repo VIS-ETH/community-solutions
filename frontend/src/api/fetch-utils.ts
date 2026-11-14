@@ -99,118 +99,6 @@ export function getHeaders(requestInit?: RequestInit) {
   return Object.fromEntries(headers);
 }
 
-export async function performDataRequest<T>(
-  method: string,
-  url: string | URL,
-  data: Record<string, any> | FormData | string | URLSearchParams,
-  requestInit?: RequestInit,
-): Promise<HttpResponse<T>> {
-  // Refresh token if needed.
-  // If refresh fails or if the refresh token is expired too, we won't outright
-  // reject the network request. This is because some endpoints don't need auth,
-  // like the category list. Since we don't know which backend routes need auth
-  // and which don't, we let the backend deal with any auth failures.
-  const { token: exp, refresh: refresh_exp } = getAuthenticationExpiry();
-  if (isTokenExpired(exp) && !isTokenExpired(refresh_exp)) {
-    await refreshToken();
-  }
-
-  let formData: FormData | URLSearchParams | string = new FormData();
-  if (
-    data instanceof FormData ||
-    data instanceof URLSearchParams ||
-    typeof data === "string"
-  ) {
-    formData = data;
-  } else {
-    // Convert the `data` object into a `formData` object by iterating
-    // through the keys and appending the (key, value) pair to the FormData
-    // object. All non-Blob values are converted to a string.
-
-    for (const [key, value] of Object.entries(data)) {
-      if (value === undefined) continue;
-      if (value instanceof File || value instanceof Blob) {
-        formData.append(key, value);
-      } else {
-        formData.append(key, value.toString());
-      }
-    }
-  }
-
-  const response = await fetch(url, {
-    ...requestInit,
-    credentials: "include",
-    headers: getHeaders(requestInit),
-    method,
-    body: formData,
-  });
-  try {
-    // Endpoints might respond with `200, None`
-    let body = undefined as T;
-    const text = await response.text();
-    if (text !== "") {
-      body = JSON.parse(text) as T;
-    }
-    if (!response.ok) {
-      return Promise.reject((body as { err: string } | undefined)?.err);
-    }
-    return {
-      data: body,
-      status: response.status,
-      headers: response.headers,
-    };
-  } catch (e: any) {
-    return Promise.reject(e.toString());
-  }
-}
-
-export interface HttpResponse<T> {
-  status: number;
-  headers: Headers;
-  data: T;
-}
-
-export async function performRequest<T>(
-  method: string,
-  url: string | URL,
-  requestInit?: RequestInit,
-): Promise<HttpResponse<T>> {
-  // Refresh token if needed.
-  // If refresh fails or if the refresh token is expired too, we won't outright
-  // reject the network request. This is because some endpoints don't need auth,
-  // like the category list. Since we don't know which backend routes need auth
-  // and which don't, we let the backend deal with any auth failures.
-  const { token: exp, refresh: refresh_exp } = getAuthenticationExpiry();
-  if (isTokenExpired(exp) && !isTokenExpired(refresh_exp)) {
-    await refreshToken();
-  }
-
-  const response = await fetch(url, {
-    ...requestInit,
-    credentials: "include",
-    headers: getHeaders(requestInit),
-    method,
-  });
-  try {
-    // Endpoints might respond with `200, None`
-    let body = undefined as T;
-    const text = await response.text();
-    if (text !== "") {
-      body = JSON.parse(text) as T;
-    }
-    if (!response.ok) {
-      return Promise.reject((body as { err: string } | undefined)?.err);
-    }
-    return {
-      data: body,
-      status: response.status,
-      headers: response.headers,
-    };
-  } catch (e: any) {
-    return Promise.reject(e.toString());
-  }
-}
-
 export function getCookie(name: string): string | null {
   let cookieValue = null;
   if (document.cookie && document.cookie !== "") {
@@ -226,11 +114,6 @@ export function getCookie(name: string): string | null {
     }
   }
   return cookieValue;
-}
-
-export async function fetchGet<T = any>(url: string): Promise<T> {
-  const response = await performRequest<T>("GET", url);
-  return response.data;
 }
 
 export function download(url: string, name?: string) {

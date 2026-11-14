@@ -7,7 +7,7 @@ class TestNotificationSettings(ComsolTest):
         self.get("/api/notification/getenabled/")
 
     def test_set_enabled(self):
-        types = self.get("/api/notification/getenabled/")["value"]
+        types = self.get("/api/notification/getenabled/")
         self.assertGreater(len(types), 0)
         for val in types:
             self.post(
@@ -17,7 +17,7 @@ class TestNotificationSettings(ComsolTest):
                     "enabled": "false",
                 },
             )
-        res = self.get("/api/notification/getenabled/")["value"]
+        res = self.get("/api/notification/getenabled/")
         self.assertEqual(len(res), 0)
 
         for val in types:
@@ -28,17 +28,17 @@ class TestNotificationSettings(ComsolTest):
                     "enabled": "true",
                 },
             )
-        res = self.get("/api/notification/getenabled/")["value"]
+        res = self.get("/api/notification/getenabled/")
         self.assertEqual(len(res), len(types))
 
 
 class TestNotifications(ComsolTest):
     def test_notification_lifecycle(self):
-        res = self.get("/api/notification/all/?unread=true")["value"]
+        res = self.get("/api/notification/all/?unread=true")
         self.assertEqual(len(res), 0)
-        res = self.get("/api/notification/all/")["value"]
+        res = self.get("/api/notification/all/")
         self.assertEqual(len(res), 0)
-        res = self.get("/api/notification/unreadcount/")["value"]
+        res = self.get("/api/notification/unreadcount/")
         self.assertEqual(res, 0)
 
         notification = Notification(
@@ -50,29 +50,28 @@ class TestNotifications(ComsolTest):
         )
         notification.save()
 
-        res1 = self.get("/api/notification/all/?unread=true")["value"]
+        res1 = self.get("/api/notification/all/?unread=true")
         self.assertEqual(len(res1), 1)
-        res2 = self.get("/api/notification/all/")["value"]
+        res2 = self.get("/api/notification/all/")
         self.assertEqual(len(res2), 1)
         self.assertEqual(res1, res2)
         self.assertEqual(res1[0]["title"], notification.title)
         self.assertEqual(res1[0]["message"], notification.text)
-        res = self.get("/api/notification/unreadcount/")["value"]
+        res = self.get("/api/notification/unreadcount/")
         self.assertEqual(res, 1)
 
         self.post(
             f"/api/notification/setread/{notification.id}/",
             {"read": True},
-            test_get=False,
         )
 
-        res = self.get("/api/notification/all/?unread=true")["value"]
+        res = self.get("/api/notification/all/?unread=true")
         self.assertEqual(len(res), 0)
-        res = self.get("/api/notification/all/")["value"]
+        res = self.get("/api/notification/all/")
         self.assertEqual(len(res), 1)
         self.assertEqual(res[0]["title"], notification.title)
         self.assertEqual(res[0]["message"], notification.text)
-        res = self.get("/api/notification/unreadcount/")["value"]
+        res = self.get("/api/notification/unreadcount/")
         self.assertEqual(res, 0)
 
 
@@ -95,7 +94,6 @@ class TestNotificationAccess(ComsolTest):
             f"/api/notification/setread/{notification.id}/",
             {"read": True},
             status_code=404,
-            test_get=False,
         )
         notification.refresh_from_db()
         self.assertFalse(notification.read)
@@ -104,7 +102,6 @@ class TestNotificationAccess(ComsolTest):
         self.post(
             f"/api/notification/setread/{notification.id}/",
             {"read": True},
-            test_get=False,
         )
         notification.refresh_from_db()
         self.assertTrue(notification.read)

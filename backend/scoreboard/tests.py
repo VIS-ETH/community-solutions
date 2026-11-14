@@ -4,9 +4,7 @@ from testing.tests import ComsolTestExamData
 class TestScoreboard(ComsolTestExamData):
     def test_userinfo(self):
         for user in self.users:
-            res = self.get("/api/scoreboard/userinfo/{}/".format(user["username"]))[
-                "value"
-            ]
+            res = self.get("/api/scoreboard/userinfo/{}/".format(user["username"]))
             self.assertEqual(res["username"], user["username"])
 
     def test_top(self):
@@ -17,7 +15,7 @@ class TestScoreboard(ComsolTestExamData):
             "score_cuts",
             "score_legacy",
         ]:
-            res = self.get(f"/api/scoreboard/top/{ty}/")["value"]
+            res = self.get(f"/api/scoreboard/top/{ty}/")
             self.assertEqual(len(res), min(10, len(self.users)))
 
 

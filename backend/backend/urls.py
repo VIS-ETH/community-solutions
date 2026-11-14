@@ -20,6 +20,7 @@ from django.http import Http404
 from django.urls import include, path, re_path
 from django_prometheus import exports
 from ninja import NinjaAPI
+from ninja.errors import ValidationError
 
 from backend.settings import DEBUG, STATIC_ROOT
 from util import response
@@ -53,6 +54,9 @@ api.add_router("faq/", "faq.api.router")
 api.add_router("auth/", "myauth.api.router")
 api.add_router("filestore/", "filestore.api.router")
 
+if DEBUG:
+    api.add_router("debug/", "testing.api.router")
+
 urlpatterns = [
     path("", include("health.urls")),
     path("", include("frontend.urls")),
@@ -67,9 +71,6 @@ urlpatterns = [
     path("metrics/", restrict_proxied(exports.ExportToDjangoView)),
 ]
 
-if DEBUG:
-    urlpatterns += [path("api/debug/", include("testing.urls"))]
-
 handler400 = views.handler400
 handler403 = views.handler403
 handler404 = views.handler404
@@ -79,3 +80,13 @@ handler500 = views.handler500
 @api.exception_handler(Http404)
 def validation_errors(request, exc):
     return views.handler404(request, exc)
+
+
+@api.exception_handler(ValidationError)
+def ninja_validation_errors(request, exc: ValidationError):
+    messages = []
+    for error in exc.errors:
+        loc = ".".join(str(part) for part in error.get("loc", ())[1:])
+        msg = error.get("msg", "Invalid value")
+        messages.append(f"{loc}: {msg}" if loc else msg)
+    return response.not_possible("; ".join(messages) or "Invalid request")

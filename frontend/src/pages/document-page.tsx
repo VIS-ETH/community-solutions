@@ -147,7 +147,7 @@ const AcceptTransferBanner: React.FC<AcceptTransferBannerProps> = ({
   const target = document?.pending_transfer_user;
   const acceptDocument = useAcceptDocumentTransfer({
     mutation: {
-      onSuccess: async ({ value: newDocument }) => {
+      onSuccess: async newDocument => {
         await navigate(
           `/user/${newDocument.author.username}/document/${newDocument.slug}`,
         );
@@ -316,21 +316,10 @@ const DocumentPage: React.FC = () => {
     refetch,
     isError,
     error,
-  } = useGetDocument(
-    author,
-    slug,
-    {
-      include_comments: true,
-      include_files: true,
-    },
-    {
-      query: {
-        select({ value: document }) {
-          return document;
-        },
-      },
-    },
-  );
+  } = useGetDocument(author, slug, {
+    include_comments: true,
+    include_files: true,
+  });
 
   useQuickSearchFilter(
     isSuccess
@@ -489,7 +478,7 @@ const DocumentPage: React.FC = () => {
               )}
           </Box>
         )}
-        {isError && <Alert color="red">{String(error)}</Alert>}
+        {isError && <Alert color="red">{error.message}</Alert>}
         {document?.description && (
           <div>
             <MarkdownText value={document.description} />

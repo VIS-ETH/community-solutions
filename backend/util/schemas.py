@@ -1,12 +1,8 @@
 from ninja import Schema
 
 
-class ValueWrapped[T](Schema):
-    value: T
-
-
 class ErrorSchema(Schema):
     err: str
 
 
-__all__ = ("ValueWrapped", "ErrorSchema")
+__all__ = ("ErrorSchema",)

@@ -8,7 +8,7 @@ from answers.section_util import AnswerSectionSchema
 from myauth import auth_check
 from notifications import notification_util
 from util import response
-from util.schemas import ErrorSchema, ValueWrapped
+from util.schemas import ErrorSchema
 
 router = Router(tags=["Answers"])
 
@@ -20,7 +20,7 @@ class CreateModifyCommentRequestBody(Schema):
 @router.post(
     "/addcomment/{oid}/",
     response={
-        200: ValueWrapped[AnswerSectionSchema],
+        200: AnswerSectionSchema,
         401: ErrorSchema,
         404: ErrorSchema,
     },
@@ -34,15 +34,13 @@ def add_comment(request, oid: int, data: Form[CreateModifyCommentRequestBody]):
     notification_util.new_comment_to_answer(answer, new_comment)
     notification_util.new_comment_to_comment(answer, new_comment)
     section_util.increase_section_version(answer.answer_section)
-    return {
-        "value": section_util.get_answersection_response(request, answer.answer_section)
-    }
+    return section_util.get_answersection_response(request, answer.answer_section)
 
 
 @router.post(
     "/setcomment/{oid}/",
     response={
-        200: ValueWrapped[AnswerSectionSchema],
+        200: AnswerSectionSchema,
         401: ErrorSchema,
         403: ErrorSchema,
         404: ErrorSchema,
@@ -60,17 +58,15 @@ def set_comment(request, oid: int, data: Form[CreateModifyCommentRequestBody]):
     comment.save()
 
     section_util.increase_section_version(comment.answer.answer_section)
-    return {
-        "value": section_util.get_answersection_response(
-            request, comment.answer.answer_section
-        )
-    }
+    return section_util.get_answersection_response(
+        request, comment.answer.answer_section
+    )
 
 
 @router.post(
     "/removecomment/{oid}/",
     response={
-        200: ValueWrapped[AnswerSectionSchema],
+        200: AnswerSectionSchema,
         401: ErrorSchema,
         403: ErrorSchema,
         404: ErrorSchema,
@@ -85,9 +81,7 @@ def remove_comment(request, oid: int):
     section = comment.answer.answer_section
     comment.delete()
     section_util.increase_section_version(comment.answer.answer_section)
-    return {
-        "value": section_util.get_answersection_response(request, section),
-    }
+    return section_util.get_answersection_response(request, section)
 
 
 class FlagCommentRequestBody(Schema):
@@ -97,7 +91,7 @@ class FlagCommentRequestBody(Schema):
 @router.post(
     "/setcommentflagged/{oid}/",
     response={
-        200: ValueWrapped[AnswerSectionSchema],
+        200: AnswerSectionSchema,
         400: ErrorSchema,
         401: ErrorSchema,
         404: ErrorSchema,
@@ -119,11 +113,9 @@ def set_flagged(request, oid: int, data: Form[FlagCommentRequestBody]):
         comment.save()
 
     section_util.increase_section_version(comment.answer.answer_section)
-    return {
-        "value": section_util.get_answersection_response(
-            request, comment.answer.answer_section
-        )
-    }
+    return section_util.get_answersection_response(
+        request, comment.answer.answer_section
+    )
 
 
 class MarkCommentAsAiRequestBody(Schema):
@@ -133,7 +125,7 @@ class MarkCommentAsAiRequestBody(Schema):
 @router.post(
     "/setcommentmarkedasai/{oid}/",
     response={
-        200: ValueWrapped[AnswerSectionSchema],
+        200: AnswerSectionSchema,
         400: ErrorSchema,
         401: ErrorSchema,
         404: ErrorSchema,
@@ -155,17 +147,15 @@ def set_marked_as_ai(request, oid: int, data: Form[MarkCommentAsAiRequestBody]):
         comment.save()
 
     section_util.increase_section_version(comment.answer.answer_section)
-    return {
-        "value": section_util.get_answersection_response(
-            request, comment.answer.answer_section
-        )
-    }
+    return section_util.get_answersection_response(
+        request, comment.answer.answer_section
+    )
 
 
 @router.post(
     "/resetcommentflagged/{oid}/",
     response={
-        200: ValueWrapped[AnswerSectionSchema],
+        200: AnswerSectionSchema,
         401: ErrorSchema,
         403: ErrorSchema,
         404: ErrorSchema,
@@ -178,17 +168,15 @@ def reset_flagged(request, oid: int):
     comment.flagged.clear()
     comment.save()
     section_util.increase_section_version(comment.answer.answer_section)
-    return {
-        "value": section_util.get_answersection_response(
-            request, comment.answer.answer_section
-        )
-    }
+    return section_util.get_answersection_response(
+        request, comment.answer.answer_section
+    )
 
 
 @router.post(
     "/resetcommentmarkedasai/{oid}/",
     response={
-        200: ValueWrapped[AnswerSectionSchema],
+        200: AnswerSectionSchema,
         401: ErrorSchema,
         403: ErrorSchema,
         404: ErrorSchema,
@@ -201,8 +189,6 @@ def reset_marked_as_ai(request, oid: int):
     comment.marked_as_ai.clear()
     comment.save()
     section_util.increase_section_version(comment.answer.answer_section)
-    return {
-        "value": section_util.get_answersection_response(
-            request, comment.answer.answer_section
-        )
-    }
+    return section_util.get_answersection_response(
+        request, comment.answer.answer_section
+    )

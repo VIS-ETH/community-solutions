@@ -47,7 +47,7 @@ const Score: React.FC<Props> = ({
 }) => {
   const { isPending: loading, mutate: setLike } = useSetAnswerLike({
     mutation: {
-      onSuccess: ({ value }) => onSectionChanged(value),
+      onSuccess: section => onSectionChanged(section),
     },
   });
   const handleVote = (vote: -1 | 0 | 1) =>

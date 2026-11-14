@@ -26,11 +26,7 @@ const UserComments: React.FC<UserCommentsProps> = ({ username }) => {
     isLoading: loading,
     data,
     refetch: reload,
-  } = useListCommentsByUser(
-    username,
-    { page: -1 },
-    { query: { select: data => data.value } },
-  );
+  } = useListCommentsByUser(username, { page: -1 });
   const [lastElement, setLastElement] = useState<HTMLDivElement | null>(null);
 
   const PAGE_SIZE = 10; // loads a limited amount of new elements at a time when scrolling down
@@ -71,7 +67,7 @@ const UserComments: React.FC<UserCommentsProps> = ({ username }) => {
 
   return (
     <>
-      {error && <Alert color="red">{error as unknown as string}</Alert>}
+      {error && <Alert color="red">{error.message}</Alert>}
       {(!data || data.length === 0) && !loading && (
         <Alert color="gray">No comments</Alert>
       )}

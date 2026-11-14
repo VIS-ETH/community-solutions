@@ -3,8 +3,6 @@ from testing.tests import ComsolTest
 
 
 class TestFAQ(ComsolTest):
-    test_http_methods = False
-
     def test_add_remove(self):
         faq = {
             "question": "Test Question",
@@ -18,13 +16,13 @@ class TestFAQ(ComsolTest):
                 "answer": "Test Answer",
                 "order": 42,
             },
-        )["value"]["oid"]
-        res = self.get("/api/faq/")["value"]
+        )["oid"]
+        res = self.get("/api/faq/")
         self.assertEqual(1, len(res))
         self.assertEqual(faq["question"], res[0]["question"])
         self.assertEqual(faq["answer"], res[0]["answer"])
         self.delete(f"/api/faq/{new_id}/", as_json=False)
-        res = self.get("/api/faq/")["value"]
+        res = self.get("/api/faq/")
         self.assertEqual(0, len(res))
 
     def test_set(self):
@@ -52,7 +50,7 @@ class TestFAQ(ComsolTest):
                     "order": x,
                 },
             )
-        res = self.get("/api/faq/")["value"]
+        res = self.get("/api/faq/")
         self.assertEqual(len(perm), len(res))
         for re, x in zip(res, sorted(perm), strict=True):
             self.assertEqual(re["question"], str(x))
@@ -69,12 +67,12 @@ class TestFAQ(ComsolTest):
                 },
             )
 
-        res = self.get("/api/faq/")["value"]
+        res = self.get("/api/faq/")
 
         self.put(f"/api/faq/swap/{res[0]['oid']}/{res[1]['oid']}/", {}, as_json=False)
         self.put(f"/api/faq/swap/{res[2]['oid']}/{res[3]['oid']}/", {}, as_json=False)
 
-        res_new = self.get("/api/faq/")["value"]
+        res_new = self.get("/api/faq/")
 
         expected_order = [res[1], res[0], res[3], res[2]]
 

@@ -37,13 +37,7 @@ const ImageModal: React.FC<ModalProps> = ({
     await images.refetch();
   };
 
-  const images = useListImages({
-    query: {
-      select(data) {
-        return data.value;
-      },
-    },
-  });
+  const images = useListImages();
 
   const uploadImage = useUploadImage({
     mutation: {

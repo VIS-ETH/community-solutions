@@ -26,13 +26,9 @@ from notifications import notification_util
 from users.api import UserSchema
 from util import s3_util
 from util.response import not_allowed, not_possible
-from util.schemas import ErrorSchema, ValueWrapped
+from util.schemas import ErrorSchema
 
 router = Router(tags=["Documents"])
-
-
-class DocumentTypeListSchema(ValueWrapped[list[str]]):
-    pass
 
 
 class DocumentCommentSchema(Schema):
@@ -46,10 +42,6 @@ class DocumentCommentSchema(Schema):
     flaggedCount: int
     isMarkedAsAi: bool
     markedAsAiCount: int
-
-
-class CommentListSchema(ValueWrapped[list[DocumentCommentSchema]]):
-    pass
 
 
 class CreateDocumentCommentSchema(Schema):
@@ -72,10 +64,6 @@ class MoveDocumentFileSchema(Schema):
     direction: Literal["down", "up"]
 
 
-class DocumentCommentWrappedSchema(ValueWrapped[DocumentCommentSchema]):
-    pass
-
-
 class DocumentFileSchema(Schema):
     oid: int
     display_name: str
@@ -84,24 +72,12 @@ class DocumentFileSchema(Schema):
     order: int
 
 
-class DocumentFileListSchema(ValueWrapped[list[DocumentFileSchema]]):
-    pass
-
-
 class CreateDocumentFileSchema(Schema):
     display_name: str
 
 
 class UpdateDocumentFileSchema(Schema):
     display_name: str | None = None
-
-
-class DocumentFileWrappedSchema(ValueWrapped[DocumentFileSchema]):
-    pass
-
-
-class DeleteDocumentFileResponse(ValueWrapped[bool]):
-    pass
 
 
 class DocumentSchema(Schema):
@@ -128,10 +104,6 @@ class DocumentSchema(Schema):
     files: list[DocumentFileSchema] | None = None
 
 
-class DocumentListSchema(ValueWrapped[list[DocumentSchema]]):
-    pass
-
-
 class CreateDocumentSchema(Schema):
     display_name: str
     category: str
@@ -146,14 +118,6 @@ class UpdateDocumentSchema(Schema):
     category: str | None = None
     document_type: str | None = None
     pending_transfer_user: str | None = None
-
-
-class DocumentWrappedSchema(ValueWrapped[DocumentSchema]):
-    pass
-
-
-class DeleteDocumentResponse(ValueWrapped[bool]):
-    pass
 
 
 def user_liked(request):
@@ -240,21 +204,17 @@ def normalise_document_order(document: Document):
 
 @router.get(
     "/listdocumenttypes/",
-    response=DocumentTypeListSchema,
+    response=list[str],
     operation_id="listDocumentTypes",
 )
 @auth_check.require_login
 def list_document_types(request):
-    return {
-        "value": DocumentType.objects.values_list("display_name", flat=True).order_by(
-            "order"
-        )
-    }
+    return DocumentType.objects.values_list("display_name", flat=True).order_by("order")
 
 
 @router.get(
     "/",
-    response={200: DocumentListSchema, 403: ErrorSchema},
+    response={200: list[DocumentSchema], 403: ErrorSchema},
     operation_id="listDocuments",
 )
 @auth_check.require_login
@@ -286,9 +246,7 @@ def list_documents(
     elif category is not None:
         objects = objects.filter(category__slug=category)
     else:  # if nothing is given, we return an empty result instead of giving back everything
-        return {
-            "value": [],
-        }
+        return []
 
     if include_comments:
         comments_query = Comment.objects.annotate(
@@ -315,14 +273,12 @@ def list_documents(
         make_document_response(document, request, include_comments, include_files)
         for document in objects.all()
     ]
-    return {
-        "value": res,
-    }
+    return res
 
 
 @router.post(
     "/",
-    response={200: DocumentWrappedSchema, 400: ErrorSchema},
+    response={200: DocumentSchema, 400: ErrorSchema},
     operation_id="createDocument",
 )
 @auth_check.require_login
@@ -340,14 +296,12 @@ def create_document(request, data: Form[CreateDocumentSchema]):
     )
     document.save()
 
-    return {
-        "value": make_document_response(document, request),
-    }
+    return make_document_response(document, request)
 
 
 @router.get(
     "/{username}/{slug}/",
-    response={200: DocumentWrappedSchema},
+    response={200: DocumentSchema},
     operation_id="getDocument",
 )
 @auth_check.require_login
@@ -385,16 +339,12 @@ def get_document(
 
     document = get_object_or_404(objects, author__username=username, slug=slug)
 
-    return {
-        "value": make_document_response(
-            document, request, include_comments, include_files
-        )
-    }
+    return make_document_response(document, request, include_comments, include_files)
 
 
 @router.put(
     "/{username}/{slug}/",
-    response={200: DocumentWrappedSchema, 400: ErrorSchema, 403: ErrorSchema},
+    response={200: DocumentSchema, 400: ErrorSchema, 403: ErrorSchema},
     operation_id="updateDocument",
     exclude_none=True,
 )
@@ -480,14 +430,12 @@ def update_document(
     if send_document_transfer_notification:
         notification_util.new_document_transfer_request(document)
 
-    return {
-        "value": make_document_response(document, request),
-    }
+    return make_document_response(document, request)
 
 
 @router.delete(
     "/{username}/{slug}/",
-    response={200: DeleteDocumentResponse, 403: ErrorSchema},
+    response={200: bool, 403: ErrorSchema},
     operation_id="deleteDocument",
 )
 @auth_check.require_login
@@ -500,14 +448,12 @@ def delete_document(request, username: str, slug: str):
     filenames = [document_file.filename for document_file in document.files.all()]
     success = s3_util.delete_files(settings.COMSOL_DOCUMENT_DIR, filenames)
     document.delete()
-    return {
-        "value": success,
-    }
+    return success
 
 
 @router.get(
     "/{username}/{slug}/comments/",
-    response={200: CommentListSchema},
+    response={200: list[DocumentCommentSchema]},
     operation_id="listDocumentComments",
 )
 @auth_check.require_login
@@ -527,14 +473,12 @@ def list_document_comments(request, username: str, slug: str):
             ),
         )
     )
-    return {
-        "value": [make_comment_response(comment, request) for comment in objects],
-    }
+    return [make_comment_response(comment, request) for comment in objects]
 
 
 @router.post(
     "/{username}/{slug}/comments/",
-    response={200: DocumentCommentWrappedSchema, 400: ErrorSchema},
+    response={200: DocumentCommentSchema, 400: ErrorSchema},
     operation_id="createDocumentComment",
 )
 @auth_check.require_login
@@ -550,9 +494,7 @@ def create_document_comment(
     notification_util.new_comment_to_document(document, comment)
 
     comment = prep_comment_obj(comment, request)
-    return {
-        "value": make_comment_response(comment, request),
-    }
+    return make_comment_response(comment, request)
 
 
 @router.get(
@@ -574,7 +516,7 @@ def get_document_comment(request, username: str, slug: str, id: int):
 
 @router.put(
     "/{username}/{slug}/comments/{id}/",
-    response={200: DocumentCommentWrappedSchema, 403: ErrorSchema},
+    response={200: DocumentCommentSchema, 403: ErrorSchema},
     operation_id="updateDocumentComment",
 )
 @auth_check.require_login
@@ -602,9 +544,7 @@ def update_document_comment(
     comment.save()
 
     comment = prep_comment_obj(comment, request)
-    return {
-        "value": make_comment_response(comment, request),
-    }
+    return make_comment_response(comment, request)
 
 
 @router.delete(
@@ -629,22 +569,20 @@ def delete_document_comment(request, username: str, slug: str, id: int):
 
 @router.get(
     "/{username}/{slug}/files/",
-    response={200: DocumentFileListSchema},
+    response={200: list[DocumentFileSchema]},
     operation_id="listDocumentFiles",
 )
 @auth_check.require_login
 def list_document_files(request, username: str, slug: str):
     document = get_object_or_404(Document, author__username=username, slug=slug)
     objects = DocumentFile.objects.filter(document=document).all()
-    return {
-        "value": [make_file_response(file) for file in objects],
-    }
+    return [make_file_response(file) for file in objects]
 
 
 @router.post(
     "/{username}/{slug}/files/",
     response={
-        200: DocumentFileWrappedSchema,
+        200: DocumentFileSchema,
         400: ErrorSchema,
         403: ErrorSchema,
         415: ErrorSchema,
@@ -696,14 +634,12 @@ def create_document_file(
     document.edittime = timezone.now()
     document.save()
 
-    return {
-        "value": make_file_response(document_file),
-    }
+    return make_file_response(document_file)
 
 
 @router.get(
     "/{username}/{slug}/files/{id}/",
-    response={200: DocumentFileWrappedSchema},
+    response={200: DocumentFileSchema},
     operation_id="getDocumentFileMeta",
 )
 @auth_check.require_login
@@ -714,15 +650,13 @@ def get_document_file_meta(request, username: str, slug: str, id: int):
         document__author__username=username,
         document__slug=slug,
     )
-    return {
-        "value": make_file_response(document_file),
-    }
+    return make_file_response(document_file)
 
 
 @router.put(
     "/{username}/{slug}/files/{id}/",
     response={
-        200: DocumentFileWrappedSchema,
+        200: DocumentFileSchema,
         400: ErrorSchema,
         403: ErrorSchema,
         415: ErrorSchema,
@@ -774,14 +708,12 @@ def update_document_file(
     document.edittime = timezone.now()
     document.save()
 
-    return {
-        "value": make_file_response(document_file),
-    }
+    return make_file_response(document_file)
 
 
 @router.delete(
     "/{username}/{slug}/files/{id}/",
-    response={200: DeleteDocumentFileResponse, 403: ErrorSchema},
+    response={200: bool, 403: ErrorSchema},
     operation_id="deleteDocumentFile",
 )
 @auth_check.require_login
@@ -807,14 +739,12 @@ def delete_document_file(request, username: str, slug: str, id: int):
     document.edittime = timezone.now()
     document.save()
 
-    return {
-        "value": success,
-    }
+    return success
 
 
 @router.post(
     "/setflaggedcomment/{id}",
-    response={200: DocumentCommentWrappedSchema, 400: ErrorSchema},
+    response={200: DocumentCommentSchema, 400: ErrorSchema},
     operation_id="setDocumentCommentFlagged",
 )
 @auth_check.require_login
@@ -833,14 +763,12 @@ def set_flagged_comment(
         else:
             comment.flagged.add(request.user)
         comment.save()
-    return {
-        "value": make_comment_response(prep_comment_obj(comment, request), request),
-    }
+    return make_comment_response(prep_comment_obj(comment, request), request)
 
 
 @router.post(
     "/setmarkedasaicomment/{id}",
-    response={200: DocumentCommentWrappedSchema, 400: ErrorSchema},
+    response={200: DocumentCommentSchema, 400: ErrorSchema},
     operation_id="setDocumentCommentMarkedAsAi",
 )
 @auth_check.require_login
@@ -859,14 +787,12 @@ def set_marked_as_ai(
         else:
             comment.marked_as_ai.add(request.user)
         comment.save()
-    return {
-        "value": make_comment_response(prep_comment_obj(comment, request), request),
-    }
+    return make_comment_response(prep_comment_obj(comment, request), request)
 
 
 @router.post(
     "/resetflaggedcomment/{id}",
-    response={200: DocumentCommentWrappedSchema},
+    response={200: DocumentCommentSchema},
     operation_id="resetDocumentCommentFlagged",
 )
 @auth_check.require_admin
@@ -874,14 +800,12 @@ def reset_flagged_comment(request, id: int):
     comment = get_object_or_404(Comment, pk=id)
     comment.flagged.clear()
     comment.save()
-    return {
-        "value": make_comment_response(prep_comment_obj(comment, request), request),
-    }
+    return make_comment_response(prep_comment_obj(comment, request), request)
 
 
 @router.post(
     "/resetmarkedasaicomment/{id}",
-    response={200: DocumentCommentWrappedSchema},
+    response={200: DocumentCommentSchema},
     operation_id="resetDocumentCommentMarkedAsAi",
 )
 @auth_check.require_admin
@@ -889,14 +813,12 @@ def reset_comment_marked_as_ai(request, id: int):
     comment = get_object_or_404(Comment, pk=id)
     comment.marked_as_ai.clear()
     comment.save()
-    return {
-        "value": make_comment_response(prep_comment_obj(comment, request), request),
-    }
+    return make_comment_response(prep_comment_obj(comment, request), request)
 
 
 @router.post(
     "/{username}/{slug}/regenerate_api_key/",
-    response={200: DocumentWrappedSchema, 403: ErrorSchema},
+    response={200: DocumentSchema, 403: ErrorSchema},
     operation_id="regenerateDocumentApiKey",
     exclude_none=True,
 )
@@ -907,9 +829,7 @@ def regenerate_document_api_key(request, username: str, slug: str):
         return not_allowed()
     document.api_key = generate_api_key()
     document.save()
-    return {
-        "value": make_document_response(document, request),
-    }
+    return make_document_response(document, request)
 
 
 @router.get(
@@ -945,7 +865,7 @@ def update_document_file_content(
     token = request.headers.get("Authorization", "")
     document = get_object_or_404(Document, author__username=username, slug=slug)
     if document.api_key != token:
-        return 403, {"error": "invalid authorization token"}
+        return 403, {"err": "invalid authorization token"}
 
     document_file = get_object_or_404(
         DocumentFile,
@@ -1018,7 +938,7 @@ def move_document_file(
 
 @router.put(
     "{username}/{slug}/transfer/accept",
-    response={200: ValueWrapped[DocumentSchema], 403: ErrorSchema},
+    response={200: DocumentSchema, 403: ErrorSchema},
     operation_id="acceptDocumentTransfer",
     exclude_none=True,
 )
@@ -1040,14 +960,12 @@ def accept_document_transfer(request, username: str, slug: str):
 
     notification_util.accepted_document_transfer_request(document, old_owner)
 
-    return {
-        "value": make_document_response(document, request),
-    }
+    return make_document_response(document, request)
 
 
 @router.put(
     "{username}/{slug}/transfer/reject",
-    response={200: ValueWrapped[DocumentSchema], 403: ErrorSchema},
+    response={200: DocumentSchema, 403: ErrorSchema},
     operation_id="rejectDocumentTransfer",
     exclude_none=True,
 )
@@ -1063,9 +981,7 @@ def reject_document_transfer(request, username: str, slug: str):
     old_target = document.pending_transfer_user
 
     if not old_target:
-        return {
-            "value": make_document_response(document, request),
-        }
+        return make_document_response(document, request)
 
     document.pending_transfer_user = None
     document.edittime = timezone.now()
@@ -1075,6 +991,4 @@ def reject_document_transfer(request, username: str, slug: str):
     if document.author.id != request.user.id:
         notification_util.rejected_document_transfer_request(document, old_target)
 
-    return {
-        "value": make_document_response(document, request),
-    }
+    return make_document_response(document, request)

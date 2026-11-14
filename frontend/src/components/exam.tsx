@@ -102,7 +102,7 @@ const Exam: React.FC<Props> = React.memo(
 
     const [cutVersions, setCutVersions] = useState<Record<string, number>>({});
     const { data: loadedCutVersions } = useGetCutVersions(metaData.filename, {
-      query: { refetchInterval: 60_000, select: data => data.value },
+      query: { refetchInterval: 60_000 },
     });
     useEffect(() => {
       if (loadedCutVersions === undefined) return;
@@ -144,7 +144,7 @@ const Exam: React.FC<Props> = React.memo(
         getAnswer(answerId)
           .then(res => {
             if (cancelled) return;
-            onExpandSections(res.value.sectionId);
+            onExpandSections(res.sectionId);
           })
           .catch(() => {
             /* do nothing */

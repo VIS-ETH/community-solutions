@@ -51,11 +51,7 @@ interface Props {
 
 const DocumentSettings: React.FC<Props> = ({ document, refetch }) => {
   const navigate = useNavigate();
-  const { data: categories } = useListCategoriesWithMeta({
-    query: {
-      select: ({ value }) => value,
-    },
-  });
+  const { data: categories } = useListCategoriesWithMeta();
   const categoryOptions =
     categories &&
     createOptions(
@@ -71,7 +67,7 @@ const DocumentSettings: React.FC<Props> = ({ document, refetch }) => {
 
   const updateDocument = useUpdateDocument({
     mutation: {
-      onSuccess({ value: newDocument }) {
+      onSuccess(newDocument) {
         setDisplayName(undefined);
         setCategory(undefined);
         setDocumentType(undefined);
@@ -196,7 +192,7 @@ const DocumentSettings: React.FC<Props> = ({ document, refetch }) => {
                   setDocumentType(query);
                   return query;
                 }}
-                data={documentTypes?.value ?? []}
+                data={documentTypes ?? []}
                 value={documentType ?? document.document_type}
                 onChange={(value: string) => {
                   setDocumentType(value);

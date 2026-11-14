@@ -45,8 +45,6 @@ import type {
   CutPageSchema,
   EditCutBody,
   ExamMetadataSchema,
-  ValueWrappedDictIntListCutPageSchema,
-  ValueWrappedExamMetadataSchema,
 } from "../api/model";
 import { useQueryClient } from "@tanstack/react-query";
 import { UserContext, useUser } from "../auth";
@@ -180,13 +178,13 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
   );
   const toggleExamUserSolved: () => Promise<void> = async () => {
     const { filename } = metaData;
-    const { value } = metaData.userSolved
+    const { userSolved } = metaData.userSolved
       ? await runUnmarkExamUserSolved({ filename })
       : await runMarkExamUserSolved({ filename });
 
     mutateMetaData(metaData => ({
       ...metaData,
-      userSolved: value.userSolved,
+      userSolved,
     }));
   };
 
@@ -506,7 +504,6 @@ const ExamPage: React.FC = () => {
     data: metadata,
   } = useGetExamMetadata(filename, {
     query: {
-      select: data => data.value,
       // refetching breaks other plcaes that use `examFile` and other presigned urls
       // even if the actual content didn't change
       staleTime: Infinity,
@@ -520,10 +517,8 @@ const ExamPage: React.FC = () => {
     ) =>
       queryClient.setQueryData(
         getGetExamMetadataQueryKey(filename),
-        (old: ValueWrappedExamMetadataSchema | undefined) =>
-          old && {
-            value: typeof update === "function" ? update(old.value) : update,
-          },
+        (old: ExamMetadataSchema | undefined) =>
+          old && (typeof update === "function" ? update(old) : update),
       ),
     [queryClient, filename],
   );
@@ -544,14 +539,13 @@ const ExamPage: React.FC = () => {
     isLoading: cutsLoading,
     data: cuts,
     refetch,
-  } = useGetCuts(filename, { query: { select: data => data.value } });
+  } = useGetCuts(filename);
   const reloadCuts = useCallback(() => void refetch(), [refetch]);
   const mutateCuts = useCallback(
     (mutation: (old: ServerCutResponse) => ServerCutResponse) =>
       queryClient.setQueryData(
         getGetCutsQueryKey(filename),
-        (old: ValueWrappedDictIntListCutPageSchema | undefined) =>
-          old && { value: mutation(old.value) },
+        (old: ServerCutResponse | undefined) => old && mutation(old),
       ),
     [queryClient, filename],
   );
@@ -577,13 +571,6 @@ const ExamPage: React.FC = () => {
   const user = useUser()!;
 
   const error = metadataError ?? cutsError ?? pdfError;
-  const errorStringified =
-    typeof error === "string"
-      ? error
-      : error instanceof Error
-        ? error.message
-        : // eslint-disable-next-line @typescript-eslint/no-base-to-string
-          String(error);
 
   const navigate = useNavigate();
 
@@ -615,7 +602,7 @@ const ExamPage: React.FC = () => {
       <div>
         {error && (
           <Container>
-            <Alert color="red">{errorStringified}</Alert>
+            <Alert color="red">{error.message}</Alert>
           </Container>
         )}
         {metadataLoading && (

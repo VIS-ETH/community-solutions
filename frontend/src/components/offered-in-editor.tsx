@@ -19,11 +19,7 @@ const OfferedInEditor: React.FC<OfferedInEditorProps> = ({
     error,
     isPending: loading,
     data: fetchedData,
-  } = useListMetaCategories({
-    query: {
-      select: ({ value }) => value,
-    },
-  });
+  } = useListMetaCategories();
   const [mutatedData, setMutatedData] = useState<
     Meta1CategoryResponse[] | undefined
   >();
@@ -99,8 +95,7 @@ const OfferedInEditor: React.FC<OfferedInEditorProps> = ({
   };
   return (
     <>
-      {/* eslint-disable-next-line @typescript-eslint/no-base-to-string */}
-      {error && <Alert color="red">{error.toString()}</Alert>}
+      {error && <Alert color="red">{error.message}</Alert>}
       <Group>
         {offeredIn.map(([meta1, meta2]) => (
           <Button

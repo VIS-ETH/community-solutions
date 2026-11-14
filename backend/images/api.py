@@ -6,23 +6,22 @@ from images.models import Image
 from myauth import auth_check
 from util import s3_util
 from util.response import not_allowed, not_possible
-from util.schemas import ErrorSchema, ValueWrapped
+from util.schemas import ErrorSchema
 
 router = Router(tags=["Images"])
 
 
-class ImageList(ValueWrapped[list[str]]):
-    pass
-
-
-@router.get("/list/", response=ImageList, operation_id="listImages")
+@router.get(
+    "/list/",
+    response={
+        200: list[str],
+        401: ErrorSchema,
+    },
+    operation_id="listImages",
+)
 @auth_check.require_login
 def list_images(request):
-    return {
-        "value": Image.objects.filter(owner=request.user).values_list(
-            "filename", flat=True
-        )
-    }
+    return Image.objects.filter(owner=request.user).values_list("filename", flat=True)
 
 
 class ImageUploadResponse(Schema):

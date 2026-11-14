@@ -28,9 +28,7 @@ const CreateMarkdownFileModal: React.FC<Props> = ({
   const [files, setFiles] = useState<File[]>([]);
   const [isCreating, setIsCreating] = useState(false);
 
-  const { mutateAsync, isError, error } = useCreateDocumentFile<
-    string | Error
-  >();
+  const { mutateAsync, isError, error } = useCreateDocumentFile();
 
   function handleAddFile(): void {
     const name = displayName.trim();
@@ -103,12 +101,7 @@ const CreateMarkdownFileModal: React.FC<Props> = ({
 
   return (
     <Stack>
-      {isError && (
-        <Alert color="red">
-          {" "}
-          {error instanceof Error ? error.message : error}{" "}
-        </Alert>
-      )}
+      {isError && <Alert color="red">{error.message}</Alert>}
       <Group align="flex-end" wrap="nowrap">
         <TextInput
           flex={1}

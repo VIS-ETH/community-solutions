@@ -60,14 +60,13 @@ export const dlSelectedExams = async (
   }
   const zipFileItems = selectedExams.map(
     async (exam): Promise<ZipFileItem | undefined> => {
-      const { value } = await getExamPdfUrl(exam.filename);
-      const responseFile = fetch(value.url).then(r => r.arrayBuffer());
+      const examPdf = await getExamPdfUrl(exam.filename);
+      const responseFile = fetch(examPdf.url).then(r => r.arrayBuffer());
       let documentCategoryName: string;
       if (examtypes.size === 1) {
-        documentCategoryName = exam.displayname + "-" + categoryName;
+        documentCategoryName = `${exam.displayname}-${categoryName}`;
       } else {
-        documentCategoryName =
-          exam.examtype + "/" + exam.displayname + "-" + categoryName;
+        documentCategoryName = `${exam.examtype}/${exam.displayname}-${categoryName}`;
       }
       return {
         displayName: documentCategoryName,
@@ -76,7 +75,7 @@ export const dlSelectedExams = async (
       };
     },
   );
-  await downloadZipFile("exams-" + categoryName + ".zip", zipFileItems);
+  await downloadZipFile(`exams-${categoryName}.zip`, zipFileItems);
 };
 export const dlSelectedSolutions = async (
   categoryName: string,

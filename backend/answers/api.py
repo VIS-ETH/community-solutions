@@ -11,7 +11,7 @@ from myauth import auth_check
 from myauth.auth_check import has_admin_rights_for_exam, is_expert_for_exam
 from users.api import UserSchema
 from util import response
-from util.schemas import ErrorSchema, ValueWrapped
+from util.schemas import ErrorSchema
 
 from . import api_answers, api_comments, api_cuts, api_listings, api_search
 
@@ -169,7 +169,7 @@ def make_exam_metadata_object(request, exam):
 @router.get(
     "/status/{filename}/",
     response={
-        200: ValueWrapped[CategoryExamSchema],
+        200: CategoryExamSchema,
         401: ErrorSchema,
         403: ErrorSchema,
         404: ErrorSchema,
@@ -186,9 +186,7 @@ def get_exam_admin_status(request, filename: str):
     ):
         return response.not_allowed()
 
-    return {
-        "value": make_category_exam_obj(request, exam),
-    }
+    return make_category_exam_obj(request, exam)
 
 
 class UserSolvedExamSchema(Schema):
@@ -198,7 +196,7 @@ class UserSolvedExamSchema(Schema):
 @router.delete(
     "/{filename}/usersolved",
     response={
-        200: ValueWrapped[UserSolvedExamSchema],
+        200: UserSolvedExamSchema,
         401: ErrorSchema,
         404: ErrorSchema,
     },
@@ -210,16 +208,14 @@ def remove_exam_user_solved(request, filename: str):
     ExamUserSolved.objects.filter(user=request.user, exam=exam).delete()
 
     return {
-        "value": {
-            "userSolved": False,
-        }
+        "userSolved": False,
     }
 
 
 @router.put(
     "/{filename}/usersolved",
     response={
-        200: ValueWrapped[UserSolvedExamSchema],
+        200: UserSolvedExamSchema,
         401: ErrorSchema,
         404: ErrorSchema,
     },
@@ -230,16 +226,14 @@ def put_exam_user_solved(request, filename: str):
     exam = get_object_or_404(Exam, filename=filename)
     ExamUserSolved.objects.update_or_create(user=request.user, exam=exam, defaults={})
     return {
-        "value": {
-            "userSolved": True,
-        }
+        "userSolved": True,
     }
 
 
 @router.get(
     "/{filename}/usersolved",
     response={
-        200: ValueWrapped[UserSolvedExamSchema],
+        200: UserSolvedExamSchema,
         401: ErrorSchema,
         404: ErrorSchema,
     },
@@ -253,16 +247,14 @@ def get_exam_user_solved(request, filename: str):
         exam=exam,
     ).exists()
     return {
-        "value": {
-            "userSolved": solved,
-        }
+        "userSolved": solved,
     }
 
 
 @router.get(
     "/metadata/{filename}/",
     response={
-        200: ValueWrapped[ExamMetadataSchema],
+        200: ExamMetadataSchema,
         401: ErrorSchema,
         404: ErrorSchema,
     },
@@ -272,9 +264,7 @@ def get_exam_user_solved(request, filename: str):
 def exam_metadata(request, filename: str):
     exam = get_object_or_404(Exam, filename=filename)
 
-    return {
-        "value": make_exam_metadata_object(request, exam),
-    }
+    return make_exam_metadata_object(request, exam)
 
 
 class SetExamMetadataBodySchema(Schema):

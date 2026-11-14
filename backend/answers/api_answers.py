@@ -9,7 +9,7 @@ from answers.section_util import AnswerSchema, AnswerSectionSchema
 from myauth import auth_check
 from notifications import notification_util
 from util import response
-from util.schemas import ErrorSchema, ValueWrapped
+from util.schemas import ErrorSchema
 
 router = Router(tags=["Answers"])
 
@@ -17,7 +17,7 @@ router = Router(tags=["Answers"])
 @router.get(
     "/answer/{longId}/",
     response={
-        200: ValueWrapped[AnswerSchema],
+        200: AnswerSchema,
         401: ErrorSchema,
         404: ErrorSchema,
     },
@@ -29,7 +29,7 @@ def get_answer(request, longId: str):
         answer = section_util.prepare_answer_objects(Answer.objects, request).get(
             long_id=longId
         )
-        return response.success(value=section_util.get_answer_response(request, answer))
+        return section_util.get_answer_response(request, answer)
     except Answer.DoesNotExist as err:
         raise Http404() from err
     except Answer.MultipleObjectsReturned as err:
@@ -44,7 +44,7 @@ class SetAnswerRequestBody(Schema):
 @router.post(
     "/setanswer/{oid}/",
     response={
-        200: ValueWrapped[AnswerSectionSchema],
+        200: AnswerSectionSchema,
         401: ErrorSchema,
         403: ErrorSchema,
         404: ErrorSchema,
@@ -96,15 +96,13 @@ def set_answer(request, oid: int, data: Form[SetAnswerRequestBody]):
 
     section_util.increase_section_version(section)
 
-    return {
-        "value": section_util.get_answersection_response(request, section),
-    }
+    return section_util.get_answersection_response(request, section)
 
 
 @router.post(
     "/removeanswer/{oid}/",
     response={
-        200: ValueWrapped[AnswerSectionSchema],
+        200: AnswerSectionSchema,
         401: ErrorSchema,
         403: ErrorSchema,
         404: ErrorSchema,
@@ -122,7 +120,7 @@ def remove_answer(request, oid: int):
     section = answer.answer_section
     answer.delete()
     section_util.increase_section_version(section)
-    return {"value": section_util.get_answersection_response(request, section)}
+    return section_util.get_answersection_response(request, section)
 
 
 class SetLikeRequestBody(Schema):
@@ -133,7 +131,7 @@ class SetLikeRequestBody(Schema):
 @router.post(
     "/setlike/{oid}/",
     response={
-        200: ValueWrapped[AnswerSectionSchema],
+        200: AnswerSectionSchema,
         401: ErrorSchema,
         404: ErrorSchema,
     },
@@ -162,9 +160,7 @@ def set_like(request, oid: int, data: Form[SetLikeRequestBody]):
         answer.save()
 
     section_util.increase_section_version(answer.answer_section)
-    return {
-        "value": section_util.get_answersection_response(request, answer.answer_section)
-    }
+    return section_util.get_answersection_response(request, answer.answer_section)
 
 
 class SetExpertVoteRequestBody(Schema):
@@ -174,7 +170,7 @@ class SetExpertVoteRequestBody(Schema):
 @router.post(
     "/setexpertvote/{oid}/",
     response={
-        200: ValueWrapped[AnswerSectionSchema],
+        200: AnswerSectionSchema,
         401: ErrorSchema,
         403: ErrorSchema,
         404: ErrorSchema,
@@ -197,9 +193,7 @@ def set_expertvote(request, oid: int, data: Form[SetExpertVoteRequestBody]):
             answer.expertvotes.add(request.user)
         answer.save()
     section_util.increase_section_version(answer.answer_section)
-    return {
-        "value": section_util.get_answersection_response(request, answer.answer_section)
-    }
+    return section_util.get_answersection_response(request, answer.answer_section)
 
 
 class SetFlaggedRequestBody(Schema):
@@ -209,7 +203,7 @@ class SetFlaggedRequestBody(Schema):
 @router.post(
     "/setanswerflagged/{oid}/",
     response={
-        200: ValueWrapped[AnswerSectionSchema],
+        200: AnswerSectionSchema,
         400: ErrorSchema,
         401: ErrorSchema,
         404: ErrorSchema,
@@ -233,9 +227,7 @@ def set_flagged(request, oid: int, data: Form[SetFlaggedRequestBody]):
         answer.save()
 
     section_util.increase_section_version(answer.answer_section)
-    return {
-        "value": section_util.get_answersection_response(request, answer.answer_section)
-    }
+    return section_util.get_answersection_response(request, answer.answer_section)
 
 
 class MarkAsAiRequestBody(Schema):
@@ -245,7 +237,7 @@ class MarkAsAiRequestBody(Schema):
 @router.post(
     "/setanswermarkedasai/{oid}/",
     response={
-        200: ValueWrapped[AnswerSectionSchema],
+        200: AnswerSectionSchema,
         400: ErrorSchema,
         401: ErrorSchema,
         404: ErrorSchema,
@@ -269,15 +261,13 @@ def set_marked_as_ai(request, oid: int, data: Form[MarkAsAiRequestBody]):
         answer.save()
 
     section_util.increase_section_version(answer.answer_section)
-    return {
-        "value": section_util.get_answersection_response(request, answer.answer_section)
-    }
+    return section_util.get_answersection_response(request, answer.answer_section)
 
 
 @router.post(
     "/resetanswerflagged/{oid}/",
     response={
-        200: ValueWrapped[AnswerSectionSchema],
+        200: AnswerSectionSchema,
         401: ErrorSchema,
         403: ErrorSchema,
         404: ErrorSchema,
@@ -293,15 +283,13 @@ def reset_flagged(request, oid: int):
     answer.save()
 
     section_util.increase_section_version(answer.answer_section)
-    return {
-        "value": section_util.get_answersection_response(request, answer.answer_section)
-    }
+    return section_util.get_answersection_response(request, answer.answer_section)
 
 
 @router.post(
     "/resetanswermarkedasai/{oid}/",
     response={
-        200: ValueWrapped[AnswerSectionSchema],
+        200: AnswerSectionSchema,
         401: ErrorSchema,
         403: ErrorSchema,
         404: ErrorSchema,
@@ -317,6 +305,4 @@ def reset_marked_as_ai(request, oid: int):
     answer.save()
 
     section_util.increase_section_version(answer.answer_section)
-    return {
-        "value": section_util.get_answersection_response(request, answer.answer_section)
-    }
+    return section_util.get_answersection_response(request, answer.answer_section)

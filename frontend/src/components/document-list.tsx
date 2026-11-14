@@ -8,7 +8,6 @@ import { useDisclosure } from "@mantine/hooks";
 import classes from "../utils/focus-outline.module.css";
 import { clsx } from "clsx";
 import { useListDocuments, useListDocumentTypes } from "../api/hooks/documents";
-import type { DocumentListSchema } from "../api/model/documentListSchema";
 import type { DocumentSchema } from "../api/model/documentSchema";
 
 interface Props {
@@ -18,10 +17,10 @@ interface Props {
 // Take list of documents and mutate it
 // into a record<document-type, documents[]>
 function splitDocuments(
-  documents: DocumentListSchema,
+  documents: DocumentSchema[],
 ): Record<string, readonly DocumentSchema[]> {
   const grouped: Record<string, DocumentSchema[]> = {};
-  for (const document of documents.value) {
+  for (const document of documents) {
     grouped[document.document_type] ??= [];
     grouped[document.document_type].push(document);
   }
@@ -56,13 +55,11 @@ const DocumentList: React.FC<Props> = ({ slug }) => {
         Documents
       </Title>
       {documents.isError && (
-        <Alert color="red">{documents.error as unknown as string}</Alert>
+        <Alert color="red">{documents.error.message}</Alert>
       )}
-      {docTypes.isError && (
-        <Alert color="red">{docTypes.error as string}</Alert>
-      )}
+      {docTypes.isError && <Alert color="red">{docTypes.error.message}</Alert>}
       {docTypes.isSuccess &&
-        docTypes.data.value.map(
+        docTypes.data.map(
           type =>
             splitDocs?.[type] && (
               <Fragment key={type}>

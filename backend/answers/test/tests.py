@@ -8,7 +8,7 @@ class TestMetadata(ComsolTestExamData):
     add_sections = False
 
     def test_metadata(self):
-        res = self.get(f"/api/exam/metadata/{self.exam.filename}/")["value"]
+        res = self.get(f"/api/exam/metadata/{self.exam.filename}/")
         self.assertEqual(res["filename"], self.exam.filename)
         self.assertEqual(res["displayname"], self.exam.displayname)
         self.assertEqual(res["examType"], self.exam.exam_type.displayname)
@@ -45,7 +45,7 @@ class TestMetadata(ComsolTestExamData):
             },
             as_json=False,
         )
-        res = self.get(f"/api/exam/metadata/{self.exam.filename}/")["value"]
+        res = self.get(f"/api/exam/metadata/{self.exam.filename}/")
         self.assertNotEqual(res["filename"], "cannotchange.pdf")
 
 
@@ -93,12 +93,12 @@ class TestUserSolved(ComsolTestExamData):
 
     def test_user_solved(self):
         url = f"/api/exam/{self.exam.filename}/usersolved"
-        self.assertFalse(self.get(url)["value"]["userSolved"])
-        self.assertTrue(self.put(url, {})["value"]["userSolved"])
-        self.assertTrue(self.get(url)["value"]["userSolved"])
+        self.assertFalse(self.get(url)["userSolved"])
+        self.assertTrue(self.put(url, {})["userSolved"])
+        self.assertTrue(self.get(url)["userSolved"])
         self.assertEqual(ExamUserSolved.objects.count(), 1)
-        self.assertFalse(self.delete(url)["value"]["userSolved"])
-        self.assertFalse(self.get(url)["value"]["userSolved"])
+        self.assertFalse(self.delete(url)["userSolved"])
+        self.assertFalse(self.get(url)["userSolved"])
         self.assertEqual(ExamUserSolved.objects.count(), 0)
 
     def test_mark_solved_twice(self):
@@ -110,20 +110,20 @@ class TestUserSolved(ComsolTestExamData):
     def test_unmark_not_solved(self):
         # Unmarking an exam which was never marked is not an error
         url = f"/api/exam/{self.exam.filename}/usersolved"
-        self.assertFalse(self.delete(url)["value"]["userSolved"])
+        self.assertFalse(self.delete(url)["userSolved"])
         self.assertEqual(ExamUserSolved.objects.count(), 0)
 
     def test_user_solved_is_per_user(self):
         url = f"/api/exam/{self.exam.filename}/usersolved"
         self.put(url, {})
         self.user = self.adminUsers[1]
-        self.assertFalse(self.get(url)["value"]["userSolved"])
+        self.assertFalse(self.get(url)["userSolved"])
         self.put(url, {})
         self.assertEqual(ExamUserSolved.objects.count(), 2)
         self.delete(url)
         self.user = self.adminUsers[0]
         # Unmarking for one user leaves the marker of the other one intact
-        self.assertTrue(self.get(url)["value"]["userSolved"])
+        self.assertTrue(self.get(url)["userSolved"])
 
     def test_not_existing_exam(self):
         self.get("/api/exam/nonexistant.pdf/usersolved", status_code=404, as_json=False)

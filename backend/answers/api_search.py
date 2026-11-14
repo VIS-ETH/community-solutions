@@ -19,7 +19,7 @@ from answers.models import Answer, Comment, Exam, ExamPage
 from myauth import auth_check
 from myauth.auth_check import has_admin_rights
 from users.api import UserSchema
-from util.schemas import ErrorSchema, ValueWrapped
+from util.schemas import ErrorSchema
 
 router = Router(tags=["Answers"])
 
@@ -535,7 +535,7 @@ class SearchResult(RootModel):
 @router.post(
     "/search/",
     response={
-        200: ValueWrapped[SearchResult],
+        200: SearchResult,
         401: ErrorSchema,
     },
     operation_id="search",
@@ -597,6 +597,4 @@ def search(request, data: Form[SearchRequestBody]):
             f"Time spent: exams: {(answers_start - exams_start) * 1000} ms, answers: {(comments_start - answers_start) * 1000} ms, comments: {(start_merge - comments_start) * 1000} ms, sorting: {(end - start_merge) * 1000} ms"
         )
 
-    return {
-        "value": res,
-    }
+    return res

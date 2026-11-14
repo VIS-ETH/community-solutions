@@ -70,8 +70,7 @@ const CommentComponent: React.FC<Props> = ({
 
   const onSectionMutated = {
     mutation: {
-      onSuccess: ({ value }: { value: AnswerSectionSchema }) =>
-        onSectionChanged(value),
+      onSuccess: (section: AnswerSectionSchema) => onSectionChanged(section),
     },
   };
   const { isPending: setFlaggedLoading, mutate: setExamCommentFlagged } =
@@ -95,9 +94,9 @@ const CommentComponent: React.FC<Props> = ({
     usePendingImages();
   const { isPending: addNewLoading, mutate: runAddNewComment } = useAddComment({
     mutation: {
-      onSuccess: ({ value }) => {
+      onSuccess: section => {
         if (onDelete) onDelete();
-        onSectionChanged(value);
+        onSectionChanged(section);
         clearDraftFromStorage(draftKey, "comment");
       },
     },
@@ -105,9 +104,9 @@ const CommentComponent: React.FC<Props> = ({
   const { isPending: updateLoading, mutate: runUpdateComment } =
     useUpdateComment({
       mutation: {
-        onSuccess: ({ value }) => {
+        onSuccess: section => {
           setEditing(false);
-          onSectionChanged(value);
+          onSectionChanged(section);
           clearDraftFromStorage(draftKey, "comment");
         },
       },

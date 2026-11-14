@@ -7,7 +7,7 @@ from myauth import auth_check
 from notifications.models import Notification, NotificationSetting, NotificationType
 from users.api import UserSchema
 from util import response
-from util.schemas import ErrorSchema, ValueWrapped
+from util.schemas import ErrorSchema
 
 
 class NotificationEnableRequest(Schema):
@@ -37,19 +37,17 @@ router = Router(tags=["Notifications"])
 @router.get(
     "/getenabled/",
     response={
-        200: ValueWrapped[list[int]],
+        200: list[int],
         401: ErrorSchema,
     },
     operation_id="getEnabledNotifications",
 )
 @auth_check.require_login
 def getenabled(request):
-    return response.success(
-        value=list(
-            NotificationSetting.objects.filter(user=request.user, enabled=True)
-            .order_by("type")
-            .values_list("type", flat=True)
-        )
+    return list(
+        NotificationSetting.objects.filter(user=request.user, enabled=True)
+        .order_by("type")
+        .values_list("type", flat=True)
     )
 
 
@@ -84,22 +82,20 @@ def _get_notification_link(notification):
 @router.get(
     "/unreadcount/",
     response={
-        200: ValueWrapped[int],
+        200: int,
         401: ErrorSchema,
     },
     operation_id="getNotificationUnreadCount",
 )
 @auth_check.require_login
 def unreadcount(request):
-    return response.success(
-        value=Notification.objects.filter(receiver=request.user, read=False).count()
-    )
+    return Notification.objects.filter(receiver=request.user, read=False).count()
 
 
 @router.get(
     "/all/",
     response={
-        200: ValueWrapped[list[NotificationResponse]],
+        200: list[NotificationResponse],
         401: ErrorSchema,
     },
     operation_id="getAllNotifications",
@@ -120,7 +116,7 @@ def all(request, unread: bool = False):
 
     notifications = notifications.order_by("-time")
 
-    value = [
+    return [
         {
             "oid": notification.id,
             "receiver": notification.receiver,
@@ -134,10 +130,6 @@ def all(request, unread: bool = False):
         }
         for notification in notifications
     ]
-
-    return {
-        "value": value,
-    }
 
 
 @router.post(

@@ -10,22 +10,16 @@ from categories.models import Category, CategoryUserPinned, MetaCategory
 from myauth import auth_check
 from myauth.models import MyUser, get_my_user
 from util import response
-from util.schemas import ErrorSchema, ValueWrapped
+from util.schemas import ErrorSchema
 
 router = Router(tags=["Categories"])
 
 
-@router.get(
-    "list/", response={200: ValueWrapped[list[str]]}, operation_id="listCategories"
-)
+@router.get("list/", response={200: list[str]}, operation_id="listCategories")
 def list_categories(request):
-    return {
-        "value": list(
-            Category.objects.order_by("displayname").values_list(
-                "displayname", flat=True
-            )
-        )
-    }
+    return list(
+        Category.objects.order_by("displayname").values_list("displayname", flat=True)
+    )
 
 
 class ListCategoriesWithMetaResponse(Schema):
@@ -40,7 +34,7 @@ class ListCategoriesWithMetaResponse(Schema):
 
 @router.get(
     "listwithmeta/",
-    response={200: ValueWrapped[list[ListCategoriesWithMetaResponse]]},
+    response={200: list[ListCategoriesWithMetaResponse]},
     operation_id="listCategoriesWithMeta",
 )
 def list_categories_with_meta(request):
@@ -66,7 +60,7 @@ def list_categories_with_meta(request):
         }
         for cat in categories
     ]
-    return {"value": res}
+    return res
 
 
 class ListCategoriesBasicResponse(Schema):
@@ -77,7 +71,7 @@ class ListCategoriesBasicResponse(Schema):
 @router.get(
     "listonlyadmin/",
     response={
-        200: ValueWrapped[list[ListCategoriesBasicResponse]],
+        200: list[ListCategoriesBasicResponse],
         403: ErrorSchema,
     },
     operation_id="listCategoriesOnlyAdmin",
@@ -93,13 +87,13 @@ def list_categories_only_admin(request):
         for cat in categories
         if auth_check.has_admin_rights_for_category(request, cat)
     ]
-    return {"value": res}
+    return res
 
 
 @router.get(
     "listonlypayment/",
     response={
-        200: ValueWrapped[list[ListCategoriesBasicResponse]],
+        200: list[ListCategoriesBasicResponse],
         403: ErrorSchema,
     },
     operation_id="listCategoriesOnlyPayment",
@@ -113,12 +107,12 @@ def list_categories_only_payment(request):
         }
         for cat in Category.objects.filter(has_payments=True).order_by("displayname")
     ]
-    return {"value": res}
+    return res
 
 
 @router.post(
     "add/",
-    response={200: ValueWrapped[str], 403: ErrorSchema},
+    response={200: str, 403: ErrorSchema},
     operation_id="addCategory",
 )
 @auth_check.require_admin
@@ -129,7 +123,7 @@ def add_category(request, category: Form[str]):
         slug=slug,
     )
     cat.save()
-    return {"value": slug}
+    return slug
 
 
 def create_category_slug(category, ignored_pk=None):
@@ -199,7 +193,7 @@ class ListExamsResponse(Schema):
 
 @router.get(
     "listexams/{slug}/",
-    response={200: ValueWrapped[list[ListExamsResponse]], 404: ErrorSchema},
+    response={200: list[ListExamsResponse], 404: ErrorSchema},
     operation_id="listCategoryExams",
 )
 def list_exams(request, slug):
@@ -249,7 +243,7 @@ def list_exams(request, slug):
     )
     for ex in res:
         del ex["sort-key"]
-    return {"value": res}
+    return res
 
 
 class CategoryDataAttachment(Schema):
@@ -316,7 +310,7 @@ def get_category_data(request, cat) -> CategoryData:
 @router.get(
     "metadata/{slug}/",
     response={
-        200: ValueWrapped[CategoryData],
+        200: CategoryData,
         403: ErrorSchema,
         404: ErrorSchema,
     },
@@ -326,7 +320,7 @@ def get_category_data(request, cat) -> CategoryData:
 def get_metadata(request, slug: str):
     cat = get_object_or_404(Category, slug=slug)
     res = get_category_data(request, cat)
-    return {"value": res}
+    return res
 
 
 class SetMetadataRequest(Schema):
@@ -342,7 +336,7 @@ class SetMetadataRequest(Schema):
 @router.post(
     "setmetadata/{slug}/",
     response={
-        200: ValueWrapped[CategoryData],
+        200: CategoryData,
         403: ErrorSchema,
         404: ErrorSchema,
     },
@@ -377,7 +371,7 @@ def set_metadata(
         cat.more_exams_link = data.more_exams_link
     cat.save()
     res = get_category_data(request, cat)
-    return {"value": res}
+    return res
 
 
 @router.post(
@@ -436,7 +430,7 @@ class Meta1CategoryResponse(Schema):
 
 @router.get(
     "listmetacategories/",
-    response={200: ValueWrapped[list[Meta1CategoryResponse]]},
+    response={200: list[Meta1CategoryResponse]},
     operation_id="listMetaCategories",
 )
 def list_metacategories(request):
@@ -471,7 +465,7 @@ def list_metacategories(request):
                 ],
             }
         )
-    return {"value": res}
+    return res
 
 
 @router.post(
