@@ -54,7 +54,7 @@ export const dlSelectedExams = async (
   selectedExams: ExamSelectedForDownload[],
 ) => {
   categoryName = categoryName.replaceAll(/\s/g, "_");
-  const examtypes = new Set<String>();
+  const examtypes = new Set<string>();
   for (const exam of selectedExams) {
     examtypes.add(exam.examtype);
   }
