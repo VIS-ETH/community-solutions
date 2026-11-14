@@ -16,12 +16,11 @@ import {
 import { useCreateMandate, useListMandates } from "../api/hooks/mandates";
 import { useUser } from "../auth";
 import { MandateSchema } from "../api/model";
-import { useRequest } from "ahooks";
-import { loadCategories } from "../api/hooks";
 import { useDisclosure } from "@mantine/hooks";
 import { IconAlertCircle, IconInfoCircle } from "@tabler/icons-react";
 import { Link } from "react-router-dom";
 import GlobalConsts from "../globalconsts";
+import { useListCategoriesOnlyAdmin } from "../api/hooks/categories";
 
 enum MandateStatusType {
   OPEN_ONGOING,
@@ -58,7 +57,105 @@ const getMandateStatusType = (mandate: MandateSchema): MandateStatusType => {
   return MandateStatusType.OPEN_OVERDUE;
 };
 
+const RenderMandates: React.FC<{ mandates: readonly MandateSchema[] }> = ({
+  mandates,
+}) => {
+  return (
+    <List>
+      {mandates.map(mandate => {
+        return (
+          <ListItem key={mandate.id}>
+            Mandate on category{" "}
+            <Anchor component={Link} to={`/category/${mandate.category}`}>
+              {mandate.category_display_name}
+            </Anchor>
+            : signed up for on{" "}
+            {lightFormat(mandate.created_at, GlobalConsts.dateFNSFormatString)},
+            due on{" "}
+            {lightFormat(
+              mandate.due_date,
+              GlobalConsts.dateFNSFormatStringDate,
+            )}
+            <br />
+            {mandate.checked_state === "excused" && (
+              <>The mandate was excused by an administrator.</>
+            )}
+            {mandate.checked_state === "accepted" && (
+              <>
+                The mandate was accepted by an administrator on{" "}
+                {lightFormat(
+                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                  mandate.checked_at!,
+                  GlobalConsts.dateFNSFormatString,
+                )}
+                , which the user uploaded on
+                {lightFormat(
+                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                  mandate.fulfilled_at!,
+                  GlobalConsts.dateFNSFormatString,
+                )}
+                . The document is found at:{" "}
+                <Anchor
+                  component={Link}
+                  to={`/exams/${mandate.uploaded_transcript}`}
+                >
+                  {mandate.uploaded_transcript_display_name}
+                </Anchor>
+                .
+              </>
+            )}
+            {mandate.fulfilled_at == null &&
+              mandate.checked_state !== "excused" &&
+              (isAfter(new Date(), parseISO(mandate.due_date)) ? (
+                <>
+                  Mandate not fulfilled and deadline exceeded by over{" "}
+                  {differenceInCalendarDays(
+                    new Date(),
+                    parseISO(mandate.due_date),
+                  )}{" "}
+                  days!
+                </>
+              ) : (
+                <>
+                  {differenceInCalendarDays(
+                    parseISO(mandate.due_date),
+                    new Date(),
+                  )}{" "}
+                  days left to fulfill.
+                </>
+              ))}
+            {mandate.checked_state === "rejected" && (
+              <>
+                The mandate was last rejected on{" "}
+                {lightFormat(
+                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                  mandate.checked_at!,
+                  GlobalConsts.dateFNSFormatString,
+                )}
+                , after being fulfilled on the{" "}
+                {lightFormat(
+                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                  mandate.fulfilled_at!,
+                  GlobalConsts.dateFNSFormatString,
+                )}
+                . It needs to be amended until{" "}
+                {lightFormat(
+                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                  mandate.grace_until!,
+                  GlobalConsts.dateFNSFormatString,
+                )}
+                .<br />
+              </>
+            )}
+          </ListItem>
+        );
+      })}
+    </List>
+  );
+};
+
 const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const user = useUser()!;
   const isAdmin = user.isAdmin;
   const {
@@ -74,113 +171,20 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
     },
   });
   const { error: categoriesError, data: categories } =
-    useRequest(loadCategories);
-  const error = mandatesError || addError || categoriesError;
+    useListCategoriesOnlyAdmin();
+  const error = mandatesError ?? addError ?? categoriesError;
   const [
     addMandateModalIsOpen,
     { open: openAddMandateModal, close: closeAddMandateModal },
   ] = useDisclosure();
 
-  if (!isAdmin && userProps.username !== user.username) {
+  if (!isAdmin && userProps.username !== user.user?.username) {
     throw new Error("You are not authorized to view this user's mandates.");
   }
 
-  const groupedMandates = Object.groupBy(mandates?.value ?? [], mandate =>
+  const groupedMandates = Object.groupBy(mandates ?? [], mandate =>
     getMandateStatusType(mandate),
   );
-
-  const renderMandates = (mandates: MandateSchema[]) => {
-    return (
-      <List>
-        {mandates.map(mandate => {
-          return (
-            <ListItem key={mandate.id}>
-              Mandate on category{" "}
-              <Anchor component={Link} to={`/category/${mandate.category}`}>
-                {mandate.category_display_name}
-              </Anchor>
-              : signed up for on{" "}
-              {lightFormat(
-                mandate.created_at,
-                GlobalConsts.dateFNSFormatString,
-              )}
-              , due on{" "}
-              {lightFormat(
-                mandate.due_date,
-                GlobalConsts.dateFNSFormatStringDate,
-              )}
-              <br />
-              {mandate.checked_state === "excused" && (
-                <>The mandate was excused by an administrator.</>
-              )}
-              {mandate.checked_state === "accepted" && (
-                <>
-                  The mandate was accepted by an administrator on{" "}
-                  {lightFormat(
-                    mandate.checked_at!,
-                    GlobalConsts.dateFNSFormatString,
-                  )}
-                  , which the user uploaded on
-                  {lightFormat(
-                    mandate.fulfilled_at!,
-                    GlobalConsts.dateFNSFormatString,
-                  )}
-                  . The document is found at:{" "}
-                  <Anchor
-                    component={Link}
-                    to={`/exams/${mandate.uploaded_transcript}`}
-                  >
-                    {mandate.uploaded_transcript_display_name}
-                  </Anchor>
-                  .
-                </>
-              )}
-              {mandate.fulfilled_at == null &&
-                mandate.checked_state !== "excused" &&
-                (isAfter(new Date(), parseISO(mandate.due_date)) ? (
-                  <>
-                    Mandate not fulfilled and deadline exceeded by over{" "}
-                    {differenceInCalendarDays(
-                      new Date(),
-                      parseISO(mandate.due_date),
-                    )}{" "}
-                    days!
-                  </>
-                ) : (
-                  <>
-                    {differenceInCalendarDays(
-                      parseISO(mandate.due_date),
-                      new Date(),
-                    )}{" "}
-                    days left to fulfill.
-                  </>
-                ))}
-              {mandate.checked_state === "rejected" && (
-                <>
-                  The mandate was last rejected on{" "}
-                  {lightFormat(
-                    mandate.checked_at!,
-                    GlobalConsts.dateFNSFormatString,
-                  )}
-                  , after being fulfilled on the{" "}
-                  {lightFormat(
-                    mandate.fulfilled_at!,
-                    GlobalConsts.dateFNSFormatString,
-                  )}
-                  . It needs to be amended until{" "}
-                  {lightFormat(
-                    mandate.grace_until!,
-                    GlobalConsts.dateFNSFormatString,
-                  )}
-                  .<br />
-                </>
-              )}
-            </ListItem>
-          );
-        })}
-      </List>
-    );
-  };
 
   return (
     <div>
@@ -208,27 +212,26 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
         <Divider my="md" />
         Select the category:
         <List>
-          {categories &&
-            categories.map(cat => {
-              return (
-                <ListItem key={cat.slug}>
-                  <Button
-                    onClick={() => {
-                      add({
-                        data: {
-                          username: userProps.username,
-                          category: cat.slug,
-                        },
-                      });
-                      closeAddMandateModal();
-                    }}
-                    variant="subtle"
-                  >
-                    {cat.displayname}
-                  </Button>
-                </ListItem>
-              );
-            })}
+          {categories?.map(cat => {
+            return (
+              <ListItem key={cat.slug}>
+                <Button
+                  onClick={() => {
+                    add({
+                      data: {
+                        username: userProps.username,
+                        category: cat.slug,
+                      },
+                    });
+                    closeAddMandateModal();
+                  }}
+                  variant="subtle"
+                >
+                  {cat.displayname}
+                </Button>
+              </ListItem>
+            );
+          })}
         </List>
       </Modal>
 
@@ -246,7 +249,10 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
             date.
           </Alert>
 
-          {renderMandates(groupedMandates[MandateStatusType.OPEN_ONGOING]!)}
+          {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
+          <RenderMandates
+            mandates={groupedMandates[MandateStatusType.OPEN_ONGOING]!}
+          />
         </div>
       )}
 
@@ -263,7 +269,10 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
             <strong>account blockage</strong>.
           </Alert>
 
-          {renderMandates(groupedMandates[MandateStatusType.REJECTED_GRACE]!)}
+          {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
+          <RenderMandates
+            mandates={groupedMandates[MandateStatusType.REJECTED_GRACE]!}
+          />
         </div>
       )}
 
@@ -280,7 +289,10 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
             any access to Community Solutions.
           </Alert>
 
-          {renderMandates(groupedMandates[MandateStatusType.REJECTED_OVERDUE]!)}
+          {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
+          <RenderMandates
+            mandates={groupedMandates[MandateStatusType.REJECTED_OVERDUE]!}
+          />
         </div>
       )}
 
@@ -297,7 +309,10 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
             preventing any access to Community Solutions.
           </Alert>
 
-          {renderMandates(groupedMandates[MandateStatusType.OPEN_OVERDUE]!)}
+          {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
+          <RenderMandates
+            mandates={groupedMandates[MandateStatusType.OPEN_OVERDUE]!}
+          />
         </div>
       )}
 
@@ -313,7 +328,10 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
             These mandates are archived and do not require any further action.
           </Alert>
 
-          {renderMandates(groupedMandates[MandateStatusType.ARCHIVED]!)}
+          {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
+          <RenderMandates
+            mandates={groupedMandates[MandateStatusType.ARCHIVED]!}
+          />
         </div>
       )}
     </div>
