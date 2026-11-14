@@ -13,7 +13,7 @@ function parseVersions(source: string): {
   version: string;
   content: string;
 }[] {
-  const matches: { version: string; content: string }[] = [];
+  const matches: { version: string; content: string; title: string }[] = [];
   const sections = [...source.matchAll(LEVEL_2_HEADING)];
 
   let previousIndex = undefined;
@@ -31,6 +31,7 @@ function parseVersions(source: string): {
 
     matches.unshift({
       version,
+      title: m[1],
       content,
     });
 

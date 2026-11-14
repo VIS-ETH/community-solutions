@@ -48,7 +48,7 @@ const ChangelogPage: React.FC = () => {
             <Timeline.Item
               title={
                 <Group wrap="nowrap" gap="xs" mb="lg">
-                  <Title order={2}>{version.version}</Title>
+                  <Title order={2}>{version.title}</Title>
                   {index < lastSeenIndex && (
                     <Badge color="brand">New since your last visit</Badge>
                   )}
