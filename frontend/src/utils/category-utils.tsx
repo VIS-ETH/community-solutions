@@ -50,20 +50,31 @@ export const mapExamsToExamType = (exams: ListExamsResponse[]) => {
   ].sort(([a], [b]) => a.localeCompare(b));
 };
 export const dlSelectedExams = async (
+  categoryName: string,
   selectedExams: ExamSelectedForDownload[],
 ) => {
+  categoryName = categoryName.replaceAll(/\s/g, "_");
+  const examtypes = new Set<string>();
+  for (const exam of selectedExams) {
+    examtypes.add(exam.examtype);
+  }
   const zipFileItems = selectedExams.map(
     async (exam): Promise<ZipFileItem | undefined> => {
       const { value } = await getExamPdfUrl(exam.filename);
       const responseFile = fetch(value.url).then(r => r.arrayBuffer());
-
+      let documentCategoryName: string;
+      if (examtypes.size === 1) {
+        documentCategoryName = exam.displayname + "-" + categoryName;
+      } else {
+        documentCategoryName =
+          exam.examtype + "/" + exam.displayname + "-" + categoryName;
+      }
       return {
-        displayName: exam.displayname,
+        displayName: documentCategoryName,
         filename: exam.filename,
         file: responseFile,
       };
     },
   );
-
-  await downloadZipFile("exams.zip", zipFileItems);
+  await downloadZipFile("exams-" + categoryName + ".zip", zipFileItems);
 };

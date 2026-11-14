@@ -51,6 +51,7 @@ const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
     for (const exam of data) {
       if (selected.has(exam.filename))
         selectedExams.push({
+          examtype: exam.examtype,
           filename: exam.filename,
           displayname: exam.displayname,
         });
@@ -74,7 +75,12 @@ const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
         <Flex gap="sm" align="center">
           <Button
             disabled={selected.size === 0}
-            onClick={() => void dlSelectedExams(getSelectedExams(selected))}
+            onClick={() =>
+              void dlSelectedExams(
+                metaData.displayname,
+                getSelectedExams(selected),
+              )
+            }
             leftSection={<IconDownload />}
           >
             Download selected exams
