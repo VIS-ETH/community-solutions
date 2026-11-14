@@ -216,34 +216,6 @@ export function getCookie(name: string): string | null {
   }
   return cookieValue;
 }
-export async function fetchPost<T = any>(
-  url: string,
-  data: Record<string, any>,
-): Promise<T> {
-  const response = await performDataRequest<T>("POST", url, data);
-  return response.data;
-}
-
-export async function fetchPut<T = any>(
-  url: string,
-  data: Record<string, any>,
-): Promise<T> {
-  const response = await performDataRequest<T>("PUT", url, data);
-  return response.data;
-}
-
-export async function fetchPatch<T = any>(
-  url: string,
-  data: Record<string, any>,
-): Promise<T> {
-  const response = await performDataRequest<T>("PATCH", url, data);
-  return response.data;
-}
-
-export async function fetchDelete<T = any>(url: string): Promise<T> {
-  const response = await performRequest<T>("DELETE", url);
-  return response.data;
-}
 
 export async function fetchGet<T = any>(url: string): Promise<T> {
   const response = await performRequest<T>("GET", url);
