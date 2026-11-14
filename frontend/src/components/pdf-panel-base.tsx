@@ -105,6 +105,10 @@ const PdfPanelBase: React.FC<PdfPanelBaseProps> = ({
     return inViewPages ? Math.min(...Array.from(inViewPages)) : undefined;
   }, [inViewPages]);
 
+  const pages = visiblePages
+    ? [...visiblePages].sort((a, b) => a - b)
+    : Array.from({ length: renderer?.document.numPages ?? 0 }, (_, i) => i + 1);
+
   function handlePageInput(input: string) {
     input = input.trim();
 
@@ -134,13 +138,11 @@ const PdfPanelBase: React.FC<PdfPanelBaseProps> = ({
         <Title order={6}>Pages</Title>
         {renderer && (
           <Pagination
-            value={inViewPage}
-            total={visiblePages?.size ?? renderer.document.numPages}
+            value={pages.indexOf(inViewPage ?? 0) + 1}
+            total={pages.length}
             getItemProps={page => ({
               component: "a",
-              // #page-n will be the nth page that is shown in the screen, not
-              // the nth page in the PDF document.
-              href: `#page-${page}`,
+              href: `#page-${pages[page - 1]}`,
             })}
             withControls={false}
           />

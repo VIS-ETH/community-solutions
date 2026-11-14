@@ -1,3 +1,5 @@
+import { clearReadingPages } from "../utils/reading-page";
+
 /**
  * Minimum validity of the access token in seconds when a request to the API starts
  */
@@ -47,6 +49,7 @@ export function login(redirectUrl = window.location.pathname) {
 }
 
 export function logout(redirectUrl = window.location.pathname) {
+  clearReadingPages();
   const form = document.createElement("form");
   form.method = "POST";
   form.action = "/api/auth/logout";

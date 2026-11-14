@@ -53,11 +53,13 @@ import { UserContext, useUser } from "../auth";
 import Exam from "../components/exam";
 import ExamMetadataEditor from "../components/exam-metadata-editor";
 import ExamPanel from "../components/exam-panel";
+import ResumeReading from "../components/resume-reading";
 import IconButton from "../components/icon-button";
 import PrintExam from "../components/print-exam";
 import ContentContainer from "../components/secondary-container";
 import { TOC, TOCNode } from "../components/table-of-contents";
 import useSet from "../hooks/useSet";
+import useReadingPage from "../hooks/useReadingPage";
 import useTitle from "../hooks/useTitle";
 import { useRecentExams } from "../utils/recently-viewed-exams";
 import {
@@ -242,6 +244,13 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
     return s;
   }, [sections, displayOptions]);
 
+  const readingPage = useReadingPage(
+    metaData.filename,
+    inViewPages,
+    metaData.canView ? visiblePages : undefined,
+    sizeRef,
+  );
+
   const [expandedSections, expandSections, collapseSections] = useSet<number>();
   const answerSections = useMemo(() => {
     if (sections === undefined) return;
@@ -338,6 +347,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
             )}
           </Group>
         </Flex>
+        <ResumeReading {...readingPage} />
         {metaData.darkModeWarning && computedColorScheme === "dark" && (
           <Alert color="yellow" title="Dark mode warning" mb="md">
             Images are inverted in dark mode. This exam is marked as
@@ -652,6 +662,7 @@ const ExamPage: React.FC = () => {
                   }}
                 >
                   <ExamPageContent
+                    key={metadata.filename}
                     metaData={metadata}
                     sections={sections}
                     renderer={renderer}
