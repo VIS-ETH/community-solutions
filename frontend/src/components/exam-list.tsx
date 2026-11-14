@@ -92,7 +92,7 @@ const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
   };
   const downloadSolutionButton = (
     <Button
-      disabled={selected.size === 0 || !selectedExamsHasSolution(selected)} // MODIFIER ICI POUR LE PROBLEME
+      disabled={selected.size === 0 || !selectedExamsHasSolution(selected)}
       onClick={() =>
         void dlSelectedSolutions(
           metaData.displayname,
