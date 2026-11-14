@@ -44,7 +44,7 @@ import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSear
 import { UploadPdfForm } from "../components/upload-pdf-card";
 import { UploadTranscriptForm } from "../components/upload-transcript-card.js";
 import { useDisclosure } from "@mantine/hooks";
-import { createMandate } from "../api/hooks/mandates";
+import { useCreateMandate } from "../api/hooks/mandates";
 import {
   getGetCategoryMetadataQueryKey,
   getListCategoryExamsQueryKey,
@@ -115,15 +115,14 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
     showMandateAcceptModal,
     { open: openMandateAcceptModal, close: closeMandateAcceptModal },
   ] = useDisclosure(false);
-  const { loading: creatingMandate, run: runCreateMandate } = useRequest(
-    createMandate,
-    {
-      manual: true,
-      onSuccess: () => {
-        closeMandateAcceptModal();
+  const { isPending: creatingMandate, mutate: runCreateMandate } =
+    useCreateMandate({
+      mutation: {
+        onSuccess() {
+          closeMandateAcceptModal();
+        },
       },
-    },
-  );
+    });
 
   return (
     <>
@@ -159,7 +158,9 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
             loading={creatingMandate}
             onClick={() =>
               runCreateMandate({
-                category: metaData.slug,
+                data: {
+                  category: metaData.slug,
+                },
               })
             }
           >

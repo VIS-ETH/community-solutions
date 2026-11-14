@@ -50,14 +50,6 @@ class CheckMandateSchema(Schema):
     checked_state: Literal["accepted", "rejected", "excused"]
 
 
-class MandateListSchema(list[MandateSchema]):
-    pass
-
-
-class EmptySchema(Schema):
-    pass
-
-
 class Filters(Schema):
     username: str | None = None
     checked_state: Literal["accepted", "rejected", "excused"] | None = None
@@ -158,7 +150,7 @@ def create_mandate(request, data: Form[CreateMandateSchema]):
 @router.get(
     "/",
     response={
-        200: MandateListSchema,
+        200: list[MandateSchema],
         # Unauthenticated
         401: ErrorSchema,
         # Unauthorised
@@ -194,7 +186,6 @@ def get_mandates(request, filters: Query[Filters]):
         # Unauthorised
         403: ErrorSchema,
         404: ErrorSchema,
-        304: EmptySchema,
     },
     operation_id="fulfillMandate",
 )
@@ -227,7 +218,7 @@ def fulfill_mandate(request, mandate_id: str):
 @router.delete(
     "/{mandate_id}/",
     response={
-        204: EmptySchema,
+        204: None,
         # Unauthenticated
         401: ErrorSchema,
         # Unauthorised
@@ -247,7 +238,7 @@ def delete_mandate(request, mandate_id: str):
             return response.not_allowed()
 
         mandate.delete()
-    return 204, {}
+    return 204, None
 
 
 @router.post(
