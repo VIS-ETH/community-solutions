@@ -44,8 +44,8 @@ const displayNameGetter = (data: ListCategoriesWithMetaResponse) =>
 
 const loadCategoryData = async () => {
   const [categories, metaCategories] = await Promise.all([
-    listCategoriesWithMeta().then(res => res.value),
-    listMetaCategories().then(res => res.value),
+    listCategoriesWithMeta(),
+    listMetaCategories(),
   ]);
   return [
     categories.sort((a, b) => a.displayname.localeCompare(b.displayname)),
@@ -307,7 +307,7 @@ export const CategoryList: React.FC = () => {
             <Loader size="xs" color="gray" pos="absolute" top={0} right={0} />
           )}
           {error ? (
-            <Alert color="red">{error.toString()}</Alert>
+            <Alert color="red">{error.message}</Alert>
           ) : filter.length > 0 || mode === "alphabetical" ? (
             <>
               <Grid>

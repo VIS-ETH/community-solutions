@@ -113,8 +113,8 @@ const FeedbackReader: React.FC = () => {
   };
 
   const sorted =
-    feedbacks.data?.value
-      .map(fb => {
+    feedbacks.data
+      ?.map(fb => {
         const date = parseISO(fb.time);
         return {
           ...fb,
@@ -132,9 +132,7 @@ const FeedbackReader: React.FC = () => {
 
   return (
     <>
-      {feedbacks.error && (
-        <Alert color="red">{(feedbacks.error as Error).message}</Alert>
-      )}
+      {feedbacks.error && <Alert color="red">{feedbacks.error.message}</Alert>}
       {feedbacks.isSuccess && (
         <>
           {mapEntries(categorized.waiting_action)}

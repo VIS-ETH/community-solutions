@@ -17,12 +17,7 @@ import {
   useGetAnswerSection,
   useRemoveCut,
 } from "../api/hooks/answers";
-import {
-  AnswerSchema,
-  AnswerSectionSchema,
-  AnswerKind,
-  ValueWrappedAnswerSectionSchema,
-} from "../api/model";
+import { AnswerSchema, AnswerSectionSchema, AnswerKind } from "../api/model";
 import { useUser } from "../auth";
 import useInitialState from "../hooks/useInitialState";
 import AnswerComponent from "./answer";
@@ -47,11 +42,11 @@ import AnswerSectionModal from "./answer-section-overlay";
 const getScore = (answer: AnswerSchema) =>
   answer.expertVotes * 10 + answer.upvotes;
 
-const selectSortedSection = ({
-  value,
-}: ValueWrappedAnswerSectionSchema): AnswerSectionSchema => ({
-  ...value,
-  answers: [...value.answers].sort((a, b) => getScore(b) - getScore(a)),
+const selectSortedSection = (
+  section: AnswerSectionSchema,
+): AnswerSectionSchema => ({
+  ...section,
+  answers: [...section.answers].sort((a, b) => getScore(b) - getScore(a)),
 });
 
 interface NameCardProps {
@@ -237,9 +232,7 @@ const AnswerSectionComponent: React.FC<Props> = React.memo(
     );
     const setAnswerSection = useCallback(
       (newData: AnswerSectionSchema) =>
-        queryClient.setQueryData(getGetAnswerSectionQueryKey(oid), {
-          value: newData,
-        }),
+        queryClient.setQueryData(getGetAnswerSectionQueryKey(oid), newData),
       [queryClient, oid],
     );
 

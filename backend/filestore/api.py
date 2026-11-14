@@ -8,7 +8,7 @@ from filestore.models import Attachment
 from myauth import auth_check
 from util import s3_util
 from util.response import not_possible
-from util.schemas import ErrorSchema, ValueWrapped
+from util.schemas import ErrorSchema
 
 router = Router(tags=["Filestore"])
 
@@ -26,7 +26,7 @@ class FilestoreUploadResult(Schema):
 @router.post(
     "upload/",
     response={
-        200: ValueWrapped[FilestoreUploadResult],
+        200: FilestoreUploadResult,
         400: ErrorSchema,
         401: ErrorSchema,
         403: ErrorSchema,
@@ -60,9 +60,7 @@ def upload_attachment(
     att.save()
     s3_util.save_uploaded_file_to_s3(settings.COMSOL_FILESTORE_DIR, filename, file)
 
-    return {
-        "value": FilestoreUploadResult(filename=filename),
-    }
+    return FilestoreUploadResult(filename=filename)
 
 
 class FilestoreEditSchema(Schema):

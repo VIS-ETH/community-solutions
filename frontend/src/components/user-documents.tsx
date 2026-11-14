@@ -47,10 +47,10 @@ const UserDocuments: React.FC<UserDocumentsProps> = ({
         Documents
       </h3>
       {documents.isError && (
-        <Alert color="red">{documents.error as unknown as string}</Alert>
+        <Alert color="red">{documents.error.message}</Alert>
       )}
-      {documents.data && displayDocuments(documents.data.value)}
-      {(!documents.data || documents.data.value.length === 0) && (
+      {documents.data && displayDocuments(documents.data)}
+      {(!documents.data || documents.data.length === 0) && (
         <Alert color="gray">No documents</Alert>
       )}
       {documents.isLoading && <Loader />}
@@ -59,12 +59,10 @@ const UserDocuments: React.FC<UserDocumentsProps> = ({
         <>
           <h3>Liked Documents</h3>
           {likedDocuments.isError && (
-            <Alert color="red">
-              {likedDocuments.error as unknown as string}
-            </Alert>
+            <Alert color="red">{likedDocuments.error.message}</Alert>
           )}
-          {likedDocuments.data && displayDocuments(likedDocuments.data.value)}
-          {(!likedDocuments.data || likedDocuments.data.value.length === 0) && (
+          {likedDocuments.data && displayDocuments(likedDocuments.data)}
+          {(!likedDocuments.data || likedDocuments.data.length === 0) && (
             <Alert color="gray">No liked documents</Alert>
           )}
           {likedDocuments.isLoading && <Loader />}

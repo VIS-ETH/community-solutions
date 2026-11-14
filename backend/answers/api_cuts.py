@@ -6,7 +6,7 @@ from answers.models import AnswerSection, Exam
 from answers.section_util import AnswerSectionSchema
 from myauth import auth_check
 from util import response
-from util.schemas import ErrorSchema, ValueWrapped
+from util.schemas import ErrorSchema
 
 router = Router(tags=["Answers"])
 
@@ -23,7 +23,7 @@ class CutPageSchema(Schema):
 @router.get(
     "/cuts/{filename}/",
     response={
-        200: ValueWrapped[dict[int, list[CutPageSchema]]],
+        200: dict[int, list[CutPageSchema]],
         401: ErrorSchema,
         404: ErrorSchema,
     },
@@ -47,9 +47,7 @@ def get_cuts(request, filename: str):
     for page in pages.values():
         page.sort(key=lambda x: x.relHeight)
 
-    return {
-        "value": pages,
-    }
+    return pages
 
 
 class AddCutRequestBody(Schema):
@@ -145,7 +143,7 @@ def remove_cut(request, oid: int):
 @router.get(
     "/cutversions/{filename}/",
     response={
-        200: ValueWrapped[dict[int, int]],
+        200: dict[int, int],
         401: ErrorSchema,
         404: ErrorSchema,
     },
@@ -158,15 +156,13 @@ def get_cut_versions(request, filename: str):
     for section in exam.answersection_set.all():
         res[section.id] = section.cut_version
 
-    return {
-        "value": res,
-    }
+    return res
 
 
 @router.get(
     "/answersection/{oid}/",
     response={
-        200: ValueWrapped[AnswerSectionSchema],
+        200: AnswerSectionSchema,
         401: ErrorSchema,
         404: ErrorSchema,
     },
@@ -185,4 +181,4 @@ def get_answersection(request, oid: int):
         ),
         pk=oid,
     )
-    return {"value": section_util.get_answersection_response(request, section)}
+    return section_util.get_answersection_response(request, section)

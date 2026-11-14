@@ -30,21 +30,26 @@ const UserPage: React.FC = () => {
   const {
     isError,
     isPending,
+    error,
     data: userInfo,
   } = useGetUserScores(username, {
     query: {
-      select: data => data.value,
       retry: false, // immediately fail if errored
     },
   });
 
   const [activeTab, setActiveTab] = useState<string | null>("overview");
 
-  // Assume any error is because of 404
-  // Other error from not being logged in shouldn't happen
-  // as we can't get here (this component) without being logged in
-  if (isError) {
+  if (isError && error.status === 404) {
     return <NotFoundPage />;
+  }
+
+  if (isError) {
+    return (
+      <Container size="xl">
+        <Alert color="red">{error.message}</Alert>
+      </Container>
+    );
   }
 
   return (

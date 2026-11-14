@@ -132,7 +132,7 @@ const FlaggedContent: React.FC = () => {
     error: flaggedError,
     isLoading: flaggedLoading,
     data: flaggedList,
-  } = useListFlagged({ query: { select: data => data.value } });
+  } = useListFlagged();
 
   const [mode, setMode] = useLocalStorage({
     key: "flaggedMode",

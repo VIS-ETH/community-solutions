@@ -5,7 +5,7 @@ from ninja import Field, Form, ModelSchema, Router, Schema
 from feedback.models import Feedback
 from myauth import auth_check
 from myauth.models import get_my_user
-from util.schemas import ValueWrapped
+from util.schemas import ErrorSchema
 
 router = Router(tags=["Feedback"])
 
@@ -14,7 +14,9 @@ class FeedbackSchema(Schema):
     text: str
 
 
-@router.post("/submit/", operation_id="submitFeedback")
+@router.post(
+    "/submit/", response={200: None, 401: ErrorSchema}, operation_id="submitFeedback"
+)
 @auth_check.require_login
 def submit(request, data: Form[FeedbackSchema]):
     feedback = Feedback(author=request.user, text=data.text)
@@ -61,14 +63,18 @@ class FeedbackOut(ModelSchema):
         return obj.read
 
 
-class FeedbackList(ValueWrapped[list[FeedbackOut]]):
-    pass
-
-
-@router.get("/list/", response=FeedbackList, operation_id="listFeedback")
+@router.get(
+    "/list/",
+    response={
+        200: list[FeedbackOut],
+        401: ErrorSchema,
+        403: ErrorSchema,
+    },
+    operation_id="listFeedback",
+)
 @auth_check.require_admin
 def list_all(request):
-    return {"value": Feedback.objects.select_related("author").all()}
+    return Feedback.objects.select_related("author").all()
 
 
 class FeedbackFlagsSchema(Schema):
@@ -80,7 +86,16 @@ class FeedbackReplySchema(Schema):
     reply: str
 
 
-@router.post("/reply/{feedbackid}/", operation_id="createFeedbackReply")
+@router.post(
+    "/reply/{feedbackid}/",
+    response={
+        200: None,
+        401: ErrorSchema,
+        403: ErrorSchema,
+        404: ErrorSchema,
+    },
+    operation_id="createFeedbackReply",
+)
 @auth_check.require_admin
 def replies(request, feedbackid: int, data: Form[FeedbackReplySchema]):
     feedback = get_object_or_404(Feedback, pk=feedbackid)
@@ -95,7 +110,16 @@ def replies(request, feedbackid: int, data: Form[FeedbackReplySchema]):
         new_feedback_reply(request.user, feedback)
 
 
-@router.post("/flags/{feedbackid}/", operation_id="setFeedbackFlags")
+@router.post(
+    "/flags/{feedbackid}/",
+    response={
+        200: None,
+        401: ErrorSchema,
+        403: ErrorSchema,
+        404: ErrorSchema,
+    },
+    operation_id="setFeedbackFlags",
+)
 @auth_check.require_admin
 def flags(request, feedbackid: int, data: Form[FeedbackFlagsSchema]):
     feedback = get_object_or_404(Feedback, pk=feedbackid)

@@ -19,7 +19,6 @@ import React, { lazy, Suspense, useEffect, useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import {
   getAuthenticationExpiry,
-  fetchGet,
   getCookie,
   isTokenExpired,
   login,
@@ -180,9 +179,15 @@ const App: React.FC = () => {
     // `yarn start` as only certain pages will set the csrf cookie.
     // Technically the application won't work until the promise resolves, but we just
     // hope that the user doesn't do anything in that time.
-    if (getCookie("csrftoken") === null) {
-      void fetchGet("/api/can_i_haz_csrf_cookie/");
-    }
+    if (getCookie("csrftoken") !== null) return;
+    const controller = new AbortController();
+    fetch("/api/can_i_haz_csrf_cookie/", {
+      credentials: "include",
+      signal: controller.signal,
+    }).catch(() => {
+      // ignore
+    });
+    return () => controller.abort();
   }, []);
   const [user, setUser] = useState<User | undefined>(undefined);
   useEffect(() => {
@@ -191,7 +196,7 @@ const App: React.FC = () => {
       authViewMe().then(
         res => {
           if (cancelled) return;
-          setUser(res.value);
+          setUser(res);
         },
         () => {
           setUser(notLoggedIn);
@@ -227,8 +232,7 @@ const App: React.FC = () => {
       // requests to fire while the user was idle. So we pick on it in particular.
       const { token: exp } = getAuthenticationExpiry();
       if (exp && !isTokenExpired(exp)) {
-        const response = await getNotificationUnreadCount();
-        return response.value;
+        return getNotificationUnreadCount();
       }
       return undefined;
     },

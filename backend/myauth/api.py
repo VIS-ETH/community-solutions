@@ -20,7 +20,6 @@ from ninja import Cookie, Form, P, Query, Router, Schema
 
 from myauth import auth_check
 from users.api import UserSchema
-from util.schemas import ValueWrapped
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +37,7 @@ class User(Schema):
 @router.get(
     "me/",
     response={
-        200: ValueWrapped[User],
+        200: User,
     },
     operation_id="authViewMe",
 )
@@ -58,9 +57,7 @@ def me_view(request):
             user=None,
         )
 
-    return {
-        "value": user,
-    }
+    return user
 
 
 def redirect_url_from_host(host: str):

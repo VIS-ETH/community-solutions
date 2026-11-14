@@ -66,13 +66,13 @@ const applyChanges = async (
 
   if (Object.keys(metadataDiff).length > 0) {
     const fetchedMetaData = await setCategoryMetadata(slug, metadataDiff);
-    slug = fetchedMetaData.value.slug;
+    slug = fetchedMetaData.slug;
   }
 
   const newAttachments: CategoryDataAttachment[] = [];
   for (const attachment of newMetaData.attachments) {
     if (attachment.filename instanceof File) {
-      const { value: uploadResponse } = await uploadAttachment({
+      const uploadResponse = await uploadAttachment({
         category: slug,
         displayname: attachment.displayname,
         file: attachment.filename,
@@ -236,7 +236,7 @@ const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
         <h2>Edit Category</h2>
         <CloseButton onClick={close} />
       </Group>
-      {error && <Alert color="red">{error.toString()}</Alert>}
+      {error && <Alert color="red">{error.message}</Alert>}
       <Title order={4} mb="xs">
         Metadata
       </Title>

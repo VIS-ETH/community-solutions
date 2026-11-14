@@ -9,7 +9,7 @@ import type { EnableNotificationBodyType } from "../api/model";
 const UserNotificationsSettings: React.FC = () => {
   const enabled = useGetEnabledNotifications({
     query: {
-      select: data => new Set(data.value),
+      select: data => new Set(data),
     },
   });
   const setEnabled = useEnableNotification({
@@ -37,7 +37,7 @@ const UserNotificationsSettings: React.FC = () => {
   return (
     <>
       <h3>Notifications</h3>
-      {error && <Alert color="red">{error as unknown as string}</Alert>}
+      {error && <Alert color="red">{error.message}</Alert>}
       <Stack gap="sm">
         <Checkbox
           label="Comment to my answer"

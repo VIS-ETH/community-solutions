@@ -92,8 +92,8 @@ const AnswerComponent: React.FC<Props> = ({
   const [viewSource, { toggle: toggleViewSource }] = useDisclosure();
   const onSectionMutated = {
     mutation: {
-      onSuccess: ({ value }: { value: AnswerSectionSchema }) =>
-        onSectionChanged?.(value),
+      onSuccess: (newSection: AnswerSectionSchema) =>
+        onSectionChanged?.(newSection),
     },
   };
   const { isPending: setFlaggedLoading, mutate: setAnswerFlagged } =
@@ -110,9 +110,9 @@ const AnswerComponent: React.FC<Props> = ({
   const answerId = section?.oid;
   const { isPending: updating, mutate: update } = useSetAnswer({
     mutation: {
-      onSuccess: ({ value }) => {
+      onSuccess: newSection => {
         setEditing(false);
-        onSectionChanged?.(value);
+        onSectionChanged?.(newSection);
         if (answer === undefined && onDelete) onDelete();
         clearDraftFromStorage(answerId, "answer");
       },

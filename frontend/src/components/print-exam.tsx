@@ -37,7 +37,7 @@ export default class PrintExam extends React.Component<Props, State> {
         })
         .catch((error: unknown) => {
           this.setState({
-            error: error as string,
+            error: error instanceof Error ? error.message : (error as string),
           });
         });
     } else {

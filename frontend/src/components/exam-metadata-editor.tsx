@@ -91,7 +91,7 @@ const applyChanges = async (
   const newAttachments: Attachment[] = [];
   for (const attachment of newMetaData.attachments) {
     if (attachment.filename instanceof File) {
-      const { value: uploadResult } = await uploadAttachment({
+      const uploadResult = await uploadAttachment({
         exam: filename,
         displayname: attachment.displayname,
         file: attachment.filename,
@@ -133,7 +133,7 @@ const applyChanges = async (
       filename,
     });
     metaDataDiff.isPrintonly = true;
-    metaDataDiff.printonlyFile = result.value.url;
+    metaDataDiff.printonlyFile = result.url;
   }
 
   if (masterSolution === undefined && oldMetaData.hasSolution) {
@@ -145,7 +145,7 @@ const applyChanges = async (
       filename,
     });
     metaDataDiff.hasSolution = true;
-    metaDataDiff.solutionFile = result.value.url;
+    metaDataDiff.solutionFile = result.url;
   }
 
   return {
@@ -166,14 +166,8 @@ const ExamMetadataEditor: React.FC<Props> = ({
   closeEditPage,
   onMetaDataChange,
 }) => {
-  const { data: categories } = useListCategoriesOnlyAdmin({
-    query: {
-      select: ({ value: data }) => data,
-    },
-  });
-  const { data: examTypes } = useListExamTypes({
-    query: { select: data => data.value },
-  });
+  const { data: categories } = useListCategoriesOnlyAdmin();
+  const { data: examTypes } = useListExamTypes();
   const categoryOptions =
     categories &&
     createOptions(
@@ -228,7 +222,7 @@ const ExamMetadataEditor: React.FC<Props> = ({
         <Title order={2}>Edit Exam</Title>
         <CloseButton onClick={closeEditPage} />
       </Group>
-      {error && <Alert color="red">{error.toString()}</Alert>}
+      {error && <Alert color="red">{error.message}</Alert>}
       <Title order={5}>Metadata</Title>
       <Grid>
         <Grid.Col span={{ md: 6 }}>
@@ -322,7 +316,7 @@ const ExamMetadataEditor: React.FC<Props> = ({
                 size="sm"
                 onClick={() =>
                   void getPrintonlyPdfUrl(currentMetaData.filename).then(
-                    ({ value }) => download(value.url, value.displayName),
+                    ({ url, displayName }) => download(url, displayName),
                   )
                 }
               >
@@ -345,7 +339,7 @@ const ExamMetadataEditor: React.FC<Props> = ({
                 size="sm"
                 onClick={() =>
                   void getSolutionPdfUrl(currentMetaData.filename).then(
-                    ({ value }) => download(value.url, value.displayName),
+                    ({ url, displayName }) => download(url, displayName),
                   )
                 }
               >

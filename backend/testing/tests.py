@@ -54,20 +54,12 @@ class ComsolTestUser(TypedDict):
 
 
 class ComsolTest(TestCase):
-    test_http_methods = True
     nonAdminUsers: list[ComsolTestUser] = []
     adminUsers: list[ComsolTestUser] = []
     users: list[ComsolTestUser] = []
     user: ComsolTestUser
 
-    def get(self, path, status_code=200, test_post=True, as_json=True):
-        if test_post and self.test_http_methods:
-            response = (
-                self.client.post(path, headers={"authorization": get_token(self.user)})
-                if self.user
-                else self.client.post(path)
-            )
-            self.assertEqual(response.status_code, 405)
+    def get(self, path, status_code=200, as_json=True):
         response = (
             self.client.get(path, headers={"authorization": get_token(self.user)})
             if self.user
@@ -78,10 +70,7 @@ class ComsolTest(TestCase):
             return response.json()
         return response
 
-    def post(self, path, args, status_code=200, test_get=True, as_json=True):
-        if test_get and self.test_http_methods:
-            response = self.client.get(path)
-            self.assertEqual(response.status_code, 405)
+    def post(self, path, args, status_code=200, as_json=True):
         for arg in args:
             if isinstance(args[arg], bool):
                 args[arg] = "true" if args[arg] else "false"

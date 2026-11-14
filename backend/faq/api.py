@@ -4,7 +4,7 @@ from ninja import Form, Router, Schema
 
 from faq.models import FAQuestion
 from myauth import auth_check
-from util.schemas import ErrorSchema, ValueWrapped
+from util.schemas import ErrorSchema
 
 router = Router(tags=["Faq"])
 
@@ -28,7 +28,7 @@ def get_faq_obj(faq: FAQuestion) -> FaqEntry:
 @router.get(
     "/",
     response={
-        200: ValueWrapped[list[FaqEntry]],
+        200: list[FaqEntry],
         401: ErrorSchema,
     },
     operation_id="listFaqEntries",
@@ -37,9 +37,7 @@ def get_faq_obj(faq: FAQuestion) -> FaqEntry:
 def list_faq_entries(request):
     res = [get_faq_obj(q) for q in FAQuestion.objects.order_by("order", "pk").all()]
 
-    return {
-        "value": res,
-    }
+    return res
 
 
 class NewFaqEntrySchema(Schema):
@@ -51,7 +49,7 @@ class NewFaqEntrySchema(Schema):
 @router.post(
     "/",
     response={
-        200: ValueWrapped[FaqEntry],
+        200: FaqEntry,
         401: ErrorSchema,
         403: ErrorSchema,
     },
@@ -65,13 +63,13 @@ def add_faq_entry(request, body: Form[NewFaqEntrySchema]):
         order=body.order,
     )
     faq.save()
-    return {"value": get_faq_obj(faq)}
+    return get_faq_obj(faq)
 
 
 @router.get(
     "{id}/",
     response={
-        200: ValueWrapped[FaqEntry],
+        200: FaqEntry,
         401: ErrorSchema,
         404: ErrorSchema,
     },
@@ -80,9 +78,7 @@ def add_faq_entry(request, body: Form[NewFaqEntrySchema]):
 @auth_check.require_login
 def get_faq_entry(request, id: int):
     faq = get_object_or_404(FAQuestion, pk=id)
-    return {
-        "value": get_faq_obj(faq),
-    }
+    return get_faq_obj(faq)
 
 
 class UpdateFaqEntrySchema(Schema):
@@ -94,7 +90,7 @@ class UpdateFaqEntrySchema(Schema):
 @router.put(
     "{id}/",
     response={
-        200: ValueWrapped[FaqEntry],
+        200: FaqEntry,
         401: ErrorSchema,
         403: ErrorSchema,
         404: ErrorSchema,
@@ -113,7 +109,7 @@ def update_faq_entry(request, id: int, body: Form[UpdateFaqEntrySchema]):
         faq.order = body.order
 
     faq.save()
-    return {"value": get_faq_obj(faq)}
+    return get_faq_obj(faq)
 
 
 @router.delete(

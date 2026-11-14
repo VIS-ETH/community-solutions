@@ -23,11 +23,7 @@ const UserPayments: React.FC<UserPaymentsProps> = ({ username }) => {
     error: paymentsError,
     data: payments,
     refetch: reloadPayments,
-  } = useGetPayments(username, {
-    query: {
-      select: ({ value: data }) => data,
-    },
-  });
+  } = useGetPayments(username);
   const { error: refundError, mutate: refund } = useRefundPayment({
     mutation: {
       onSuccess: async () => reloadPayments(),
@@ -48,7 +44,7 @@ const UserPayments: React.FC<UserPaymentsProps> = ({ username }) => {
   const [openPayment, setOpenPayment] = useState<number | null>(null);
   return (
     <div>
-      {error && <Alert color="red">{error as unknown as string}</Alert>}
+      {error && <Alert color="red">{error.message}</Alert>}
       <h3>Paid Oral Exams</h3>
       {payments && (payments.length > 0 || isAdmin) && (
         <>

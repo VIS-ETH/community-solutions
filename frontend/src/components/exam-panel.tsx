@@ -101,7 +101,7 @@ const ExamPanel: React.FC<ExamPanelProps> = ({
     data: exam,
     refetch: reloadExam,
   } = useGetExamAdminStatus(metaData.filename, {
-    query: { enabled: user?.isAdmin ?? false, select: data => data.value },
+    query: { enabled: user?.isAdmin ?? false },
   });
 
   return (
@@ -143,9 +143,7 @@ const ExamPanel: React.FC<ExamPanelProps> = ({
       {canEdit && (
         <>
           {examError && (
-            <Text>
-              Could not load admin info: {examError as unknown as string}
-            </Text>
+            <Text>Could not load admin info: {examError.message}</Text>
           )}
           {exam && user?.user && (
             <>

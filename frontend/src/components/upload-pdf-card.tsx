@@ -29,7 +29,6 @@ export const UploadPdfForm: React.FC<UploadPdfFormProps> = ({
   } = useListCategoriesOnlyAdmin({
     query: {
       enabled: !!givenCategory,
-      select: ({ value: data }) => data,
     },
   });
   const {
@@ -38,7 +37,7 @@ export const UploadPdfForm: React.FC<UploadPdfFormProps> = ({
     mutate: upload,
   } = useUploadExamPdf({
     mutation: {
-      onSuccess: ({ value: filename }) => void navigate(`/exams/${filename}`),
+      onSuccess: filename => void navigate(`/exams/${filename}`),
     },
   });
   const [validationError, setValidationError] = useState("");
@@ -71,8 +70,11 @@ export const UploadPdfForm: React.FC<UploadPdfFormProps> = ({
   return (
     <form onSubmit={onSubmit}>
       <Stack mt="sm">
-        {/* eslint-disable-next-line @typescript-eslint/no-base-to-string */}
-        {error && <Alert color="red">{error.toString()}</Alert>}
+        {error && (
+          <Alert color="red">
+            {error instanceof Error ? error.message : error}
+          </Alert>
+        )}
         <FileInput
           label="File"
           placeholder="Click to choose file..."

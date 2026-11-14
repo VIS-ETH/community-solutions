@@ -41,7 +41,7 @@ class Client:
         return r
 
 def guess_category(client, foldername):
-    categories = client.get('/api/category/list/').json()["value"]
+    categories = client.get('/api/category/list/').json()
     best_guess = difflib.get_close_matches(foldername, categories, n=10, cutoff=0.2)
     if best_guess:
         print("Which category do you want to use for", foldername)
@@ -86,7 +86,7 @@ def yesno(prompt, default):
 
 
 def category_to_slug(client, category):
-    categories = client.get('/api/category/listwithmeta/').json()["value"]
+    categories = client.get('/api/category/listwithmeta/').json()
     for cat in categories:
         if cat['displayname'] == category:
             return cat['slug']
@@ -103,7 +103,7 @@ def upload(client, category, dummy, real, displayname):
         displayname=displayname,
     )
     fil.close()
-    newfilename = r.json()["filename"]
+    newfilename = r.json()
     print("Upload real pdf", real)
     fil = open(real, 'rb')
     client.post(

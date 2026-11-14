@@ -25,17 +25,9 @@ const UserAnswers: React.FC<UserAnswersProps> = ({ username }) => {
     isLoading: loading,
     data,
     refetch,
-  } = useListAnswersByUser(
-    username,
-    {
-      page: -1,
-    },
-    {
-      query: {
-        select: data => data.value,
-      },
-    },
-  );
+  } = useListAnswersByUser(username, {
+    page: -1,
+  });
   const [lastElement, setLastElement] = useState<HTMLDivElement | null>(null);
 
   const PAGE_SIZE = 10; // loads a limited amount of new elements at a time when scrolling down
@@ -72,7 +64,7 @@ const UserAnswers: React.FC<UserAnswersProps> = ({ username }) => {
 
   return (
     <>
-      {error && <Alert color="red">{error as unknown as string}</Alert>}
+      {error && <Alert color="red">{error.message}</Alert>}
       {(!data || data.length === 0) && !loading && (
         <Alert color="gray">No answers</Alert>
       )}

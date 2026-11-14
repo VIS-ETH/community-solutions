@@ -63,20 +63,12 @@ const Scoreboard: React.FC = () => {
     sync: false,
   });
 
-  const { isError, error, isPending, data } = useGetScoreboardTop(
-    mode,
-    {},
-    {
-      query: {
-        select: data => data.value,
-      },
-    },
-  );
+  const { isError, error, isPending, data } = useGetScoreboardTop(mode, {});
 
   return (
     <Container size="xl">
       <h1>Scoreboard</h1>
-      {isError && <Alert color="red">{String(error)}</Alert>}
+      {isError && <Alert color="red">{error.message}</Alert>}
       <LoadingOverlay visible={isPending} />
       <div className={classes.overflowScroll}>
         <Table highlightOnHover verticalSpacing="md" fz="md">

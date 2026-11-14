@@ -38,13 +38,11 @@ class TestSearch(ComsolTestExamData):
         res = self.post(
             "/api/exam/search/",
             {"term": "uniqueidthatwecansearch", "includeExams": False},
-        )["value"]
+        )
         self.assertEqual(len(res), 0)
 
         # Then check that we get a result if we include exams
-        res = self.post("/api/exam/search/", {"term": "uniqueidthatwecansearch"})[
-            "value"
-        ]
+        res = self.post("/api/exam/search/", {"term": "uniqueidthatwecansearch"})
         self.assertEqual(len(res), 1)
 
         # Check that the result is what we expect
@@ -62,13 +60,13 @@ class TestSearch(ComsolTestExamData):
         res = self.post(
             "/api/exam/search/",
             {"term": "uniqueidthatwecansearch", "category": "not_default"},
-        )["value"]
+        )
         self.assertEqual(len(res), 0)
 
         res = self.post(
             "/api/exam/search/",
             {"term": "uniqueidthatwecansearch", "category": "default"},
-        )["value"]
+        )
         self.assertEqual(len(res), 1)
 
     def test_search_answer(self):
@@ -76,13 +74,13 @@ class TestSearch(ComsolTestExamData):
         res = self.post(
             "/api/exam/search/",
             {"term": "mywacky answer", "includeAnswers": False},
-        )["value"]
+        )
         self.assertEqual(len(res), 0)
 
         res = self.post(
             "/api/exam/search/",
             {"term": "mywacky answer"},
-        )["value"]
+        )
         self.assertEqual(len(res), 1)
 
         match = res[0]
@@ -102,7 +100,7 @@ class TestSearch(ComsolTestExamData):
         res = self.post(
             "/api/exam/search/",
             {"term": "mywacky answer", "category": "something"},
-        )["value"]
+        )
         self.assertEqual(len(res), 0)
 
         res = self.post(
@@ -111,7 +109,7 @@ class TestSearch(ComsolTestExamData):
                 "term": "mywacky answer",
                 "category": self.answers[0].answer_section.exam.category.slug,
             },
-        )["value"]
+        )
         self.assertEqual(len(res), 1)
 
     def test_search_comment(self):
@@ -119,13 +117,13 @@ class TestSearch(ComsolTestExamData):
         res = self.post(
             "/api/exam/search/",
             {"term": "mywacky comment", "includeComments": False},
-        )["value"]
+        )
         self.assertEqual(len(res), 0)
 
         res = self.post(
             "/api/exam/search/",
             {"term": "mywacky comment"},
-        )["value"]
+        )
         self.assertEqual(len(res), 1)
 
         match = res[0]
@@ -146,7 +144,7 @@ class TestSearch(ComsolTestExamData):
         res = self.post(
             "/api/exam/search/",
             {"term": "mywacky comment", "category": "something"},
-        )["value"]
+        )
         self.assertEqual(len(res), 0)
 
         res = self.post(
@@ -155,7 +153,7 @@ class TestSearch(ComsolTestExamData):
                 "term": "mywacky comment",
                 "category": self.comments[0].answer.answer_section.exam.category.slug,
             },
-        )["value"]
+        )
         self.assertEqual(len(res), 1)
 
     def test_search_answer_comment(self):
@@ -163,7 +161,7 @@ class TestSearch(ComsolTestExamData):
         res = self.post(
             "/api/exam/search/",
             {"term": "mywacky", "includeComments": True, "includeAnswers": True},
-        )["value"]
+        )
         self.assertEqual(len(res), 2)
 
         # Specifying category shouldn't change result - they are both in it
@@ -175,7 +173,7 @@ class TestSearch(ComsolTestExamData):
                 "includeAnswers": True,
                 "category": self.comments[0].answer.answer_section.exam.category.slug,
             },
-        )["value"]
+        )
         self.assertEqual(len(res), 2)
 
         # Specifying a non-matching category should return no results
@@ -187,5 +185,5 @@ class TestSearch(ComsolTestExamData):
                 "includeAnswers": True,
                 "category": "something",
             },
-        )["value"]
+        )
         self.assertEqual(len(res), 0)

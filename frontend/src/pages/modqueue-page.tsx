@@ -30,10 +30,7 @@ const ModQueue: React.FC = () => {
     isFetching: examsLoading,
     data: exams,
     refetch: reloadExams,
-  } = useListImportExams(
-    { includeHidden },
-    { query: { select: data => data.value } },
-  );
+  } = useListImportExams({ includeHidden });
   const [removeConfirm, modals] = useRemoveConfirm();
   const { mutate: runRemoveExam } = useRemoveExam({
     mutation: { onSuccess: () => void reloadExams() },
@@ -48,7 +45,7 @@ const ModQueue: React.FC = () => {
     error: payError,
     isFetching: payLoading,
     data: paymentExams,
-  } = useListPaymentCheckExams({ query: { select: data => data.value } });
+  } = useListPaymentCheckExams();
 
   const error = examsError ?? payError;
 
@@ -96,7 +93,7 @@ const ModQueue: React.FC = () => {
       <Title my="sm" order={2}>
         Import Queue
       </Title>
-      {error && <div>{error as unknown as string}</div>}
+      {error && <div>{error.message}</div>}
       <div>
         <LoadingOverlay visible={examsLoading} />
         <Table fz="md">

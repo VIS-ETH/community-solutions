@@ -19,7 +19,7 @@ invalid_key.import_from_pem(invalid_private_key_data)
 
 class TestMyAuthAdmin(ComsolTest):
     def test_me(self):
-        res = self.get("/api/auth/me/")["value"]
+        res = self.get("/api/auth/me/")
         self.assertTrue(res["loggedin"])
         self.assertTrue(res["isAdmin"])
         self.assertTrue(res["isCategoryAdmin"])
@@ -32,7 +32,7 @@ class TestMyAuthNonadmin(ComsolTest):
         self.login_as(self.nonAdminUsers[0])
 
     def test_me(self):
-        res = self.get("/api/auth/me/")["value"]
+        res = self.get("/api/auth/me/")
         self.assertTrue(res["loggedin"])
         self.assertFalse(res["isAdmin"])
         self.assertFalse(res["isCategoryAdmin"])
@@ -45,7 +45,7 @@ class TestMyAuthUnauthorized(ComsolTest):
         self.login_as(None)
 
     def test_me(self):
-        res = self.get("/api/auth/me/")["value"]
+        res = self.get("/api/auth/me/")
         self.assertFalse(res["loggedin"])
         self.assertFalse(res["isAdmin"])
         self.assertFalse(res["isCategoryAdmin"])
@@ -216,7 +216,7 @@ class TestAuth(ComsolTest):
         self.get("/api/notification/unreadcount/", status_code=200)
 
         # GET logout must fail
-        self.get("/api/auth/logout", status_code=405, test_post=False, as_json=False)
+        self.get("/api/auth/logout", status_code=405, as_json=False)
 
         # Still logged in
         self.get("/api/notification/unreadcount/", status_code=200)

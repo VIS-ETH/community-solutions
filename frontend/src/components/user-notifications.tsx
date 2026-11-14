@@ -13,16 +13,9 @@ const UserNotifications: React.FC = () => {
     data: notifications,
     error,
     isLoading,
-  } = useGetAllNotifications(
-    {
-      unread: showUnread,
-    },
-    {
-      query: {
-        select: data => data.value,
-      },
-    },
-  );
+  } = useGetAllNotifications({
+    unread: showUnread,
+  });
 
   const markAllNotificationsAsRead = useMarkAllNotificationsAsRead();
 
@@ -39,7 +32,7 @@ const UserNotifications: React.FC = () => {
   return (
     <div>
       <h3>Notifications</h3>
-      {error && <Alert color="red">{error as unknown as string}</Alert>}
+      {error && <Alert color="red">{error.message}</Alert>}
       <Button mb="sm" onClick={() => setShowUnread(prev => !prev)}>
         {showUnread ? "Show all" : "Show unread"}
       </Button>

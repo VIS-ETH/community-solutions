@@ -15,23 +15,17 @@ const sorted = (arg: FaqEntry[]) =>
 
 export const useFaq = () => {
   const queryClient = useQueryClient();
-  const faqEntries = useListFaqEntries({
-    query: {
-      select: data => data.value,
-    },
-  });
+  const faqEntries = useListFaqEntries();
 
   function setQueryData(faqs: FaqEntry[]) {
-    queryClient.setQueryData(getListFaqEntriesQueryKey(), {
-      value: sorted(faqs),
-    });
+    queryClient.setQueryData(getListFaqEntriesQueryKey(), sorted(faqs));
   }
 
   const addFaq = useAddFaqEntry({
     mutation: {
       onSuccess(data) {
         if (faqEntries.data) {
-          setQueryData([...faqEntries.data, data.value]);
+          setQueryData([...faqEntries.data, data]);
         } else {
           void faqEntries.refetch();
         }
@@ -42,10 +36,8 @@ export const useFaq = () => {
     mutation: {
       onSuccess(data) {
         if (faqEntries.data) {
-          const filtered = faqEntries.data.filter(
-            s => s.oid !== data.value.oid,
-          );
-          setQueryData([...filtered, data.value]);
+          const filtered = faqEntries.data.filter(s => s.oid !== data.oid);
+          setQueryData([...filtered, data]);
         } else {
           void faqEntries.refetch();
         }

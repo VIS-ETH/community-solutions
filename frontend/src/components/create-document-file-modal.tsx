@@ -32,9 +32,7 @@ const CreateDocumentFileModal: React.FC<Props> = ({
   // added to clear browser input when a file is deleted from the pending list
   const resetFileInputRef = useRef<(() => void) | null>(null);
 
-  const { mutateAsync, isError, error } = useCreateDocumentFile<
-    string | Error
-  >();
+  const { mutateAsync, isError, error } = useCreateDocumentFile();
 
   function handleFilesSelected(selectedFiles: File[]): void {
     setFiles(prevFiles => [...prevFiles, ...selectedFiles]);
@@ -136,12 +134,7 @@ const CreateDocumentFileModal: React.FC<Props> = ({
         onDrop={handleDrop}
         onDragLeave={handleDragLeave}
       >
-        {isError && (
-          <Alert color="red">
-            {" "}
-            {error instanceof Error ? error.message : error}{" "}
-          </Alert>
-        )}
+        {isError && <Alert color="red">{error.message}</Alert>}
         <FileButton
           multiple
           resetRef={resetFileInputRef}
