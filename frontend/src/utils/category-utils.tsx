@@ -1,5 +1,5 @@
 import { ExamSelectedForDownload } from "../interfaces";
-import { getExamPdfUrl } from "../api/hooks/answers";
+import { getExamPdfUrl, getSolutionPdfUrl } from "../api/hooks/answers";
 import { downloadZipFile, type ZipFileItem } from "./download-zip-file.js";
 import type { ListExamsResponse, Meta1CategoryResponse } from "../api/model";
 
@@ -77,4 +77,34 @@ export const dlSelectedExams = async (
     },
   );
   await downloadZipFile("exams-" + categoryName + ".zip", zipFileItems);
+};
+export const dlSelectedSolutions = async (
+  categoryName: string,
+  selectedSolutions: ExamSelectedForDownload[],
+) => {
+  // precondition the selected exam has a solution file since button clickable
+  categoryName = categoryName.replaceAll(/\s/g, "_");
+  const examtypes = new Set<string>();
+  for (const solution of selectedSolutions) {
+    examtypes.add(solution.examtype);
+  }
+  const zipFileItems = selectedSolutions.map(
+    async (solution): Promise<ZipFileItem | undefined> => {
+      const { value } = await getSolutionPdfUrl(solution.filename);
+      const responseFile = fetch(value.url).then(r => r.arrayBuffer());
+      let documentCategoryName: string;
+      if (examtypes.size === 1) {
+        documentCategoryName = solution.displayname + "-" + categoryName;
+      } else {
+        documentCategoryName =
+          solution.examtype + "/" + solution.displayname + "-" + categoryName;
+      }
+      return {
+        displayName: documentCategoryName,
+        filename: solution.filename,
+        file: responseFile,
+      };
+    },
+  );
+  await downloadZipFile("solutions-" + categoryName + ".zip", zipFileItems);
 };
