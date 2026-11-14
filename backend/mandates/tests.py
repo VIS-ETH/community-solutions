@@ -19,7 +19,6 @@ class TestMandate(ComsolTest):
         self.post(
             "/api/mandates/",
             {"username": "test", "category": "TestCategory"},
-            test_get=False,
         )
         self.mandate = Mandate.objects.get(user__username="test")
 
@@ -29,24 +28,18 @@ class TestMandate(ComsolTest):
         self.post(
             "/api/mandates/",
             {"username": "test2", "category": "TestCategory"},
-            test_get=False,
         )
-        res = self.get("/api/mandates/?username=test2", test_post=False)["value"]
+        res = self.get("/api/mandates/?username=test2")
         self.assertEqual(len(res), 1)
 
     def test_me(self):
-        res = self.get(
-            f"/api/mandates/?username={self.user['username']}", test_post=False
-        )["value"]
+        res = self.get(f"/api/mandates/?username={self.user['username']}")
         self.assertEqual(len(res), 0)
         self.post(
             "/api/mandates/",
             {"username": self.user["username"], "category": "TestCategory"},
-            test_get=False,
         )
-        res = self.get(
-            f"/api/mandates/?username={self.user['username']}", test_post=False
-        )["value"]
+        res = self.get(f"/api/mandates/?username={self.user['username']}")
         self.assertEqual(len(res), 1)
 
     def test_fulfill(self):
@@ -54,7 +47,7 @@ class TestMandate(ComsolTest):
             f"/api/mandates/{self.mandate.pk}/fulfill/",
             {},
         )
-        res = self.get("/api/mandates/?username=test", test_post=False)["value"]
+        res = self.get("/api/mandates/?username=test")
         self.assertEqual(len(res), 1)
         self.assertTrue(res[0]["fulfilled_at"])
 
@@ -63,11 +56,11 @@ class TestMandate(ComsolTest):
     #   self.post(f"/api/payment/refund/{self.payment.id}/", {}, status_code=400)
 
     # def test_payment_active(self):
-    #    res = self.get("/api/payment/query/test/")["value"]
+    #    res = self.get("/api/payment/query/test/")
     #    self.assertTrue(res[0]["active"])
     #    self.payment.payment_time -= timedelta(days=365)
     #    self.payment.save()
-    #    res = self.get("/api/payment/query/test/")["value"]
+    #    res = self.get("/api/payment/query/test/")
     #    self.assertFalse(res[0]["active"])
 
 
@@ -83,8 +76,8 @@ class TestMandate(ComsolTest):
 #        exam.is_oral_transcript = True
 #        exam.oral_transcript_uploader = self.testuser
 #        exam.save()
-#        res = self.get("/api/payment/query/test/")["value"]
+#        res = self.get("/api/payment/query/test/")
 #        self.assertFalse(res[0]["check_time"])
 #        self.post(f"/api/payment/markexamchecked/{exam.filename}/", {})
-#        res = self.get("/api/payment/query/test/")["value"]
+#        res = self.get("/api/payment/query/test/")
 #        self.assertTrue(res[0]["check_time"])
