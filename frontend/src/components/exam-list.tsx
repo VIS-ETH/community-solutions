@@ -133,7 +133,7 @@ const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
           </Button>
 
           {!selectedExamsHasSolution(selected) && selected.size !== 0 ? (
-            <Tooltip label="selected exams do not have a solution file">
+            <Tooltip label="Selected exams do not have a solution file">
               {downloadSolutionButton}
             </Tooltip>
           ) : (
