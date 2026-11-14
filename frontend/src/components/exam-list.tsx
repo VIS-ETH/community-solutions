@@ -92,7 +92,7 @@ const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
   };
   const downloadSolutionButton = (
     <Button
-      disabled={selected.size === 0 || !selectedExamsHasSolution(selected)} // MODIFIER ICI POUR LE PROBLEME
+      disabled={selected.size === 0 || !selectedExamsHasSolution(selected)}
       onClick={() =>
         void dlSelectedSolutions(
           metaData.displayname,
@@ -133,7 +133,7 @@ const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
           </Button>
 
           {!selectedExamsHasSolution(selected) && selected.size !== 0 ? (
-            <Tooltip label="selected exams do not have a solution file">
+            <Tooltip label="Selected exams do not have a solution file">
               {downloadSolutionButton}
             </Tooltip>
           ) : (
