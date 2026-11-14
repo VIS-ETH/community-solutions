@@ -174,7 +174,7 @@ def get_mandates(request, filters: Query[Filters]):
     mandates = Mandate.objects.select_related(
         "category", "user", "uploaded_transcript"
     ).filter(**db_filters)
-    return {"value": [mandate_to_schema_resp(mandate) for mandate in mandates]}
+    return [mandate_to_schema_resp(mandate) for mandate in mandates]
 
 
 @router.post(
