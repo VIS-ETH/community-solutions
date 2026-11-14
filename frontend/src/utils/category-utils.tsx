@@ -64,7 +64,7 @@ export const dlSelectedExams = async (
       const responseFile = fetch(value.url).then(r => r.arrayBuffer());
       let documentCategoryName: string;
       if (examtypes.size === 1) {
-        documentCategoryName = categoryName;
+        documentCategoryName = exam.displayname + "-" + categoryName;
       } else {
         documentCategoryName =
           exam.examtype + "/" + exam.displayname + "-" + categoryName;
