@@ -49,25 +49,37 @@ export const mapExamsToExamType = (exams: ListExamsResponse[]) => {
       .entries(),
   ].sort(([a], [b]) => a.localeCompare(b));
 };
-export const dlSelectedExams = async (
+export const dlSelectedPdfs = async (
   categoryName: string,
   selectedExams: ExamSelectedForDownload[],
+  type: "exams" | "solutions",
 ) => {
-  categoryName = categoryName.replaceAll(/\s/g, "_");
+  categoryName = categoryName.replaceAll(/\s+/g, "-");
   const examtypes = new Set<string>();
   for (const exam of selectedExams) {
     examtypes.add(exam.examtype);
   }
+
   const zipFileItems = selectedExams.map(
     async (exam): Promise<ZipFileItem | undefined> => {
-      const examPdf = await getExamPdfUrl(exam.filename);
-      const responseFile = fetch(examPdf.url).then(r => r.arrayBuffer());
+      let url: string;
+      if (type === "exams") {
+        const examPdf = await getExamPdfUrl(exam.filename);
+        url = examPdf.url;
+      } else {
+        const solutionPdf = await getSolutionPdfUrl(exam.filename);
+        url = solutionPdf.url;
+      }
+
+      const responseFile = fetch(url).then(r => r.arrayBuffer());
+
       let documentCategoryName: string;
       if (examtypes.size === 1) {
         documentCategoryName = `${exam.displayname}-${categoryName}`;
       } else {
         documentCategoryName = `${exam.examtype}/${exam.displayname}-${categoryName}`;
       }
+
       return {
         displayName: documentCategoryName,
         filename: exam.filename,
@@ -75,35 +87,6 @@ export const dlSelectedExams = async (
       };
     },
   );
-  await downloadZipFile(`exams-${categoryName}.zip`, zipFileItems);
-};
-export const dlSelectedSolutions = async (
-  categoryName: string,
-  selectedSolutions: ExamSelectedForDownload[],
-) => {
-  // precondition the selected exam has a solution file since button clickable
-  categoryName = categoryName.replaceAll(/\s/g, "_");
-  const examtypes = new Set<string>();
-  for (const solution of selectedSolutions) {
-    examtypes.add(solution.examtype);
-  }
-  const zipFileItems = selectedSolutions.map(
-    async (solution): Promise<ZipFileItem | undefined> => {
-      const { value } = await getSolutionPdfUrl(solution.filename);
-      const responseFile = fetch(value.url).then(r => r.arrayBuffer());
-      let documentCategoryName: string;
-      if (examtypes.size === 1) {
-        documentCategoryName = solution.displayname + "-" + categoryName;
-      } else {
-        documentCategoryName =
-          solution.examtype + "/" + solution.displayname + "-" + categoryName;
-      }
-      return {
-        displayName: documentCategoryName,
-        filename: solution.filename,
-        file: responseFile,
-      };
-    },
-  );
-  await downloadZipFile("solutions-" + categoryName + ".zip", zipFileItems);
+
+  await downloadZipFile(`${type}-${categoryName}.zip`, zipFileItems);
 };

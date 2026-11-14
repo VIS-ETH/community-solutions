@@ -12,8 +12,7 @@ import { useUser } from "../auth";
 import useSet from "../hooks/useSet";
 import { ExamSelectedForDownload } from "../interfaces";
 import {
-  dlSelectedExams,
-  dlSelectedSolutions,
+  dlSelectedPdfs,
   filterMatches,
   mapExamsToExamType,
 } from "../utils/category-utils";
@@ -90,9 +89,10 @@ const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
     <Button
       disabled={selected.size === 0 || !selectedExamsHasSolution(selected)}
       onClick={() =>
-        void dlSelectedSolutions(
+        void dlSelectedPdfs(
           metaData.displayname,
           getSelectedSolutions(selected),
+          "solutions",
         )
       }
       leftSection={<IconDownload />}
@@ -118,9 +118,10 @@ const ExamList: React.FC<ExamListProps> = ({ metaData }) => {
           <Button
             disabled={selected.size === 0}
             onClick={() =>
-              void dlSelectedExams(
+              void dlSelectedPdfs(
                 metaData.displayname,
                 getSelectedExams(selected),
+                "exams",
               )
             }
             leftSection={<IconDownload />}
