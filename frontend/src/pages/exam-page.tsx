@@ -662,7 +662,6 @@ const ExamPage: React.FC = () => {
                   }}
                 >
                   <ExamPageContent
-                    key={metadata.filename}
                     metaData={metadata}
                     sections={sections}
                     renderer={renderer}
