@@ -226,7 +226,9 @@ def get_by_user(request, username: str, page: int = Query(-1, ge=-1)):
     user = get_object_or_404(MyUser, username=username)
 
     sorted_answers = Answer.objects.filter(
-        author=user, kind=Answer.AnswerKind.PERSONAL
+        Exam.current_user_can_view_q(request, "answer_section__exam__"),
+        author=user,
+        kind=Answer.AnswerKind.PERSONAL,
     ).select_related(*section_util.get_answer_fields_to_preselect())
     sorted_answers = section_util.prepare_answer_objects(
         sorted_answers, request
@@ -258,7 +260,10 @@ def get_comments_by_user(request, username: str, page: int = Query(-1, ge=-1)):
     user = get_object_or_404(MyUser, username=username)
 
     sorted_comments = (
-        Comment.objects.filter(author=user)
+        Comment.objects.filter(
+            Exam.current_user_can_view_q(request, "answer__answer_section__exam__"),
+            author=user,
+        )
         .select_related(*section_util.get_comment_fields_to_preselect())
         .prefetch_related(*section_util.get_comment_fields_to_prefetch())
         .annotate(

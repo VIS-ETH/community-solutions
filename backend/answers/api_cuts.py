@@ -25,13 +25,17 @@ class CutPageSchema(Schema):
     response={
         200: dict[int, list[CutPageSchema]],
         401: ErrorSchema,
+        403: ErrorSchema,
         404: ErrorSchema,
     },
     operation_id="getCuts",
 )
 @auth_check.require_login
 def get_cuts(request, filename: str):
-    sections = get_object_or_404(Exam, filename=filename).answersection_set.all()
+    exam = get_object_or_404(Exam, filename=filename)
+    if not exam.current_user_can_view(request):
+        return response.not_allowed()
+    sections = exam.answersection_set.all()
     pages: dict[int, list[CutPageSchema]] = {}
     for sec in sections:
         pages.setdefault(sec.page_num, []).append(
@@ -145,6 +149,7 @@ def remove_cut(request, oid: int):
     response={
         200: dict[int, int],
         401: ErrorSchema,
+        403: ErrorSchema,
         404: ErrorSchema,
     },
     operation_id="getCutVersions",
@@ -152,6 +157,8 @@ def remove_cut(request, oid: int):
 @auth_check.require_login
 def get_cut_versions(request, filename: str):
     exam = get_object_or_404(Exam, filename=filename)
+    if not exam.current_user_can_view(request):
+        return response.not_allowed()
     res = {}
     for section in exam.answersection_set.all():
         res[section.id] = section.cut_version
@@ -164,6 +171,7 @@ def get_cut_versions(request, filename: str):
     response={
         200: AnswerSectionSchema,
         401: ErrorSchema,
+        403: ErrorSchema,
         404: ErrorSchema,
     },
     operation_id="getAnswerSection",
@@ -181,4 +189,6 @@ def get_answersection(request, oid: int):
         ),
         pk=oid,
     )
+    if not section.exam.current_user_can_view(request):
+        return response.not_allowed()
     return section_util.get_answersection_response(request, section)

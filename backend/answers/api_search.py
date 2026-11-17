@@ -16,6 +16,7 @@ from ninja import Field, Form, Router, Schema
 from pydantic import RootModel
 
 from answers.models import Answer, Comment, Exam, ExamPage
+from mandates.models import Mandate
 from myauth import auth_check
 from myauth.auth_check import has_admin_rights
 from users.api import UserSchema
@@ -184,6 +185,7 @@ def headline(
 def search_exams(
     term,
     has_paid,
+    mandate_categories,
     is_admin,
     category_filter,
     user_admin_categories,
@@ -198,7 +200,9 @@ def search_exams(
 
     can_view = Q(public=True) | Q(category__in=user_admin_categories)
     if not has_paid:
-        can_view = can_view & Q(needs_payment=False)
+        can_view = can_view & (
+            Q(needs_payment=False) | Q(category__in=mandate_categories)
+        )
 
     exams = (
         Exam.objects.filter(
@@ -310,7 +314,13 @@ def search_exams(
 
 
 def search_answers(
-    term, has_paid, is_admin, category_filter, user_admin_categories, amount
+    term,
+    has_paid,
+    mandate_categories,
+    is_admin,
+    category_filter,
+    user_admin_categories,
+    amount,
 ):
     query = SearchQuery(term)
 
@@ -322,8 +332,9 @@ def search_answers(
         answer_section__exam__category__in=user_admin_categories
     )
     if not has_paid:
-        answer_section_exam_can_view = answer_section_exam_can_view & Q(
-            answer_section__exam__needs_payment=False
+        answer_section_exam_can_view = answer_section_exam_can_view & (
+            Q(answer_section__exam__needs_payment=False)
+            | Q(answer_section__exam__category__in=mandate_categories)
         )
     answers = Answer.objects
     if not is_admin:
@@ -379,7 +390,13 @@ def search_answers(
 
 
 def search_comments(
-    term, has_paid, is_admin, category_filter, user_admin_categories, amount
+    term,
+    has_paid,
+    mandate_categories,
+    is_admin,
+    category_filter,
+    user_admin_categories,
+    amount,
 ):
     query = SearchQuery(term)
 
@@ -391,8 +408,9 @@ def search_comments(
         answer__answer_section__exam__public=True
     ) | Q(answer__answer_section__exam__category__in=user_admin_categories)
     if not has_paid:
-        answer_answer_section_exam_can_view = answer_answer_section_exam_can_view & Q(
-            answer__answer_section__exam__needs_payment=False
+        answer_answer_section_exam_can_view = answer_answer_section_exam_can_view & (
+            Q(answer__answer_section__exam__needs_payment=False)
+            | Q(answer__answer_section__exam__category__in=mandate_categories)
         )
     comments = Comment.objects
     if not is_admin:
@@ -555,12 +573,14 @@ def search(request, data: Form[SearchRequestBody]):
     user = request.user
     user_admin_categories = user.category_admin_set.values_list("id", flat=True)
     has_paid = user.has_paid()
+    mandate_categories = Mandate.categories_with_access(user)
     is_admin = has_admin_rights(request)
     exams_start = time.time()
     exams = (
         search_exams(
             term,
             has_paid,
+            mandate_categories,
             is_admin,
             category_filter,
             user_admin_categories,
@@ -573,7 +593,13 @@ def search(request, data: Form[SearchRequestBody]):
     answers_start = time.time()
     answers = (
         search_answers(
-            term, has_paid, is_admin, category_filter, user_admin_categories, amount
+            term,
+            has_paid,
+            mandate_categories,
+            is_admin,
+            category_filter,
+            user_admin_categories,
+            amount,
         )
         if include_answers
         else []
@@ -581,7 +607,13 @@ def search(request, data: Form[SearchRequestBody]):
     comments_start = time.time()
     comments = (
         search_comments(
-            term, has_paid, is_admin, category_filter, user_admin_categories, amount
+            term,
+            has_paid,
+            mandate_categories,
+            is_admin,
+            category_filter,
+            user_admin_categories,
+            amount,
         )
         if include_comments
         else []

@@ -71,12 +71,14 @@ const UserPage: React.FC = () => {
         </Tabs.List>
         <Tabs.Panel value="overview" pt="sm">
           <SimpleGrid cols={{ base: 1, md: 2 }}>
-            {!isMyself && !user.isAdmin && (
+            {!isMyself && !user.isCategoryAdmin && (
               <Alert color="gray">There's nothing here</Alert>
             )}
             {isMyself && <UserNotifications />}
             {(isMyself || user.isAdmin) && <UserPayments username={username} />}
-            {(isMyself || user.isAdmin) && <UserMandates username={username} />}
+            {(isMyself || user.isCategoryAdmin) && (
+              <UserMandates username={username} />
+            )}
           </SimpleGrid>
         </Tabs.Panel>
         <Tabs.Panel value="answers" pt="sm">

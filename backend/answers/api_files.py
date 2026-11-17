@@ -1,12 +1,15 @@
 import os
 
 from django.conf import settings
+from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from ninja import Field, File, Form, Router, Schema, UploadedFile
 
 from answers import pdf_utils
 from answers.models import Exam, ExamType
 from categories.models import Category
+from mandates.models import Mandate
 from myauth import auth_check
 from util import ethprint, response, s3_util
 from util.schemas import ErrorSchema
@@ -115,7 +118,19 @@ def upload_transcript(
         is_oral_transcript=True,
         oral_transcript_uploader=request.user,
     )
-    exam.save()
+    with transaction.atomic():
+        exam.save()
+        mandate = (
+            Mandate.objects.select_for_update()
+            .filter(user=request.user, category=category)
+            .filter(
+                Q(fulfilled_time__isnull=True, checked_state__isnull=True)
+                | Q(checked_state=Mandate.CheckedState.REJECTED)
+            )
+            .first()
+        )
+        if mandate:
+            mandate.submit_transcript(exam)
 
     pdf_utils.analyze_pdf(exam, os.path.join(settings.COMSOL_UPLOAD_FOLDER, filename))
     return filename

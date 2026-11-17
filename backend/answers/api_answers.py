@@ -19,6 +19,7 @@ router = Router(tags=["Answers"])
     response={
         200: AnswerSchema,
         401: ErrorSchema,
+        403: ErrorSchema,
         404: ErrorSchema,
     },
     operation_id="getAnswer",
@@ -29,6 +30,8 @@ def get_answer(request, longId: str):
         answer = section_util.prepare_answer_objects(Answer.objects, request).get(
             long_id=longId
         )
+        if not answer.answer_section.exam.current_user_can_view(request):
+            return response.not_allowed()
         return section_util.get_answer_response(request, answer)
     except Answer.DoesNotExist as err:
         raise Http404() from err
@@ -64,7 +67,7 @@ def set_answer(request, oid: int, data: Form[SetAnswerRequestBody]):
         pk=oid,
     )
 
-    if not section.has_answers:
+    if not section.has_answers or not section.exam.current_user_can_view(request):
         return response.not_allowed()
 
     kind = data.kind

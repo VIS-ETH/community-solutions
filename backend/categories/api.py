@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from django.conf import settings
 from django.db.models import Exists, OuterRef
@@ -7,6 +7,7 @@ from ninja import Form, Router, Schema
 
 from answers.models import ExamUserSolved
 from categories.models import Category, CategoryUserPinned, MetaCategory
+from mandates.models import Mandate
 from myauth import auth_check
 from myauth.models import MyUser, get_my_user
 from util import response
@@ -90,20 +91,34 @@ def list_categories_only_admin(request):
     return res
 
 
+class ListCategoriesOnlyPaymentResponse(Schema):
+    displayname: str
+    slug: str
+    user_has_mandate: bool
+    mandate_due_date: date
+    can_manage: bool
+
+
 @router.get(
     "listonlypayment/",
     response={
-        200: list[ListCategoriesBasicResponse],
+        200: list[ListCategoriesOnlyPaymentResponse],
         403: ErrorSchema,
     },
     operation_id="listCategoriesOnlyPayment",
 )
 @auth_check.require_login
 def list_categories_only_payment(request):
+    due_date = Mandate.next_due_date()
     res = [
         {
             "displayname": cat.displayname,
             "slug": cat.slug,
+            "user_has_mandate": Mandate.user_has_mandate_category(
+                username=request.user.username, category=cat
+            ),
+            "mandate_due_date": due_date,
+            "can_manage": cat.current_user_is_admin(request),
         }
         for cat in Category.objects.filter(has_payments=True).order_by("displayname")
     ]
@@ -204,6 +219,8 @@ def list_exams(request, slug):
         exam=OuterRef("pk"),
     )
 
+    is_admin = cat.current_user_is_admin(request)
+    can_view_category = cat.current_user_can_view(request)
     exams = (
         cat.exam_set.select_related("exam_type", "import_claim", "counts")
         .annotate(user_solved=Exists(solved_subquery))
@@ -231,7 +248,9 @@ def list_exams(request, slug):
                 "has_solution": ex.has_solution,
                 "is_printonly": ex.is_printonly,
                 "finished_cuts": ex.finished_cuts,
-                "canView": ex.current_user_can_view(request),
+                "canView": ex.current_user_can_view(
+                    request, is_admin, can_view_category
+                ),
                 "count_cuts": ex.counts.count_cuts,
                 "count_answered": ex.counts.count_answered,
                 "user_solved": ex.user_solved,
@@ -265,6 +284,8 @@ class CategoryData(Schema):
     more_exams_link: str
     pinned: bool
     attachments: list[CategoryDataAttachment]
+    user_has_mandate: bool
+    mandate_due_date: date
 
 
 def get_category_data(request, cat) -> CategoryData:
@@ -300,6 +321,10 @@ def get_category_data(request, cat) -> CategoryData:
             ],
             key=lambda x: x["displayname"],
         ),
+        "user_has_mandate": Mandate.user_has_mandate_category(
+            username=request.user.username, category=cat
+        ),
+        "mandate_due_date": Mandate.next_due_date(),
     }
     if auth_check.has_admin_rights_for_category(request, cat):
         res["admins"] = list(cat.admins.all().values_list("username", flat=True))

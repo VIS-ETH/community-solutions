@@ -22,13 +22,18 @@ class CreateModifyCommentRequestBody(Schema):
     response={
         200: AnswerSectionSchema,
         401: ErrorSchema,
+        403: ErrorSchema,
         404: ErrorSchema,
     },
     operation_id="addComment",
 )
 @auth_check.require_login
 def add_comment(request, oid: int, data: Form[CreateModifyCommentRequestBody]):
-    answer = get_object_or_404(Answer, pk=oid)
+    answer = get_object_or_404(
+        Answer.objects.select_related("answer_section__exam__category"), pk=oid
+    )
+    if not answer.answer_section.exam.current_user_can_view(request):
+        return response.not_allowed()
     new_comment = Comment(answer=answer, author=request.user, text=data.text)
     new_comment.save()
     notification_util.new_comment_to_answer(answer, new_comment)

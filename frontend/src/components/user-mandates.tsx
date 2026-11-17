@@ -1,29 +1,35 @@
-import {
-  parseISO,
-  lightFormat,
-  differenceInCalendarDays,
-  isAfter,
-} from "date-fns";
+import { parseISO, lightFormat, differenceInCalendarDays } from "date-fns";
 import {
   Alert,
   Anchor,
   Button,
   Divider,
+  Group,
   List,
   ListItem,
   Modal,
 } from "@mantine/core";
-import { useCreateMandate, useListMandates } from "../api/hooks/mandates";
+import {
+  useCheckMandate,
+  useCreateMandate,
+  useDeleteMandate,
+  useExtendMandate,
+  useListMandates,
+} from "../api/hooks/mandates";
+import useRemoveConfirm from "../hooks/useRemoveConfirm";
 import { useUser } from "../auth";
 import { MandateSchema } from "../api/model";
 import { useDisclosure } from "@mantine/hooks";
 import { IconAlertCircle, IconInfoCircle } from "@tabler/icons-react";
 import { Link } from "react-router-dom";
 import GlobalConsts from "../globalconsts";
-import { useListCategoriesOnlyAdmin } from "../api/hooks/categories";
+import { useListCategoriesOnlyPayment } from "../api/hooks/categories";
+import MandateAcceptModal from "./mandate-accept-modal";
+import { useState } from "react";
 
 enum MandateStatusType {
   OPEN_ONGOING,
+  AWAITING_CHECK,
   OPEN_OVERDUE,
   REJECTED_GRACE,
   REJECTED_OVERDUE,
@@ -34,11 +40,19 @@ interface UserMandatesProps {
   username: string;
 }
 
+// due_date and grace_until are the last days (UTC) with access
+const isPastDate = (date: string) =>
+  new Date().toISOString().slice(0, 10) > date;
+
 const getMandateStatusType = (mandate: MandateSchema): MandateStatusType => {
   if (["accepted", "excused"].includes(mandate.checked_state ?? ""))
     return MandateStatusType.ARCHIVED;
 
-  if (!isAfter(new Date(), parseISO(mandate.due_date))) {
+  // waiting for an admin never blocks
+  if (mandate.fulfilled_at != null && mandate.checked_state == null)
+    return MandateStatusType.AWAITING_CHECK;
+
+  if (!isPastDate(mandate.due_date)) {
     return mandate.checked_state === "rejected"
       ? MandateStatusType.REJECTED_GRACE
       : MandateStatusType.OPEN_ONGOING;
@@ -47,7 +61,7 @@ const getMandateStatusType = (mandate: MandateSchema): MandateStatusType => {
   if (
     mandate.checked_state === "rejected" &&
     mandate.grace_until &&
-    !isAfter(new Date(), parseISO(mandate.grace_until))
+    !isPastDate(mandate.grace_until)
   )
     return MandateStatusType.REJECTED_GRACE;
 
@@ -57,9 +71,100 @@ const getMandateStatusType = (mandate: MandateSchema): MandateStatusType => {
   return MandateStatusType.OPEN_OVERDUE;
 };
 
-const RenderMandates: React.FC<{ mandates: readonly MandateSchema[] }> = ({
-  mandates,
-}) => {
+const MandateActions: React.FC<{
+  mandate: MandateSchema;
+  onChanged: () => void;
+}> = ({ mandate, onChanged }) => {
+  const [confirm, modals] = useRemoveConfirm();
+  const options = { mutation: { onSuccess: onChanged } };
+  const remove = useDeleteMandate(options);
+  const check = useCheckMandate(options);
+  const extend = useExtendMandate(options);
+  const error = remove.error ?? check.error ?? extend.error;
+
+  const status = getMandateStatusType(mandate);
+  const isFinal = ["accepted", "excused"].includes(mandate.checked_state ?? "");
+  const isBlocking =
+    status === MandateStatusType.OPEN_OVERDUE ||
+    status === MandateStatusType.REJECTED_OVERDUE;
+  const name = `${mandate.user_display_name}'s mandate for ${mandate.category_display_name}`;
+
+  function onExtendClick() {
+    confirm(
+      `Extend ${name}? It gives the user 24 hours of access to upload their transcript.`,
+      () => extend.mutate({ mandateId: mandate.id }),
+      undefined,
+      { label: "Extend", propsDict: {} },
+    );
+  }
+
+  function onExcuseClick() {
+    confirm(
+      `Excuse ${name}? The user no longer has to upload a transcript. This cannot be undone.`,
+      () =>
+        check.mutate({
+          mandateId: mandate.id,
+          data: { checked_state: "excused" },
+        }),
+      undefined,
+      { label: "Excuse", propsDict: { color: "orange" } },
+    );
+  }
+
+  function onDeleteClick() {
+    confirm(`Delete ${name}? This cannot be undone.`, () =>
+      remove.mutate({ mandateId: mandate.id }),
+    );
+  }
+
+  return (
+    <>
+      {modals}
+      <Group gap="xs" mt="xs">
+        {isBlocking && (
+          <Button
+            size="compact-sm"
+            variant="light"
+            loading={extend.isPending}
+            onClick={onExtendClick}
+          >
+            Extend 24h
+          </Button>
+        )}
+        {!isFinal && (
+          <Button
+            size="compact-sm"
+            variant="light"
+            color="orange"
+            loading={check.isPending}
+            onClick={onExcuseClick}
+          >
+            Excuse
+          </Button>
+        )}
+        <Button
+          size="compact-sm"
+          variant="light"
+          color="red"
+          loading={remove.isPending}
+          onClick={onDeleteClick}
+        >
+          Delete
+        </Button>
+      </Group>
+      {error && (
+        <Alert color="red" mt="xs">
+          {error.message}
+        </Alert>
+      )}
+    </>
+  );
+};
+
+const RenderMandates: React.FC<{
+  mandates: readonly MandateSchema[];
+  onChanged: () => void;
+}> = ({ mandates, onChanged }) => {
   return (
     <List>
       {mandates.map(mandate => {
@@ -94,19 +199,47 @@ const RenderMandates: React.FC<{ mandates: readonly MandateSchema[] }> = ({
                   mandate.fulfilled_at!,
                   GlobalConsts.dateFNSFormatString,
                 )}
-                . The document is found at:{" "}
-                <Anchor
-                  component={Link}
-                  to={`/exams/${mandate.uploaded_transcript}`}
-                >
-                  {mandate.uploaded_transcript_display_name}
-                </Anchor>
-                .
+                .{" "}
+                {mandate.uploaded_transcript ? (
+                  <>
+                    The document is found at:{" "}
+                    <Anchor
+                      component={Link}
+                      to={`/exams/${mandate.uploaded_transcript}`}
+                    >
+                      {mandate.uploaded_transcript_display_name}
+                    </Anchor>
+                    .
+                  </>
+                ) : (
+                  "The document has since been deleted."
+                )}
+              </>
+            )}
+            {mandate.fulfilled_at != null && mandate.checked_state == null && (
+              <>
+                The user uploaded{" "}
+                {mandate.uploaded_transcript ? (
+                  <Anchor
+                    component={Link}
+                    to={`/exams/${mandate.uploaded_transcript}`}
+                  >
+                    {mandate.uploaded_transcript_display_name}
+                  </Anchor>
+                ) : (
+                  "a transcript (since deleted)"
+                )}{" "}
+                on{" "}
+                {lightFormat(
+                  mandate.fulfilled_at,
+                  GlobalConsts.dateFNSFormatString,
+                )}
+                , which is waiting to be checked by an administrator.
               </>
             )}
             {mandate.fulfilled_at == null &&
               mandate.checked_state !== "excused" &&
-              (isAfter(new Date(), parseISO(mandate.due_date)) ? (
+              (isPastDate(mandate.due_date) ? (
                 <>
                   Mandate not fulfilled and deadline exceeded by over{" "}
                   {differenceInCalendarDays(
@@ -147,6 +280,21 @@ const RenderMandates: React.FC<{ mandates: readonly MandateSchema[] }> = ({
                 .<br />
               </>
             )}
+            {mandate.extended_until &&
+              new Date(mandate.extended_until) > new Date() && (
+                <>
+                  <br />
+                  Extended until{" "}
+                  {lightFormat(
+                    mandate.extended_until,
+                    GlobalConsts.dateFNSFormatString,
+                  )}
+                  : the mandate does not block the account until then.
+                </>
+              )}
+            {mandate.can_manage && (
+              <MandateActions mandate={mandate} onChanged={onChanged} />
+            )}
           </ListItem>
         );
       })}
@@ -157,7 +305,6 @@ const RenderMandates: React.FC<{ mandates: readonly MandateSchema[] }> = ({
 const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const user = useUser()!;
-  const isAdmin = user.isAdmin;
   const {
     error: mandatesError,
     data: mandates,
@@ -165,25 +312,50 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
   } = useListMandates({
     username: userProps.username,
   });
-  const { error: addError, mutate: add } = useCreateMandate({
+
+  const [pendingCategory, setPendingCategory] = useState<{
+    slug: string;
+    displayname: string;
+    mandate_due_date: string;
+  } | null>(null);
+  const {
+    error: categoriesError,
+    data: categories,
+    refetch: reloadCategories,
+  } = useListCategoriesOnlyPayment();
+  const {
+    error: addError,
+    isPending: addingMandate,
+    mutate: addMandate,
+  } = useCreateMandate({
     mutation: {
-      onSuccess: async () => reloadMandates(),
+      onSuccess() {
+        void reloadMandates();
+        void reloadCategories();
+      },
+      onSettled() {
+        setPendingCategory(null);
+      },
     },
   });
-  const { error: categoriesError, data: categories } =
-    useListCategoriesOnlyAdmin();
   const error = mandatesError ?? addError ?? categoriesError;
   const [
     addMandateModalIsOpen,
     { open: openAddMandateModal, close: closeAddMandateModal },
   ] = useDisclosure();
 
-  if (!isAdmin && userProps.username !== user.user?.username) {
+  if (!user.isCategoryAdmin && userProps.username !== user.user?.username) {
     throw new Error("You are not authorized to view this user's mandates.");
   }
 
   const groupedMandates = Object.groupBy(mandates ?? [], mandate =>
     getMandateStatusType(mandate),
+  );
+
+  const isMyself = userProps.username === user.user?.username;
+  const takenCategories = new Set(mandates?.map(mandate => mandate.category));
+  const addableCategories = categories?.filter(
+    cat => !takenCategories.has(cat.slug) && (isMyself || cat.can_manage),
   );
 
   return (
@@ -199,7 +371,7 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
       <Modal
         opened={addMandateModalIsOpen}
         onClose={closeAddMandateModal}
-        title={<h3>Add mandate for category</h3>}
+        title="Add mandate for category"
       >
         Select a category to add a mandate. An added mandate will require you to{" "}
         <strong>actively contribute</strong> in order for Community Solutions as
@@ -212,28 +384,38 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
         <Divider my="md" />
         Select the category:
         <List>
-          {categories?.map(cat => {
-            return (
-              <ListItem key={cat.slug}>
-                <Button
-                  onClick={() => {
-                    add({
-                      data: {
-                        username: userProps.username,
-                        category: cat.slug,
-                      },
-                    });
-                    closeAddMandateModal();
-                  }}
-                  variant="subtle"
-                >
-                  {cat.displayname}
-                </Button>
-              </ListItem>
-            );
-          })}
+          {addableCategories?.map(cat => (
+            <ListItem key={cat.slug}>
+              <Button
+                onClick={() => {
+                  setPendingCategory(cat);
+                  closeAddMandateModal();
+                }}
+                variant="subtle"
+              >
+                {cat.displayname}
+              </Button>
+            </ListItem>
+          ))}
         </List>
       </Modal>
+
+      <MandateAcceptModal
+        opened={pendingCategory !== null}
+        onClose={() => setPendingCategory(null)}
+        loading={addingMandate}
+        categoryDisplayname={pendingCategory?.displayname}
+        dueDate={pendingCategory?.mandate_due_date}
+        onAccept={() =>
+          pendingCategory &&
+          addMandate({
+            data: {
+              username: userProps.username,
+              category: pendingCategory.slug,
+            },
+          })
+        }
+      />
 
       {MandateStatusType.OPEN_ONGOING in groupedMandates && (
         <div>
@@ -242,6 +424,7 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
             color="green"
             variant="light"
             icon={<IconInfoCircle size={16} />}
+            mb="md"
           >
             These mandates are currently open and ongoing. During this period,
             the user has access to Community Solutions including the mandated
@@ -249,9 +432,32 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
             date.
           </Alert>
 
-          {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
           <RenderMandates
+            onChanged={() => void reloadMandates()}
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             mandates={groupedMandates[MandateStatusType.OPEN_ONGOING]!}
+          />
+        </div>
+      )}
+
+      {MandateStatusType.AWAITING_CHECK in groupedMandates && (
+        <div>
+          <h4>Awaiting check</h4>
+          <Alert
+            color="blue"
+            variant="light"
+            icon={<IconInfoCircle size={16} />}
+            mb="md"
+          >
+            The user has uploaded a transcript for these mandates, which an
+            administrator still needs to check. Waiting for the check never
+            blocks the user&apos;s account, even after the due date.
+          </Alert>
+
+          <RenderMandates
+            onChanged={() => void reloadMandates()}
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            mandates={groupedMandates[MandateStatusType.AWAITING_CHECK]!}
           />
         </div>
       )}
@@ -269,8 +475,9 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
             <strong>account blockage</strong>.
           </Alert>
 
-          {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
           <RenderMandates
+            onChanged={() => void reloadMandates()}
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             mandates={groupedMandates[MandateStatusType.REJECTED_GRACE]!}
           />
         </div>
@@ -286,11 +493,13 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
           >
             These mandates have been rejected and have exceeded a grace period.
             They are <strong>blocking the user's account</strong> and preventing
-            any access to Community Solutions.
+            any access to Community Solutions, unless an administrator extends
+            them.
           </Alert>
 
-          {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
           <RenderMandates
+            onChanged={() => void reloadMandates()}
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             mandates={groupedMandates[MandateStatusType.REJECTED_OVERDUE]!}
           />
         </div>
@@ -306,11 +515,13 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
           >
             <strong>Immediate attention required:</strong>
             These mandates are <strong>blocking the user's account</strong> and
-            preventing any access to Community Solutions.
+            preventing any access to Community Solutions, unless an
+            administrator extends them.
           </Alert>
 
-          {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
           <RenderMandates
+            onChanged={() => void reloadMandates()}
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             mandates={groupedMandates[MandateStatusType.OPEN_OVERDUE]!}
           />
         </div>
@@ -324,12 +535,14 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
             variant="outline"
             icon={<IconInfoCircle size={16} />}
           >
-            The following mandates have been fulfilled, checked, and accepted.
-            These mandates are archived and do not require any further action.
+            The following mandates have been accepted or excused by an
+            administrator. They are archived and do not require any further
+            action.
           </Alert>
 
-          {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
           <RenderMandates
+            onChanged={() => void reloadMandates()}
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             mandates={groupedMandates[MandateStatusType.ARCHIVED]!}
           />
         </div>

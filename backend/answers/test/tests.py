@@ -19,6 +19,16 @@ class TestMetadata(ComsolTestExamData):
         self.assertEqual(res["needsPayment"], self.exam.needs_payment)
         self.assertEqual(res["darkModeWarning"], self.exam.dark_mode_warning)
 
+    def test_printonly_solution_has_no_url(self):
+        self.exam.has_solution = True
+        self.exam.solution_printonly = True
+        self.exam.save()
+        self.login_as(self.nonAdminUsers[0])
+        res = self.get(f"/api/exam/metadata/{self.exam.filename}/")
+        self.assertTrue(res["canView"])
+        self.assertIsNone(res["solutionFile"])
+        self.get(f"/api/exam/pdf/solution/{self.exam.filename}/", status_code=403)
+
     def test_set_metadata(self):
         self.post(
             f"/api/exam/setmetadata/{self.exam.filename}/",

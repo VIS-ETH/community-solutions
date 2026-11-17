@@ -12,6 +12,7 @@ import {
   Button,
   useComputedColorScheme,
   Center,
+  Text,
 } from "@mantine/core";
 import { useDisclosure, useLocalStorage } from "@mantine/hooks";
 import React, {
@@ -312,8 +313,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
             )}
             {user.isCategoryAdmin && (
               <>
-                {user.isAdmin &&
-                  metaData.isOralTranscript &&
+                {metaData.isOralTranscript &&
                   !metaData.oralTranscriptChecked && (
                     <IconButton
                       color="gray"
@@ -348,7 +348,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
             <Grid.Col span={{ md: 6, lg: 4 }}>
               <Card m="xs">
                 {metaData.needsPayment && !metaData.hasPaid ? (
-                  <>
+                  <Text>
                     You have to accept a mandate to upload your own transcript
                     before you can view this exam. You can do so{" "}
                     <Anchor
@@ -358,7 +358,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
                       here
                     </Anchor>
                     .
-                  </>
+                  </Text>
                 ) : (
                   <>You can not view this exam at this time.</>
                 )}
@@ -545,7 +545,9 @@ const ExamPage: React.FC = () => {
     isLoading: cutsLoading,
     data: cuts,
     refetch,
-  } = useGetCuts(filename);
+  } = useGetCuts(filename, {
+    query: { enabled: metadata?.canView === true },
+  });
   const reloadCuts = useCallback(() => void refetch(), [refetch]);
   const mutateCuts = useCallback(
     (mutation: (old: ServerCutResponse) => ServerCutResponse) =>
