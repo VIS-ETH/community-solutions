@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from ninja import Form, Router, Schema
@@ -145,38 +145,52 @@ def query(request, username: str):
     },
     operation_id="markExamChecked",
 )
-@auth_check.require_admin
+@auth_check.require_login
 def mark_exam_checked(request, filename: str):
-    exam = get_object_or_404(Exam, filename=filename)
-    if not exam.is_oral_transcript:
-        return response.not_possible("Exam is not an oral transcript")
-    if exam.oral_transcript_checked:
-        return response.not_possible("Exam was already checked")
-    exam.oral_transcript_checked = True
-    exam.public = True
-    exam.save()
-    payment = [
-        x
-        for x in Payment.objects.filter(user=exam.oral_transcript_uploader)
-        if x.valid() and not x.check_time
-    ]
+    with transaction.atomic():
+        exam = get_object_or_404(Exam, filename=filename)
+        if not auth_check.has_admin_rights_for_exam(request, exam):
+            return response.not_allowed()
+        if not exam.is_oral_transcript:
+            return response.not_possible("Exam is not an oral transcript")
+        if exam.oral_transcript_checked:
+            return response.not_possible("Exam was already checked")
+        exam.oral_transcript_checked = True
+        exam.public = True
+        exam.save()
+        payment = [
+            x
+            for x in Payment.objects.filter(user=exam.oral_transcript_uploader)
+            if x.valid() and not x.check_time
+        ]
 
-    if payment:
-        payment[0].check_time = timezone.now()
-        payment[0].uploaded_transcript = exam
-        payment[0].save()
+        if payment:
+            payment[0].check_time = timezone.now()
+            payment[0].uploaded_transcript = exam
+            payment[0].save()
 
-    mandate = Mandate.objects.filter(
-        Q(user=exam.oral_transcript_uploader)
-        & ~Q(checked_state=Mandate.CheckedState.ACCEPTED)
-        & ~Q(checked_state=Mandate.CheckedState.EXCUSED)
-        & Q(fulfilled_time__isnull=False)
-    ).first()
+        mandate = (
+            Mandate.objects.select_for_update()
+            .filter(
+                user=exam.oral_transcript_uploader,
+                category=exam.category,
+                fulfilled_time__isnull=False,
+            )
+            .exclude(
+                checked_state__in=[
+                    Mandate.CheckedState.ACCEPTED,
+                    Mandate.CheckedState.EXCUSED,
+                ]
+            )
+            .first()
+        )
 
-    if mandate:
-        mandate.checked_state = Mandate.CheckedState.ACCEPTED
-        mandate.edited_time = timezone.now()
-        mandate.uploaded_transcript = exam
-        mandate.save()
+        if mandate:
+            now = timezone.now()
+            mandate.checked_state = Mandate.CheckedState.ACCEPTED
+            mandate.checked_time = now
+            mandate.edited_time = now
+            mandate.uploaded_transcript = exam
+            mandate.save()
 
     return response.success()

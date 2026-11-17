@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVectorField
 from django.db import models
-from django.db.models import Exists, OuterRef
+from django.db.models import Exists, OuterRef, Q
 from django.utils import timezone
 from django_prometheus.models import ExportModelOperationsMixin
 
@@ -60,27 +60,34 @@ class Exam(ExportModelOperationsMixin("exam"), models.Model):
     class Meta:
         indexes = [GinIndex(fields=["search_vector"])]
 
-    def current_user_can_view(self, request):
-        is_admin = auth_check.has_admin_rights_for_exam(request, self)
+    @staticmethod
+    def current_user_can_view_q(request, prefix=""):
+        def q(**kwargs):
+            return Q(**{prefix + key: value for key, value in kwargs.items()})
+
+        if auth_check.has_admin_rights(request):
+            return Q()
+        is_admin = q(category__in=request.user.category_admin_set.all())
+        can_view_paid = (
+            Q()
+            if request.user.has_paid()
+            else q(needs_payment=False)
+            | q(category__in=Mandate.categories_with_access(request.user))
+        )
+        return is_admin | (q(public=True) & can_view_paid)
+
+    def current_user_can_view(self, request, is_admin=None, can_view_category=None):
+        if is_admin is None:
+            is_admin = self.category.current_user_is_admin(request)
         if is_admin:
             return True
         if not self.public:
             return False
-        if self.needs_payment:
-            if Mandate.objects.filter(
-                user=request.user,
-                category=self.category,
-                due_date__gte=timezone.now(),
-            ).exists():
-                return True
-            if not request.user.has_paid():
-                return False
-        if (
-            self.oral_transcript_uploader is not None
-            and self.oral_transcript_uploader.pk == request.user.pk
-        ):
+        if not self.needs_payment:
             return True
-        return True
+        if can_view_category is None:
+            can_view_category = self.category.current_user_can_view(request)
+        return can_view_category
 
     def attachment_name(self):
         return (self.category.displayname + "__" + self.displayname + ".pdf").replace(

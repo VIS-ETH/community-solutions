@@ -182,13 +182,13 @@ class Command(BaseCommand):
                     filename,
                     f"{settings.COMSOL_ASSETS_FOLDER}/exam10.pdf",
                 )
-                needs_payment = category.has_payments and (i + category.id % 3 == 0)
+                needs_payment = category.has_payments and ((i + category.id) % 3 == 0)
                 if needs_payment:
                     exam_type = ExamType.objects.get(displayname="Transcripts")
                 else:
                     exam_type = (
                         ExamType.objects.get(displayname="Exams")
-                        if (i + category.id % 4 != 0)
+                        if ((i + category.id) % 4 != 0)
                         else ExamType.objects.get(displayname="Midterms")
                     )
                 exam = Exam(
@@ -197,8 +197,8 @@ class Command(BaseCommand):
                     exam_type=exam_type,
                     category=category,
                     resolve_alias="resolve_" + filename,
-                    public=(i + category.id % 7 != 0),
-                    finished_cuts=(i + category.id % 5 != 0),
+                    public=((i + category.id) % 7 != 0),
+                    finished_cuts=((i + category.id) % 5 != 0),
                     needs_payment=needs_payment,
                 )
                 exam.save()

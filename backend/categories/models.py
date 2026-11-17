@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 from django.db import models
 from django_prometheus.models import ExportModelOperationsMixin
 
+from myauth import auth_check
+
 if TYPE_CHECKING:
     from django.db.models.fields.related_descriptors import RelatedManager
 
@@ -37,6 +39,19 @@ class Category(models.Model):
         meta: CategoryMetaData  # CategoryMetaData.category (related_name="meta")
         exam_set: RelatedManager[Exam]  # answers.Exam.category
         document_set: RelatedManager[Document]  # documents.Document.category
+
+    def current_user_is_admin(self, request):
+        return auth_check.has_admin_rights_for_category(request, self)
+
+    def current_user_can_view(self, request):
+        # circular dependency
+        from mandates.models import Mandate
+
+        if self.current_user_is_admin(request):
+            return True
+        if Mandate.categories_with_access(request.user).filter(category=self).exists():
+            return True
+        return request.user.has_paid()
 
     def answer_progress(self):
         if self.meta.total_cuts == 0:

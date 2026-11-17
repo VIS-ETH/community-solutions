@@ -3,13 +3,16 @@ from typing import Literal
 
 from django.contrib.auth.models import User
 from django.db import transaction
-from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from ninja import Form, Query, Router, Schema
 
 from categories.models import Category
-from mandates.models import MANDATE_REJECTION_GRACE_PERIOD, Mandate
+from mandates.models import (
+    MANDATE_EXTENSION_PERIOD,
+    MANDATE_REJECTION_GRACE_PERIOD,
+    Mandate,
+)
 from myauth import auth_check
 from myauth.models import get_my_user
 from util import response
@@ -35,15 +38,17 @@ class MandateSchema(Schema):
     checked_state: Literal["accepted", "rejected", "excused"] | None
 
     grace_until: date | None
+    extended_until: datetime | None
 
     uploaded_transcript: str | None
     uploaded_transcript_display_name: str | None
+
+    can_manage: bool
 
 
 class CreateMandateSchema(Schema):
     category: str
     username: str | None = None
-    due_date: datetime | None = None
 
 
 class CheckMandateSchema(Schema):
@@ -55,7 +60,7 @@ class Filters(Schema):
     checked_state: Literal["accepted", "rejected", "excused"] | None = None
 
 
-def mandate_to_schema_resp(mandate: Mandate) -> MandateSchema:
+def mandate_to_schema_resp(request, mandate: Mandate) -> MandateSchema:
     return MandateSchema(
         id=str(mandate.pk),
         user=mandate.user.username,
@@ -74,27 +79,17 @@ def mandate_to_schema_resp(mandate: Mandate) -> MandateSchema:
         )
         if mandate.checked_state == "rejected" and mandate.checked_time
         else None,
+        extended_until=mandate.extended_time + MANDATE_EXTENSION_PERIOD
+        if mandate.extended_time
+        else None,
         uploaded_transcript=mandate.uploaded_transcript.filename
         if mandate.uploaded_transcript
         else None,
         uploaded_transcript_display_name=mandate.uploaded_transcript.displayname
         if mandate.uploaded_transcript
         else None,
+        can_manage=auth_check.has_admin_rights_for_category(request, mandate.category),
     )
-
-
-def _next_max_due_date():
-    t = timezone.now()
-    resetdates = [
-        datetime(year, month, 1, tzinfo=t.tzinfo)
-        for year in [t.year, t.year + 1]
-        for month in [3, 10]
-    ]
-    for reset in resetdates:
-        if reset > t:
-            return reset.date()
-    else:
-        raise Exception("No reset date found after payment time")
 
 
 @router.post(
@@ -111,40 +106,34 @@ def _next_max_due_date():
 )
 @auth_check.require_login
 def create_mandate(request, data: Form[CreateMandateSchema]):
-    if not auth_check.has_admin_rights(request) and data.username not in (
+    category = get_object_or_404(Category, slug=data.category)
+    if data.username not in (
         None,
         request.user.username,
-    ):
+    ) and not auth_check.has_admin_rights_for_category(request, category):
         return response.not_allowed()
     user = (
         request.user
         if data.username is None
         else get_object_or_404(User, username=data.username)
     )
-    category = get_object_or_404(Category, slug=data.category)
     if not category.has_payments:
         return response.not_possible(
             "Cannot create mandate for a category without payments"
         )
-    unhandled_exists = Mandate.objects.filter(
-        Q(user=user)
-        & Q(category=category)
-        & (Q(checked_state="accepted") | Q(checked_state="excused"))
-    ).exists()
-    if unhandled_exists:
-        return response.not_possible(
-            "User already has an unhandled mandate for this category"
-        )
+
+    if Mandate.objects.filter(user=user, category=category).exists():
+        return response.not_possible("User already has a mandate for this category")
 
     created_mandate = Mandate.objects.create(
         user=user,
         category=category,
-        due_date=data.due_date or _next_max_due_date(),
+        due_date=Mandate.next_due_date(),
     )
     mandate = Mandate.objects.select_related("user", "category").get(
         pk=created_mandate.pk
     )
-    return mandate_to_schema_resp(mandate)
+    return mandate_to_schema_resp(request, mandate)
 
 
 @router.get(
@@ -159,60 +148,28 @@ def create_mandate(request, data: Form[CreateMandateSchema]):
     operation_id="listMandates",
 )
 @auth_check.require_login
-def get_mandates(request, filters: Query[Filters]):
-    if (
+def list_mandates(request, filters: Query[Filters]):
+    # category admins only see mandates of their own categories
+    only_admin_categories = (
         not auth_check.has_admin_rights(request)
         and request.user.username != filters.username
+    )
+    if only_admin_categories and not auth_check.has_admin_rights_for_any_category(
+        request
     ):
         return response.not_allowed()
     db_filters = {"user__username": filters.username} if filters.username else {}
     db_filters |= (
-        {"checked_state": Mandate.CheckedState[filters.checked_state]}
+        {"checked_state": Mandate.CheckedState(filters.checked_state)}
         if filters.checked_state
         else {}
     )
     mandates = Mandate.objects.select_related(
         "category", "user", "uploaded_transcript"
     ).filter(**db_filters)
-    return [mandate_to_schema_resp(mandate) for mandate in mandates]
-
-
-@router.post(
-    "/{mandate_id}/fulfill/",
-    response={
-        200: MandateSchema,
-        # Unauthenticated
-        401: ErrorSchema,
-        # Unauthorised
-        403: ErrorSchema,
-        404: ErrorSchema,
-    },
-    operation_id="fulfillMandate",
-)
-@auth_check.require_login
-def fulfill_mandate(request, mandate_id: str):
-    with transaction.atomic():
-        mandate = get_object_or_404(
-            Mandate.objects.select_related("user", "category"),
-            pk=mandate_id,
-        )
-
-        if (
-            not auth_check.has_admin_rights(request)
-            and request.user.username != mandate.user.username
-        ):
-            return response.not_allowed()
-
-        if (
-            mandate.fulfilled_time is not None
-            and mandate.checked_state != Mandate.CheckedState.REJECTED
-        ):
-            return response.not_possible("Mandate already fulfilled")
-
-        mandate.fulfilled_time = timezone.now()
-        mandate.edited_time = timezone.now()
-        mandate.save()
-    return mandate_to_schema_resp(mandate)
+    if only_admin_categories:
+        mandates = mandates.filter(category__in=request.user.category_admin_set.all())
+    return [mandate_to_schema_resp(request, mandate) for mandate in mandates]
 
 
 @router.delete(
@@ -227,6 +184,7 @@ def fulfill_mandate(request, mandate_id: str):
     },
     operation_id="deleteMandate",
 )
+@auth_check.require_login
 def delete_mandate(request, mandate_id: str):
     with transaction.atomic():
         mandate = get_object_or_404(
@@ -245,6 +203,7 @@ def delete_mandate(request, mandate_id: str):
     "/{mandate_id}/check/",
     response={
         200: MandateSchema,
+        400: ErrorSchema,
         # Unauthenticated
         401: ErrorSchema,
         # Unauthorised
@@ -257,17 +216,71 @@ def delete_mandate(request, mandate_id: str):
 def check_mandate(request, mandate_id: str, data: Form[CheckMandateSchema]):
     with transaction.atomic():
         mandate = get_object_or_404(
-            Mandate.objects.select_related("user", "category"),
+            Mandate.objects.select_for_update(of=("self",)).select_related(
+                "user", "category", "uploaded_transcript"
+            ),
             pk=mandate_id,
         )
 
         if not auth_check.has_admin_rights_for_category(request, mandate.category):
             return response.not_allowed()
 
-        if mandate.fulfilled_time is None or mandate.uploaded_transcript is None:
-            return response.not_possible("Mandate not fulfilled yet")
+        current = mandate.checked_state
+        if current in (Mandate.CheckedState.ACCEPTED, Mandate.CheckedState.EXCUSED):
+            return response.not_possible(f"Mandate is already {current}")
 
-        mandate.checked_state = Mandate.CheckedState[data.checked_state]
-        mandate.checked_time = timezone.now()
-        mandate.edited_time = timezone.now()
+        if data.checked_state != "excused" and mandate.fulfilled_time is None:
+            return response.not_possible("Mandate not fulfilled yet")
+        if data.checked_state == "rejected" and current is not None:
+            return response.not_possible("Mandate is already rejected")
+
+        now = timezone.now()
+        mandate.checked_state = Mandate.CheckedState(data.checked_state)
+        mandate.checked_time = now
+        mandate.edited_time = now
         mandate.save()
+
+        # same as "mark checked" on the exam page
+        exam = mandate.uploaded_transcript
+        if data.checked_state == "accepted" and exam is not None:
+            exam.oral_transcript_checked = True
+            exam.public = True
+            exam.save()
+    return mandate_to_schema_resp(request, mandate)
+
+
+@router.post(
+    "/{mandate_id}/extend/",
+    response={
+        200: MandateSchema,
+        400: ErrorSchema,
+        # Unauthenticated
+        401: ErrorSchema,
+        # Unauthorised
+        403: ErrorSchema,
+        404: ErrorSchema,
+    },
+    operation_id="extendMandate",
+)
+@auth_check.require_login
+def extend_mandate(request, mandate_id: str):
+    with transaction.atomic():
+        mandate = get_object_or_404(
+            Mandate.objects.select_for_update(of=("self",)).select_related(
+                "user", "category", "uploaded_transcript"
+            ),
+            pk=mandate_id,
+        )
+
+        if not auth_check.has_admin_rights_for_category(request, mandate.category):
+            return response.not_allowed()
+
+        # granting again restarts the period
+        if not Mandate.objects.filter(Mandate.overdue_q(), pk=mandate.pk).exists():
+            return response.not_possible("Mandate is not overdue")
+
+        now = timezone.now()
+        mandate.extended_time = now
+        mandate.edited_time = now
+        mandate.save()
+    return mandate_to_schema_resp(request, mandate)

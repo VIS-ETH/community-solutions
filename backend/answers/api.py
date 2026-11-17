@@ -7,6 +7,7 @@ from ninja import Field, Form, Router, Schema
 import answers.api_files as files
 from answers.models import Exam, ExamType, ExamUserSolved
 from categories.models import Category
+from mandates.models import Mandate
 from myauth import auth_check
 from myauth.auth_check import has_admin_rights_for_exam, is_expert_for_exam
 from users.api import UserSchema
@@ -119,7 +120,7 @@ def make_exam_metadata_object(request, exam):
         exam_file = files.get_presigned_url_exam(exam)
 
     solution_file = None
-    if can_view and exam.has_solution:
+    if can_view and exam.has_solution and not exam.solution_printonly:
         solution_file = files.get_presigned_url_solution(exam)
 
     printonly_file = None
@@ -138,7 +139,10 @@ def make_exam_metadata_object(request, exam):
         canEdit=admin_rights,
         isExpert=is_expert,
         canView=can_view,
-        hasPaid=request.user.has_paid(),
+        hasPaid=request.user.has_paid()
+        or Mandate.categories_with_access(request.user)
+        .filter(category=exam.category)
+        .exists(),
         filename=exam.filename,
         displayname=exam.displayname,
         category=exam.category.slug,

@@ -26,6 +26,7 @@ import {
 import { UserContext, useUser } from "../auth";
 import CategoryMetaDataEditor from "../components/category-metadata-editor";
 import ExamList from "../components/exam-list";
+import MandateAcceptModal from "../components/mandate-accept-modal";
 import LoadingOverlay from "../components/loading-overlay";
 import DocumentList from "../components/document-list";
 import useRemoveConfirm from "../hooks/useRemoveConfirm";
@@ -57,11 +58,11 @@ import { useQueryClient } from "@tanstack/react-query";
 
 interface CategoryPageContentProps {
   onMetaDataChange: (newMetaData: CategoryData) => void;
-  metaData: CategoryData;
+  metadata: CategoryData;
 }
 const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
   onMetaDataChange,
-  metaData,
+  metadata: metadata,
 }) => {
   const { data, isPending: loading, refetch: run } = useListMetaCategories();
   const navigate = useNavigate();
@@ -72,10 +73,10 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
         void navigate("/");
         // Remove caches
         queryClient.removeQueries({
-          queryKey: getGetCategoryMetadataQueryKey(metaData.slug),
+          queryKey: getGetCategoryMetadataQueryKey(metadata.slug),
         });
         queryClient.removeQueries({
-          queryKey: getListCategoryExamsQueryKey(metaData.slug),
+          queryKey: getListCategoryExamsQueryKey(metadata.slug),
         });
         // Invalidate caches for all category listings (e.g. quicksearch box)
         void queryClient.invalidateQueries({
@@ -89,15 +90,15 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
   const onRemove = useCallback(
     () =>
       removeConfirm(
-        `Do you really want to remove the category "${metaData.displayname}"?`,
-        () => remove({ data: { slug: metaData.slug } }),
+        `Do you really want to remove the category "${metadata.displayname}"?`,
+        () => remove({ data: { slug: metadata.slug } }),
       ),
-    [removeConfirm, remove, metaData],
+    [removeConfirm, remove, metadata],
   );
   const offeredIn = useMemo(
     () =>
-      data ? getMetaCategoriesForCategory(data, metaData.slug) : undefined,
-    [data, metaData],
+      data ? getMetaCategoriesForCategory(data, metadata.slug) : undefined,
+    [data, metadata],
   );
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const user = useUser()!;
@@ -120,54 +121,26 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
       mutation: {
         onSuccess() {
           closeMandateAcceptModal();
+          // hides the banner and unlocks the paid exams
+          void queryClient.invalidateQueries({
+            queryKey: getGetCategoryMetadataQueryKey(metadata.slug),
+          });
+          void queryClient.invalidateQueries({
+            queryKey: getListCategoryExamsQueryKey(metadata.slug),
+          });
         },
       },
     });
 
   return (
     <>
-      <Modal
+      <MandateAcceptModal
         opened={showMandateAcceptModal}
         onClose={closeMandateAcceptModal}
-        title="Mandate Acceptance"
-      >
-        We require you to accept the terms of oral exam contributions before
-        proceeding. By accepting, you agree to actively contribute to Community
-        Solutions and adhere to the guidelines provided. Please read the terms
-        carefully before accepting.
-        <br />A transcript of your oral exam <strong>MUST</strong> be uploaded
-        to Community Solutions. If you do not upload a transcript, your{" "}
-        <strong>access</strong> to all exams <strong>will be blocked</strong>.
-        <br />
-        You will have time to upload the transcript until the end of the exam
-        sessions.
-        <br />
-        You <strong>CANNOT CANCEL</strong> this on your own, and will need to
-        explain and show your situation to a Community Solutions administrator.
-        <br />
-        For any questions or concerns, please contact the administrators of
-        Community Solutions.
-        <Group justify="right" mt="md">
-          <Button mt="md" onClick={closeMandateAcceptModal}>
-            Dismiss
-          </Button>
-          <Button
-            mt="md"
-            variant="light"
-            color="red"
-            loading={creatingMandate}
-            onClick={() =>
-              runCreateMandate({
-                data: {
-                  category: metaData.slug,
-                },
-              })
-            }
-          >
-            Accept
-          </Button>
-        </Group>
-      </Modal>
+        loading={creatingMandate}
+        dueDate={metadata.mandate_due_date}
+        onAccept={() => runCreateMandate({ data: { category: metadata.slug } })}
+      />
       {modals}
       <Breadcrumbs separator={<IconChevronRight />}>
         <Anchor tt="uppercase" size="xs" component={Link} to="/">
@@ -177,9 +150,9 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
           tt="uppercase"
           size="xs"
           component={Link}
-          to={`/category/${metaData.slug}`}
+          to={`/category/${metadata.slug}`}
         >
-          {metaData.displayname}
+          {metadata.displayname}
         </Anchor>
       </Breadcrumbs>
       <Routes>
@@ -195,7 +168,7 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                   close={() => {
                     void navigate("./..");
                   }}
-                  currentMetaData={metaData}
+                  currentMetaData={metadata}
                   offeredIn={offeredIn.flatMap(b =>
                     b.meta2.map(d => [b.displayname, d.displayname] as const),
                   )}
@@ -214,9 +187,9 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                 mb="sm"
               >
                 <Title order={1} my="md">
-                  {metaData.displayname}
+                  {metadata.displayname}
                 </Title>
-                {!user.isCategoryAdmin && metaData.has_payments && (
+                {!user.isCategoryAdmin && metadata.has_payments && (
                   <Button
                     leftSection={<IconUpload />}
                     onClick={() => {
@@ -228,7 +201,7 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                 )}
                 {user.isCategoryAdmin && (
                   <Group>
-                    {metaData.has_payments && (
+                    {metadata.has_payments && (
                       <Button
                         leftSection={<IconUpload />}
                         onClick={() => {
@@ -256,7 +229,7 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                     <Button
                       color="red"
                       loading={removeLoading}
-                      disabled={metaData.slug === "default"}
+                      disabled={metadata.slug === "default"}
                       leftSection={<IconTrash />}
                       onClick={onRemove}
                     >
@@ -267,20 +240,20 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
               </Flex>
 
               <Grid mb="xs">
-                {metaData.semester && (
+                {metadata.semester && (
                   <Grid.Col span="content">
-                    Semester: <Badge>{metaData.semester}</Badge>
+                    Semester: <Badge>{metadata.semester}</Badge>
                   </Grid.Col>
                 )}
-                {metaData.form && (
+                {metadata.form && (
                   <Grid.Col span="content">
-                    Form: <Badge>{metaData.form}</Badge>
+                    Form: <Badge>{metadata.form}</Badge>
                   </Grid.Col>
                 )}
-                {metaData.more_exams_link && (
+                {metadata.more_exams_link && (
                   <Grid.Col span="content">
                     <Anchor
-                      href={metaData.more_exams_link}
+                      href={metadata.more_exams_link}
                       target="_blank"
                       rel="noopener noreferrer"
                       c="blue"
@@ -289,8 +262,8 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                     </Anchor>
                   </Grid.Col>
                 )}
-                {metaData.remark && (
-                  <Grid.Col>Remark: {metaData.remark}</Grid.Col>
+                {metadata.remark && (
+                  <Grid.Col>Remark: {metadata.remark}</Grid.Col>
                 )}
               </Grid>
               {(offeredIn === undefined || offeredIn.length > 0) && (
@@ -315,7 +288,7 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
               )}
               <Grid my="sm">
                 {user.user?.username &&
-                  metaData.experts.includes(user.user.username) && (
+                  metadata.experts.includes(user.user.username) && (
                     <Grid.Col span="auto">
                       <Alert
                         color="yellow"
@@ -327,20 +300,20 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                       </Alert>
                     </Grid.Col>
                   )}
-                {metaData.has_payments && (
+                {metadata.has_payments && !metadata.user_has_mandate && (
                   <Grid.Col span="auto">
                     <Alert color="gray" icon={<IconInfoCircle />}>
                       As oral exams are crowdsourced, more so than other types
                       of exams, they require active contribution to Community
                       Solutions. You must explicitly agree to these terms before
                       continuing.{" "}
-                      <Button onClick={openMandateAcceptModal}>
+                      <Button ms="md" onClick={openMandateAcceptModal}>
                         Accept terms
                       </Button>
                     </Alert>
                   </Grid.Col>
                 )}
-                {metaData.catadmin && (
+                {metadata.catadmin && (
                   <Grid.Col span="auto">
                     <Alert
                       variant="light"
@@ -354,17 +327,17 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                   </Grid.Col>
                 )}
               </Grid>
-              <ExamList metaData={metaData} />
+              <ExamList metaData={metadata} />
 
-              <DocumentList slug={metaData.slug} />
+              <DocumentList slug={metadata.slug} />
 
-              {metaData.attachments.length > 0 && (
+              {metadata.attachments.length > 0 && (
                 <>
                   <Title order={2} mt="xl" mb="lg">
                     Attachments
                   </Title>
                   <List>
-                    {metaData.attachments.map(att => (
+                    {metadata.attachments.map(att => (
                       <List.Item key={att.filename}>
                         <Anchor
                           href={`/api/filestore/get/${att.filename}/`}
@@ -379,7 +352,7 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                   </List>
                 </>
               )}
-              {(user.isCategoryAdmin || metaData.has_payments) && (
+              {(user.isCategoryAdmin || metadata.has_payments) && (
                 <Modal
                   opened={showUploadModal !== false}
                   onClose={() => {
@@ -392,10 +365,10 @@ const CategoryPageContent: React.FC<CategoryPageContentProps> = ({
                   }
                 >
                   {showUploadModal === "exam" && (
-                    <UploadPdfForm category={metaData.slug} />
+                    <UploadPdfForm category={metadata.slug} />
                   )}
                   {showUploadModal === "transcript" && (
-                    <UploadTranscriptForm category={metaData.slug} />
+                    <UploadTranscriptForm category={metadata.slug} />
                   )}
                 </Modal>
               )}
@@ -448,7 +421,7 @@ const CategoryPage: React.FC = () => {
           }
         >
           <CategoryPageContent
-            metaData={data}
+            metadata={data}
             onMetaDataChange={onMetaDataChange}
           />
         </UserContext>
