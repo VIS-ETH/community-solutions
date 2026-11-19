@@ -101,7 +101,9 @@ const TelemetryRoutes =
     : FaroRoutes;
 
 const App: React.FC = () => {
-  const [loggedOut, setLoggedOut] = useState(false);
+  const [logoutModal, setLogoutModal] = useState<
+    "hidden" | "open" | "dismissed"
+  >("hidden");
   useEffect(() => {
     let cancel = false;
     // Keep track of consecutive failed token refreshes (per token expiry), so
@@ -133,7 +135,7 @@ const App: React.FC = () => {
 
           // If the refresh was successful we are happy
           if (r && r.status >= 200 && r.status < 400) {
-            setLoggedOut(false);
+            setLogoutModal("hidden");
             // Reset the counter, there is a new token
             failedCount = 0;
             return;
@@ -141,7 +143,7 @@ const App: React.FC = () => {
 
           // Refresh failed, or we didn't refresh (due to expired refresh token)
           // We should retry a few times to a limit, but we'll show a modal already.
-          setLoggedOut(true);
+          setLogoutModal(state => (state === "dismissed" ? state : "open"));
           failedTokenExpiry = exp;
           failedCount++;
           return;
@@ -149,7 +151,7 @@ const App: React.FC = () => {
       } else if (!isTokenExpired(exp)) {
         // Access token is not expired yet. If any modal is currently visible,
         // hide it
-        setLoggedOut(false);
+        setLogoutModal("hidden");
       }
       // When we are authenticated (`exp !== undefined`) we want to refresh the token
       // `minValidity` seconds before it expires. If there's no token we recheck this
@@ -350,8 +352,8 @@ const App: React.FC = () => {
   return (
     <MantineProvider theme={fvTheme} cssVariablesResolver={resolver}>
       <Modal
-        opened={loggedOut}
-        onClose={() => login()}
+        opened={logoutModal === "open"}
+        onClose={() => setLogoutModal("dismissed")}
         title="You've been logged out due to inactivity"
       >
         <Text mb="md">
