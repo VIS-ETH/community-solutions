@@ -89,14 +89,13 @@ export const dlSelectedSolutions = async (
   }
   const zipFileItems = selectedSolutions.map(
     async (solution): Promise<ZipFileItem | undefined> => {
-      const { value } = await getSolutionPdfUrl(solution.filename);
-      const responseFile = fetch(value.url).then(r => r.arrayBuffer());
+      const { url } = await getSolutionPdfUrl(solution.filename);
+      const responseFile = fetch(url).then(r => r.arrayBuffer());
       let documentCategoryName: string;
       if (examtypes.size === 1) {
-        documentCategoryName = solution.displayname + "-" + categoryName;
+        documentCategoryName = `${solution.displayname}-${categoryName}`;
       } else {
-        documentCategoryName =
-          solution.examtype + "/" + solution.displayname + "-" + categoryName;
+        documentCategoryName = `${solution.examtype}/${solution.displayname}-${categoryName}`;
       }
       return {
         displayName: documentCategoryName,
@@ -105,5 +104,5 @@ export const dlSelectedSolutions = async (
       };
     },
   );
-  await downloadZipFile("solutions-" + categoryName + ".zip", zipFileItems);
+  await downloadZipFile(`solutions-${categoryName}.zip`, zipFileItems);
 };

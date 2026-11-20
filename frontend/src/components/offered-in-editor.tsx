@@ -6,7 +6,7 @@ import { useListMetaCategories } from "../api/hooks/categories";
 import { Meta1CategoryResponse } from "../api/model";
 
 interface OfferedInEditorProps {
-  offeredIn: (readonly [string, string])[];
+  offeredIn: readonly (readonly [string, string])[];
   setOfferedIn: (newOfferedIn: (readonly [string, string])[]) => void;
 }
 const OfferedInEditor: React.FC<OfferedInEditorProps> = ({

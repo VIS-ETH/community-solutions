@@ -15,12 +15,12 @@ import {
 } from "@mantine/core";
 import {
   getHotkeyHandler,
+  useDebouncedValue,
   useDisclosure,
   useHotkeys,
   useMediaQuery,
   useOs,
 } from "@mantine/hooks";
-import { useDebounce } from "ahooks";
 import { keepPreviousData } from "@tanstack/react-query";
 import { useSearch as useSearchRequest } from "../../../api/hooks/answers";
 import { useUser } from "../../../auth";
@@ -89,7 +89,7 @@ export const QuickSearchBox: React.FC = () => {
 
   // Search query and its debounced version (to save network requests while typing)
   const [searchQuery, setSearchQuery] = useState("");
-  const debouncedSearchQuery = useDebounce(searchQuery, { wait: 100 });
+  const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 200);
 
   // Category filter, set by pages like ExamPage or CategoryPage through the
   // global context (in App). Undefined if there is no filter.

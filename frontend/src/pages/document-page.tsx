@@ -53,6 +53,7 @@ import { useUser } from "../auth";
 import type { DocumentFileSchema } from "../api/model/documentFileSchema";
 import type { DocumentSchema } from "../api/model/documentSchema";
 import {
+  getGetDocumentFileUrl,
   useAcceptDocumentTransfer,
   useGetDocument,
   useRejectDocumentTransfer,
@@ -533,7 +534,7 @@ const DocumentPage: React.FC = () => {
                 <Components.Viewer
                   file={activeFile}
                   document={document}
-                  url={`/api/document/file/${activeFile.filename}`}
+                  url={getGetDocumentFileUrl(activeFile.filename)}
                 />
               )}
               {editing && (
@@ -541,7 +542,7 @@ const DocumentPage: React.FC = () => {
                   <Components.Editor
                     file={activeFile}
                     document={document}
-                    url={`/api/document/file/${activeFile.filename}`}
+                    url={getGetDocumentFileUrl(activeFile.filename)}
                   />
                 </Container>
               )}
@@ -550,7 +551,7 @@ const DocumentPage: React.FC = () => {
             <Components.Viewer
               file={activeFile}
               document={document}
-              url={`/api/document/file/${activeFile.filename}`}
+              url={getGetDocumentFileUrl(activeFile.filename)}
             />
           )
         ) : (
@@ -570,7 +571,7 @@ const DocumentPage: React.FC = () => {
               <Button
                 leftSection={<IconDownload />}
                 onClick={() =>
-                  download(`/api/document/file/${activeFile.filename}`)
+                  download(getGetDocumentFileUrl(activeFile.filename))
                 }
               >
                 Download

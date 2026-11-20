@@ -1,4 +1,3 @@
-import { useRequest } from "ahooks";
 import {
   Alert,
   Button,
@@ -33,6 +32,7 @@ import {
   removeUserFromCategorySet,
   setCategoryMetadata,
 } from "../api/hooks/categories";
+import { useMutation } from "@tanstack/react-query";
 
 export interface CategoryMetaDataDraft extends Omit<
   CategoryData,
@@ -45,8 +45,8 @@ const applyChanges = async (
   slug: string,
   oldMetaData: CategoryData,
   newMetaData: CategoryMetaDataDraft,
-  oldOfferedIn: (readonly [string, string])[],
-  newOfferedIn: (readonly [string, string])[],
+  oldOfferedIn: OfferedIn,
+  newOfferedIn: OfferedIn,
 ) => {
   const metadataDiff: Partial<CategoryData> = {};
   if (oldMetaData.displayname !== newMetaData.displayname)
@@ -189,11 +189,13 @@ const permissionOptions = createOptions({
   none: "none",
 });
 
+type OfferedIn = readonly (readonly [string, string])[];
+
 interface CategoryMetaDataEditorProps {
   currentMetaData: CategoryData;
   onMetaDataChange: (newMetaData: CategoryData) => void;
   close: () => void;
-  offeredIn: (readonly [string, string])[];
+  offeredIn: OfferedIn;
 }
 const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
   onMetaDataChange,
@@ -201,19 +203,29 @@ const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
   close,
   offeredIn: propOfferedIn,
 }) => {
-  const {
-    error,
-    loading,
-    run: runApplyChanges,
-  } = useRequest(applyChanges, {
-    manual: true,
-    onSuccess: newMetaData => {
+  const editMetadata = useMutation({
+    mutationFn(data: {
+      slug: string;
+      oldMetadata: CategoryData;
+      newMetadata: CategoryMetaDataDraft;
+      oldOfferedIn: OfferedIn;
+      newOfferedIn: OfferedIn;
+    }) {
+      return applyChanges(
+        data.slug,
+        data.oldMetadata,
+        data.newMetadata,
+        data.oldOfferedIn,
+        data.newOfferedIn,
+      );
+    },
+    onSuccess(newMetaData) {
       close();
       onMetaDataChange(newMetaData);
     },
   });
-  const [offeredIn, setOfferedIn] =
-    useInitialState<(readonly [string, string])[]>(propOfferedIn);
+
+  const [offeredIn, setOfferedIn] = useInitialState<OfferedIn>(propOfferedIn);
   const {
     registerInput,
     registerCheckbox,
@@ -222,13 +234,13 @@ const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
     setFormValue,
     onSubmit,
   } = useForm(currentMetaData as CategoryMetaDataDraft, data => {
-    void runApplyChanges(
-      currentMetaData.slug,
-      currentMetaData,
-      data,
-      propOfferedIn,
-      offeredIn,
-    );
+    editMetadata.mutate({
+      slug: currentMetaData.slug,
+      oldMetadata: currentMetaData,
+      newMetadata: data,
+      oldOfferedIn: propOfferedIn,
+      newOfferedIn: offeredIn,
+    });
   });
   return (
     <>
@@ -236,7 +248,9 @@ const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
         <h2>Edit Category</h2>
         <CloseButton onClick={close} />
       </Group>
-      {error && <Alert color="red">{error.message}</Alert>}
+      {editMetadata.isError && (
+        <Alert color="red">{editMetadata.error.message}</Alert>
+      )}
       <Title order={4} mb="xs">
         Metadata
       </Title>
@@ -344,7 +358,7 @@ const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
         </Button>
         <Button
           leftSection={<IconDeviceFloppy />}
-          loading={loading}
+          loading={editMetadata.isPending}
           onClick={onSubmit}
         >
           Save

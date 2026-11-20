@@ -1,4 +1,3 @@
-import { useRequest } from "ahooks";
 import {
   Alert,
   Button,
@@ -41,6 +40,7 @@ import {
   removeAttachment,
   uploadAttachment,
 } from "../api/hooks/filestore";
+import { useMutation } from "@tanstack/react-query";
 
 const stringKeys = [
   "displayname",
@@ -159,7 +159,7 @@ const applyChanges = async (
 interface Props {
   currentMetaData: ExamMetadataSchema;
   closeEditPage: () => void;
-  onMetaDataChange: (newMetaData: ExamMetadataSchema) => void;
+  onMetaDataChange: (newMetadata: ExamMetadataSchema) => void;
 }
 const ExamMetadataEditor: React.FC<Props> = ({
   currentMetaData,
@@ -184,14 +184,28 @@ const ExamMetadataEditor: React.FC<Props> = ({
   }, [examTypes]);
 
   const {
-    loading,
+    isPending,
     error,
-    run: runApplyChanges,
-  } = useRequest(applyChanges, {
-    manual: true,
-    onSuccess: newMetaData => {
+    mutate: runApplyChanges,
+  } = useMutation({
+    mutationFn(data: {
+      filename: string;
+      oldMetadata: ExamMetadataSchema;
+      newMetadata: ExamMetaDataDraft;
+      printonly: File | true | undefined;
+      masterSolution: File | true | undefined;
+    }) {
+      return applyChanges(
+        data.filename,
+        data.oldMetadata,
+        data.newMetadata,
+        data.printonly,
+        data.masterSolution,
+      );
+    },
+    onSuccess(newMetadata) {
       closeEditPage();
-      onMetaDataChange(newMetaData);
+      onMetaDataChange(newMetadata);
     },
   });
 
@@ -206,13 +220,13 @@ const ExamMetadataEditor: React.FC<Props> = ({
     useForm(
       currentMetaData as ExamMetaDataDraft,
       values =>
-        void runApplyChanges(
-          currentMetaData.filename,
-          currentMetaData,
-          values,
-          printonlyFile,
-          masterFile,
-        ),
+        runApplyChanges({
+          filename: currentMetaData.filename,
+          oldMetadata: currentMetaData,
+          newMetadata: values,
+          printonly: printonlyFile,
+          masterSolution: masterFile,
+        }),
       ["category", "categoryDisplayname", "examType", "remark", "attachments"],
     );
 
@@ -364,7 +378,7 @@ const ExamMetadataEditor: React.FC<Props> = ({
         </Button>
         <Button
           leftSection={<IconDeviceFloppy />}
-          loading={loading}
+          loading={isPending}
           onClick={onSubmit}
         >
           Save

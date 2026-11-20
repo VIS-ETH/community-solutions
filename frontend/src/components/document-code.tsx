@@ -1,13 +1,21 @@
-import { useRequest } from "ahooks";
 import { Container } from "@mantine/core";
 import React from "react";
 import CodeBlock from "./code-block";
+import { useQuery } from "@tanstack/react-query";
 
 interface DocumentCodeProps {
   url: string;
 }
 const DocumentCode: React.FC<DocumentCodeProps> = ({ url }) => {
-  const { data } = useRequest(() => fetch(url).then(r => r.text()));
+  const { data } = useQuery({
+    queryKey: ["document-code", url],
+    async queryFn({ signal }) {
+      const response = await fetch(url, { signal });
+      if (!response.ok)
+        throw new Error(`Failed to load document (${response.status}).`);
+      return response.text();
+    },
+  });
 
   return (
     <Container size="xl" py="sm">

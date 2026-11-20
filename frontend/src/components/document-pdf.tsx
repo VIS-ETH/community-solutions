@@ -1,4 +1,3 @@
-import { useRequest, useSize } from "ahooks";
 import { Container } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
@@ -11,6 +10,8 @@ import ContentContainer from "./secondary-container";
 import useToggle from "../hooks/useToggle";
 import PdfPanelBase from "./pdf-panel-base";
 import useSet from "../hooks/useSet";
+import { useQuery } from "@tanstack/react-query";
+import { useWidth } from "../hooks/useWidth";
 
 const loadDocumentRenderer = async (url: string) => {
   const pdf = (await getDocument({
@@ -33,14 +34,16 @@ interface DocumentPdfProps {
   url: string;
 }
 const DocumentPdf: React.FC<DocumentPdfProps> = ({ url }) => {
-  const { error: pdfError, data } = useRequest(
-    () => loadDocumentRenderer(url),
-    {
-      refreshDeps: [url],
+  const { error: pdfError, data } = useQuery({
+    queryFn() {
+      return loadDocumentRenderer(url);
     },
-  );
-  const sizeRef = useRef<HTMLDivElement>(null);
-  const size = useSize(sizeRef);
+    queryKey: ["document-pdf", url],
+    staleTime: Infinity,
+  });
+
+  const widthRef = useRef<HTMLDivElement>(null);
+  const width = useWidth(widthRef, 1000);
   const renderer = data ? data[1] : undefined;
 
   const [maxWidth, setMaxWidth] = useLocalStorage({
@@ -80,7 +83,7 @@ const DocumentPdf: React.FC<DocumentPdfProps> = ({ url }) => {
         <Container size="xl" style={{ maxWidth }}>
           {pdfError && "Error loading PDF"}
 
-          <div ref={sizeRef}>
+          <div ref={widthRef}>
             {renderer && (
               <div>
                 {getPages(renderer).map(pageNumber => (
@@ -91,7 +94,7 @@ const DocumentPdf: React.FC<DocumentPdfProps> = ({ url }) => {
                       page={pageNumber}
                       start={0}
                       end={1}
-                      targetWidth={size.width}
+                      targetWidth={width}
                       renderer={renderer}
                       onInViewChange={inViewChangeListeners[pageNumber]}
                     />

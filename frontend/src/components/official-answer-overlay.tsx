@@ -11,7 +11,6 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getExamMetadata, useGetExamMetadata } from "../api/hooks/answers.js";
 import type { ExamMetadataSchema } from "../api/model/index.js";
-import { useRequest } from "ahooks";
 import { createOptions, options } from "../utils/ts-utils.js";
 import { usePdfUrl } from "./official-solution.js";
 import type {
@@ -29,6 +28,7 @@ import {
   listCategoryExams,
   useListCategoriesWithMeta,
 } from "../api/hooks/categories";
+import { useQuery } from "@tanstack/react-query";
 
 function formatCoordinate(c: number): string {
   const rounded = Math.round(c * 1e6) / 1e6;
@@ -286,16 +286,13 @@ const ExamNavigator: React.FC<NavigatorProps> = ({ onCrop }) => {
     [categories],
   );
 
-  const { data: exams } = useRequest(
-    () =>
-      selectedCategory
-        ? listCategoryExams(selectedCategory)
-        : Promise.resolve(undefined),
-    {
-      cacheKey: `exam-list-${selectedCategory}`,
-      refreshDeps: [selectedCategory],
-    },
-  );
+  const { data: exams } = useQuery({
+    // `enabled` below guarantees selectedCategory is non-null
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    queryFn: ({ signal }) => listCategoryExams(selectedCategory!, { signal }),
+    queryKey: ["exam-list", selectedCategory],
+    enabled: !!selectedCategory,
+  });
   const examsMap = useMemo(
     () =>
       exams &&

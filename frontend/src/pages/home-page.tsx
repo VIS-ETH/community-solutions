@@ -13,7 +13,6 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useDisclosure, useLocalStorage } from "@mantine/hooks";
-import { useRequest } from "ahooks";
 import React, { useCallback, useMemo, useState } from "react";
 import { useUser } from "../auth";
 import CategoryCard from "../components/category-card";
@@ -38,14 +37,15 @@ import {
   ListCategoriesWithMetaResponse,
   type Meta1CategoryResponse,
 } from "../api/model";
+import { useQuery } from "@tanstack/react-query";
 
 const displayNameGetter = (data: ListCategoriesWithMetaResponse) =>
   data.displayname;
 
-const loadCategoryData = async () => {
+const loadCategoryData = async (signal: AbortSignal) => {
   const [categories, metaCategories] = await Promise.all([
-    listCategoriesWithMeta(),
-    listMetaCategories(),
+    listCategoriesWithMeta({ signal }),
+    listMetaCategories({ signal }),
   ]);
   return [
     categories.sort((a, b) => a.displayname.localeCompare(b.displayname)),
@@ -190,7 +190,7 @@ export const CategoryList: React.FC = () => {
   // while the actual request is loading
   const [localStorageCategoryData, setLocalStorageCategoryData] =
     useLocalStorage<
-      [ListCategoriesWithMetaResponse[]?, Meta1CategoryResponse[]?]
+      readonly [ListCategoriesWithMetaResponse[]?, Meta1CategoryResponse[]?]
     >({
       key: "category-data",
       defaultValue: [undefined, undefined],
@@ -199,26 +199,27 @@ export const CategoryList: React.FC = () => {
     });
 
   // Run the promise to get the various category data
-  const { data, error, loading, run } = useRequest(loadCategoryData, {
-    cacheKey: "category-data",
-    onSuccess: data => {
+  const {
+    data,
+    isFetching: categoriesLoading,
+    error,
+    refetch,
+  } = useQuery({
+    async queryFn({ signal }) {
+      const data = await loadCategoryData(signal);
       // Update the cache with the new data. In total this is about 25-35 kB
       // with 100-150 courses, which we deem as acceptable. Browser limits are
       // 5-10 MB. Also, if the user disables localStorage or has a lower limit,
       // our website won't break -- it's just a cache to speed up perceived load.
-      setLocalStorageCategoryData(
-        // onSuccess gives us a readonly array, so cast it to a mutable array
-        data as [ListCategoriesWithMetaResponse[], Meta1CategoryResponse[]],
-      );
+      setLocalStorageCategoryData(data);
+      return data;
     },
+    queryKey: ["category-data"],
+    initialData: localStorageCategoryData,
+    initialDataUpdatedAt: 0,
   });
 
-  // Combine the data from the request with the local storage cache, preferring
-  // the actual data. Each of the two elements in the array can be 'undefined'
-  // when neither the cache or the request have been loaded yet. This is
-  // different from an empty array which implies the loaded data is empty.
-  const [categoriesWithDefault, metaCategories] =
-    data ?? localStorageCategoryData;
+  const [categoriesWithDefault, metaCategories] = data;
 
   const categories = useMemo(
     () =>
@@ -251,8 +252,8 @@ export const CategoryList: React.FC = () => {
   );
 
   const onChange = useCallback(() => {
-    void run();
-  }, [run]);
+    void refetch();
+  }, [refetch]);
   const [panelIsOpen, { toggle: togglePanel }] = useDisclosure();
 
   const is_collapsed = (category: string): boolean => {
@@ -303,7 +304,7 @@ export const CategoryList: React.FC = () => {
       </Container>
       <ContentContainer mt="sm">
         <Container size="xl" py="md" pos="relative">
-          {loading && !error && (
+          {categoriesLoading && !error && (
             <Loader size="xs" color="gray" pos="absolute" top={0} right={0} />
           )}
           {error ? (
@@ -464,7 +465,7 @@ export const CategoryList: React.FC = () => {
           )}
         </Container>
       </ContentContainer>
-      {!loading && mode !== "pinned" && (
+      {!categoriesLoading && mode !== "pinned" && (
         <CourseCategoriesPanel
           mode={mode}
           isOpen={panelIsOpen}

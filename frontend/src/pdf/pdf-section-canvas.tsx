@@ -1,7 +1,6 @@
-import { useInViewport } from "ahooks";
 import { Card } from "@mantine/core";
 import * as React from "react";
-import { useCallback, use, useEffect, useRef, useState } from "react";
+import { useCallback, use, useEffect, useState } from "react";
 import { DebugContext } from "../components/Debug";
 import IconButton from "../components/icon-button";
 import PdfSectionCanvasOverlay from "../components/pdf-section-canvas-overlay";
@@ -16,6 +15,7 @@ import type { EditCutBody } from "../api/model";
 import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import classes from "./pdf-section-canvas.module.css";
 import { clsx } from "clsx";
+import { useInViewport } from "@mantine/hooks";
 
 const usePdf = (
   shouldRender: boolean,
@@ -149,18 +149,16 @@ const PdfSectionCanvas: React.FC<Props> = React.memo(
           : undefined
         : undefined,
     );
-    const inViewportRef = useRef<HTMLDivElement>(null);
-    const inViewport = useInViewport(inViewportRef);
-    const v = inViewport ?? false;
+    const { ref: inViewportRef, inViewport } = useInViewport();
     useEffect(() => {
-      if (onInViewChange) onInViewChange(v);
+      if (onInViewChange) onInViewChange(inViewport);
       return () => {
         if (onInViewChange) {
           onInViewChange(false);
         }
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [v]);
+    }, [inViewport]);
 
     const canvasMountingPoint = useCallback<
       (element: HTMLDivElement | null) => void

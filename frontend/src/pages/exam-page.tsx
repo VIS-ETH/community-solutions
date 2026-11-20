@@ -1,4 +1,3 @@
-import { useRequest, useSize } from "ahooks";
 import {
   Card,
   Breadcrumbs,
@@ -46,7 +45,7 @@ import type {
   EditCutBody,
   ExamMetadataSchema,
 } from "../api/model";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { UserContext, useUser } from "../auth";
 import Exam from "../components/exam";
 import ExamMetadataEditor from "../components/exam-metadata-editor";
@@ -79,6 +78,7 @@ import {
 } from "@tabler/icons-react";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
 import { useMarkExamChecked } from "../api/hooks/payments";
+import { useWidth } from "../hooks/useWidth";
 
 type ServerCutResponse = Record<string, CutPageSchema[]>;
 
@@ -190,8 +190,8 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
     }));
   };
 
-  const sizeRef = useRef<HTMLDivElement>(null);
-  const size = useSize(sizeRef);
+  const widthRef = useRef<HTMLDivElement>(null);
+  const width = useWidth(widthRef, 0);
   const [maxWidth, setMaxWidth] = useLocalStorage({
     key: "max-width",
     defaultValue: 1000,
@@ -212,7 +212,6 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
     [addInViewSplit, removeInViewSplit],
   );
 
-  const width = size.width;
   const [displayOptions, setDisplayOptions] = useState({
     displayHiddenPdfSections: false,
     displayHiddenAnswerSections: false,
@@ -246,7 +245,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
     metaData.filename,
     inViewPages,
     metaData.canView ? visiblePages : undefined,
-    sizeRef,
+    widthRef,
   );
 
   const [expandedSections, expandSections, collapseSections] = useSet<number>();
@@ -446,7 +445,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
       </Container>
 
       <ContentContainer>
-        <Container ref={sizeRef} style={{ maxWidth }} my="sm" px="xs">
+        <Container ref={widthRef} style={{ maxWidth }} my="sm" px="xs">
           {width && sections && renderer && (
             <Exam
               metaData={metaData}
@@ -561,17 +560,19 @@ const ExamPage: React.FC = () => {
   );
   const {
     error: pdfError,
-    loading: pdfLoading,
+    isLoading: pdfLoading,
     data,
-  } = useRequest(
-    () => {
-      if (metadata === undefined) return Promise.resolve(undefined);
-      const examFile = metadata.examFile;
-      if (examFile === null) return Promise.resolve(undefined);
+  } = useQuery({
+    queryFn: () => {
+      // `enabled` below guarantees the values are defined
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const examFile = metadata!.examFile!;
       return loadSplitRenderer(examFile);
     },
-    { refreshDeps: [metadata === undefined, metadata?.examFile === null] },
-  );
+    enabled: !!metadata?.examFile,
+    queryKey: ["exam-pdf", filename],
+    staleTime: Infinity,
+  });
   const [pdf, renderer] = !pdfLoading && data ? data : [];
   const sections = useMemo(
     () => (cuts && pdf ? loadSections(pdf.numPages, cuts) : undefined),

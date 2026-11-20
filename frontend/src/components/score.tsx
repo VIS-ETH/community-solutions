@@ -10,12 +10,7 @@ const VoteButton: React.FC<{
   userVote: -1 | 0 | 1;
   loading: boolean;
   onVote: (vote: -1 | 0 | 1) => void;
-}> = ({
-  vote,
-  userVote,
-  loading,
-  onVote,
-}) => {
+}> = ({ vote, userVote, loading, onVote }) => {
   const isSelected = userVote === vote;
 
   return (

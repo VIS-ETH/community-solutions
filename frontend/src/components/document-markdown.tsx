@@ -1,22 +1,25 @@
-import { useRequest } from "ahooks";
 import { Container } from "@mantine/core";
 import React from "react";
 import MarkdownText from "./markdown-text";
+import { useQuery } from "@tanstack/react-query";
 
 interface DocumentMarkdownProps {
   url: string;
 }
 const DocumentMarkdown: React.FC<DocumentMarkdownProps> = ({ url }) => {
-  const { error: mdError, data } = useRequest(
-    () => fetch(url).then(r => r.text()),
-    {
-      refreshDeps: [url],
+  const { error, data } = useQuery({
+    queryKey: ["document-markdown", url],
+    async queryFn({ signal }) {
+      const response = await fetch(url, { signal });
+      if (!response.ok)
+        throw new Error(`Failed to load markdown (${response.status}).`);
+      return response.text();
     },
-  );
+  });
 
   return (
     <Container py="sm">
-      {mdError && "Error loading Markdown"}
+      {error && "Error loading Markdown"}
       {data !== undefined &&
         (data.length > 0 ? (
           <MarkdownText value={data} />
