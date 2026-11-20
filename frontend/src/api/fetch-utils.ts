@@ -1,3 +1,4 @@
+import { clearReadingPages } from "../utils/reading-page";
 import {
   getAuthLoginUrl,
   getAuthLogoutUrl,
@@ -54,6 +55,7 @@ export function login(redirectUrl = location.pathname) {
 }
 
 export function logout(redirectUrl = location.pathname) {
+  clearReadingPages();
   const form = document.createElement("form");
   form.method = "POST";
   form.action = getAuthLogoutUrl();

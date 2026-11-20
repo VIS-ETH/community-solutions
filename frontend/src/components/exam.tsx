@@ -112,7 +112,7 @@ const Exam: React.FC<Props> = React.memo(
       editState.mode === EditMode.Add || editState.mode === EditMode.Move
         ? editState.snap
         : true;
-    let pageCounter = 0;
+    let previousPage = 0;
     const addCutText =
       editState.mode === EditMode.Add
         ? "Add Cut"
@@ -246,11 +246,11 @@ const Exam: React.FC<Props> = React.memo(
             }
           } else {
             if (displayHiddenPdfSections || !section.hidden) {
+              const startsPage = previousPage !== section.start.page;
+              previousPage = section.start.page;
               return (
                 <React.Fragment key={section.key}>
-                  {pageCounter < section.start.page && ++pageCounter && (
-                    <div id={`page-${pageCounter}`} key={section.key} />
-                  )}
+                  {startsPage && <div id={`page-${section.start.page}`} />}
                   <PdfSectionCanvas
                     /* PDF cut data */
                     oid={section.cutOid}
