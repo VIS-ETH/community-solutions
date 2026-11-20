@@ -2,6 +2,39 @@
 
 All changes to this project are documented here.
 
+## v2026.11.p2 - Coding Weekend
+
+### Important for you
+
+- Resume reading an exam on the page where you left off (!823) by Ebruli
+- New button to download only the selected solutions (!824, !825) by Theo
+- Clearer file names for ZIP downloads (!821) by Theo
+- Upload multiple document files at once, with drag and drop and batch Markdown file creation (!785) by Demir
+- Clicking a vote button again now removes your vote (!819) by Ebruli
+- The inactivity logout modal can now be dismissed (!826) by Ebruli
+- More consistent error handling (!822) by Luca
+- Improved category metadata editor (!798) by Luca
+- Restored Mantine light variant colors (!807) by Burak
+
+### Behind the scenes
+
+- Branding is now configurable via `FRONTEND_BRANDING_URL` (!804) by Burak
+  - :warning: This release deprecates `FRONTEND_GLOB_ID`. Please switch to `FRONTEND_BRANDING_URL`. \
+    If your `FRONTEND_GLOB_ID` was `vseth-1116-vis`, your `FRONTEND_BRANDING_URL` should be `https://static.vseth.ethz.ch/assets/vseth-1116-vis/config.js`. Then you can remove `FRONTEND_GLOB_ID` from your config.
+- Rewrote the Answers, FAQ, Filestore, and Auth APIs to be OpenAPI-compliant (!767, !810, !816, !820) by Luca
+- Use generated Category types and hooks in the frontend (!811, !816) by Luca
+- Scope notification and document file lookups to their owner (!802) by Burak
+- Custom Vite plugin for changelog parsing (!815) by Luca
+- Enforce prettier / ruff formatting (!805) by Luca
+- Fix ESLint warnings, enable more ESLint rules, and upgrade to ESLint 10 (!808) by Luca
+- Remove dead code and unused dependencies (!808, !814) by Luca and Burak
+- Upgrade Django to 6.0, Python to 3.14, Node.js to v26, gunicorn to v27 (!592, !817) by Luca
+- Dockerignore unused files (!818) by Luca
+
+Many thanks to first-time contributors Ebruli and Theo.
+
+Many thanks to contributors Burak, Demir, and Luca.
+
 ## v2026.11.p1
 
 ### Important for you
