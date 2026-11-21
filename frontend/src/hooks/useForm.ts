@@ -1,9 +1,9 @@
-import React, { useCallback, useDebugValue, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 
 type KeysWhereValue<T, S> = {
   [K in keyof T]: T[K] extends S ? K : never;
 }[keyof T];
-type FormData = Record<string, any>;
+type FormData = Record<string, unknown>;
 interface InputElement<T> {
   value: T;
   defaultValue: T;
@@ -24,76 +24,81 @@ type ResetFnMap<T extends FormData> = {
  * will be used to infer the form data type.
  * @param formSubmit An optional callback that is invoked with the
  * current data when the returned onSubmit is invoked.
- * @param _state An array of keys that are controlled by controlled
- * input elements. Currently this array is only used for type-checking
  * @example
  * const {
  *   registerInput,
  *   registerCheckbox,
  *   onSubmit
- * } = useForm({
+ * } = useForm<{name: string, password: string}>({
  *     name: "",
  *     password: "",
  *   },
  *   ({name, password}) =>
- *     login(name, password),
- *   []
+ *     login(name, password)
  * );
  */
-const useForm = <S extends keyof T, T extends FormData>(
-  initialData: T,
-  formSubmit?: (data: T, reset: () => void) => void,
-  _state: S[] = [],
+const useForm = <FormTypes extends FormData>(
+  initialData: FormTypes,
+  formSubmit?: (data: FormTypes, reset: () => void) => void,
 ) => {
   const ref = useRef({ ...initialData });
-  useDebugValue(ref.current);
-  const [state, setState] = useState<Pick<T, S>>({ ...initialData });
-  const resetFnMapRef = useRef<ResetFnMap<T>>({});
-  const getValues = useCallback(() => {
-    return ref.current;
-  }, []);
-  const setValue = useCallback(<A extends keyof T>(name: A, value: T[A]) => {
-    ref.current[name] = value;
-  }, []);
+  const [state, setState] = useState<FormTypes>({ ...initialData });
+  const resetFnMapRef = useRef<ResetFnMap<FormTypes>>({});
+  const setValue = useCallback(
+    <A extends keyof FormTypes>(name: A, value: FormTypes[A]) => {
+      ref.current[name] = value;
+    },
+    [],
+  );
   const onChangeTransform = useCallback(
-    <B extends keyof T, M>(
+    <B extends keyof FormTypes, M>(
       name: B,
       e: React.ChangeEvent<M>,
-      transform: (val: M) => T[B],
+      transform: (val: M) => FormTypes[B],
     ) => {
       setValue(name, transform(e.target));
     },
     [setValue],
   );
   const setStateValue = useCallback(
-    (key: S, value: T[S]) => {
+    <Key extends keyof FormTypes>(key: Key, value: FormTypes[Key]) => {
       setValue(key, value);
       setState(prevState => ({ ...prevState, [key]: value }));
     },
     [setValue],
   );
   const register = useCallback(
-    <K extends keyof T, M, S>(
-      name: K,
-      transform: (val: M) => T[K],
-      valueTransform: (val: T[K]) => S,
+    <Type, M, S>(
+      name: KeysWhereValue<FormTypes, Type>,
+      transform: (val: M) => Type,
+      valueTransform: (val: Type) => S,
     ) => {
       const handler = (e: React.ChangeEvent<M>) =>
-        onChangeTransform(name, e, transform);
+        onChangeTransform(
+          name,
+          e,
+          transform as (val: M) => FormTypes[typeof name],
+        );
       return {
-        ...valueTransform(getValues()[name]),
+        ...valueTransform(ref.current[name] as Type),
         onChange: handler,
       } as const;
     },
-    [getValues, onChangeTransform],
+    [onChangeTransform],
   );
 
-  const registerInput = useCallback(
-    <K extends keyof T>(name: K) => {
-      return register<K, InputElement<T[K]>, Partial<InputElement<T[K]>>>(
+  const registerTextInput = useCallback(
+    (name: KeysWhereValue<FormTypes, string>) => {
+      return register<
+        string,
+        InputElement<string>,
+        Partial<InputElement<string>>
+      >(
         name,
         e => {
-          resetFnMapRef.current[name] = () => (e.value = initialData[name]);
+          resetFnMapRef.current[name] = () => {
+            e.value = initialData[name] as string;
+          };
 
           return e.value;
         },
@@ -105,15 +110,16 @@ const useForm = <S extends keyof T, T extends FormData>(
     [register, initialData],
   );
 
-  type Keys = KeysWhereValue<T, boolean>;
   const registerCheckbox = useCallback(
-    (name: Keys) => {
-      return register<Keys, CheckedElement, Partial<CheckedElement>>(
+    (name: KeysWhereValue<FormTypes, boolean>) => {
+      return register<boolean, CheckedElement, Partial<CheckedElement>>(
         name,
         e => {
-          resetFnMapRef.current[name] = () => (e.checked = initialData[name]);
+          resetFnMapRef.current[name] = () => {
+            e.checked = initialData[name] as boolean;
+          };
 
-          return e.checked as T[Keys];
+          return e.checked;
         },
         v => ({ defaultChecked: v }),
       );
@@ -137,23 +143,21 @@ const useForm = <S extends keyof T, T extends FormData>(
     (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      if (formSubmit) formSubmit(getValues(), reset);
+      if (formSubmit) formSubmit(ref.current, reset);
     },
-    [formSubmit, getValues, reset],
+    [formSubmit, reset],
   );
+
   return {
     reset,
-    register,
 
-    registerInput,
+    registerTextInput,
     registerCheckbox,
 
     formState: state,
     setFormValue: setStateValue,
 
     onSubmit,
-
-    getFormValues: getValues,
   } as const;
 };
 

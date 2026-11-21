@@ -34,12 +34,9 @@ import {
 } from "../api/hooks/categories";
 import { useMutation } from "@tanstack/react-query";
 
-export interface CategoryMetaDataDraft extends Omit<
-  CategoryData,
-  "attachments"
-> {
-  attachments: EditorAttachment[];
-}
+export type CategoryMetaDataDraft = Omit<CategoryData, "attachments"> & {
+  attachments: readonly EditorAttachment[];
+};
 
 const applyChanges = async (
   slug: string,
@@ -227,13 +224,13 @@ const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
 
   const [offeredIn, setOfferedIn] = useInitialState<OfferedIn>(propOfferedIn);
   const {
-    registerInput,
+    registerTextInput,
     registerCheckbox,
     reset,
     formState,
     setFormValue,
     onSubmit,
-  } = useForm(currentMetaData as CategoryMetaDataDraft, data => {
+  } = useForm<CategoryMetaDataDraft>(currentMetaData, data => {
     editMetadata.mutate({
       slug: currentMetaData.slug,
       oldMetadata: currentMetaData,
@@ -258,7 +255,7 @@ const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
         <TextInput
           disabled={currentMetaData.slug === "default"}
           label="Name"
-          {...registerInput("displayname")}
+          {...registerTextInput("displayname")}
         />
         <Grid>
           <Grid.Col span={{ md: 6 }}>
@@ -291,7 +288,7 @@ const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
             />
           </Grid.Col>
         </Grid>
-        <Textarea label="Remark" {...registerInput("remark")} />
+        <Textarea label="Remark" {...registerTextInput("remark")} />
         <Grid>
           <Grid.Col span={{ md: 6 }}>
             <NativeSelect
@@ -311,7 +308,7 @@ const CategoryMetaDataEditor: React.FC<CategoryMetaDataEditorProps> = ({
             <TextInput
               type="url"
               label="More Exams Link"
-              {...registerInput("more_exams_link")}
+              {...registerTextInput("more_exams_link")}
             />
           </Grid.Col>
         </Grid>

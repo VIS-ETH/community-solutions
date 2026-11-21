@@ -8,7 +8,7 @@ export interface EditorAttachment {
   filename: File | string;
 }
 interface AttachmentsEditorProps {
-  attachments: EditorAttachment[];
+  attachments: readonly EditorAttachment[];
   setAttachments: (newAttachments: EditorAttachment[]) => void;
 }
 export const toKey = (file: File | string) =>
@@ -23,7 +23,7 @@ const AttachmentsEditor: React.FC<AttachmentsEditorProps> = ({
   const withIndexedFilename = (
     candidateDisplayName: string,
     candidateFile: File | string,
-    items: EditorAttachment[],
+    items: readonly EditorAttachment[],
   ) => {
     const createIndexedFilename = (index: number) =>
       `${index}_${toKey(candidateFile)}`;

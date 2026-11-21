@@ -13,7 +13,7 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { download } from "../api/fetch-utils";
 import useInitialState from "../hooks/useInitialState";
 import { Attachment } from "../interfaces";
@@ -58,12 +58,9 @@ const booleanKeys = [
   "darkModeWarning",
 ] as const;
 
-export interface ExamMetaDataDraft extends Omit<
-  ExamMetadataSchema,
-  "attachments"
-> {
-  attachments: EditorAttachment[];
-}
+export type ExamMetaDataDraft = Omit<ExamMetadataSchema, "attachments"> & {
+  attachments: readonly EditorAttachment[];
+};
 const applyChanges = async (
   filename: string,
   oldMetaData: ExamMetadataSchema,
@@ -178,10 +175,7 @@ const ExamMetadataEditor: React.FC<Props> = ({
       ) as Record<string, string>,
     );
 
-  const [examTypeOptions, setExamTypeOptions] = useState<string[]>([]);
-  useEffect(() => {
-    setExamTypeOptions(examTypes ?? []);
-  }, [examTypes]);
+  const [examTypeOptions, setExamTypeOptions] = useInitialState(examTypes);
 
   const {
     isPending,
@@ -216,19 +210,21 @@ const ExamMetadataEditor: React.FC<Props> = ({
     currentMetaData.hasSolution ? true : undefined,
   );
 
-  const { registerInput, registerCheckbox, formState, setFormValue, onSubmit } =
-    useForm(
-      currentMetaData as ExamMetaDataDraft,
-      values =>
-        runApplyChanges({
-          filename: currentMetaData.filename,
-          oldMetadata: currentMetaData,
-          newMetadata: values,
-          printonly: printonlyFile,
-          masterSolution: masterFile,
-        }),
-      ["category", "categoryDisplayname", "examType", "remark", "attachments"],
-    );
+  const {
+    registerTextInput,
+    registerCheckbox,
+    formState,
+    setFormValue,
+    onSubmit,
+  } = useForm<ExamMetaDataDraft>(currentMetaData, values =>
+    runApplyChanges({
+      filename: currentMetaData.filename,
+      oldMetadata: currentMetaData,
+      newMetadata: values,
+      printonly: printonlyFile,
+      masterSolution: masterFile,
+    }),
+  );
 
   return (
     <Stack mb="xl">
@@ -240,10 +236,16 @@ const ExamMetadataEditor: React.FC<Props> = ({
       <Title order={5}>Metadata</Title>
       <Grid>
         <Grid.Col span={{ md: 6 }}>
-          <TextInput label="Display name" {...registerInput("displayname")} />
+          <TextInput
+            label="Display name"
+            {...registerTextInput("displayname")}
+          />
         </Grid.Col>
         <Grid.Col span={{ md: 6 }}>
-          <TextInput label="Resolve Alias" {...registerInput("resolveAlias")} />
+          <TextInput
+            label="Resolve Alias"
+            {...registerTextInput("resolveAlias")}
+          />
         </Grid.Col>
       </Grid>
       <Grid>
@@ -272,7 +274,7 @@ const ExamMetadataEditor: React.FC<Props> = ({
               setExamTypeOptions([...(examTypes ?? []), query]);
               return query;
             }}
-            data={examTypeOptions}
+            data={examTypeOptions ?? []}
             value={formState.examType}
             onChange={(value: string) => setFormValue("examType", value)}
           />
@@ -316,7 +318,7 @@ const ExamMetadataEditor: React.FC<Props> = ({
         <Grid.Col span={{ md: 6 }}>
           <TextInput
             type="url"
-            {...registerInput("masterSolution")}
+            {...registerTextInput("masterSolution")}
             label="Master Solution (extern)"
           />
         </Grid.Col>
@@ -366,7 +368,7 @@ const ExamMetadataEditor: React.FC<Props> = ({
           )}
         </Grid.Col>
       </Grid>
-      <Textarea label="Remark" {...registerInput("remark")} />
+      <Textarea label="Remark" {...registerTextInput("remark")} />
       <Title order={5}>Attachments</Title>
       <AttachmentsEditor
         attachments={formState.attachments}
