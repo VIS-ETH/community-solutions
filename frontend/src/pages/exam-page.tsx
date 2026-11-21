@@ -12,7 +12,7 @@ import {
   useComputedColorScheme,
   Center,
 } from "@mantine/core";
-import { useDisclosure, useLocalStorage } from "@mantine/hooks";
+import { useDisclosure, useElementSize, useLocalStorage } from "@mantine/hooks";
 import React, {
   useCallback,
   useEffect,
@@ -78,7 +78,6 @@ import {
 } from "@tabler/icons-react";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
 import { useMarkExamChecked } from "../api/hooks/payments";
-import { useWidth } from "../hooks/useWidth";
 
 type ServerCutResponse = Record<string, CutPageSchema[]>;
 
@@ -190,8 +189,8 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
     }));
   };
 
-  const widthRef = useRef<HTMLDivElement>(null);
-  const width = useWidth(widthRef, 0);
+  const pdfRef = useRef<HTMLElement>(null);
+  const { ref: widthRef, width } = useElementSize();
   const [maxWidth, setMaxWidth] = useLocalStorage({
     key: "max-width",
     defaultValue: 1000,
@@ -245,7 +244,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
     metaData.filename,
     inViewPages,
     metaData.canView ? visiblePages : undefined,
-    widthRef,
+    pdfRef,
   );
 
   const [expandedSections, expandSections, collapseSections] = useSet<number>();
@@ -445,7 +444,15 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
       </Container>
 
       <ContentContainer>
-        <Container ref={widthRef} style={{ maxWidth }} my="sm" px="xs">
+        <Container
+          ref={el => {
+            widthRef(el);
+            pdfRef.current = el;
+          }}
+          style={{ maxWidth }}
+          my="sm"
+          px="xs"
+        >
           {width && sections && renderer && (
             <Exam
               metaData={metaData}

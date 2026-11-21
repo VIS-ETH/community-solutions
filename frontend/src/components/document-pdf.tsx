@@ -1,7 +1,7 @@
 import { Container } from "@mantine/core";
-import { useLocalStorage } from "@mantine/hooks";
+import { useElementSize, useLocalStorage } from "@mantine/hooks";
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useCallback, useMemo } from "react";
 import { getHeaders } from "../api/fetch-utils";
 import PDF from "../pdf/pdf-renderer";
 import PdfSectionCanvas from "../pdf/pdf-section-canvas";
@@ -11,7 +11,6 @@ import useToggle from "../hooks/useToggle";
 import PdfPanelBase from "./pdf-panel-base";
 import useSet from "../hooks/useSet";
 import { useQuery } from "@tanstack/react-query";
-import { useWidth } from "../hooks/useWidth";
 
 const loadDocumentRenderer = async (url: string) => {
   const pdf = (await getDocument({
@@ -42,8 +41,7 @@ const DocumentPdf: React.FC<DocumentPdfProps> = ({ url }) => {
     staleTime: Infinity,
   });
 
-  const widthRef = useRef<HTMLDivElement>(null);
-  const width = useWidth(widthRef, 1000);
+  const { ref: widthRef, width } = useElementSize();
   const renderer = data ? data[1] : undefined;
 
   const [maxWidth, setMaxWidth] = useLocalStorage({

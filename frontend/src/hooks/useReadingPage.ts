@@ -7,7 +7,7 @@ export default function useReadingPage(
   examFilename: string,
   pagesInViewport: Set<number>,
   displayedPages: Set<number> | undefined,
-  examContainerRef: RefObject<HTMLDivElement | null>,
+  examContainerRef: RefObject<HTMLElement | null>,
 ) {
   const [bookmarkedPage] = useState(() => loadReadingPage(examFilename));
   const { hash, search } = useLocation();
