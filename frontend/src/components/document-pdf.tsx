@@ -1,5 +1,5 @@
 import { Container } from "@mantine/core";
-import { useElementSize, useLocalStorage } from "@mantine/hooks";
+import { useDisclosure, useElementSize, useLocalStorage } from "@mantine/hooks";
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 import React, { useCallback, useMemo } from "react";
 import { getHeaders } from "../api/fetch-utils";
@@ -7,7 +7,6 @@ import PDF from "../pdf/pdf-renderer";
 import PdfSectionCanvas from "../pdf/pdf-section-canvas";
 import { getDocument } from "../pdf/pdfjs";
 import ContentContainer from "./secondary-container";
-import useToggle from "../hooks/useToggle";
 import PdfPanelBase from "./pdf-panel-base";
 import useSet from "../hooks/useSet";
 import { useQuery } from "@tanstack/react-query";
@@ -50,7 +49,7 @@ const DocumentPdf: React.FC<DocumentPdfProps> = ({ url }) => {
     getInitialValueInEffect: false,
     sync: false,
   });
-  const [panelIsOpen, togglePanel] = useToggle();
+  const [panelIsOpen, panelHandler] = useDisclosure();
 
   // Set of pages that are currently in view
   const [inViewPages, addInViewPages, removeInViewPages] = useSet<number>();
@@ -105,7 +104,7 @@ const DocumentPdf: React.FC<DocumentPdfProps> = ({ url }) => {
       </ContentContainer>
       <PdfPanelBase
         isOpen={panelIsOpen}
-        toggle={togglePanel}
+        toggle={panelHandler.toggle}
         renderer={renderer}
         maxWidth={maxWidth}
         setMaxWidth={setMaxWidth}
