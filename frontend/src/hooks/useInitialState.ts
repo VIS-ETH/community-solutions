@@ -1,10 +1,14 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const useInitialState = <T>(prop: T) => {
+  const [oldProp, setOldProp] = useState(prop);
   const [value, setValue] = useState(prop);
-  useEffect(() => {
+
+  if (!Object.is(oldProp, prop)) {
+    setOldProp(prop);
     setValue(prop);
-  }, [prop]);
+  }
+
   return [value, setValue] as const;
 };
 export default useInitialState;
