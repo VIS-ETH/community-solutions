@@ -453,7 +453,7 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
           my="sm"
           px="xs"
         >
-          {width && sections && renderer && (
+          {width > 0 && sections && renderer && (
             <Exam
               metaData={metaData}
               sections={sections}

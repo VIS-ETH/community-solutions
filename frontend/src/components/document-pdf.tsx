@@ -91,7 +91,7 @@ const DocumentPdf: React.FC<DocumentPdfProps> = ({ url }) => {
                       page={pageNumber}
                       start={0}
                       end={1}
-                      targetWidth={width}
+                      targetWidth={width || undefined}
                       renderer={renderer}
                       onInViewChange={inViewChangeListeners[pageNumber]}
                     />
