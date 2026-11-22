@@ -16,7 +16,7 @@ import useForm from "../hooks/useForm";
 import useInitialState from "../hooks/useInitialState";
 import { createOptions, options } from "../utils/ts-utils";
 import AttachmentsEditor, { EditorAttachment } from "./attachments-editor";
-import OfferedInEditor from "./offered-in-editor";
+import OfferedInEditor, { type OfferedIn } from "./offered-in-editor";
 import UserSetEditor from "./user-set-editor";
 import { IconDeviceFloppy, IconX } from "@tabler/icons-react";
 import { CategoryData, CategoryDataAttachment } from "../api/model";
@@ -185,8 +185,6 @@ const permissionOptions = createOptions({
   hidden: "hidden",
   none: "none",
 });
-
-type OfferedIn = readonly (readonly [string, string])[];
 
 interface CategoryMetaDataEditorProps {
   currentMetaData: CategoryData;

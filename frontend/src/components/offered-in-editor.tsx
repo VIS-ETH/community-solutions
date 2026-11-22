@@ -5,9 +5,11 @@ import Creatable from "./creatable";
 import { useListMetaCategories } from "../api/hooks/categories";
 import { Meta1CategoryResponse } from "../api/model";
 
+export type OfferedIn = readonly (readonly [string, string])[];
+
 interface OfferedInEditorProps {
-  offeredIn: readonly (readonly [string, string])[];
-  setOfferedIn: (newOfferedIn: (readonly [string, string])[]) => void;
+  offeredIn: OfferedIn;
+  setOfferedIn: (newOfferedIn: OfferedIn) => void;
 }
 const OfferedInEditor: React.FC<OfferedInEditorProps> = ({
   offeredIn,
