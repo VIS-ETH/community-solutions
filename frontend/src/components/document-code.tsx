@@ -15,6 +15,7 @@ const DocumentCode: React.FC<DocumentCodeProps> = ({ url }) => {
         throw new Error(`Failed to load document (${response.status}).`);
       return response.text();
     },
+    refetchOnWindowFocus: false,
   });
 
   return (

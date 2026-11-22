@@ -217,6 +217,7 @@ export const CategoryList: React.FC = () => {
     queryKey: ["category-data"],
     initialData: localStorageCategoryData,
     initialDataUpdatedAt: 0,
+    refetchOnWindowFocus: false,
   });
 
   const [categoriesWithDefault, metaCategories] = data;

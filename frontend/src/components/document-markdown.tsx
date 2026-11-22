@@ -15,6 +15,7 @@ const DocumentMarkdown: React.FC<DocumentMarkdownProps> = ({ url }) => {
         throw new Error(`Failed to load markdown (${response.status}).`);
       return response.text();
     },
+    refetchOnWindowFocus: false,
   });
 
   return (
