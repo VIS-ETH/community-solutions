@@ -9,6 +9,7 @@ from answers.models import Exam, ExamType
 from categories.models import Category
 from mandates.models import Mandate
 from myauth.models import MyUser
+from notifications.models import Notification, NotificationType
 from testing.tests import ComsolTest, ComsolTestExamData
 
 
@@ -320,6 +321,32 @@ class TestMandateTranscript(ComsolTest):
                 extended_time=timezone.now()
             )
 
+    def test_notifications_reject_accept(self):
+        student = self.nonAdminUsers[0]
+        self.login_as(student)
+        self.post("/api/mandates/", {"category": "TestCategory"})
+        filename = self.upload("TestCategory")
+        self.login_as(self.adminUsers[0])
+        self.reject_transcript(filename)
+
+        self.login_as(student)
+        filename = self.upload("TestCategory")
+        self.login_as(self.adminUsers[0])
+        self.mark_checked(filename)
+
+        titles = Notification.objects.filter(
+            receiver__username=student["username"],
+            type=NotificationType.MANDATE_UPDATE,
+        ).order_by("time")
+        self.assertEqual(
+            list(titles.values_list("title", flat=True)),
+            ["Mandate rejected", "Mandate accepted"],
+        )
+
+    def test_no_notification_for_own_mandate(self):
+        self.excuse()
+        self.assertFalse(Notification.objects.exists())
+
     def test_filter_checked_state(self):
         url = f"/api/mandates/?username={self.user['username']}&checked_state="
         filename = self.upload("TestCategory")
@@ -571,6 +598,24 @@ class TestMandateManage(ComsolTest):
             reason="Test reason",
         )
         self.extend(status_code=400)
+
+    def student_notifications(self):
+        return Notification.objects.filter(
+            receiver__username=self.student["username"],
+            type=NotificationType.MANDATE_UPDATE,
+        ).order_by("time")
+
+    def test_notifications_extend_excuse(self):
+        self.extend(reason="Exam postponed")
+        self.post(
+            f"/api/mandates/{self.mandate.pk}/excuse/", {"reason": "Moved abroad"}
+        )
+        notifications = list(self.student_notifications())
+        self.assertEqual(
+            [n.title for n in notifications], ["Mandate extended", "Mandate excused"]
+        )
+        self.assertIn("Exam postponed", notifications[0].text)
+        self.assertIn("Moved abroad", notifications[1].text)
 
     def test_category_admin_can_manage(self):
         self.login_as(self.nonAdminUsers[0])

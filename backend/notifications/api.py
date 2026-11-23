@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 
 from django.shortcuts import get_object_or_404
 from ninja import Form, Router, Schema
@@ -23,7 +23,7 @@ class NotificationResponse(Schema):
     oid: int
     receiver: UserSchema
     sender: UserSchema
-    time: datetime.datetime
+    time: dt.datetime
     type: NotificationType
     title: str
     message: str
@@ -44,11 +44,12 @@ router = Router(tags=["Notifications"])
 )
 @auth_check.require_login
 def getenabled(request):
-    return list(
-        NotificationSetting.objects.filter(user=request.user, enabled=True)
-        .order_by("type")
-        .values_list("type", flat=True)
+    disabled = set(
+        NotificationSetting.objects.filter(
+            user=request.user, enabled=False
+        ).values_list("type", flat=True)
     )
+    return [type_.value for type_ in NotificationType if type_.value not in disabled]
 
 
 @router.post(
@@ -75,6 +76,8 @@ def _get_notification_link(notification):
         return f"/exams/{notification.answer.answer_section.exam.filename}#{notification.answer.long_id}"
     elif notification.document:
         return f"/user/{notification.receiver.username}/document/{notification.document.slug}"
+    elif notification.type == NotificationType.MANDATE_UPDATE:
+        return f"/user/{notification.receiver.username}"
     # Feedback Page is admin-only, so makes no sense to link it since notification contains reply anyway.
     return ""
 

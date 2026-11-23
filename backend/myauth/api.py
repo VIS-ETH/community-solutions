@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import logging
 from base64 import b64decode, b64encode, urlsafe_b64encode
 from hashlib import sha256
@@ -159,13 +159,13 @@ def set_token_cookies(response: HttpResponse, token_response):
     if token_type.lower() != "bearer":
         raise ValueError("OP returned unexpected token_type")
 
-    now = datetime.datetime.now()
+    now = dt.datetime.now()
 
     # Extract expiration time without decoding the token - this is only used by the
     # client and thus isn't relevant for security
     if "expires_in" in token_response:
         expires_in: str = token_response["expires_in"]
-        expires = now + datetime.timedelta(seconds=float(expires_in))
+        expires = now + dt.timedelta(seconds=float(expires_in))
         response.set_cookie(
             "token_expires", str(expires.timestamp()), httponly=False, samesite="Lax"
         )
@@ -197,7 +197,7 @@ def set_token_cookies(response: HttpResponse, token_response):
     # spam-request refreshing when our refresh token is already expired.
     if "refresh_expires_in" in token_response:
         refresh_expires_in: str = token_response["refresh_expires_in"]
-        refresh_expires = now + datetime.timedelta(seconds=float(refresh_expires_in))
+        refresh_expires = now + dt.timedelta(seconds=float(refresh_expires_in))
         response.set_cookie(
             "refresh_expires",
             str(refresh_expires.timestamp()),
@@ -285,7 +285,7 @@ def refresh(
     refresh_expires: Cookie[str | None] = None,
 ):
     if refresh_expires:
-        now = datetime.datetime.now()
+        now = dt.datetime.now()
         if float(refresh_expires) < now.timestamp():
             # Don't try to refresh if the refresh token is no longer valid
             return HttpResponse("Refresh token is no longer valid", status=400)

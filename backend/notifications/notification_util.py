@@ -1,15 +1,19 @@
+from zoneinfo import ZoneInfo
+
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 from answers.models import Answer
 from documents.models import Comment as DocumentComment
 from documents.models import Document
+from mandates.models import Mandate
 from myauth.models import get_my_user
 from notifications.models import Notification, NotificationSetting, NotificationType
 
 
 def is_notification_enabled(receiver, notification_type):
-    return NotificationSetting.objects.filter(
-        user=receiver, type=notification_type.value, enabled=True
+    return not NotificationSetting.objects.filter(
+        user=receiver, type=notification_type.value, enabled=False
     ).exists()
 
 
@@ -72,6 +76,65 @@ def send_feedback_notification(sender, receiver, type_, title, message, feedback
         answer=None,
     )
     notification.save()
+
+
+TZ_ZURICH = ZoneInfo("Europe/Zurich")
+
+
+def _send_mandate_notification(sender, mandate: Mandate, title, message):
+    if sender == mandate.user:
+        return
+    if not is_notification_enabled(mandate.user, NotificationType.MANDATE_UPDATE):
+        return
+    Notification.objects.create(
+        sender=sender,
+        receiver=mandate.user,
+        type=NotificationType.MANDATE_UPDATE.value,
+        title=title,
+        text=message,
+    )
+
+
+def mandate_accepted(sender, mandate: Mandate):
+    _send_mandate_notification(
+        sender,
+        mandate,
+        "Mandate accepted",
+        f"Your transcript for {mandate.category.displayname} was accepted. "
+        "Your mandate is fulfilled.",
+    )
+
+
+def mandate_rejected(sender, mandate: Mandate):
+    _send_mandate_notification(
+        sender,
+        mandate,
+        "Mandate rejected",
+        f"Your transcript for {mandate.category.displayname} was rejected. "
+        f"Upload a new one by {mandate.grace_until():%d.%m.%Y} to keep access.",
+    )
+
+
+def mandate_excused(sender, mandate: Mandate):
+    _send_mandate_notification(
+        sender,
+        mandate,
+        "Mandate excused",
+        f"Your mandate for {mandate.category.displayname} was excused. "
+        f"You no longer need to upload a transcript.\n\nReason: {mandate.reason}",
+    )
+
+
+def mandate_extended(sender, mandate: Mandate):
+    _send_mandate_notification(
+        sender,
+        mandate,
+        "Mandate extended",
+        f"Your mandate for {mandate.category.displayname} was extended until "
+        f"{timezone.localtime(mandate.extended_until(), TZ_ZURICH):%d.%m.%Y %H:%M}. "
+        "Upload your transcript "
+        f"before then.\n\nReason: {mandate.reason}",
+    )
 
 
 def new_comment_to_answer(answer, new_comment):

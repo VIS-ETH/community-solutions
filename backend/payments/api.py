@@ -7,6 +7,7 @@ from answers.models import Exam
 from mandates.models import Mandate
 from myauth import auth_check
 from myauth.models import MyUser
+from notifications import notification_util
 from payments.models import Payment
 from util import response
 from util.schemas import ErrorSchema
@@ -192,5 +193,6 @@ def mark_exam_checked(request, filename: str):
             mandate.edited_time = now
             mandate.uploaded_transcript = exam
             mandate.save()
+            notification_util.mandate_accepted(request.user, mandate)
 
     return response.success()

@@ -11,6 +11,7 @@ class NotificationType(enum.IntEnum):
     NEW_COMMENT_TO_DOCUMENT = 4
     NEW_COMMENT_TO_FEEDBACK = 5
     DOCUMENT_TRANSFER = 6
+    MANDATE_UPDATE = 7
 
 
 class Notification(models.Model):

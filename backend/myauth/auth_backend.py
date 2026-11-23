@@ -14,7 +14,6 @@ from jwcrypto.jwt import JWT, JWTMissingKey
 
 from mandates.models import Mandate
 from myauth.models import MyUser, Profile
-from notifications.models import NotificationSetting, NotificationType
 from util.func_cache import cache
 
 logger = logging.getLogger(__name__)
@@ -167,13 +166,6 @@ def add_auth(request: HttpRequest):
                     Profile.objects.create(user=user, sub=sub)
 
                     request.user = user
-
-                    for type_ in [
-                        NotificationType.NEW_COMMENT_TO_ANSWER,
-                        NotificationType.NEW_ANSWER_TO_ANSWER,
-                    ]:
-                        setting = NotificationSetting(user=user, type=type_.value)
-                        setting.save()
 
 
 def AuthenticationMiddleware(get_response):

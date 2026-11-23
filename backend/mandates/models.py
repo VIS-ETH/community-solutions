@@ -92,6 +92,18 @@ class Mandate(ExportModelOperationsMixin("mandate"), models.Model):
             ),
         ]
 
+    def grace_until(self):
+        if self.checked_state != Mandate.CheckedState.REJECTED or not self.checked_time:
+            return None
+        return max(
+            (self.checked_time + MANDATE_REJECTION_GRACE_PERIOD).date(), self.due_date
+        )
+
+    def extended_until(self):
+        if not self.extended_time:
+            return None
+        return self.extended_time + MANDATE_EXTENSION_PERIOD
+
     def submit_transcript(self, exam):
         now = timezone.now()
         self.fulfilled_time = now

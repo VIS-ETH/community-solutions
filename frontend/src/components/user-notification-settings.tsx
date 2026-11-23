@@ -75,6 +75,12 @@ const UserNotificationsSettings: React.FC = () => {
           disabled={checkboxLoading}
           onChange={e => handleSetEnabled(6, e.currentTarget.checked)}
         />
+        <Checkbox
+          label="Mandate was accepted, rejected, excused, or extended"
+          checked={enabled.data?.has(7)}
+          disabled={checkboxLoading}
+          onChange={e => handleSetEnabled(7, e.currentTarget.checked)}
+        />
       </Stack>
     </>
   );

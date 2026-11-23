@@ -9,13 +9,10 @@ from ninja import Form, Query, Router, Schema
 
 from answers.models import Exam
 from categories.models import Category
-from mandates.models import (
-    MANDATE_EXTENSION_PERIOD,
-    MANDATE_REJECTION_GRACE_PERIOD,
-    Mandate,
-)
+from mandates.models import Mandate
 from myauth import auth_check
 from myauth.models import get_my_user
+from notifications import notification_util
 from util import response
 from util.schemas import ErrorSchema
 
@@ -75,15 +72,8 @@ def mandate_to_schema_resp(request, mandate: Mandate) -> MandateSchema:
         fulfilled_at=mandate.fulfilled_time,
         checked_at=mandate.checked_time,
         checked_state=mandate.checked_state or None,
-        grace_until=max(
-            (mandate.checked_time + MANDATE_REJECTION_GRACE_PERIOD).date(),
-            mandate.due_date,
-        )
-        if mandate.checked_state == "rejected" and mandate.checked_time
-        else None,
-        extended_until=mandate.extended_time + MANDATE_EXTENSION_PERIOD
-        if mandate.extended_time
-        else None,
+        grace_until=mandate.grace_until(),
+        extended_until=mandate.extended_until(),
         reason=mandate.reason,
         uploaded_transcript=mandate.uploaded_transcript.filename
         if mandate.uploaded_transcript
@@ -241,6 +231,7 @@ def excuse_mandate(request, mandate_id: str, data: Form[ReasonSchema]):
         mandate.checked_time = now
         mandate.edited_time = now
         mandate.save()
+        notification_util.mandate_excused(request.user, mandate)
     return mandate_to_schema_resp(request, mandate)
 
 
@@ -278,6 +269,7 @@ def reject_transcript(request, filename: str):
         mandate.checked_time = now
         mandate.edited_time = now
         mandate.save()
+        notification_util.mandate_rejected(request.user, mandate)
     return mandate_to_schema_resp(request, mandate)
 
 
@@ -319,4 +311,5 @@ def extend_mandate(request, mandate_id: str, data: Form[ReasonSchema]):
         mandate.extended_time = now
         mandate.edited_time = now
         mandate.save()
+        notification_util.mandate_extended(request.user, mandate)
     return mandate_to_schema_resp(request, mandate)
