@@ -32,6 +32,8 @@ class Mandate(ExportModelOperationsMixin("mandate"), models.Model):
         max_length=16,
         choices=CheckedState.choices,
     )
+    # excuse or extension reason
+    reason = models.TextField(blank=True, default="")
 
     uploaded_transcript = models.ForeignKey(
         "answers.Exam", null=True, on_delete=models.SET_NULL
@@ -75,6 +77,14 @@ class Mandate(ExportModelOperationsMixin("mandate"), models.Model):
                 name="mandate_check_state_only_if_checked",
                 condition=Q(checked_time__isnull=True, checked_state__isnull=True)
                 | Q(checked_time__isnull=False, checked_state__isnull=False),
+            ),
+            CheckConstraint(
+                name="mandate_reason_if_excused_or_extended",
+                condition=Q(reason__regex=r"\S")
+                | (
+                    Q(extended_time__isnull=True)
+                    & (Q(checked_state__isnull=True) | ~Q(checked_state="excused"))
+                ),
             ),
             UniqueConstraint(
                 name="unique_category_mandate",

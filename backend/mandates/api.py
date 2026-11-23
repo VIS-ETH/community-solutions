@@ -39,6 +39,7 @@ class MandateSchema(Schema):
 
     grace_until: date | None
     extended_until: datetime | None
+    reason: str
 
     uploaded_transcript: str | None
     uploaded_transcript_display_name: str | None
@@ -53,6 +54,11 @@ class CreateMandateSchema(Schema):
 
 class CheckMandateSchema(Schema):
     checked_state: Literal["accepted", "rejected", "excused"]
+    reason: str = ""
+
+
+class ExtendMandateSchema(Schema):
+    reason: str
 
 
 class Filters(Schema):
@@ -82,6 +88,7 @@ def mandate_to_schema_resp(request, mandate: Mandate) -> MandateSchema:
         extended_until=mandate.extended_time + MANDATE_EXTENSION_PERIOD
         if mandate.extended_time
         else None,
+        reason=mandate.reason,
         uploaded_transcript=mandate.uploaded_transcript.filename
         if mandate.uploaded_transcript
         else None,
@@ -233,6 +240,11 @@ def check_mandate(request, mandate_id: str, data: Form[CheckMandateSchema]):
             return response.not_possible("Mandate not fulfilled yet")
         if data.checked_state == "rejected" and current is not None:
             return response.not_possible("Mandate is already rejected")
+        reason = data.reason.strip()
+        if data.checked_state == "excused":
+            if not reason:
+                return response.not_possible("Excusing requires a reason")
+            mandate.reason = reason
 
         now = timezone.now()
         mandate.checked_state = Mandate.CheckedState(data.checked_state)
@@ -263,7 +275,7 @@ def check_mandate(request, mandate_id: str, data: Form[CheckMandateSchema]):
     operation_id="extendMandate",
 )
 @auth_check.require_login
-def extend_mandate(request, mandate_id: str):
+def extend_mandate(request, mandate_id: str, data: Form[ExtendMandateSchema]):
     with transaction.atomic():
         mandate = get_object_or_404(
             Mandate.objects.select_for_update(of=("self",)).select_related(
@@ -278,8 +290,12 @@ def extend_mandate(request, mandate_id: str):
         # granting again restarts the period
         if not Mandate.objects.filter(Mandate.overdue_q(), pk=mandate.pk).exists():
             return response.not_possible("Mandate is not overdue")
+        reason = data.reason.strip()
+        if not reason:
+            return response.not_possible("Extending requires a reason")
 
         now = timezone.now()
+        mandate.reason = reason
         mandate.extended_time = now
         mandate.edited_time = now
         mandate.save()

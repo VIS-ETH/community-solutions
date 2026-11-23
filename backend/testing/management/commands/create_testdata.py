@@ -532,6 +532,9 @@ class Command(BaseCommand):
                     fulfilled_time=fulfilled_time,
                     checked_time=checked_time,
                     checked_state=None if not checked_time else state,
+                    reason="Test reason"
+                    if checked_time and state == Mandate.CheckedState.EXCUSED
+                    else "",
                     uploaded_transcript=e,
                 )
 

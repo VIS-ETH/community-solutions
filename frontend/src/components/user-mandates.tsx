@@ -8,6 +8,7 @@ import {
   List,
   ListItem,
   Modal,
+  Textarea,
 } from "@mantine/core";
 import {
   useCheckMandate,
@@ -71,6 +72,49 @@ const getMandateStatusType = (mandate: MandateSchema): MandateStatusType => {
   return MandateStatusType.OPEN_OVERDUE;
 };
 
+const ReasonModal: React.FC<{
+  title: string | null;
+  opened: boolean;
+  message: string;
+  confirmLabel: string;
+  onClose: () => void;
+  onConfirm: (reason: string) => void;
+}> = ({ title, opened, message, confirmLabel, onClose, onConfirm }) => {
+  const [reason, setReason] = useState("");
+  const close = () => {
+    setReason("");
+    onClose();
+  };
+  return (
+    <Modal opened={opened} onClose={close} title={title}>
+      {message}
+      <Textarea
+        mt="sm"
+        label="Reason"
+        required
+        autosize
+        minRows={2}
+        value={reason}
+        onChange={e => setReason(e.currentTarget.value)}
+      />
+      <Group justify="right" mt="md">
+        <Button variant="default" onClick={close}>
+          Cancel
+        </Button>
+        <Button
+          disabled={reason.trim() === ""}
+          onClick={() => {
+            onConfirm(reason);
+            close();
+          }}
+        >
+          {confirmLabel}
+        </Button>
+      </Group>
+    </Modal>
+  );
+};
+
 const MandateActions: React.FC<{
   mandate: MandateSchema;
   onChanged: () => void;
@@ -81,6 +125,9 @@ const MandateActions: React.FC<{
   const check = useCheckMandate(options);
   const extend = useExtendMandate(options);
   const error = remove.error ?? check.error ?? extend.error;
+  const [reasonAction, setReasonAction] = useState<"extend" | "excuse" | null>(
+    null,
+  );
 
   const status = getMandateStatusType(mandate);
   const isFinal = ["accepted", "excused"].includes(mandate.checked_state ?? "");
@@ -89,26 +136,14 @@ const MandateActions: React.FC<{
     status === MandateStatusType.REJECTED_OVERDUE;
   const name = `${mandate.user_display_name}'s mandate for ${mandate.category_display_name}`;
 
-  function onExtendClick() {
-    confirm(
-      `Extend ${name}? It gives the user 24 hours of access to upload their transcript.`,
-      () => extend.mutate({ mandateId: mandate.id }),
-      undefined,
-      { label: "Extend", propsDict: {} },
-    );
-  }
-
-  function onExcuseClick() {
-    confirm(
-      `Excuse ${name}? The user no longer has to upload a transcript. This cannot be undone.`,
-      () =>
-        check.mutate({
-          mandateId: mandate.id,
-          data: { checked_state: "excused" },
-        }),
-      undefined,
-      { label: "Excuse", propsDict: { color: "orange" } },
-    );
+  function onReasonConfirm(reason: string) {
+    if (reasonAction === "extend")
+      extend.mutate({ mandateId: mandate.id, data: { reason } });
+    else
+      check.mutate({
+        mandateId: mandate.id,
+        data: { checked_state: "excused", reason },
+      });
   }
 
   function onDeleteClick() {
@@ -120,13 +155,31 @@ const MandateActions: React.FC<{
   return (
     <>
       {modals}
+      <ReasonModal
+        title={
+          reasonAction === "extend"
+            ? `Extend ${name}`
+            : reasonAction === "excuse"
+              ? `Excuse ${name}`
+              : null
+        }
+        opened={reasonAction !== null}
+        message={
+          reasonAction === "extend"
+            ? "It gives the user 24 hours of access to upload their transcript."
+            : "The user no longer has to upload a transcript. This cannot be undone."
+        }
+        confirmLabel={reasonAction === "extend" ? "Extend" : "Excuse"}
+        onClose={() => setReasonAction(null)}
+        onConfirm={onReasonConfirm}
+      />
       <Group gap="xs" mt="xs">
         {isBlocking && (
           <Button
             size="compact-sm"
             variant="light"
             loading={extend.isPending}
-            onClick={onExtendClick}
+            onClick={() => setReasonAction("extend")}
           >
             Extend 24h
           </Button>
@@ -137,7 +190,7 @@ const MandateActions: React.FC<{
             variant="light"
             color="orange"
             loading={check.isPending}
-            onClick={onExcuseClick}
+            onClick={() => setReasonAction("excuse")}
           >
             Excuse
           </Button>
@@ -292,6 +345,12 @@ const RenderMandates: React.FC<{
                   : the mandate does not block the account until then.
                 </>
               )}
+            {mandate.reason && (
+              <>
+                <br />
+                Reason: {mandate.reason}
+              </>
+            )}
             {mandate.can_manage && (
               <MandateActions mandate={mandate} onChanged={onChanged} />
             )}
@@ -469,10 +528,11 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
             color="orange"
             variant="light"
             icon={<IconInfoCircle size={16} />}
+            mb="md"
           >
             These mandates have been rejected and are in a grace period. The
             user must fulfill these mandates to avoid{" "}
-            <strong>account blockage</strong>.
+            <strong>account blockage.</strong>
           </Alert>
 
           <RenderMandates
@@ -490,6 +550,7 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
             color="red"
             variant="filled"
             icon={<IconAlertCircle size={16} />}
+            mb="md"
           >
             These mandates have been rejected and have exceeded a grace period.
             They are <strong>blocking the user's account</strong> and preventing
@@ -512,6 +573,7 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
             color="red"
             variant="filled"
             icon={<IconAlertCircle size={16} />}
+            mb="md"
           >
             <strong>Immediate attention required:</strong>
             These mandates are <strong>blocking the user's account</strong> and
@@ -534,6 +596,7 @@ const UserMandatesProps: React.FC<UserMandatesProps> = userProps => {
             color="green"
             variant="outline"
             icon={<IconInfoCircle size={16} />}
+            mb="md"
           >
             The following mandates have been accepted or excused by an
             administrator. They are archived and do not require any further

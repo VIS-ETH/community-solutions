@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.db import connection
+from django.db import IntegrityError, connection, transaction
 from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
@@ -180,10 +180,10 @@ class TestMandateTranscript(ComsolTest):
     def my_mandate(self):
         return self.get(f"/api/mandates/?username={self.user['username']}")[0]
 
-    def check(self, state, status_code=200):
+    def check(self, state, status_code=200, reason="Test reason"):
         return self.post(
             f"/api/mandates/{self.mandate.pk}/check/",
-            {"checked_state": state},
+            {"checked_state": state, "reason": reason},
             status_code=status_code,
         )
 
@@ -290,6 +290,25 @@ class TestMandateTranscript(ComsolTest):
         self.assertEqual(res["checked_state"], "excused")
         self.assertIsNone(res["uploaded_transcript"])
 
+    def test_excuse_requires_reason(self):
+        for reason in ["", "  \n\t"]:
+            self.check("excused", status_code=400, reason=reason)
+        self.assertIsNone(self.my_mandate()["checked_state"])
+        res = self.check("excused", reason=" Moved abroad ")
+        self.assertEqual(res["reason"], "Moved abroad")
+
+    def test_reason_constraint(self):
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            Mandate.objects.filter(pk=self.mandate.pk).update(
+                checked_time=timezone.now(),
+                checked_state=Mandate.CheckedState.EXCUSED,
+                reason=" ",
+            )
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            Mandate.objects.filter(pk=self.mandate.pk).update(
+                extended_time=timezone.now()
+            )
+
     def test_filter_checked_state(self):
         url = f"/api/mandates/?username={self.user['username']}&checked_state="
         self.upload("TestCategory")
@@ -392,7 +411,9 @@ class TestMandateExamAccess(ComsolTestExamData):
         )
         self.assert_access(True)
         Mandate.objects.update(
-            fulfilled_time=None, checked_state=Mandate.CheckedState.EXCUSED
+            fulfilled_time=None,
+            checked_state=Mandate.CheckedState.EXCUSED,
+            reason="Test reason",
         )
         self.assert_access(True)
 
@@ -479,9 +500,11 @@ class TestMandateManage(ComsolTest):
     def is_blocked(self):
         return Mandate.user_has_any_nongrace_overdue_mandates(self.student["username"])
 
-    def extend(self, status_code=200):
+    def extend(self, status_code=200, reason="Test reason"):
         return self.post(
-            f"/api/mandates/{self.mandate.pk}/extend/", {}, status_code=status_code
+            f"/api/mandates/{self.mandate.pk}/extend/",
+            {"reason": reason},
+            status_code=status_code,
         )
 
     def test_extend_unblocks_for_one_day(self):
@@ -497,6 +520,22 @@ class TestMandateManage(ComsolTest):
         # granting again restarts the day
         self.extend()
         self.assertFalse(self.is_blocked())
+
+    def test_extend_requires_reason(self):
+        for reason in ["", "   "]:
+            self.extend(status_code=400, reason=reason)
+        self.assertTrue(self.is_blocked())
+        res = self.extend(reason="Exam postponed")
+        self.assertEqual(res["reason"], "Exam postponed")
+
+        # kept after the extension expires
+        Mandate.objects.filter(pk=self.mandate.pk).update(
+            extended_time=timezone.now() - timedelta(days=2)
+        )
+        self.assertTrue(self.is_blocked())
+        self.assertEqual(
+            Mandate.objects.get(pk=self.mandate.pk).reason, "Exam postponed"
+        )
 
     def test_extend_rejected_overdue(self):
         checked = timezone.now() - timedelta(days=20)
@@ -518,6 +557,7 @@ class TestMandateManage(ComsolTest):
             due_date=timezone.now().date() - timedelta(days=1),
             checked_time=timezone.now(),
             checked_state=Mandate.CheckedState.EXCUSED,
+            reason="Test reason",
         )
         self.extend(status_code=400)
 
@@ -531,7 +571,8 @@ class TestMandateManage(ComsolTest):
         self.assertTrue(res[0]["can_manage"])
         self.extend()
         self.post(
-            f"/api/mandates/{self.mandate.pk}/check/", {"checked_state": "excused"}
+            f"/api/mandates/{self.mandate.pk}/check/",
+            {"checked_state": "excused", "reason": "Test reason"},
         )
         self.assertFalse(self.is_blocked())
         self.delete(f"/api/mandates/{self.mandate.pk}/", status_code=204, as_json=False)

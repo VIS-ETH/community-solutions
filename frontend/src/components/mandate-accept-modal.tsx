@@ -72,10 +72,10 @@ const MandateAcceptModal: React.FC<MandateAcceptModalProps> = ({
       .
       <br />
       You <strong>CANNOT CANCEL</strong> this on your own, and will need to
-      explain and show your situation to a Community Solutions administrator.
+      explain and show your situation to an administrator or board member.
       <br />
-      For any questions or concerns, please contact the administrators of
-      Community Solutions.
+      For any questions or concerns, please contact an administrator or your
+      friendly board members.
       <Group justify="right" mt="md">
         <Button mt="md" onClick={onClose}>
           Dismiss
