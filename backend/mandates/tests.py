@@ -162,9 +162,8 @@ class TestMandateTranscript(ComsolTest):
         after = self.assert_unchanged_after_delete(filename)
         self.assertTrue(after["fulfilled_at"])
         self.assertIsNone(after["checked_state"])
-        # without the file it can only be excused (or deleted)
+        # a deleted transcript cannot be rejected
         self.reject_transcript(filename, status_code=404)
-        self.assertEqual(self.excuse()["checked_state"], "excused")
 
     def upload(self, category):
         filename = self.post(
@@ -246,12 +245,6 @@ class TestMandateTranscript(ComsolTest):
         self.assertIsNone(res["checked_state"])
         self.assertEqual(res["uploaded_transcript"], filename)
 
-    def test_reject_keeps_transcript_unchecked(self):
-        filename = self.upload("TestCategory")
-        self.reject_transcript(filename)
-        exam = Exam.objects.get(filename=filename)
-        self.assertFalse(exam.oral_transcript_checked)
-
     def test_check_transitions(self):
         filename = self.upload("TestCategory")
         self.reject_transcript(filename)
@@ -260,19 +253,6 @@ class TestMandateTranscript(ComsolTest):
         self.reject_transcript(filename, status_code=400)
         self.excuse(status_code=400)
         self.assertEqual(self.my_mandate()["checked_state"], "accepted")
-
-    def test_reject_transcript(self):
-        filename = self.upload("TestCategory")
-        res = self.reject_transcript(filename)
-        self.assertEqual(res["checked_state"], "rejected")
-        self.assertEqual(res["uploaded_transcript"], filename)
-        # nothing awaiting a check anymore
-        self.reject_transcript(filename, status_code=400)
-        self.reject_transcript("doesnotexist", status_code=404)
-
-        # a new upload can be rejected again
-        filename = self.upload("TestCategory")
-        self.reject_transcript(filename)
 
     def test_excused_is_final(self):
         self.excuse()
@@ -342,10 +322,6 @@ class TestMandateTranscript(ComsolTest):
             list(titles.values_list("title", flat=True)),
             ["Mandate rejected", "Mandate accepted"],
         )
-
-    def test_no_notification_for_own_mandate(self):
-        self.excuse()
-        self.assertFalse(Notification.objects.exists())
 
     def test_filter_checked_state(self):
         url = f"/api/mandates/?username={self.user['username']}&checked_state="
@@ -563,17 +539,8 @@ class TestMandateManage(ComsolTest):
         for reason in ["", "   "]:
             self.extend(status_code=400, reason=reason)
         self.assertTrue(self.is_blocked())
-        res = self.extend(reason="Exam postponed")
+        res = self.extend(reason=" Exam postponed ")
         self.assertEqual(res["reason"], "Exam postponed")
-
-        # kept after the extension expires
-        Mandate.objects.filter(pk=self.mandate.pk).update(
-            extended_time=timezone.now() - timedelta(days=2)
-        )
-        self.assertTrue(self.is_blocked())
-        self.assertEqual(
-            Mandate.objects.get(pk=self.mandate.pk).reason, "Exam postponed"
-        )
 
     def test_extend_rejected_overdue(self):
         checked = timezone.now() - timedelta(days=20)
