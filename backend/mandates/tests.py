@@ -152,7 +152,7 @@ class TestMandateTranscript(ComsolTest):
 
     def test_delete_transcript_excused(self):
         filename = self.upload("TestCategory")
-        self.check("excused")
+        self.excuse()
         after = self.assert_unchanged_after_delete(filename)
         self.assertEqual(after["checked_state"], "excused")
 
@@ -161,8 +161,9 @@ class TestMandateTranscript(ComsolTest):
         after = self.assert_unchanged_after_delete(filename)
         self.assertTrue(after["fulfilled_at"])
         self.assertIsNone(after["checked_state"])
-        # can still be checked without the file
-        self.assertEqual(self.check("rejected")["checked_state"], "rejected")
+        # without the file it can only be excused (or deleted)
+        self.reject_transcript(filename, status_code=404)
+        self.assertEqual(self.excuse()["checked_state"], "excused")
 
     def upload(self, category):
         filename = self.post(
@@ -180,11 +181,21 @@ class TestMandateTranscript(ComsolTest):
     def my_mandate(self):
         return self.get(f"/api/mandates/?username={self.user['username']}")[0]
 
-    def check(self, state, status_code=200, reason="Test reason"):
+    def excuse(self, status_code=200, reason="Test reason"):
         return self.post(
-            f"/api/mandates/{self.mandate.pk}/check/",
-            {"checked_state": state, "reason": reason},
+            f"/api/mandates/{self.mandate.pk}/excuse/",
+            {"reason": reason},
             status_code=status_code,
+        )
+
+    def mark_checked(self, filename, status_code=200):
+        return self.post(
+            f"/api/payment/markexamchecked/{filename}/", {}, status_code=status_code
+        )
+
+    def reject_transcript(self, filename, status_code=200):
+        return self.post(
+            f"/api/mandates/transcript/{filename}/reject/", {}, status_code=status_code
         )
 
     def test_upload_fulfills(self):
@@ -206,8 +217,7 @@ class TestMandateTranscript(ComsolTest):
         self.assertEqual(self.my_mandate()["uploaded_transcript"], first)
 
     def test_upload_after_rejection(self):
-        self.upload("TestCategory")
-        self.check("rejected")
+        self.reject_transcript(self.upload("TestCategory"))
         self.assertEqual(self.my_mandate()["checked_state"], "rejected")
 
         filename = self.upload("TestCategory")
@@ -218,11 +228,14 @@ class TestMandateTranscript(ComsolTest):
 
     def test_mark_checked(self):
         filename = self.upload("TestCategory")
-        self.post(f"/api/payment/markexamchecked/{filename}/", {})
+        self.mark_checked(filename)
         res = self.my_mandate()
         self.assertEqual(res["checked_state"], "accepted")
         self.assertTrue(res["checked_at"])
         self.assertEqual(res["uploaded_transcript"], filename)
+        exam = Exam.objects.get(filename=filename)
+        self.assertTrue(exam.oral_transcript_checked)
+        self.assertTrue(exam.public)
 
     def test_mark_checked_other_category(self):
         filename = self.upload("TestCategory")
@@ -232,46 +245,44 @@ class TestMandateTranscript(ComsolTest):
         self.assertIsNone(res["checked_state"])
         self.assertEqual(res["uploaded_transcript"], filename)
 
-    def test_check(self):
+    def test_reject_keeps_transcript_unchecked(self):
         filename = self.upload("TestCategory")
-        res = self.check("accepted")
-        self.assertEqual(res["checked_state"], "accepted")
-        self.assertTrue(res["checked_at"])
-        self.assertEqual(res["uploaded_transcript"], filename)
-        self.assertEqual(self.my_mandate()["checked_state"], "accepted")
-        exam = Exam.objects.get(filename=filename)
-        self.assertTrue(exam.oral_transcript_checked)
-        self.assertTrue(exam.public)
-
-    def test_check_reject_keeps_transcript_unchecked(self):
-        filename = self.upload("TestCategory")
-        self.check("rejected")
+        self.reject_transcript(filename)
         exam = Exam.objects.get(filename=filename)
         self.assertFalse(exam.oral_transcript_checked)
 
     def test_check_transitions(self):
-        self.upload("TestCategory")
-        self.check("rejected")
-        self.check("rejected", status_code=400)
-        self.check("accepted")
-        for state in ["accepted", "rejected", "excused"]:
-            self.check(state, status_code=400)
+        filename = self.upload("TestCategory")
+        self.reject_transcript(filename)
+        self.reject_transcript(filename, status_code=400)
+        self.mark_checked(filename)
+        self.reject_transcript(filename, status_code=400)
+        self.excuse(status_code=400)
         self.assertEqual(self.my_mandate()["checked_state"], "accepted")
 
-    def test_check_excused_is_final(self):
-        self.check("excused")
-        self.upload("TestCategory")
-        for state in ["accepted", "rejected", "excused"]:
-            self.check(state, status_code=400)
+    def test_reject_transcript(self):
+        filename = self.upload("TestCategory")
+        res = self.reject_transcript(filename)
+        self.assertEqual(res["checked_state"], "rejected")
+        self.assertEqual(res["uploaded_transcript"], filename)
+        # nothing awaiting a check anymore
+        self.reject_transcript(filename, status_code=400)
+        self.reject_transcript("doesnotexist", status_code=404)
+
+        # a new upload can be rejected again
+        filename = self.upload("TestCategory")
+        self.reject_transcript(filename)
+
+    def test_excused_is_final(self):
+        self.excuse()
+        filename = self.upload("TestCategory")
+        self.excuse(status_code=400)
+        self.reject_transcript(filename, status_code=400)
+        self.mark_checked(filename)
         self.assertEqual(self.my_mandate()["checked_state"], "excused")
 
-    def test_check_requires_upload(self):
-        for state in ["accepted", "rejected"]:
-            self.check(state, status_code=400)
-        self.assertIsNone(self.my_mandate()["checked_state"])
-
     def test_excuse_without_upload(self):
-        res = self.check("excused")
+        res = self.excuse()
         self.assertEqual(res["checked_state"], "excused")
         self.assertIsNone(res["fulfilled_at"])
 
@@ -292,9 +303,9 @@ class TestMandateTranscript(ComsolTest):
 
     def test_excuse_requires_reason(self):
         for reason in ["", "  \n\t"]:
-            self.check("excused", status_code=400, reason=reason)
+            self.excuse(status_code=400, reason=reason)
         self.assertIsNone(self.my_mandate()["checked_state"])
-        res = self.check("excused", reason=" Moved abroad ")
+        res = self.excuse(reason=" Moved abroad ")
         self.assertEqual(res["reason"], "Moved abroad")
 
     def test_reason_constraint(self):
@@ -311,9 +322,9 @@ class TestMandateTranscript(ComsolTest):
 
     def test_filter_checked_state(self):
         url = f"/api/mandates/?username={self.user['username']}&checked_state="
-        self.upload("TestCategory")
+        filename = self.upload("TestCategory")
         self.assertEqual(len(self.get(url + "rejected")), 0)
-        self.check("rejected")
+        self.reject_transcript(filename)
         self.assertEqual(len(self.get(url + "rejected")), 1)
         self.assertEqual(len(self.get(url + "accepted")), 0)
 
@@ -571,8 +582,8 @@ class TestMandateManage(ComsolTest):
         self.assertTrue(res[0]["can_manage"])
         self.extend()
         self.post(
-            f"/api/mandates/{self.mandate.pk}/check/",
-            {"checked_state": "excused", "reason": "Test reason"},
+            f"/api/mandates/{self.mandate.pk}/excuse/",
+            {"reason": "Test reason"},
         )
         self.assertFalse(self.is_blocked())
         self.delete(f"/api/mandates/{self.mandate.pk}/", status_code=204, as_json=False)

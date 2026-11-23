@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from ninja import Form, Query, Router, Schema
 
+from answers.models import Exam
 from categories.models import Category
 from mandates.models import (
     MANDATE_EXTENSION_PERIOD,
@@ -52,12 +53,7 @@ class CreateMandateSchema(Schema):
     username: str | None = None
 
 
-class CheckMandateSchema(Schema):
-    checked_state: Literal["accepted", "rejected", "excused"]
-    reason: str = ""
-
-
-class ExtendMandateSchema(Schema):
+class ReasonSchema(Schema):
     reason: str
 
 
@@ -207,7 +203,7 @@ def delete_mandate(request, mandate_id: str):
 
 
 @router.post(
-    "/{mandate_id}/check/",
+    "/{mandate_id}/excuse/",
     response={
         200: MandateSchema,
         400: ErrorSchema,
@@ -217,10 +213,10 @@ def delete_mandate(request, mandate_id: str):
         403: ErrorSchema,
         404: ErrorSchema,
     },
-    operation_id="checkMandate",
+    operation_id="excuseMandate",
 )
 @auth_check.require_login
-def check_mandate(request, mandate_id: str, data: Form[CheckMandateSchema]):
+def excuse_mandate(request, mandate_id: str, data: Form[ReasonSchema]):
     with transaction.atomic():
         mandate = get_object_or_404(
             Mandate.objects.select_for_update(of=("self",)).select_related(
@@ -235,29 +231,53 @@ def check_mandate(request, mandate_id: str, data: Form[CheckMandateSchema]):
         current = mandate.checked_state
         if current in (Mandate.CheckedState.ACCEPTED, Mandate.CheckedState.EXCUSED):
             return response.not_possible(f"Mandate is already {current}")
-
-        if data.checked_state != "excused" and mandate.fulfilled_time is None:
-            return response.not_possible("Mandate not fulfilled yet")
-        if data.checked_state == "rejected" and current is not None:
-            return response.not_possible("Mandate is already rejected")
         reason = data.reason.strip()
-        if data.checked_state == "excused":
-            if not reason:
-                return response.not_possible("Excusing requires a reason")
-            mandate.reason = reason
+        if not reason:
+            return response.not_possible("Excusing requires a reason")
 
         now = timezone.now()
-        mandate.checked_state = Mandate.CheckedState(data.checked_state)
+        mandate.reason = reason
+        mandate.checked_state = Mandate.CheckedState.EXCUSED
         mandate.checked_time = now
         mandate.edited_time = now
         mandate.save()
+    return mandate_to_schema_resp(request, mandate)
 
-        # same as "mark checked" on the exam page
-        exam = mandate.uploaded_transcript
-        if data.checked_state == "accepted" and exam is not None:
-            exam.oral_transcript_checked = True
-            exam.public = True
-            exam.save()
+
+@router.post(
+    "/transcript/{filename}/reject/",
+    response={
+        200: MandateSchema,
+        400: ErrorSchema,
+        # Unauthenticated
+        401: ErrorSchema,
+        # Unauthorised
+        403: ErrorSchema,
+        404: ErrorSchema,
+    },
+    operation_id="rejectMandateTranscript",
+)
+@auth_check.require_login
+def reject_transcript(request, filename: str):
+    with transaction.atomic():
+        exam = get_object_or_404(Exam, filename=filename)
+        if not auth_check.has_admin_rights_for_exam(request, exam):
+            return response.not_allowed()
+
+        mandate = (
+            Mandate.objects.select_for_update(of=("self",))
+            .select_related("user", "category", "uploaded_transcript")
+            .filter(uploaded_transcript=exam, checked_state__isnull=True)
+            .first()
+        )
+        if mandate is None:
+            return response.not_possible("No mandate awaits a check of this transcript")
+
+        now = timezone.now()
+        mandate.checked_state = Mandate.CheckedState.REJECTED
+        mandate.checked_time = now
+        mandate.edited_time = now
+        mandate.save()
     return mandate_to_schema_resp(request, mandate)
 
 
@@ -275,7 +295,7 @@ def check_mandate(request, mandate_id: str, data: Form[CheckMandateSchema]):
     operation_id="extendMandate",
 )
 @auth_check.require_login
-def extend_mandate(request, mandate_id: str, data: Form[ExtendMandateSchema]):
+def extend_mandate(request, mandate_id: str, data: Form[ReasonSchema]):
     with transaction.atomic():
         mandate = get_object_or_404(
             Mandate.objects.select_for_update(of=("self",)).select_related(

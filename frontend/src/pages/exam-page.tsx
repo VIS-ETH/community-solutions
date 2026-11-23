@@ -76,10 +76,13 @@ import {
   IconDownload,
   IconEdit,
   IconFileCheck,
+  IconFileX,
   IconLink,
 } from "@tabler/icons-react";
 import { useQuickSearchFilter } from "../components/Navbar/QuickSearch/QuickSearchFilterContext";
 import { useMarkExamChecked } from "../api/hooks/payments";
+import { useRejectMandateTranscript } from "../api/hooks/mandates";
+import useRemoveConfirm from "../hooks/useRemoveConfirm";
 
 type ServerCutResponse = Record<string, CutPageSchema[]>;
 
@@ -120,6 +123,11 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
         }));
       },
     },
+  });
+  const [confirm, confirmModals] = useRemoveConfirm();
+  const [transcriptRejected, setTranscriptRejected] = useState(false);
+  const rejectTranscript = useRejectMandateTranscript({
+    mutation: { onSuccess: () => setTranscriptRejected(true) },
   });
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const user = useUser()!;
@@ -335,6 +343,27 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
                       }
                     />
                   )}
+                {metaData.isOralTranscript &&
+                  !metaData.oralTranscriptChecked &&
+                  !transcriptRejected && (
+                    <IconButton
+                      color="gray"
+                      tooltip="Mark as rejected"
+                      icon={<IconFileX />}
+                      loading={rejectTranscript.isPending}
+                      onClick={() =>
+                        confirm(
+                          "Reject this transcript? The uploader's mandate enters its grace period.",
+                          () =>
+                            rejectTranscript.mutate({
+                              filename: metaData.filename,
+                            }),
+                          undefined,
+                          { label: "Reject", propsDict: { color: "red" } },
+                        )
+                      }
+                    />
+                  )}
                 <IconButton
                   color="gray"
                   icon={<IconEdit />}
@@ -345,6 +374,12 @@ const ExamPageContent: React.FC<ExamPageContentProps> = ({
             )}
           </Group>
         </Flex>
+        {confirmModals}
+        {rejectTranscript.error && (
+          <Alert color="red" mb="md">
+            {rejectTranscript.error.message}
+          </Alert>
+        )}
         <ResumeReading {...readingPage} />
         {metaData.darkModeWarning && computedColorScheme === "dark" && (
           <Alert color="yellow" title="Dark mode warning" mb="md">

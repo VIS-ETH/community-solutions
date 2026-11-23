@@ -11,9 +11,9 @@ import {
   Textarea,
 } from "@mantine/core";
 import {
-  useCheckMandate,
   useCreateMandate,
   useDeleteMandate,
+  useExcuseMandate,
   useExtendMandate,
   useListMandates,
 } from "../api/hooks/mandates";
@@ -122,9 +122,9 @@ const MandateActions: React.FC<{
   const [confirm, modals] = useRemoveConfirm();
   const options = { mutation: { onSuccess: onChanged } };
   const remove = useDeleteMandate(options);
-  const check = useCheckMandate(options);
+  const excuse = useExcuseMandate(options);
   const extend = useExtendMandate(options);
-  const error = remove.error ?? check.error ?? extend.error;
+  const error = remove.error ?? excuse.error ?? extend.error;
   const [reasonAction, setReasonAction] = useState<"extend" | "excuse" | null>(
     null,
   );
@@ -139,11 +139,7 @@ const MandateActions: React.FC<{
   function onReasonConfirm(reason: string) {
     if (reasonAction === "extend")
       extend.mutate({ mandateId: mandate.id, data: { reason } });
-    else
-      check.mutate({
-        mandateId: mandate.id,
-        data: { checked_state: "excused", reason },
-      });
+    else excuse.mutate({ mandateId: mandate.id, data: { reason } });
   }
 
   function onDeleteClick() {
@@ -189,7 +185,7 @@ const MandateActions: React.FC<{
             size="compact-sm"
             variant="light"
             color="orange"
-            loading={check.isPending}
+            loading={excuse.isPending}
             onClick={() => setReasonAction("excuse")}
           >
             Excuse
