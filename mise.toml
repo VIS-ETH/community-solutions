@@ -2,7 +2,7 @@
 node = "26.13.1"
 prek = "0.5.11"
 uv = "0.13.9"
-yarn = "4.18.1"
+yarn = "4.19.0"
 
 [env]
 _.file = "backend/.env.development"
